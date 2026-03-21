@@ -1,1 +1,16 @@
+.cursor
+CONTEXT.md
+PROGRESS.md
 node_modules
+.pnpm-store
+.env*
+.next
+next-env.d.ts
+tsconfig.tsbuildinfo
+.DS_Store
+dist
+build
+*.log
+.vercel
+.turbo
+coverage

@@ -1,0 +1,323 @@
+// Hiretivo — PostgreSQL (Neon) + Prisma
+// Auth.js adapter models: Account, Session, VerificationToken
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SEEKER
+  RECRUITER
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum ApplyType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  PAUSED
+  CLOSED
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum AppStatus {
+  PENDING
+  REVIEWED
+  SHORTLISTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum WorkType {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum PlanTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(SEEKER)
+  plan          PlanTier  @default(FREE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  seekerProfile   SeekerProfile?
+  recruiterProfile RecruiterProfile?
+
+  jobsPosted Job[] @relation("RecruiterJobs")
+
+  applications Application[]
+
+  interviewsAsRecruiter Interview[] @relation("InterviewRecruiter")
+  interviewsAsSeeker    Interview[] @relation("InterviewSeeker")
+
+  clickEvents ClickEvent[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model SeekerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  headline       String?
+  bio            String?  @db.Text
+  location       String?
+  yearsExperience Int?
+  workPreference WorkType?
+
+  skills     SeekerSkill[]
+  jobMatches JobMatch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  seekerSkills SeekerSkill[]
+  jobSkills    JobSkill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SeekerSkill {
+  id              String @id @default(cuid())
+  seekerProfileId String
+  skillId         String
+  level           SkillLevel
+
+  seekerProfile SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+  skill           Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([seekerProfileId, skillId])
+  @@index([skillId])
+}
+
+model RecruiterProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyName String
+  website     String?
+  bio         String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Job {
+  id          String @id @default(cuid())
+  recruiterId String
+  recruiter   User   @relation("RecruiterJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String      @db.Text
+  jobType     JobType
+  applyType   ApplyType
+  workType    WorkType?
+  status      JobStatus   @default(DRAFT)
+
+  salaryMin Int?
+  salaryMax Int?
+  currency  String?
+
+  externalApplyUrl String?
+
+  publishedAt DateTime?
+  closedAt    DateTime?
+
+  skills        JobSkill[]
+  applications  Application[]
+  jobMatches    JobMatch[]
+  clickEvents   ClickEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recruiterId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model JobSkill {
+  id      String @id @default(cuid())
+  jobId   String
+  skillId String
+  level   SkillLevel
+
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+  @@index([skillId])
+}
+
+model JobMatch {
+  id              String @id @default(cuid())
+  jobId           String
+  seekerProfileId String
+  score           Int
+
+  job           Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seekerProfile SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  computedAt DateTime @default(now())
+
+  @@unique([jobId, seekerProfileId])
+  @@index([seekerProfileId])
+  @@index([score])
+}
+
+model Application {
+  id String @id @default(cuid())
+
+  jobId    String
+  seekerId String
+
+  status      AppStatus @default(PENDING)
+  matchScore  Int
+
+  coverLetter String? @db.Text
+
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+
+  interviews Interview[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobId, seekerId])
+  @@index([seekerId])
+  @@index([status])
+}
+
+model Interview {
+  id String @id @default(cuid())
+
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  recruiterId String
+  recruiter   User   @relation("InterviewRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  seekerId String
+  seeker   User   @relation("InterviewSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
+
+  status   InterviewStatus @default(SCHEDULED)
+  startsAt DateTime?
+  endsAt   DateTime?
+  meetLink String?
+  notes    String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+  @@index([recruiterId])
+  @@index([seekerId])
+  @@index([startsAt])
+}
+
+model ClickEvent {
+  id String @id @default(cuid())
+
+  jobId  String?
+  job    Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  source   String
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([jobId])
+  @@index([userId])
+  @@index([createdAt])
+}

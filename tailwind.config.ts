@@ -52,6 +52,15 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        /** Brand palette (hex) — use alongside shadcn CSS-variable `primary` */
+        brand: {
+          primary: "#5c54e6",
+          "primary-light": "#ede9ff",
+          dark: "#1a1a2e",
+        },
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -74,7 +83,7 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config
 
 export default config
