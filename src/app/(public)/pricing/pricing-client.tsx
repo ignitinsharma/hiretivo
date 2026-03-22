@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Plus } from "lucide-react";
+import { CircleCheck, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ export function PricingClient() {
             Pricing that scales with your hiring
           </h1>
           <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
-            Choose the plan that fits your team's needs. Join 5,000+ remote-first companies.
+            Choose the plan that fits your team&apos;s needs. Join 5,000+ remote-first companies.
           </p>
 
           {/* Toggle Switch */}
@@ -72,19 +72,39 @@ export function PricingClient() {
             <div className="h-px bg-slate-100 mb-6"></div>
             <ul className="space-y-3 mb-8 grow">
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">1 active job post</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">20 applicant views/mo</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Basic AI skill match</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Email support</span>
               </li>
             </ul>
@@ -120,27 +140,57 @@ export function PricingClient() {
             
             <ul className="space-y-3 mb-8 grow">
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">3 active job posts</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">AI skill matching</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Candidate contact access</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Resume search</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Basic analytics</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Email + chat support</span>
               </li>
             </ul>
@@ -179,31 +229,66 @@ export function PricingClient() {
             
             <ul className="space-y-3 mb-8 grow">
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">8 active job posts</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">Advanced AI ranking</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">Interview scheduling</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">ATS integration</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">Unlimited resume DB</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">Priority support</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-white w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-white text-brand-primary"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-indigo-50 text-xs">Team seats (3)</span>
               </li>
             </ul>
@@ -237,31 +322,66 @@ export function PricingClient() {
             
             <ul className="space-y-3 mb-8 grow">
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">25 active job posts</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">AI ranking + scoring</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Full ATS integration</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Custom pipeline stages</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Advanced analytics</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">API access</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Team seats (10)</span>
               </li>
             </ul>
@@ -285,31 +405,66 @@ export function PricingClient() {
             <div className="h-px bg-slate-100 mb-6"></div>
             <ul className="space-y-3 mb-8 grow">
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Unlimited job posts</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Dedicated AI models</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">White-label option</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">SSO / SAML</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">SLA + dedicated CSM</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Custom integrations</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle className="text-brand-primary w-4 h-4 mt-0.5 shrink-0" />
+                <CircleCheck
+                  className="mt-0.5 shrink-0 fill-brand-primary text-white"
+                  size={16}
+                  strokeWidth={2.5}
+                  aria-hidden
+                />
                 <span className="text-slate-700 text-xs">Unlimited seats</span>
               </li>
             </ul>
@@ -450,28 +605,44 @@ export function PricingClient() {
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden group">
               <div className="p-6 flex items-center justify-between cursor-pointer">
                 <h4 className="font-bold text-lg text-slate-900">Can I change plans later?</h4>
-                <Plus className="text-slate-400 transition-transform group-hover:text-brand-primary w-6 h-6" />
+                <CirclePlus
+                className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-brand-primary-light group-hover:text-brand-primary"
+                strokeWidth={2}
+                aria-hidden
+              />
               </div>
             </div>
             {/* FAQ Item 2 */}
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden group">
               <div className="p-6 flex items-center justify-between cursor-pointer">
                 <h4 className="font-bold text-lg text-slate-900">What payment methods do you accept?</h4>
-                <Plus className="text-slate-400 transition-transform group-hover:text-brand-primary w-6 h-6" />
+                <CirclePlus
+                className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-brand-primary-light group-hover:text-brand-primary"
+                strokeWidth={2}
+                aria-hidden
+              />
               </div>
             </div>
             {/* FAQ Item 3 */}
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden group">
               <div className="p-6 flex items-center justify-between cursor-pointer">
                 <h4 className="font-bold text-lg text-slate-900">Is there a free trial for Growth?</h4>
-                <Plus className="text-slate-400 transition-transform group-hover:text-brand-primary w-6 h-6" />
+                <CirclePlus
+                className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-brand-primary-light group-hover:text-brand-primary"
+                strokeWidth={2}
+                aria-hidden
+              />
               </div>
             </div>
             {/* FAQ Item 4 */}
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden group">
               <div className="p-6 flex items-center justify-between cursor-pointer">
                 <h4 className="font-bold text-lg text-slate-900">What happens to my listings if I downgrade?</h4>
-                <Plus className="text-slate-400 transition-transform group-hover:text-brand-primary w-6 h-6" />
+                <CirclePlus
+                className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-brand-primary-light group-hover:text-brand-primary"
+                strokeWidth={2}
+                aria-hidden
+              />
               </div>
             </div>
           </div>

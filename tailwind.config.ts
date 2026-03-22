@@ -53,13 +53,19 @@ const config = {
         },
         /** Brand palette (hex) — use alongside shadcn CSS-variable `primary` */
         brand: {
-          primary: "#5c54e6",
+          primary: '#5951E5',
+          heading: '#0A0A0F',
+          body: '#4B5563',
+          accent: '#16A34A',
+          light: '#F5F3FF',
+          gray: '#F9FAFB',
+          border: '#E5E7EB',
           "primary-light": "#ede9ff",
           dark: "#1a1a2e",
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        sans: ["var(--font-plus-jakarta-sans)", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
