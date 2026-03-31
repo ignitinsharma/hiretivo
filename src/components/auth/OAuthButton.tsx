@@ -35,7 +35,7 @@ export function OAuthButton({
     <Button
       type="button"
       variant="outline"
-      className={cn("w-full gap-2", className)}
+      className={cn("w-full gap-3 h-14 rounded-xl font-semibold shadow-none border-slate-200 hover:bg-slate-50", className)}
       onClick={onClick}
       disabled={isLoading}
     >

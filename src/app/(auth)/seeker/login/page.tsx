@@ -18,6 +18,44 @@ import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { seekerLoginSchema, type SeekerLoginInput } from "@/lib/validations/auth";
 
+const SeekerLoginLeft = (
+  <>
+    <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 rounded-full bg-brand-primary opacity-5 blur-3xl"></div>
+    <div className="relative z-10 max-w-lg w-full">
+      <div className="mb-12">
+        <span className="text-brand-primary font-bold text-2xl tracking-tighter">Digital Architect</span>
+      </div>
+      <h1 className="text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900 mb-8">
+        Your next chapter starts here.
+      </h1>
+      <p className="text-slate-600 font-medium text-lg leading-relaxed mb-12 max-w-md">
+        Access thousands of remote opportunities from companies that value work-life balance.
+      </p>
+      
+      <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-md transform rotate-2 hover:rotate-0 transition-transform duration-500">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Application Update</p>
+              <p className="text-sm font-semibold text-slate-900">Interview Scheduled</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-medium text-slate-400">Now</span>
+        </div>
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <h4 className="font-bold text-sm text-slate-900 mb-1">Frontend Developer at Acme Inc</h4>
+          <p className="text-xs text-slate-500">Tomorrow at 10:00 AM PST • Zoom</p>
+        </div>
+      </div>
+    </div>
+  </>
+);
+
 export default function SeekerLoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -62,94 +100,82 @@ export default function SeekerLoginPage() {
 
   return (
     <AuthLayout
-      title="Find your next opportunity"
-      description="Sign in to access your personalized job matches"
-      toggleLinkText="Don't have an account?"
-      toggleLinkHref="/seeker/register"
+      title="Welcome back"
+      description="Sign in to access your personalized job matches."
+      leftContent={SeekerLoginLeft}
     >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="email">Work email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@company.com"
-            autoComplete="email"
-            {...form.register("email")}
-          />
-          {form.formState.errors.email && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.email.message}
-            </p>
-          )}
+      <div className="space-y-8">
+        <OAuthButton
+          provider="google"
+          onClick={handleGoogleSignIn}
+          isLoading={isGoogleLoading}
+        />
+
+        <div className="relative flex items-center">
+          <div className="grow border-t border-slate-200"></div>
+          <span className="shrink mx-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">OR CONTINUE WITH EMAIL</span>
+          <div className="grow border-t border-slate-200"></div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-sm text-brand-primary hover:underline"
-            >
-              Forgot password?
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm font-bold text-slate-900 block">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+              autoComplete="email"
+              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              {...form.register("email")}
+            />
+            {form.formState.errors.email && (
+              <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-sm font-bold text-slate-900">Password</Label>
+              <Link href="/forgot-password" className="text-xs font-bold text-brand-primary hover:text-brand-primary/80 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
+            <PasswordInput
+              id="password"
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              error={!!form.formState.errors.password}
+              {...form.register("password")}
+            />
+            {form.formState.errors.password && (
+              <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5951E5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99] mt-2" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Signing in...
+              </>
+            ) : "Sign In"}
+          </Button>
+        </form>
+
+        <footer className="pt-4 text-center">
+          <p className="text-slate-600 font-medium">
+            New to Hiretivo?
+            <Link href="/seeker/register" className="text-brand-primary font-bold hover:underline underline-offset-4 ml-1">
+              Sign up
             </Link>
-          </div>
-          <PasswordInput
-            id="password"
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            error={!!form.formState.errors.password}
-            {...form.register("password")}
-          />
-          {form.formState.errors.password && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.password.message}
-            </p>
-          )}
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
-      </form>
-
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <OAuthButton
-            provider="google"
-            onClick={handleGoogleSignIn}
-            isLoading={isGoogleLoading}
-          />
-        </div>
+          </p>
+        </footer>
       </div>
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have a job seeker account?{" "}
-        <Link
-          href="/seeker/register"
-          className="font-medium text-brand-primary hover:underline"
-        >
-          Get started
-        </Link>
-      </p>
     </AuthLayout>
   );
 }

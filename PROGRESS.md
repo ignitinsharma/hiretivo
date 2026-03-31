@@ -21,7 +21,7 @@ Last updated: 2026-03-21  |  Current: Phase 1 — Auth & Onboarding
 
 ## Phase 2 — Job Posting     [ ]
 - [ ] Skills seeded (80+)
-- [ ] Post a Job form
+- [ ] Post a Job form (UI complete)
 - [ ] Job API (create/edit/delete/status)
 - [ ] My Jobs list page
 - [ ] Free plan gate
@@ -30,27 +30,29 @@ Last updated: 2026-03-21  |  Current: Phase 1 — Auth & Onboarding
 - [ ] computeMatchForSeeker
 - [ ] computeMatchForJob
 - [ ] Redis cache
-- [ ] Feed API + page
-- [ ] Job detail (seeker)
+- [ ] Feed API + page (Seeker Dashboard UI complete)
+- [ ] Job detail (seeker) (UI complete)
 - [ ] Public job listings
 - [ ] LoginModal
 
 ## Phase 4 — Applications + Dashboard     [ ]
-- [ ] Apply modal (internal)
-- [ ] Click tracking (external)
-- [ ] My Applications page
-- [ ] Recruiter dashboard (stats+list+drawer)
+- [ ] Recruiter dashboard UI redesign (shadcn sidebar, dashboard/jobs/applicants pages)
+- [ ] Apply modal (internal) (UI complete)
+- [ ] Click tracking (external redirect page UI complete)
+- [ ] My Applications page (UI complete)
+- [ ] Recruiter dashboard (stats+list+drawer) — data integration
 - [ ] Status pipeline
 - [ ] Email notifications
 
 ## Phase 5 — Public Pages + Pricing     [ ]
 - [ ] Homepage
 - [ ] Pricing page (USD+INR)
-- [ ] PublicNav, SeekerNav, RecruiterNav
+- [ ] Company Profile page (UI complete)
+- [ ] PublicNav, SeekerNav, RecruiterNav (SeekerNav UI complete)
 
 ## Phase 6 — Interview Scheduling     [ ]
 - [ ] Google Calendar OAuth
-- [ ] Settings page
+- [ ] Settings page (Seeker Settings UI complete)
 - [ ] Slot picker
 - [ ] Create interview + Meet
 - [ ] Reschedule + Cancel
