@@ -97,62 +97,62 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
-| AUTH-07 | Phase 1 | Pending |
-| AUTH-08 | Phase 1 | Pending |
-| AUTH-09 | Phase 1 | Pending |
-| JOBS-01 | Phase 2 | Pending |
-| JOBS-02 | Phase 2 | Pending |
-| JOBS-03 | Phase 2 | Pending |
-| JOBS-04 | Phase 2 | Pending |
-| JOBS-05 | Phase 2 | Pending |
-| JOBS-06 | Phase 2 | Pending |
-| JOBS-07 | Phase 2 | Pending |
-| MATCH-01 | Phase 3 | Pending |
-| MATCH-02 | Phase 3 | Pending |
-| MATCH-03 | Phase 3 | Pending |
-| MATCH-04 | Phase 3 | Pending |
-| MATCH-05 | Phase 3 | Pending |
-| MATCH-06 | Phase 3 | Pending |
-| MATCH-07 | Phase 3 | Pending |
-| MATCH-08 | Phase 3 | Pending |
-| APPL-01 | Phase 4 | Pending |
-| APPL-02 | Phase 4 | Pending |
-| APPL-03 | Phase 4 | Pending |
-| APPL-04 | Phase 4 | Pending |
-| APPL-05 | Phase 4 | Pending |
-| APPL-06 | Phase 4 | Pending |
-| APPL-07 | Phase 4 | Pending |
-| APPL-08 | Phase 4 | Pending |
-| HOME-01 | Phase 5 | Pending |
-| HOME-02 | Phase 5 | Pending |
-| HOME-03 | Phase 5 | Pending |
-| HOME-04 | Phase 5 | Pending |
-| SCHED-01 | Phase 6 | Pending |
-| SCHED-02 | Phase 6 | Pending |
-| SCHED-03 | Phase 6 | Pending |
-| SCHED-04 | Phase 6 | Pending |
-| SCHED-05 | Phase 6 | Pending |
-| SCHED-06 | Phase 6 | Pending |
-| SCHED-07 | Phase 6 | Pending |
-| SCHED-08 | Phase 6 | Pending |
-| SCHED-09 | Phase 6 | Pending |
-| POLISH-01 | Phase 7 | Pending |
-| POLISH-02 | Phase 7 | Pending |
-| POLISH-03 | Phase 7 | Pending |
-| POLISH-04 | Phase 7 | Pending |
-| POLISH-05 | Phase 7 | Pending |
-| POLISH-06 | Phase 7 | Pending |
-| POLISH-07 | Phase 7 | Pending |
-| POLISH-08 | Phase 7 | Pending |
-| POLISH-09 | Phase 7 | Pending |
+| Requirement | Phase | Phase Name | Status |
+|-------------|-------|------------|--------|
+| AUTH-01 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-02 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-03 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-04 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-05 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-06 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-07 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-08 | Phase 1 | Auth & Onboarding | Pending |
+| AUTH-09 | Phase 1 | Auth & Onboarding | Pending |
+| JOBS-01 | Phase 2 | Job Posting | Pending |
+| JOBS-02 | Phase 2 | Job Posting | Pending |
+| JOBS-03 | Phase 2 | Job Posting | Pending |
+| JOBS-04 | Phase 2 | Job Posting | Pending |
+| JOBS-05 | Phase 2 | Job Posting | Pending |
+| JOBS-06 | Phase 2 | Job Posting | Pending |
+| JOBS-07 | Phase 2 | Job Posting | Pending |
+| MATCH-01 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-02 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-03 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-04 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-05 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-06 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-07 | Phase 3 | Matching Engine & Feed | Pending |
+| MATCH-08 | Phase 3 | Matching Engine & Feed | Pending |
+| APPL-01 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-02 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-03 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-04 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-05 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-06 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-07 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| APPL-08 | Phase 4 | Applications & Recruiter Dashboard | Pending |
+| HOME-01 | Phase 5 | Homepage, Pricing & Nav | Pending |
+| HOME-02 | Phase 5 | Homepage, Pricing & Nav | Pending |
+| HOME-03 | Phase 5 | Homepage, Pricing & Nav | Pending |
+| HOME-04 | Phase 5 | Homepage, Pricing & Nav | Pending |
+| SCHED-01 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-02 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-03 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-04 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-05 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-06 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-07 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-08 | Phase 6 | Interview Scheduling | Pending |
+| SCHED-09 | Phase 6 | Interview Scheduling | Pending |
+| POLISH-01 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-02 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-03 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-04 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-05 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-06 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-07 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-08 | Phase 7 | Polish & Pre-Launch | Pending |
+| POLISH-09 | Phase 7 | Polish & Pre-Launch | Pending |
 
 **Coverage:**
 - v1.0 requirements: 54 total
@@ -161,4 +161,4 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-01 after initial definition*
+*Last updated: 2026-04-01 — traceability updated with phase names after roadmap creation*
