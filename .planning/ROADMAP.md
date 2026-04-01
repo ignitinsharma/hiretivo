@@ -32,7 +32,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A seeker who completes wizard Steps 1 and 2 can access the job feed; skipping Steps 3-5 is permitted
   4. A recruiter who completes company onboarding can access the recruiter dashboard
   5. Accessing a seeker route as a recruiter (or vice versa) is blocked by middleware and redirected
-**Plans**: TBD
+**Plans**: 7 plans
+Plans:
+- [ ] 01-PLAN-01.md — Prisma schema migration (SeekerProfile + RecruiterProfile new fields)
+- [ ] 01-PLAN-02.md — POST /api/auth/register route + wire register pages
+- [ ] 01-PLAN-03.md — Email verification API + Resend integration
+- [ ] 01-PLAN-04.md — Seeker wizard server actions (steps 1–4) + wire Steps 1 & 2
+- [ ] 01-PLAN-05.md — Recruiter onboarding server action + wire StepCompanyProfile
+- [ ] 01-PLAN-06.md — Google OAuth role-selection page + Auth.js signIn callback
+- [ ] 01-PLAN-07.md — middleware.ts with auth + role + onboarding guards
 **UI hint**: yes
 
 ### Phase 2: Job Posting
@@ -118,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth & Onboarding | 0/TBD | Not started | - |
+| 1. Auth & Onboarding | 0/7 | Not started | - |
 | 2. Job Posting | 0/TBD | Not started | - |
 | 3. Matching Engine & Feed | 0/TBD | Not started | - |
 | 4. Applications & Recruiter Dashboard | 0/TBD | Not started | - |
