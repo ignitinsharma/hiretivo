@@ -8,6 +8,19 @@ Hiretivo (hiretivo.com) is a skills-based remote job portal where job seekers ad
 
 Seekers see only the jobs they match — match score drives every surface, from feed ranking to per-skill breakdowns, creating a signal-rich experience that generic job boards can't offer.
 
+## Current Milestone: v1.0 Full Hiretivo V1 Launch Build
+
+**Goal:** Wire all backend logic, APIs, data fetching, and state management across all 7 phases to ship a fully functional V1 platform — all UI is pre-built and must not be modified.
+
+**Target features:**
+- Phase 1: Auth & Onboarding (signup, email verification, seeker wizard, recruiter onboarding, route guards, profile completeness)
+- Phase 2: Job Posting (skill seed, CRUD APIs, plan gates)
+- Phase 3: Matching Engine & Feed (matchScore algorithm, Redis cache, feed API, job detail, public listings)
+- Phase 4: Applications & Recruiter Dashboard (apply flows, status pipeline, Resend notifications, blur gate)
+- Phase 5: Homepage, Pricing & Nav (dynamic data, geo pricing INR/USD, nav auth state)
+- Phase 6: Interview Scheduling (Google Calendar OAuth AES-256, availability API, Meet links, plan gates)
+- Phase 7: Polish & Pre-Launch (errors, skeletons, toasts, SEO, rate limiting, cron, a11y)
+
 ## Critical Constraint
 
 **DO NOT modify existing UI components.** All pages are built via Stitch. Only wire logic, API routes, data fetching, server actions, and state management. If a UI component needs data or event handlers — connect them, don't redesign them.
@@ -150,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after initialization*
+*Last updated: 2026-04-01 after milestone v1.0 started*
