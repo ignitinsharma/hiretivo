@@ -108,11 +108,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, plan: true },
+          select: { role: true, plan: true, emailVerified: true },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.plan = dbUser.plan;
+          token.emailVerified = dbUser.emailVerified ?? null;
         }
       }
 
@@ -153,6 +154,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       session.user.role = role ?? Role.SEEKER;
       session.user.plan = plan ?? PlanTier.FREE;
+      session.user.emailVerified = (token.emailVerified as Date | null | undefined) ?? null;
 
       return session;
     },

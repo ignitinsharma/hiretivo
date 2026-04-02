@@ -7,6 +7,7 @@ declare module "next-auth" {
       id: string;
       role: Role;
       plan: PlanTier;
+      emailVerified: Date | null;
     };
   }
 
@@ -20,5 +21,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: Role;
     plan?: PlanTier;
+    emailVerified?: Date | null;
   }
 }
