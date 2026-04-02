@@ -78,6 +78,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // Only intercept Google OAuth — Credentials provider handles role via register
+      if (account?.provider !== "google") return true;
+
+      // Check if the user has explicitly set their role by verifying profile existence
+      // Since role defaults to SEEKER in DB, we use seeker/recruiter profile presence
+      // to determine if they have been through onboarding. Brand-new Google users have neither.
+      if (!user.id) return true;
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          seekerProfile: { select: { id: true } },
+          recruiterProfile: { select: { id: true } },
+        },
+      });
+
+      const hasProfile = dbUser?.seekerProfile || dbUser?.recruiterProfile;
+
+      if (!hasProfile) {
+        // New Google user — redirect to role selection page
+        return `/auth/select-role?userId=${user.id}`;
+      }
+
+      return true;
+    },
     async jwt({ token, user, trigger, session }) {
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({
