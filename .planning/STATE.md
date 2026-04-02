@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 01-auth-onboarding-05-PLAN.md
-last_updated: "2026-04-02T11:12:00.732Z"
-last_activity: 2026-04-01 — Roadmap created for milestone v1.0; 7 phases, 54 requirements mapped
+status: executing
+stopped_at: Completed 01-auth-onboarding-06-PLAN.md
+last_updated: "2026-04-02T11:17:12.729Z"
+last_activity: 2026-04-02
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** Seekers see only the jobs they match — match score drives every surface, from feed ranking to per-skill breakdowns, creating a signal-rich experience that generic job boards can't offer.
-**Current focus:** Phase 1 — Auth & Onboarding
+**Current focus:** Phase 01 — auth-onboarding
 
 ## Current Position
 
-Phase: 1 of 7 (Auth & Onboarding)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-04-01 — Roadmap created for milestone v1.0; 7 phases, 54 requirements mapped
+Phase: 01 (auth-onboarding) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-04-02
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-auth-onboarding P02 | 84 | 2 tasks | 3 files |
 | Phase 01-auth-onboarding P03 | 2 | 2 tasks | 3 files |
 | Phase 01-auth-onboarding P05 | 4 | 2 tasks | 3 files |
+| Phase 01-auth-onboarding P06 | 10 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Recent decisions affecting current work:
 - [Phase 01-auth-onboarding]: Token generation uses crypto.randomUUID() — no extra dependency, cryptographically random
 - [Phase 01-auth-onboarding]: Verification endpoint redirect-only pattern (no JSON) since it is a browser-facing link
 - [Phase 01-auth-onboarding]: Non-blocking wizard advance: saveRecruiterProfile error is logged but onNext() still fires to prevent UX friction
+- [Phase 01-auth-onboarding]: Google new-user detection uses seekerProfile/recruiterProfile existence rather than role value — role defaults to SEEKER so value alone cannot detect unset state
+- [Phase 01-auth-onboarding]: Auth.js v5 signIn callback returns URL string to redirect user — avoids separate middleware handling for Google new-user case
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T11:12:00.725Z
-Stopped at: Completed 01-auth-onboarding-05-PLAN.md
+Last session: 2026-04-02T11:17:12.724Z
+Stopped at: Completed 01-auth-onboarding-06-PLAN.md
 Resume file: None
