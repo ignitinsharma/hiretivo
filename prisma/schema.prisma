@@ -144,6 +144,13 @@ model SeekerProfile {
   yearsExperience Int?
   workPreference WorkType?
 
+  situation       String?
+  primaryRole     String?
+  salaryMin       Int?
+  salaryMax       Int?
+  currency        String?
+  availability    String?
+
   skills     SeekerSkill[]
   jobMatches JobMatch[]
 
@@ -184,6 +191,7 @@ model RecruiterProfile {
   companyName String
   website     String?
   bio         String? @db.Text
+  companySize String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
