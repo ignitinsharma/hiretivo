@@ -16,7 +16,7 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 - [x] **AUTH-05**: User can verify email via link
 - [x] **AUTH-06**: Seeker can complete 5-step onboarding wizard (Steps 1–2 mandatory: situation/experience + role/years/skills; Steps 3–5 skippable: resume upload, job preferences, completion screen)
 - [x] **AUTH-07**: Recruiter can complete company onboarding (name, size, website, description)
-- [ ] **AUTH-08**: Middleware enforces role-based route access (seeker vs recruiter routes separated)
+- [x] **AUTH-08**: Middleware enforces role-based route access (seeker vs recruiter routes separated)
 - [x] **AUTH-09**: Profile completeness score computed from filled wizard fields
 
 ### Job Posting

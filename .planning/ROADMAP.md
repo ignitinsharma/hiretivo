@@ -12,7 +12,7 @@ Seven phases wire all backend logic, APIs, data fetching, and state management f
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Auth & Onboarding** - Wire authentication, email verification, seeker wizard, recruiter onboarding, and route guards
+- [x] **Phase 1: Auth & Onboarding** - Wire authentication, email verification, seeker wizard, recruiter onboarding, and route guards (completed 2026-04-02)
 - [ ] **Phase 2: Job Posting** - Seed skills DB, wire job CRUD APIs, and enforce FREE plan gate
 - [ ] **Phase 3: Matching Engine & Feed** - Implement matchScore algorithm, Redis cache, seeker feed, and public listings
 - [ ] **Phase 4: Applications & Recruiter Dashboard** - Wire apply flows, application pipeline, Resend notifications, and blur gate
@@ -126,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth & Onboarding | 6/7 | In Progress|  |
+| 1. Auth & Onboarding | 7/7 | Complete   | 2026-04-02 |
 | 2. Job Posting | 0/TBD | Not started | - |
 | 3. Matching Engine & Feed | 0/TBD | Not started | - |
 | 4. Applications & Recruiter Dashboard | 0/TBD | Not started | - |
