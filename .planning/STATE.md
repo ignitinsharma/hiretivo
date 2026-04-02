@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-auth-onboarding-01-PLAN.md
-last_updated: "2026-04-02T10:52:06.106Z"
+stopped_at: Completed 01-auth-onboarding-02-PLAN.md
+last_updated: "2026-04-02T10:55:47.354Z"
 last_activity: 2026-04-01 — Roadmap created for milestone v1.0; 7 phases, 54 requirements mapped
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 7
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-auth-onboarding P01 | 4 | 2 tasks | 2 files |
+| Phase 01-auth-onboarding P02 | 84 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - Google Calendar OAuth tokens encrypted at rest (AES-256) before DB storage
 - [Phase 01-auth-onboarding]: Used prisma db execute instead of migrate dev for DB-drifted Neon instance — avoids data loss from migrate reset
 - [Phase 01-auth-onboarding]: Wizard enum values stored as String? not DB enums — UI enum options can evolve without schema churn
+- [Phase 01-auth-onboarding]: bcrypt 12 rounds for password hashing — balance of security and Vercel latency
+- [Phase 01-auth-onboarding]: Register pages use fetch-then-signIn pattern: POST /api/auth/register to create user, then signIn credentials to log in
 
 ### Pending Todos
 
@@ -79,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T10:52:06.101Z
-Stopped at: Completed 01-auth-onboarding-01-PLAN.md
+Last session: 2026-04-02T10:55:47.332Z
+Stopped at: Completed 01-auth-onboarding-02-PLAN.md
 Resume file: None
