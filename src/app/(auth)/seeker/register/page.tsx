@@ -92,22 +92,37 @@ export default function SeekerRegisterPage() {
   const onSubmit = async (data: SeekerRegisterInput) => {
     setIsSubmitting(true);
     try {
+      // Step 1: Create user account (per D-01)
+      const registerRes = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email.toLowerCase(),
+          password: data.password,
+          name: data.name,
+          role: "SEEKER",
+        }),
+      });
+
+      if (!registerRes.ok) {
+        const err = await registerRes.json();
+        if (registerRes.status === 409) {
+          toast.error("An account with this email already exists.");
+        } else {
+          toast.error(err.error ?? "Failed to create account. Please try again.");
+        }
+        return;
+      }
+
+      // Step 2: Sign in immediately after creation (per D-01)
       const result = await signIn("credentials", {
         email: data.email.toLowerCase(),
         password: data.password,
-        name: data.name,
-        role: "SEEKER",
         redirect: false,
       });
 
       if (result?.error) {
-        if (result.error === "OAuthAccountNotLinked") {
-          toast.error(
-            "An account with this email already exists. Please sign in with your existing method."
-          );
-        } else {
-          toast.error("Failed to create account. Please try again.");
-        }
+        toast.error("Account created but sign-in failed. Please try logging in.");
         return;
       }
 
