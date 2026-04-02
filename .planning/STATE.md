@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-auth-onboarding-03-PLAN.md
-last_updated: "2026-04-02T10:59:41.696Z"
+stopped_at: Completed 01-auth-onboarding-05-PLAN.md
+last_updated: "2026-04-02T11:12:00.732Z"
 last_activity: 2026-04-01 — Roadmap created for milestone v1.0; 7 phases, 54 requirements mapped
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 7
-  completed_plans: 3
+  completed_plans: 5
   percent: 0
 ---
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-auth-onboarding P01 | 4 | 2 tasks | 2 files |
 | Phase 01-auth-onboarding P02 | 84 | 2 tasks | 3 files |
 | Phase 01-auth-onboarding P03 | 2 | 2 tasks | 3 files |
+| Phase 01-auth-onboarding P05 | 4 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Recent decisions affecting current work:
 - [Phase 01-auth-onboarding]: Register pages use fetch-then-signIn pattern: POST /api/auth/register to create user, then signIn credentials to log in
 - [Phase 01-auth-onboarding]: Token generation uses crypto.randomUUID() — no extra dependency, cryptographically random
 - [Phase 01-auth-onboarding]: Verification endpoint redirect-only pattern (no JSON) since it is a browser-facing link
+- [Phase 01-auth-onboarding]: Non-blocking wizard advance: saveRecruiterProfile error is logged but onNext() still fires to prevent UX friction
 
 ### Pending Todos
 
@@ -85,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T10:59:41.681Z
-Stopped at: Completed 01-auth-onboarding-03-PLAN.md
+Last session: 2026-04-02T11:12:00.725Z
+Stopped at: Completed 01-auth-onboarding-05-PLAN.md
 Resume file: None
