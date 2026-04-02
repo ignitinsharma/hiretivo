@@ -12,7 +12,7 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 - [x] **AUTH-01**: User can sign up with email and password
 - [x] **AUTH-02**: User can sign up / sign in with Google OAuth
 - [x] **AUTH-03**: User selects role (SEEKER or RECRUITER) during signup
-- [ ] **AUTH-04**: User receives verification email via Resend after signup
+- [x] **AUTH-04**: User receives verification email via Resend after signup
 - [x] **AUTH-05**: User can verify email via link
 - [x] **AUTH-06**: Seeker can complete 5-step onboarding wizard (Steps 1–2 mandatory: situation/experience + role/years/skills; Steps 3–5 skippable: resume upload, job preferences, completion screen)
 - [x] **AUTH-07**: Recruiter can complete company onboarding (name, size, website, description)

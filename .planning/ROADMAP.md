@@ -126,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth & Onboarding | 2/7 | In Progress|  |
+| 1. Auth & Onboarding | 3/7 | In Progress|  |
 | 2. Job Posting | 0/TBD | Not started | - |
 | 3. Matching Engine & Feed | 0/TBD | Not started | - |
 | 4. Applications & Recruiter Dashboard | 0/TBD | Not started | - |
