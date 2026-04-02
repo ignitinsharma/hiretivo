@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
+import { sendVerificationEmail } from "@/lib/email/verification";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +43,11 @@ export async function POST(req: NextRequest) {
         role: role as Role,
       },
       select: { id: true, email: true, role: true },
+    });
+
+    // Send verification email — non-blocking; don't fail registration if email fails
+    sendVerificationEmail(normalizedEmail).catch((err) => {
+      console.error("[register] failed to send verification email:", err);
     });
 
     return NextResponse.json(
