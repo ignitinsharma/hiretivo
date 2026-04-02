@@ -14,6 +14,7 @@ import {
 } from '@/lib/validations/seeker-onboarding.schema';
 import type { YearsOfExperience } from '@/lib/validations/seeker-onboarding.schema';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
+import { saveStep2 } from '@/app/actions/onboarding/seeker';
 
 interface StepSkillsProps {
   onNext: () => void;
@@ -31,19 +32,31 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
 
   const [errors, setErrors] = useState<string[]>([]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const validation = validateSeekerStep2({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience ?? undefined,
       skills: step2.skills,
     });
-    
+
     if (!validation.valid) {
       setErrors(validation.errors);
       return;
     }
-    
+
     setErrors([]);
+
+    // Persist to DB before advancing (per D-04)
+    const result = await saveStep2({
+      primaryRole: step2.primaryRole,
+      yearsOfExperience: step2.yearsOfExperience,
+      skills: step2.skills,
+    });
+
+    if (!result.success) {
+      console.error("[StepSkills] saveStep2 failed:", result.error);
+    }
+
     onNext();
   };
 

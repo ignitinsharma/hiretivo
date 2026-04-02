@@ -15,6 +15,7 @@ import type {
   ExperienceLevel,
 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { saveStep1 } from "@/app/actions/onboarding/seeker";
 
 interface StepWelcomeProps {
   onNext: () => void;
@@ -26,7 +27,7 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
     useSeekerOnboardingStore();
   const [errors, setErrors] = useState<string[]>([]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const validation = validateSeekerStep1({
       situation: step1.situation ?? undefined,
       experienceLevel: step1.experienceLevel ?? undefined,
@@ -38,6 +39,19 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
     }
 
     setErrors([]);
+
+    // Persist to DB before advancing (per D-04)
+    const result = await saveStep1({
+      situation: step1.situation!,
+      experienceLevel: step1.experienceLevel!,
+    });
+
+    if (!result.success) {
+      // Non-blocking: log error but allow wizard to advance
+      // (data is in Zustand; they can still complete onboarding)
+      console.error("[StepWelcome] saveStep1 failed:", result.error);
+    }
+
     onNext();
   };
 
