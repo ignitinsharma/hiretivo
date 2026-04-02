@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { CompanySize, Industry, FundingType } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
+import { saveRecruiterProfile } from '@/app/actions/onboarding/recruiter';
 
 interface StepCompanyProfileProps {
   onNext: () => void;
@@ -80,8 +81,21 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (validateStep()) {
+      // Persist to DB before advancing (per D-06)
+      const result = await saveRecruiterProfile({
+        companyName: step2.companyName,
+        website: step2.companyWebsite || null,
+        companySize: step2.companySize,
+        bio: null,
+      });
+
+      if (!result.success) {
+        console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
+        // Non-blocking: advance anyway — RecruiterProfile can be created on retry
+      }
+
       onNext();
     }
   };
