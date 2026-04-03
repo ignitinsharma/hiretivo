@@ -73,9 +73,9 @@ export default auth(async (req: NextRequest & { auth: any }) => {
       return NextResponse.redirect(new URL("/seeker/onboarding", req.url));
     }
 
-    // Email verification gate for /seeker/jobs only (per D-03)
+    // Email verification gate for /seeker/dashboard only (per D-03)
     // Other /seeker/* routes (profile, settings, etc.) remain accessible to unverified users
-    if (pathname.startsWith("/seeker/jobs") && !emailVerified) {
+    if (pathname.startsWith("/seeker/dashboard") && !emailVerified) {
       return NextResponse.redirect(new URL("/auth/verify-email-pending", req.url));
     }
 
@@ -86,7 +86,7 @@ export default auth(async (req: NextRequest & { auth: any }) => {
   if (pathname.startsWith("/recruiter/")) {
     // Wrong role: SEEKER trying to access recruiter routes
     if (userRole !== "RECRUITER") {
-      return NextResponse.redirect(new URL("/seeker/jobs", req.url));
+      return NextResponse.redirect(new URL("/seeker/dashboard", req.url));
     }
 
     // Check RecruiterProfile exists (per D-08)
