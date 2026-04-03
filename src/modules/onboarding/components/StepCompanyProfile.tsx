@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import type { CompanySize, Industry, FundingType } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
 import { saveRecruiterProfile } from '@/app/actions/onboarding/recruiter';
+import { useSession } from 'next-auth/react';
 
 interface StepCompanyProfileProps {
   onNext: () => void;
@@ -89,6 +90,10 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
         website: step2.companyWebsite || null,
         companySize: step2.companySize,
         bio: null,
+        industry: step2.industry,
+        fundingType: step2.fundingType,
+        isFullyRemote: step2.isFullyRemote,
+        logo: step2.logoUrl,
       });
 
       if (!result.success) {

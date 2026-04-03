@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, KeyboardEvent } from 'react';
-import { X, Plus } from 'lucide-react';
+import { useState, KeyboardEvent } from "react";
+import { X, Plus } from "lucide-react";
 
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface SkillsTagInputProps {
   value: string[];
@@ -18,18 +18,18 @@ interface SkillsTagInputProps {
 export function SkillsTagInput({
   value,
   onChange,
-  placeholder = 'Type a skill and press Enter',
+  placeholder = "Type a skill and press Enter",
   maxTags = 20,
   disabled = false,
   className,
 }: SkillsTagInputProps) {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       addSkill();
-    } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0) {
+    } else if (e.key === "Backspace" && inputValue === "" && value.length > 0) {
       removeSkill(value[value.length - 1]);
     }
   };
@@ -42,7 +42,7 @@ export function SkillsTagInput({
       value.length < maxTags
     ) {
       onChange([...value, trimmedSkill]);
-      setInputValue('');
+      setInputValue("");
     }
   };
 
@@ -51,12 +51,12 @@ export function SkillsTagInput({
   };
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <div
         className={cn(
-          'flex flex-wrap gap-2 p-3 min-h-[48px] w-full rounded-md border border-input bg-background text-base ring-offset-background',
-          'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
-          disabled && 'opacity-50 cursor-not-allowed'
+          "flex flex-wrap gap-2 p-3 min-h-[48px] w-full rounded-md border border-input bg-background text-base ring-offset-background",
+          "focus-within:ring-1 focus-within:ring-ring focus-within:ring-offset-1",
+          disabled && "opacity-50 cursor-not-allowed",
         )}
       >
         {value.map((skill) => (
@@ -84,7 +84,7 @@ export function SkillsTagInput({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={addSkill}
-            placeholder={value.length === 0 ? placeholder : ''}
+            placeholder={value.length === 0 ? placeholder : ""}
             className="flex-1 min-w-[120px] border-0 p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={disabled}
           />

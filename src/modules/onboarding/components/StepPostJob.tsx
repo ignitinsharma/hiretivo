@@ -10,6 +10,7 @@ import { SkillsTagInput } from '@/components/forms/skills-tag-input';
 import { cn } from '@/lib/utils';
 import type { JobType, ExperienceLevel, JobCategory } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
+import { createJobFromOnboarding } from '@/app/actions/onboarding/recruiter';
 
 interface StepPostJobProps {
   onNext: () => void;
@@ -79,8 +80,25 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
     return newErrors.length === 0;
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (validateStep()) {
+      // Persist job to DB before advancing (per D-06)
+      const result = await createJobFromOnboarding({
+        title: step3.jobTitle,
+        description: step3.jobDescription,
+        jobType: step3.jobType!,
+        experienceLevel: step3.experienceLevel,
+        category: step3.category,
+        salaryMin: step3.salaryRange.min,
+        salaryMax: step3.salaryRange.max,
+        requiredSkills: step3.requiredSkills,
+      });
+
+      if (!result.success) {
+        console.error("[StepPostJob] createJobFromOnboarding failed:", result.error);
+        // Non-blocking: advance anyway — job can be created later
+      }
+
       onNext();
     }
   };

@@ -192,6 +192,10 @@ model RecruiterProfile {
   website     String?
   bio         String? @db.Text
   companySize String?
+  industry    String?
+  fundingType String?
+  isFullyRemote Boolean  @default(false)
+  logo        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -212,6 +216,9 @@ model Job {
   salaryMin Int?
   salaryMax Int?
   currency  String?
+
+  experienceLevel String?
+  category        String?
 
   externalApplyUrl String?
 

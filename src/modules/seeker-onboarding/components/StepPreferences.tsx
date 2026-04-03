@@ -20,6 +20,7 @@ import type {
   Availability 
 } from '@/lib/validations/seeker-onboarding.schema';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
+import { saveStep4 } from '@/app/actions/onboarding/seeker';
 
 interface StepPreferencesProps {
   onNext: () => void;
@@ -44,7 +45,7 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
 
   const [errors, setErrors] = useState<string[]>([]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const validation = validateSeekerStep4({
       jobType: step4.jobType ?? undefined,
       category: step4.category ?? undefined,
@@ -58,6 +59,20 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
     }
     
     setErrors([]);
+
+    // Persist to DB before advancing (per D-04)
+    const result = await saveStep4({
+      salaryMin: step4.salaryRange.min,
+      salaryMax: step4.salaryRange.max,
+      currency: step4.salaryRange.currency,
+      availability: step4.availability,
+      workPreference: null,
+    });
+
+    if (!result.success) {
+      console.error("[StepPreferences] saveStep4 failed:", result.error);
+    }
+
     onNext();
   };
 

@@ -1,4 +1,8 @@
 .cursor
+.agent
+.claude
+.codex
+.opencode
 CONTEXT.md
 PROGRESS.md
 node_modules
@@ -14,3 +18,4 @@ build
 .vercel
 .turbo
 coverage
+.planning

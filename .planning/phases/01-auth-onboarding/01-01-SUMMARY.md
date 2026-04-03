@@ -112,6 +112,15 @@ None - no external service configuration required. Migration was applied directl
 - Prisma client types updated — Plans 04 and 05 can reference `situation`, `primaryRole`, `salaryMin`, `salaryMax`, `currency`, `availability`, `companySize` without type errors
 - No blockers for subsequent plans in Phase 1
 
+## Self-Check: PASSED
+
+- FOUND: prisma/schema.prisma (7 new fields confirmed via grep)
+- FOUND: prisma/migrations/20260402000000_add_wizard_fields/migration.sql
+- FOUND: .planning/phases/01-auth-onboarding/01-01-SUMMARY.md
+- FOUND: commit 4c775e7 (Task 1 — schema update)
+- FOUND: commit 9ca0952 (Task 2 — migration + client regeneration)
+- FOUND: commit 2f96d9b (docs — SUMMARY, STATE, ROADMAP)
+
 ---
 *Phase: 01-auth-onboarding*
 *Completed: 2026-04-02*

@@ -21,7 +21,7 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 
 ### Job Posting
 
-- [ ] **JOBS-01**: 80+ skills seeded to DB across 6 categories (Engineering, Design, Marketing, Data, DevOps, Product)
+- [ ] **JOBS-01**: 80+ skills seeded to DB across 6 categories (Engineering, Design, Marketing, Data, DevOps, Product, add other section as well so other then these category also can post their)
 - [ ] **JOBS-02**: Recruiter can create a job posting (title, rich text description, skills multi-select, apply type internal/external, salary, location)
 - [ ] **JOBS-03**: Recruiter can edit own job posting
 - [ ] **JOBS-04**: Recruiter can delete own job posting

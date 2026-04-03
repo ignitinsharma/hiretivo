@@ -5,6 +5,7 @@ import { ArrowRight, ArrowLeft, Upload, FileText, X, CheckCircle } from 'lucide-
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
+import { saveStep3 } from '@/app/actions/onboarding/seeker';
 
 interface StepResumeProps {
   onNext: () => void;
@@ -86,6 +87,20 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
     }
     setResume(null);
   }, [setResume, step3.resume]);
+
+  const handleContinue = async () => {
+    // Persist to DB before advancing (per D-04)
+    const result = await saveStep3({
+      resumeKey: step3.resume?.key ?? null,
+      resumeUrl: step3.resume?.url ?? null,
+    });
+
+    if (!result.success) {
+      console.error("[StepResume] saveStep3 failed:", result.error);
+    }
+
+    onNext();
+  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -170,7 +185,7 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
         <div className="flex flex-col gap-3 pt-4">
           <Button 
             type="button" 
-            onClick={onNext} 
+            onClick={handleContinue} 
             size="lg" 
             className="w-full"
             disabled={isUploading}
