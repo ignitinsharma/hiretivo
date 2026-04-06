@@ -372,8 +372,8 @@ export function PostJobModal() {
         if (!open) closePostJobModal();
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        <DialogHeader className="border-b border-slate-100 pb-4 mb-4 shrink-0">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="border-b border-slate-100 px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
             {editJobId ? "Edit Job Post" : "Post a New Role"}
           </DialogTitle>
