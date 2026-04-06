@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Plus,
   Upload,
@@ -24,7 +24,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
-import { createPortal } from "react-dom";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 const JOBS_PER_PAGE = 5;
 
@@ -87,25 +87,6 @@ function JobRow({
   onToggle: (id: string, newStatus: "OPEN" | "PAUSED") => void;
   onDeleteRequest: (job: ApiJob) => void;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-
-  const openMenu = useCallback(() => {
-    if (btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-    }
-    setMenuOpen(true);
-  }, []);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handler = () => { setMenuOpen(false); setMenuPos(null); };
-    window.addEventListener("scroll", handler, true);
-    return () => window.removeEventListener("scroll", handler, true);
-  }, [menuOpen]);
-
   return (
     <tr className="hover:bg-indigo-50/30 transition-colors">
       <td className="px-6 py-4">
@@ -161,68 +142,53 @@ function JobRow({
           >
             View Talent
           </Button>
-          <div className="relative">
-            <Button
-              ref={btnRef}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-slate-900"
-              onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-400 hover:text-slate-900"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              sideOffset={4}
+              className="w-48 p-0 border-slate-200 rounded-xl shadow-xl ring-4 ring-black/5"
+              style={{ boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px" }}
             >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-            {menuOpen && menuPos && typeof document !== "undefined" && createPortal(
-              <>
-                <div
-                  className="fixed inset-0 z-[55]"
-                  onClick={() => { setMenuOpen(false); setMenuPos(null); }}
-                />
-                <div
-                  className="fixed w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden ring-4 ring-black/5"
-                  style={{ top: menuPos.top, right: menuPos.right }}
+              <div className="py-1.5">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  onClick={() => onEdit(job.id)}
                 >
-                  <button
-                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setMenuPos(null);
-                      onEdit(job.id);
-                    }}
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Edit Job
-                  </button>
-                  <button
-                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setMenuPos(null);
-                      onToggle(
-                        job.id,
-                        job.status === "OPEN" ? "PAUSED" : "OPEN",
-                      );
-                    }}
-                  >
-                    <Archive className="w-4 h-4" />
-                    {job.status === "OPEN" ? "Archive Job" : "Reactivate Job"}
-                  </button>
-                  <div className="h-px bg-slate-100 my-1" />
-                  <button
-                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setMenuPos(null);
-                      onDeleteRequest(job);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Job
-                  </button>
-                </div>
-              </>,
-              document.body,
-            )}
-          </div>
+                  <Pencil className="w-4 h-4" />
+                  Edit Job
+                </button>
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  onClick={() =>
+                    onToggle(
+                      job.id,
+                      job.status === "OPEN" ? "PAUSED" : "OPEN",
+                    )
+                  }
+                >
+                  <Archive className="w-4 h-4" />
+                  {job.status === "OPEN" ? "Archive Job" : "Reactivate Job"}
+                </button>
+                <div className="h-px bg-slate-100 my-1" />
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={() => onDeleteRequest(job)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Job
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </td>
     </tr>
