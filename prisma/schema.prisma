@@ -159,9 +159,10 @@ model SeekerProfile {
 }
 
 model Skill {
-  id   String @id @default(cuid())
-  name String @unique
-  slug String @unique
+  id       String @id @default(cuid())
+  name     String @unique
+  slug     String @unique
+  category String
 
   seekerSkills SeekerSkill[]
   jobSkills    JobSkill[]

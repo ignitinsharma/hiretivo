@@ -48,7 +48,7 @@ Plans:
 **Depends on**: Phase 1
 **Requirements**: JOBS-01, JOBS-02, JOBS-03, JOBS-04, JOBS-05, JOBS-06, JOBS-07
 **Success Criteria** (what must be TRUE):
-  1. The skills multi-select on the job form is populated with 80+ skills across 6 categories from the DB
+  1. The skills multi-select on the job form is populated with 80+ skills across 7 categories from the DB (Engineering, Design, Marketing, Data, DevOps, Product, Other)
   2. A recruiter can create a job posting with all fields (title, rich text description, skills, apply type, salary, location) and it persists to DB
   3. A recruiter can edit, delete, and toggle active/inactive on any of their own job postings via My Jobs
   4. A FREE plan recruiter who already has 1 active job receives a server-side error when attempting to post a second active job
