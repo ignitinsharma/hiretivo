@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
   Plus,
   Upload,
@@ -24,6 +24,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
+import { createPortal } from "react-dom";
 
 const JOBS_PER_PAGE = 5;
 
@@ -87,6 +88,23 @@ function JobRow({
   onDeleteRequest: (job: ApiJob) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const openMenu = useCallback(() => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setMenuOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = () => { setMenuOpen(false); setMenuPos(null); };
+    window.addEventListener("scroll", handler, true);
+    return () => window.removeEventListener("scroll", handler, true);
+  }, [menuOpen]);
 
   return (
     <tr className="hover:bg-indigo-50/30 transition-colors">
@@ -145,24 +163,29 @@ function JobRow({
           </Button>
           <div className="relative">
             <Button
+              ref={btnRef}
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-slate-400 hover:text-slate-900"
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
             >
               <MoreVertical className="w-4 h-4" />
             </Button>
-            {menuOpen && (
+            {menuOpen && menuPos && typeof document !== "undefined" && createPortal(
               <>
                 <div
                   className="fixed inset-0 z-[55]"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() => { setMenuOpen(false); setMenuPos(null); }}
                 />
-                <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden ring-4 ring-black/5">
+                <div
+                  className="fixed w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden ring-4 ring-black/5"
+                  style={{ top: menuPos.top, right: menuPos.right }}
+                >
                   <button
                     className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                     onClick={() => {
                       setMenuOpen(false);
+                      setMenuPos(null);
                       onEdit(job.id);
                     }}
                   >
@@ -173,6 +196,7 @@ function JobRow({
                     className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                     onClick={() => {
                       setMenuOpen(false);
+                      setMenuPos(null);
                       onToggle(
                         job.id,
                         job.status === "OPEN" ? "PAUSED" : "OPEN",
@@ -187,6 +211,7 @@ function JobRow({
                     className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
                     onClick={() => {
                       setMenuOpen(false);
+                      setMenuPos(null);
                       onDeleteRequest(job);
                     }}
                   >
@@ -194,7 +219,8 @@ function JobRow({
                     Delete Job
                   </button>
                 </div>
-              </>
+              </>,
+              document.body,
             )}
           </div>
         </div>
