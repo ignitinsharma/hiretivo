@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from "react";
 import {
   Plus,
   Upload,
@@ -15,14 +15,17 @@ import {
   Pencil,
   Archive,
   Trash2,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
-import { cn } from '@/lib/utils';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useUIStore } from '@/store/use-ui-store';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { SidebarToggle } from "@/components/layout/RecruiterSidebar";
+import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUIStore } from "@/store/use-ui-store";
+import { toast } from "sonner";
+import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
+
+const JOBS_PER_PAGE = 5;
 
 interface JobStatItem {
   label: string;
@@ -36,7 +39,7 @@ interface ApiJob {
   title: string;
   category: string | null;
   location: string | null;
-  status: 'DRAFT' | 'OPEN' | 'PAUSED' | 'CLOSED';
+  status: "DRAFT" | "OPEN" | "PAUSED" | "CLOSED";
   createdAt: string;
   _count: { applications: number };
   skills: { skill: { id: string; name: string; category: string } }[];
@@ -49,15 +52,22 @@ function JobStatCard({ stat }: { stat: JobStatItem }) {
         {stat.label}
       </p>
       <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-extrabold text-slate-900">{stat.value}</span>
+        <span className="text-3xl font-extrabold text-slate-900">
+          {stat.value}
+        </span>
         {stat.badge && (
-          <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', stat.badgeColor)}>
+          <span
+            className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded border",
+              stat.badgeColor,
+            )}
+          >
             {stat.badge}
           </span>
         )}
-        {stat.label === 'Talent Score Avg.' && (
+        {stat.label === "Talent Score Avg." && (
           <div className="w-full max-w-[60px] h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
-            <div className="bg-primary h-full" style={{ width: '84%' }} />
+            <div className="bg-primary h-full" style={{ width: "84%" }} />
           </div>
         )}
       </div>
@@ -67,14 +77,14 @@ function JobStatCard({ stat }: { stat: JobStatItem }) {
 
 function JobRow({
   job,
-  onDelete,
-  onToggle,
   onEdit,
+  onToggle,
+  onDeleteRequest,
 }: {
   job: ApiJob;
-  onDelete: (id: string) => void;
-  onToggle: (id: string, newStatus: 'OPEN' | 'PAUSED') => void;
   onEdit: (id: string) => void;
+  onToggle: (id: string, newStatus: "OPEN" | "PAUSED") => void;
+  onDeleteRequest: (job: ApiJob) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -88,16 +98,21 @@ function JobRow({
           <div>
             <div className="flex items-center gap-2">
               <p className="font-bold text-slate-900 text-sm">{job.title}</p>
-              {job.status === 'OPEN' && (
+              {job.status === "OPEN" && (
                 <span className="text-[10px] bg-primary text-white px-1.5 rounded-sm font-bold uppercase tracking-tighter">
                   Active
+                </span>
+              )}
+              {job.status === "PAUSED" && (
+                <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded-sm font-bold uppercase tracking-tighter">
+                  Archived
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3 mt-0.5">
               <span className="text-[11px] text-slate-500 flex items-center gap-1">
                 <Briefcase className="w-3.5 h-3.5" />
-                {job.category ?? 'General'}
+                {job.category ?? "General"}
               </span>
             </div>
           </div>
@@ -105,12 +120,18 @@ function JobRow({
       </td>
       <td className="px-4 py-4 text-center">
         <div className="inline-block">
-          <p className="font-bold text-slate-900 text-sm">{job._count.applications}</p>
+          <p className="font-bold text-slate-900 text-sm">
+            {job._count.applications}
+          </p>
         </div>
       </td>
       <td className="px-4 py-4">
         <p className="text-[11px] text-slate-600 font-medium">
-          {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {new Date(job.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
         </p>
       </td>
       <td className="px-6 py-4 text-right">
@@ -132,33 +153,48 @@ function JobRow({
               <MoreVertical className="w-4 h-4" />
             </Button>
             {menuOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden ring-4 ring-black/5">
-                <button
-                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                  onClick={() => { setMenuOpen(false); onEdit(job.id); }}
-                >
-                  <Pencil className="w-4 h-4" />
-                  Edit Job
-                </button>
-                <button
-                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onToggle(job.id, job.status === 'OPEN' ? 'PAUSED' : 'OPEN');
-                  }}
-                >
-                  <Archive className="w-4 h-4" />
-                  {job.status === 'OPEN' ? 'Archive Job' : 'Reactivate Job'}
-                </button>
-                <div className="h-px bg-slate-100 my-1" />
-                <button
-                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                  onClick={() => { setMenuOpen(false); onDelete(job.id); }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Job
-                </button>
-              </div>
+              <>
+                <div
+                  className="fixed inset-0 z-[55]"
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden ring-4 ring-black/5">
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit(job.id);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit Job
+                  </button>
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onToggle(
+                        job.id,
+                        job.status === "OPEN" ? "PAUSED" : "OPEN",
+                      );
+                    }}
+                  >
+                    <Archive className="w-4 h-4" />
+                    {job.status === "OPEN" ? "Archive Job" : "Reactivate Job"}
+                  </button>
+                  <div className="h-px bg-slate-100 my-1" />
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDeleteRequest(job);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Job
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -167,53 +203,157 @@ function JobRow({
   );
 }
 
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const pages: (number | "...")[] = [];
+
+  if (totalPages <= 5) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-slate-400 disabled:opacity-30"
+        disabled={currentPage === 1}
+        onClick={() => onPageChange(currentPage - 1)}
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </Button>
+      {pages.map((p, i) =>
+        p === "..." ? (
+          <span
+            key={`ellipsis-${i}`}
+            className="w-7 h-7 flex items-center justify-center text-slate-400 text-[11px]"
+          >
+            ...
+          </span>
+        ) : (
+          <Button
+            key={p}
+            size="icon"
+            className={cn(
+              "h-7 w-7 text-[11px] font-bold shadow-sm shadow-indigo-100",
+              p === currentPage
+                ? "bg-primary text-white"
+                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
+            )}
+            variant={p === currentPage ? "default" : "outline"}
+            onClick={() => onPageChange(p)}
+          >
+            {p}
+          </Button>
+        ),
+      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-slate-400 disabled:opacity-30"
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(currentPage + 1)}
+      >
+        <ChevronRight className="w-5 h-5" />
+      </Button>
+    </div>
+  );
+}
+
 export default function RecruiterJobsPage() {
   const queryClient = useQueryClient();
   const { openEditJobModal, openPostJobModal } = useUIStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<ApiJob | null>(null);
 
   const { data: jobs = [], isLoading } = useQuery<ApiJob[]>({
-    queryKey: ['jobs'],
-    queryFn: () => fetch('/api/jobs').then((r) => r.json()),
+    queryKey: ["jobs"],
+    queryFn: () => fetch("/api/jobs").then((r) => r.json()),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to delete');
+      if (!res.ok) throw new Error(data.error ?? "Failed to delete");
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      toast.success('Job deleted');
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Job deleted");
+      setDeleteTarget(null);
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'OPEN' | 'PAUSED' }) =>
+    mutationFn: ({ id, status }: { id: string; status: "OPEN" | "PAUSED" }) =>
       fetch(`/api/jobs/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       }).then((r) => r.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      toast.success('Job updated');
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Job updated");
     },
-    onError: () => toast.error('Failed to update job'),
+    onError: () => toast.error("Failed to update job"),
   });
 
+  const totalPages = Math.max(1, Math.ceil(jobs.length / JOBS_PER_PAGE));
+  const paginatedJobs = useMemo(() => {
+    const start = (currentPage - 1) * JOBS_PER_PAGE;
+    return jobs.slice(start, start + JOBS_PER_PAGE);
+  }, [jobs, currentPage]);
+
   const totalJobs = jobs.length;
-  const activeJobs = jobs.filter((j) => j.status === 'OPEN').length;
-  const totalApplicants = jobs.reduce((sum, j) => sum + j._count.applications, 0);
+  const activeJobs = jobs.filter((j) => j.status === "OPEN").length;
+  const totalApplicants = jobs.reduce(
+    (sum, j) => sum + j._count.applications,
+    0,
+  );
 
   const JOB_STATS: JobStatItem[] = [
-    { label: 'Total Listings', value: String(totalJobs), badge: '', badgeColor: '' },
-    { label: 'Active Jobs', value: String(activeJobs), badge: '', badgeColor: '' },
-    { label: 'Total Applicants', value: String(totalApplicants), badge: '', badgeColor: '' },
-    { label: 'Talent Score Avg.', value: '-', badge: '', badgeColor: '' },
+    {
+      label: "Total Listings",
+      value: String(totalJobs),
+      badge: "",
+      badgeColor: "",
+    },
+    {
+      label: "Active Jobs",
+      value: String(activeJobs),
+      badge: "",
+      badgeColor: "",
+    },
+    {
+      label: "Total Applicants",
+      value: String(totalApplicants),
+      badge: "",
+      badgeColor: "",
+    },
+    { label: "Talent Score Avg.", value: "-", badge: "", badgeColor: "" },
   ];
+
+  const showStart = Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs);
+  const showEnd = Math.min(currentPage * JOBS_PER_PAGE, totalJobs);
 
   return (
     <div className="min-h-screen bg-white">
@@ -279,20 +419,32 @@ export default function RecruiterJobsPage() {
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1" />
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-slate-500"
+            >
               <LayoutGrid className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-primary bg-indigo-50 border border-indigo-200">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-primary bg-indigo-50 border border-indigo-200"
+            >
               <List className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-slate-500"
+            >
               <SlidersHorizontal className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white border-x border-b border-slate-200 rounded-b-xl overflow-hidden shadow-sm">
+        <div className="bg-white border-x border-b border-slate-200 rounded-b-xl shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
@@ -313,17 +465,34 @@ export default function RecruiterJobsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">Loading jobs...</td></tr>
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-6 py-8 text-center text-slate-400 text-sm"
+                    >
+                      Loading jobs...
+                    </td>
+                  </tr>
                 ) : jobs.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">No jobs posted yet. Click "Post New Job" to get started.</td></tr>
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-6 py-8 text-center text-slate-400 text-sm"
+                    >
+                      No jobs posted yet. Click &quot;Post New Job&quot; to get
+                      started.
+                    </td>
+                  </tr>
                 ) : (
-                  jobs.map((job) => (
+                  paginatedJobs.map((job) => (
                     <JobRow
                       key={job.id}
                       job={job}
-                      onDelete={(id) => deleteMutation.mutate(id)}
-                      onToggle={(id, status) => toggleMutation.mutate({ id, status })}
                       onEdit={(id) => openEditJobModal(id)}
+                      onToggle={(id, status) =>
+                        toggleMutation.mutate({ id, status })
+                      }
+                      onDeleteRequest={(j) => setDeleteTarget(j)}
                     />
                   ))
                 )}
@@ -334,35 +503,34 @@ export default function RecruiterJobsPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-200">
             <p className="text-[11px] text-slate-500 font-medium">
-              Showing <span className="text-slate-900 font-bold">{jobs.length}</span> of{' '}
-              <span className="text-slate-900 font-bold">{totalJobs}</span> active listings
+              Showing{" "}
+              <span className="text-slate-900 font-bold">{showStart}</span>–
+              <span className="text-slate-900 font-bold">{showEnd}</span> of{" "}
+              <span className="text-slate-900 font-bold">{totalJobs}</span>{" "}
+              listings
             </p>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-              <Button size="icon" className="h-7 w-7 bg-primary text-white text-[11px] font-bold shadow-sm shadow-indigo-100">
-                1
-              </Button>
-              <Button variant="outline" size="icon" className="h-7 w-7 text-[11px] font-medium border-slate-200">
-                2
-              </Button>
-              <Button variant="outline" size="icon" className="h-7 w-7 text-[11px] font-medium border-slate-200">
-                3
-              </Button>
-              <span className="w-7 h-7 flex items-center justify-center text-slate-400 text-[11px]">
-                ...
-              </span>
-              <Button variant="outline" size="icon" className="h-7 w-7 text-[11px] font-medium border-slate-200">
-                6
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+        }}
+        jobTitle={deleteTarget?.title ?? ""}
+        hasApplications={(deleteTarget?._count.applications ?? 0) > 0}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   );
 }
