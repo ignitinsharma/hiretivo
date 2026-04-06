@@ -362,7 +362,7 @@ export function PostJobModal() {
 
   const inputErrorClass = (hasError: boolean) =>
     hasError
-      ? "border-red-500 focus-visible:ring-red-500"
+      ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500"
       : "";
 
   return (
