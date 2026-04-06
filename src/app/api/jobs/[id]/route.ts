@@ -3,6 +3,27 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { updateJobSchema } from '@/lib/validations/job';
 
+// GET /api/jobs/[id] — get single job for edit mode
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const job = await prisma.job.findUnique({
+    where: { id: params.id, recruiterId: session.user.id },
+    include: {
+      skills: true,
+    },
+  });
+  if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  return NextResponse.json(job);
+}
+
 // PATCH /api/jobs/[id] — edit job fields or toggle status
 export async function PATCH(
   req: NextRequest,

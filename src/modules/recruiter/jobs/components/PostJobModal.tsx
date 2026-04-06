@@ -372,14 +372,14 @@ export function PostJobModal() {
         if (!open) closePostJobModal();
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b border-slate-100 pb-4 mb-4">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="border-b border-slate-100 pb-4 mb-4 shrink-0">
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
             {editJobId ? "Edit Job Post" : "Post a New Role"}
           </DialogTitle>
         </DialogHeader>
 
-        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form className="space-y-6 overflow-y-auto px-6 pb-6" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div>
             <Label className="block text-sm font-semibold text-slate-700 mb-2">
               Job Title <span className="text-red-500">*</span>
