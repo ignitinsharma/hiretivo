@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,97 +14,300 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, PlusCircle } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { parseSalaryText } from '@/lib/utils/salary';
+
+interface JobFormValues {
+  title: string;
+  category: string;
+  jobType: string;
+  experienceLevel: string;
+  compensation: string;
+  description: string;
+  selectedSkillIds: string[];
+}
 
 export function PostJobModal() {
-  const { isPostJobModalOpen, closePostJobModal } = useUIStore();
+  const { isPostJobModalOpen, closePostJobModal, editJobId } = useUIStore();
+  const queryClient = useQueryClient();
+  const [skillSearch, setSkillSearch] = useState('');
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+  } = useForm<JobFormValues>({
+    defaultValues: {
+      title: '',
+      category: '',
+      jobType: '',
+      experienceLevel: '',
+      compensation: '',
+      description: '',
+      selectedSkillIds: [],
+    },
+  });
+
+  const selectedSkillIds = watch('selectedSkillIds');
+
+  const { data: skills = [], isLoading: skillsLoading } = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => fetch('/api/skills').then((r) => r.json()),
+    enabled: isPostJobModalOpen,
+  });
+
+  const { data: editJob } = useQuery({
+    queryKey: ['job', editJobId],
+    queryFn: () => fetch(`/api/jobs/${editJobId}`).then((r) => r.json()),
+    enabled: isPostJobModalOpen && !!editJobId,
+  });
+
+  useEffect(() => {
+    if (editJob && editJobId) {
+      reset({
+        title: editJob.title || '',
+        category: editJob.category || '',
+        jobType: editJob.jobType?.toLowerCase().replace('_', '-') || '',
+        experienceLevel: editJob.experienceLevel || '',
+        compensation: editJob.salaryMin
+          ? `$${editJob.salaryMin / 1000}k - $${editJob.salaryMax ? editJob.salaryMax / 1000 : ''}k`
+          : '',
+        description: editJob.description || '',
+        selectedSkillIds: editJob.skills?.map((s: { skillId: string }) => s.skillId) || [],
+      });
+    } else if (!editJobId) {
+      reset({
+        title: '',
+        category: '',
+        jobType: '',
+        experienceLevel: '',
+        compensation: '',
+        description: '',
+        selectedSkillIds: [],
+      });
+    }
+  }, [editJob, editJobId, reset]);
+
+  const onSubmit = async (data: JobFormValues) => {
+    const { salaryMin, salaryMax, currency } = parseSalaryText(data.compensation);
+
+    const payload = {
+      title: data.title,
+      description: data.description,
+      jobType: data.jobType.toUpperCase().replace('-', '_'),
+      applyType: 'INTERNAL' as const,
+      workType: 'REMOTE' as const,
+      experienceLevel: data.experienceLevel,
+      category: data.category,
+      salaryMin,
+      salaryMax,
+      currency,
+      skills: data.selectedSkillIds.map((id) => ({
+        skillId: id,
+        level: 'INTERMEDIATE' as const,
+      })),
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const url = editJobId ? `/api/jobs/${editJobId}` : '/api/jobs';
+      const method = editJobId ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 403) {
+          toast.error(result.error || 'Upgrade your plan to post more jobs');
+        } else if (res.status === 400) {
+          toast.error(result.error || 'Validation failed');
+        } else {
+          toast.error('Something went wrong');
+        }
+        return;
+      }
+
+      toast.success(editJobId ? 'Job updated!' : 'Job posted!');
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      closePostJobModal();
+      reset();
+    } catch {
+      toast.error('Failed to submit job');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredSkills = skills.filter((s: { name: string }) =>
+    s.name.toLowerCase().includes(skillSearch.toLowerCase())
+  );
+
+  const selectedSkillsData = selectedSkillIds
+    .map((id: string) => skills.find((s: { id: string }) => s.id === id))
+    .filter(Boolean);
 
   return (
-    <Dialog open={isPostJobModalOpen} onOpenChange={closePostJobModal}>
+    <Dialog open={isPostJobModalOpen} onOpenChange={(open) => { if (!open) closePostJobModal(); }}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-slate-100 pb-4 mb-4">
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
-            Post a New Role
+            {editJobId ? 'Edit Job Post' : 'Post a New Role'}
           </DialogTitle>
         </DialogHeader>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <Label className="block text-sm font-semibold text-slate-700 mb-2">Job Title</Label>
-            <Input placeholder="e.g. Senior Software Engineer" />
+            <Input placeholder="e.g. Senior Software Engineer" {...register('title')} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">Category</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="engineering">Engineering</SelectItem>
-                  <SelectItem value="design">Design</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="category"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(() => {
+                        const categoryNames = skills.map((s: { category: string }) => s.category) as string[];
+                        const uniqueCategories = categoryNames.filter((cat: string, i: number) => categoryNames.indexOf(cat) === i);
+                        return uniqueCategories.map((cat: string) => (
+                          <SelectItem key={cat} value={cat.toLowerCase()}>{cat}</SelectItem>
+                        ));
+                      })()}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">Job Type</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full-time">Full-time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="part-time">Part-time</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="jobType"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full-time">Full-time</SelectItem>
+                      <SelectItem value="part-time">Part-time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="internship">Internship</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">Experience Level</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="entry">Entry Level</SelectItem>
-                  <SelectItem value="mid">Mid-level</SelectItem>
-                  <SelectItem value="senior">Senior</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="experienceLevel"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entry">Entry Level</SelectItem>
+                      <SelectItem value="mid">Mid-level</SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">Compensation Range</Label>
-              <Input placeholder="e.g. $120k - $150k" />
+              <Input placeholder="e.g. $120k - $150k" {...register('compensation')} />
             </div>
           </div>
 
           <div>
             <Label className="block text-sm font-semibold text-slate-700 mb-2">Job Description</Label>
-            <Textarea 
-              placeholder="Describe the role, responsibilities, and impact..." 
-              className="resize-none min-h-[120px]" 
+            <Textarea
+              placeholder="Describe the role, responsibilities, and impact..."
+              className="resize-none min-h-[120px]"
+              {...register('description')}
             />
           </div>
 
           <div>
             <Label className="block text-sm font-semibold text-slate-700 mb-2">Required Skills</Label>
             <div className="flex flex-wrap gap-2 mb-3">
-              {['React', 'TypeScript', 'Node.js'].map(skill => (
-                <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 border border-primary/20">
-                  {skill} 
-                  <X className="w-3 h-3 cursor-pointer opacity-60 hover:opacity-100" />
+              {selectedSkillsData.map((skill: { id: string; name: string }) => (
+                <span key={skill.id} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 border border-primary/20">
+                  {skill.name}
+                  <X
+                    className="w-3 h-3 cursor-pointer opacity-60 hover:opacity-100"
+                    onClick={() =>
+                      setValue(
+                        'selectedSkillIds',
+                        selectedSkillIds.filter((id: string) => id !== skill.id)
+                      )
+                    }
+                  />
                 </span>
               ))}
             </div>
             <div className="relative">
-              <Input placeholder="Add more skills..." className="pr-10" />
+              <Input
+                placeholder="Add more skills..."
+                className="pr-10"
+                value={skillSearch}
+                onChange={(e) => {
+                  setSkillSearch(e.target.value);
+                  setShowSkillDropdown(true);
+                }}
+                onFocus={() => setShowSkillDropdown(true)}
+              />
               <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-primary flex items-center">
                 <PlusCircle className="w-5 h-5" />
               </button>
+              {showSkillDropdown && skillSearch && filteredSkills.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {filteredSkills
+                    .filter((s: { id: string }) => !selectedSkillIds.includes(s.id))
+                    .slice(0, 10)
+                    .map((skill: { id: string; name: string; category: string }) => (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
+                        onClick={() => {
+                          setValue('selectedSkillIds', [...selectedSkillIds, skill.id]);
+                          setSkillSearch('');
+                          setShowSkillDropdown(false);
+                        }}
+                      >
+                        {skill.name} <span className="text-slate-400 text-xs">({skill.category})</span>
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -112,8 +315,12 @@ export function PostJobModal() {
             <Button type="button" variant="ghost" className="font-bold text-slate-600" onClick={closePostJobModal}>
               Cancel
             </Button>
-            <Button type="submit" className="font-bold bg-slate-900 text-white hover:bg-slate-800">
-              Publish Job Post
+            <Button
+              type="submit"
+              className="font-bold bg-slate-900 text-white hover:bg-slate-800"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Publishing...' : 'Publish Job Post'}
             </Button>
           </div>
         </form>
