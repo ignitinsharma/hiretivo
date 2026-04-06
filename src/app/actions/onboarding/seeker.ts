@@ -32,27 +32,36 @@ export async function saveStep1(data: {
 }
 
 // --- Step 2: Primary Role + Years + Skills ---
-// Skills are stored as a JSON-stringified array in the headline column as a temporary
-// measure. Phase 2/3 will migrate to the SeekerSkill relation when skill seeds are available.
+// Skills are stored as SeekerSkill records (D-11).
 export async function saveStep2(data: {
   primaryRole: string;
   yearsOfExperience: string | null;
-  skills: string[];
+  skills: { skillId: string; level: string }[];
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
-  await prisma.seekerProfile.upsert({
-    where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      primaryRole: data.primaryRole,
-      headline: JSON.stringify(data.skills),
-    },
-    update: {
-      primaryRole: data.primaryRole,
-      headline: JSON.stringify(data.skills),
-    },
+  await prisma.$transaction(async (tx) => {
+    const profile = await tx.seekerProfile.upsert({
+      where: { userId: session.user.id },
+      create: { userId: session.user.id, primaryRole: data.primaryRole },
+      update: { primaryRole: data.primaryRole },
+      select: { id: true },
+    });
+
+    await tx.seekerSkill.deleteMany({
+      where: { seekerProfileId: profile.id },
+    });
+
+    if (data.skills.length > 0) {
+      await tx.seekerSkill.createMany({
+        data: data.skills.map((s) => ({
+          seekerProfileId: profile.id,
+          skillId: s.skillId,
+          level: (s.level as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT') ?? 'INTERMEDIATE',
+        })),
+      });
+    }
   });
 
   return { success: true };
@@ -136,11 +145,11 @@ export async function computeProfileCompleteness(userId: string): Promise<number
     select: {
       situation: true,
       primaryRole: true,
-      headline: true,    // skills stored here temporarily
-      bio: true,         // resume URL stored here temporarily
+      bio: true,
       salaryMin: true,
       salaryMax: true,
       availability: true,
+      _count: { select: { skills: true } },
     },
   });
 
@@ -150,8 +159,8 @@ export async function computeProfileCompleteness(userId: string): Promise<number
   const fields = [
     profile.situation,
     profile.primaryRole,
-    profile.headline,    // skills (step 2)
-    profile.bio,         // resume URL (step 3)
+    profile._count.skills > 0 ? 'has_skills' : null,
+    profile.bio,
     profile.salaryMin,
     profile.salaryMax,
     profile.availability,

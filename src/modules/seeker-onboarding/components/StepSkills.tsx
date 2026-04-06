@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Construction } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,14 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [apiSkills, setApiSkills] = useState<{ id: string; name: string; category: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/skills')
+      .then((r) => r.json())
+      .then((data) => setApiSkills(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   const handleContinue = async () => {
     const validation = validateSeekerStep2({
@@ -46,11 +54,19 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
 
     setErrors([]);
 
+    // Map skill names to skillIds from API data
+    const skillPayload = step2.skills
+      .map((name) => {
+        const found = apiSkills.find((s) => s.name === name);
+        return found ? { skillId: found.id, level: 'INTERMEDIATE' } : null;
+      })
+      .filter((s): s is { skillId: string; level: string } => s !== null);
+
     // Persist to DB before advancing (per D-04)
     const result = await saveStep2({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience,
-      skills: step2.skills,
+      skills: skillPayload,
     });
 
     if (!result.success) {
