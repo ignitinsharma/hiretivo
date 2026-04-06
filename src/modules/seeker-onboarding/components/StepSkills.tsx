@@ -55,12 +55,18 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     setErrors([]);
 
     // Map skill names to skillIds from API data
+    const unmatchedSkills: string[] = [];
     const skillPayload = step2.skills
       .map((name) => {
         const found = apiSkills.find((s) => s.name === name);
+        if (!found) unmatchedSkills.push(name);
         return found ? { skillId: found.id, level: 'INTERMEDIATE' } : null;
       })
       .filter((s): s is { skillId: string; level: string } => s !== null);
+
+    if (unmatchedSkills.length > 0) {
+      console.warn('[StepSkills] Skills not found in DB:', unmatchedSkills);
+    }
 
     // Persist to DB before advancing (per D-04)
     const result = await saveStep2({

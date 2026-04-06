@@ -83,11 +83,18 @@ export async function DELETE(
 
   const job = await prisma.job.findUnique({
     where: { id: params.id },
-    select: { recruiterId: true },
+    select: { recruiterId: true, _count: { select: { applications: true } } },
   });
   if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   if (job.recruiterId !== session.user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  if (job._count.applications > 0) {
+    return NextResponse.json(
+      { error: `Cannot delete job with ${job._count.applications} application(s). Close the job first.` },
+      { status: 409 }
+    );
   }
 
   await prisma.job.delete({ where: { id: params.id } });

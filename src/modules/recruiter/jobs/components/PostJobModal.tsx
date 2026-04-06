@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,20 @@ export function PostJobModal() {
   const [skillSearch, setSkillSearch] = useState('');
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [workType, setWorkType] = useState<'REMOTE' | 'HYBRID' | 'ONSITE'>('REMOTE');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowSkillDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const DEFAULT_CATEGORIES = ['Engineering', 'Design', 'Marketing', 'Data', 'DevOps', 'Product', 'Other'];
 
   const {
     register,
@@ -71,18 +85,29 @@ export function PostJobModal() {
 
   useEffect(() => {
     if (editJob && editJobId) {
+      const formatSalary = (val: number | null) => {
+        if (val == null) return '';
+        if (val >= 1000) return `${val / 1000}k`;
+        return String(val);
+      };
+
+      const salaryText = editJob.salaryMin != null
+        ? `$${formatSalary(editJob.salaryMin)}${editJob.salaryMax != null ? ` - $${formatSalary(editJob.salaryMax)}` : ''}`
+        : '';
+
+      setWorkType(editJob.workType ?? 'REMOTE');
+
       reset({
         title: editJob.title || '',
         category: editJob.category || '',
         jobType: editJob.jobType?.toLowerCase().replace('_', '-') || '',
         experienceLevel: editJob.experienceLevel || '',
-        compensation: editJob.salaryMin
-          ? `$${editJob.salaryMin / 1000}k - $${editJob.salaryMax ? editJob.salaryMax / 1000 : ''}k`
-          : '',
+        compensation: salaryText,
         description: editJob.description || '',
         selectedSkillIds: editJob.skills?.map((s: { skillId: string }) => s.skillId) || [],
       });
     } else if (!editJobId) {
+      setWorkType('REMOTE');
       reset({
         title: '',
         category: '',
@@ -103,7 +128,7 @@ export function PostJobModal() {
       description: data.description,
       jobType: data.jobType.toUpperCase().replace('-', '_'),
       applyType: 'INTERNAL' as const,
-      workType: 'REMOTE' as const,
+      workType,
       experienceLevel: data.experienceLevel,
       category: data.category,
       salaryMin,
@@ -189,7 +214,8 @@ export function PostJobModal() {
                       {(() => {
                         const categoryNames = skills.map((s: { category: string }) => s.category) as string[];
                         const uniqueCategories = categoryNames.filter((cat: string, i: number) => categoryNames.indexOf(cat) === i);
-                        return uniqueCategories.map((cat: string) => (
+                        const categories = uniqueCategories.length > 0 ? uniqueCategories : DEFAULT_CATEGORIES;
+                        return categories.map((cat: string) => (
                           <SelectItem key={cat} value={cat.toLowerCase()}>{cat}</SelectItem>
                         ));
                       })()}
@@ -198,6 +224,22 @@ export function PostJobModal() {
                 )}
               />
             </div>
+            <div>
+              <Label className="block text-sm font-semibold text-slate-700 mb-2">Work Type</Label>
+              <Select value={workType} onValueChange={(v) => setWorkType(v as 'REMOTE' | 'HYBRID' | 'ONSITE')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Work Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="REMOTE">Remote</SelectItem>
+                  <SelectItem value="HYBRID">Hybrid</SelectItem>
+                  <SelectItem value="ONSITE">Onsite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">Job Type</Label>
               <Controller
@@ -213,6 +255,25 @@ export function PostJobModal() {
                       <SelectItem value="part-time">Part-time</SelectItem>
                       <SelectItem value="contract">Contract</SelectItem>
                       <SelectItem value="internship">Internship</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div>
+              <Label className="block text-sm font-semibold text-slate-700 mb-2">Experience Level</Label>
+              <Controller
+                control={control}
+                name="experienceLevel"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entry">Entry Level</SelectItem>
+                      <SelectItem value="mid">Mid-level</SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -273,9 +334,9 @@ export function PostJobModal() {
                 </span>
               ))}
             </div>
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <Input
-                placeholder="Add more skills..."
+                placeholder={skillsLoading ? 'Loading skills...' : 'Add more skills...'}
                 className="pr-10"
                 value={skillSearch}
                 onChange={(e) => {
@@ -283,6 +344,7 @@ export function PostJobModal() {
                   setShowSkillDropdown(true);
                 }}
                 onFocus={() => setShowSkillDropdown(true)}
+                disabled={skillsLoading}
               />
               <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-primary flex items-center">
                 <PlusCircle className="w-5 h-5" />
@@ -306,6 +368,11 @@ export function PostJobModal() {
                         {skill.name} <span className="text-slate-400 text-xs">({skill.category})</span>
                       </button>
                     ))}
+                </div>
+              )}
+              {showSkillDropdown && skillSearch && filteredSkills.length === 0 && !skillsLoading && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg p-3 text-sm text-slate-500 text-center">
+                  No skills found
                 </div>
               )}
             </div>

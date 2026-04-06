@@ -9,6 +9,9 @@ import {
   ChevronRight,
   MoreVertical,
   Briefcase,
+  LayoutGrid,
+  List,
+  SlidersHorizontal,
   Pencil,
   Archive,
   Trash2,
@@ -174,13 +177,17 @@ export default function RecruiterJobsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) =>
-      fetch(`/api/jobs/${id}`, { method: 'DELETE' }).then((r) => r.json()),
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to delete');
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast.success('Job deleted');
     },
-    onError: () => toast.error('Failed to delete job'),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const toggleMutation = useMutation({
@@ -273,7 +280,13 @@ export default function RecruiterJobsPage() {
           <div className="h-6 w-px bg-slate-200 mx-1" />
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
-              <Briefcase className="w-5 h-5" />
+              <LayoutGrid className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-primary bg-indigo-50 border border-indigo-200">
+              <List className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
+              <SlidersHorizontal className="w-5 h-5" />
             </Button>
           </div>
         </div>
