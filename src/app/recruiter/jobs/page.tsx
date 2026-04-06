@@ -8,17 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
-  Palette,
-  Code,
-  Brush,
-  Landmark,
-  TrendingUp,
-  MapPin,
-  Building2,
-  Globe,
-  LayoutGrid,
-  List,
-  SlidersHorizontal,
+  Briefcase,
   Pencil,
   Archive,
   Trash2,
@@ -27,8 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { cn } from '@/lib/utils';
-
-import type { LucideIcon } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useUIStore } from '@/store/use-ui-store';
+import { toast } from 'sonner';
 
 interface JobStatItem {
   label: string;
@@ -37,60 +28,16 @@ interface JobStatItem {
   badgeColor: string;
 }
 
-const JOB_STATS: JobStatItem[] = [
-  { label: 'Total Listings', value: '24', badge: '+2 New', badgeColor: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-  { label: 'Avg. Time to Hire', value: '18d', badge: '-4d Trend', badgeColor: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
-  { label: 'Total Applicants', value: '1,402', badge: '+12% Vol', badgeColor: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-  { label: 'Talent Score Avg.', value: '8.4', badge: '', badgeColor: '' },
-];
-
-interface JobListing {
+interface ApiJob {
   id: string;
   title: string;
-  department: string;
-  location: string;
-  icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
-  applicants: number;
-  applicantBadge: string;
-  applicantBadgeColor: string;
-  postedDate: string;
-  hasFocus?: boolean;
+  category: string | null;
+  location: string | null;
+  status: 'DRAFT' | 'OPEN' | 'PAUSED' | 'CLOSED';
+  createdAt: string;
+  _count: { applications: number };
+  skills: { skill: { id: string; name: string; category: string } }[];
 }
-
-const JOB_LISTINGS: JobListing[] = [
-  {
-    id: '1', title: 'Senior UX Designer', department: 'Design', location: 'London / Remote',
-    icon: Palette, iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600',
-    applicants: 92, applicantBadge: '+5 New', applicantBadgeColor: 'text-indigo-600',
-    postedDate: 'Oct 14, 2023', hasFocus: true,
-  },
-  {
-    id: '2', title: 'Senior Full Stack Engineer', department: 'Engineering', location: 'Remote',
-    icon: Code, iconBg: 'bg-slate-100', iconColor: 'text-slate-600',
-    applicants: 148, applicantBadge: '+12 Today', applicantBadgeColor: 'text-emerald-600',
-    postedDate: 'Oct 12, 2023',
-  },
-  {
-    id: '3', title: 'Principal Product Designer', department: 'Design', location: 'London, UK',
-    icon: Brush, iconBg: 'bg-slate-100', iconColor: 'text-slate-600',
-    applicants: 84, applicantBadge: 'Steady', applicantBadgeColor: 'text-slate-400',
-    postedDate: 'Oct 08, 2023',
-  },
-  {
-    id: '4', title: 'VP of Finance', department: 'Finance', location: 'Remote',
-    icon: Landmark, iconBg: 'bg-slate-100', iconColor: 'text-slate-600',
-    applicants: 32, applicantBadge: '+4 New', applicantBadgeColor: 'text-emerald-600',
-    postedDate: 'Oct 05, 2023',
-  },
-  {
-    id: '5', title: 'Head of Growth Marketing', department: 'Marketing', location: 'New York, USA',
-    icon: TrendingUp, iconBg: 'bg-slate-100', iconColor: 'text-slate-600',
-    applicants: 212, applicantBadge: 'Sourcing', applicantBadgeColor: 'text-slate-400',
-    postedDate: 'Oct 01, 2023',
-  },
-];
 
 function JobStatCard({ stat }: { stat: JobStatItem }) {
   return (
@@ -115,34 +62,39 @@ function JobStatCard({ stat }: { stat: JobStatItem }) {
   );
 }
 
-function JobRow({ job }: { job: JobListing }) {
+function JobRow({
+  job,
+  onDelete,
+  onToggle,
+  onEdit,
+}: {
+  job: ApiJob;
+  onDelete: (id: string) => void;
+  onToggle: (id: string, newStatus: 'OPEN' | 'PAUSED') => void;
+  onEdit: (id: string) => void;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const IconComp = job.icon;
 
   return (
     <tr className="hover:bg-indigo-50/30 transition-colors">
       <td className="px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', job.iconBg)}>
-            <IconComp className={cn('w-5 h-5', job.iconColor)} />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-slate-100">
+            <Briefcase className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <p className="font-bold text-slate-900 text-sm">{job.title}</p>
-              {job.hasFocus && (
+              {job.status === 'OPEN' && (
                 <span className="text-[10px] bg-primary text-white px-1.5 rounded-sm font-bold uppercase tracking-tighter">
-                  Active Focus
+                  Active
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3 mt-0.5">
               <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5" />
-                {job.department}
-              </span>
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" />
-                {job.location}
+                <Briefcase className="w-3.5 h-3.5" />
+                {job.category ?? 'General'}
               </span>
             </div>
           </div>
@@ -150,14 +102,13 @@ function JobRow({ job }: { job: JobListing }) {
       </td>
       <td className="px-4 py-4 text-center">
         <div className="inline-block">
-          <p className="font-bold text-slate-900 text-sm">{job.applicants}</p>
-          <p className={cn('text-[10px] font-bold', job.applicantBadgeColor)}>
-            {job.applicantBadge}
-          </p>
+          <p className="font-bold text-slate-900 text-sm">{job._count.applications}</p>
         </div>
       </td>
       <td className="px-4 py-4">
-        <p className="text-[11px] text-slate-600 font-medium">{job.postedDate}</p>
+        <p className="text-[11px] text-slate-600 font-medium">
+          {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </p>
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">
@@ -179,16 +130,28 @@ function JobRow({ job }: { job: JobListing }) {
             </Button>
             {menuOpen && (
               <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[60] py-1.5 overflow-hidden ring-4 ring-black/5">
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  onClick={() => { setMenuOpen(false); onEdit(job.id); }}
+                >
                   <Pencil className="w-4 h-4" />
                   Edit Job
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onToggle(job.id, job.status === 'OPEN' ? 'PAUSED' : 'OPEN');
+                  }}
+                >
                   <Archive className="w-4 h-4" />
-                  Archive Job
+                  {job.status === 'OPEN' ? 'Archive Job' : 'Reactivate Job'}
                 </button>
                 <div className="h-px bg-slate-100 my-1" />
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={() => { setMenuOpen(false); onDelete(job.id); }}
+                >
                   <Trash2 className="w-4 h-4" />
                   Delete Job
                 </button>
@@ -202,6 +165,49 @@ function JobRow({ job }: { job: JobListing }) {
 }
 
 export default function RecruiterJobsPage() {
+  const queryClient = useQueryClient();
+  const { openEditJobModal, openPostJobModal } = useUIStore();
+
+  const { data: jobs = [], isLoading } = useQuery<ApiJob[]>({
+    queryKey: ['jobs'],
+    queryFn: () => fetch('/api/jobs').then((r) => r.json()),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetch(`/api/jobs/${id}`, { method: 'DELETE' }).then((r) => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast.success('Job deleted');
+    },
+    onError: () => toast.error('Failed to delete job'),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'OPEN' | 'PAUSED' }) =>
+      fetch(`/api/jobs/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      }).then((r) => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast.success('Job updated');
+    },
+    onError: () => toast.error('Failed to update job'),
+  });
+
+  const totalJobs = jobs.length;
+  const activeJobs = jobs.filter((j) => j.status === 'OPEN').length;
+  const totalApplicants = jobs.reduce((sum, j) => sum + j._count.applications, 0);
+
+  const JOB_STATS: JobStatItem[] = [
+    { label: 'Total Listings', value: String(totalJobs), badge: '', badgeColor: '' },
+    { label: 'Active Jobs', value: String(activeJobs), badge: '', badgeColor: '' },
+    { label: 'Total Applicants', value: String(totalApplicants), badge: '', badgeColor: '' },
+    { label: 'Talent Score Avg.', value: '-', badge: '', badgeColor: '' },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       <main className="w-full p-8">
@@ -225,7 +231,10 @@ export default function RecruiterJobsPage() {
               <Upload className="w-4 h-4" />
               Export
             </Button>
-            <Button className="bg-primary text-white gap-2 shadow-md shadow-indigo-100 hover:bg-primary/90">
+            <Button
+              className="bg-primary text-white gap-2 shadow-md shadow-indigo-100 hover:bg-primary/90"
+              onClick={openPostJobModal}
+            >
               <Plus className="w-4 h-4" />
               Post New Job
             </Button>
@@ -264,13 +273,7 @@ export default function RecruiterJobsPage() {
           <div className="h-6 w-px bg-slate-200 mx-1" />
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
-              <LayoutGrid className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-primary bg-indigo-50 border border-indigo-200">
-              <List className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
-              <SlidersHorizontal className="w-5 h-5" />
+              <Briefcase className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -296,9 +299,21 @@ export default function RecruiterJobsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {JOB_LISTINGS.map((job) => (
-                  <JobRow key={job.id} job={job} />
-                ))}
+                {isLoading ? (
+                  <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">Loading jobs...</td></tr>
+                ) : jobs.length === 0 ? (
+                  <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400 text-sm">No jobs posted yet. Click "Post New Job" to get started.</td></tr>
+                ) : (
+                  jobs.map((job) => (
+                    <JobRow
+                      key={job.id}
+                      job={job}
+                      onDelete={(id) => deleteMutation.mutate(id)}
+                      onToggle={(id, status) => toggleMutation.mutate({ id, status })}
+                      onEdit={(id) => openEditJobModal(id)}
+                    />
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -306,8 +321,8 @@ export default function RecruiterJobsPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-200">
             <p className="text-[11px] text-slate-500 font-medium">
-              Showing <span className="text-slate-900 font-bold">1-5</span> of{' '}
-              <span className="text-slate-900 font-bold">24</span> active listings
+              Showing <span className="text-slate-900 font-bold">{jobs.length}</span> of{' '}
+              <span className="text-slate-900 font-bold">{totalJobs}</span> active listings
             </p>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
