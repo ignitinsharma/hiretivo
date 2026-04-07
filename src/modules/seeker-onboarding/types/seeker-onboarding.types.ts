@@ -52,6 +52,7 @@ export interface ResumeFile {
   type: string;
   key: string | null;
   url: string | null;
+  file: File | null;
 }
 
 export interface Step1Data {
