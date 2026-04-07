@@ -22,14 +22,27 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon");
 
-  if (isPublicRoute) return NextResponse.next();
+  if (isPublicRoute) {
+    // Redirect logged-in users away from the landing page to their dashboard
+    if (session?.user && pathname === "/") {
+      const dest =
+        session.user.role === "RECRUITER"
+          ? "/recruiter/dashboard"
+          : "/seeker/dashboard";
+      return NextResponse.redirect(new URL(dest, req.url));
+    }
+    return NextResponse.next();
+  }
 
   // Auth-only routes (login, register, onboarding — accessible to authenticated users)
-  const isAuthRoute =
+  const isLoginOrRegister =
     pathname.startsWith("/seeker/login") ||
     pathname.startsWith("/seeker/register") ||
     pathname.startsWith("/recruiter/login") ||
-    pathname.startsWith("/recruiter/register") ||
+    pathname.startsWith("/recruiter/register");
+
+  const isAuthRoute =
+    isLoginOrRegister ||
     pathname.startsWith("/seeker/onboarding") ||
     pathname.startsWith("/recruiter/onboarding");
 
@@ -48,7 +61,16 @@ export default auth(async (req: NextRequest & { auth: any }) => {
   const userRole = session.user.role;
   const emailVerified = session.user.emailVerified;
 
-  // ── Allow onboarding and auth routes for authenticated users (any role) ──
+  // ── Redirect logged-in users away from login/register pages ──
+  if (isLoginOrRegister) {
+    const dest =
+      userRole === "RECRUITER"
+        ? "/recruiter/dashboard"
+        : "/seeker/dashboard";
+    return NextResponse.redirect(new URL(dest, req.url));
+  }
+
+  // ── Allow onboarding routes for authenticated users (any role) ──
   if (isAuthRoute) {
     return NextResponse.next();
   }
@@ -74,7 +96,6 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     }
 
     // Email verification gate for /seeker/dashboard only (per D-03)
-    // Other /seeker/* routes (profile, settings, etc.) remain accessible to unverified users
     if (pathname.startsWith("/seeker/dashboard") && !emailVerified) {
       return NextResponse.redirect(new URL("/auth/verify-email-pending", req.url));
     }
@@ -100,7 +121,6 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     }
 
     // Email verification gate for /recruiter/dashboard only (per D-03)
-    // Other /recruiter/* routes remain accessible to unverified users
     if (pathname.startsWith("/recruiter/dashboard") && !emailVerified) {
       return NextResponse.redirect(new URL("/auth/verify-email-pending", req.url));
     }
