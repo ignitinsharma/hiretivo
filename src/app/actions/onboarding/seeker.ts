@@ -3,6 +3,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WorkType } from "@/constants/enums";
+import { invalidateSeekerCache } from "@/lib/match";
+import { uploadFile, R2_KEYS } from "@/lib/r2";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -64,27 +66,42 @@ export async function saveStep2(data: {
     }
   });
 
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (seekerProfile) {
+    await invalidateSeekerCache(seekerProfile.id);
+  }
+
   return { success: true };
 }
 
-// --- Step 3: Resume (file already uploaded to R2 by UI) ---
-// resumeUrl stored in bio field temporarily until a dedicated resumeUrl column is added.
+// --- Step 3: Resume (upload to R2, store key in DB) ---
 // Step 3 is skippable so null values are valid.
-export async function saveStep3(data: {
-  resumeKey: string | null;
-  resumeUrl: string | null;
-}): Promise<ActionResult> {
+// Accepts FormData so the File object is transferred correctly across
+// the server action boundary (plain object props cannot carry File).
+export async function saveStep3(formData: FormData): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+
+  const resumeFile = formData.get('resumeFile') as File | null;
+  let resumeKey: string | null = null;
+
+  if (resumeFile && resumeFile.size > 0) {
+    const key = R2_KEYS.resume(session.user.id);
+    await uploadFile(resumeFile, key);
+    resumeKey = key;
+  }
 
   await prisma.seekerProfile.upsert({
     where: { userId: session.user.id },
     create: {
       userId: session.user.id,
-      bio: data.resumeUrl,
+      resumeKey,
     },
     update: {
-      bio: data.resumeUrl,
+      resumeKey,
     },
   });
 
