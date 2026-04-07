@@ -19,4 +19,5 @@ build
 .turbo
 coverage
 .planning*
+.planning
 .docs/superpowers

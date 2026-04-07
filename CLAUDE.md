@@ -49,49 +49,49 @@
 
 ```ts
 // WRONG
-import { JobCard } from '@/components/shared'
-import { calculateMatchScore } from '@/modules/matching'
-import { UserRole } from '@/constants'
+import { JobCard } from "@/components/shared";
+import { calculateMatchScore } from "@/modules/matching";
+import { UserRole } from "@/constants";
 
 // CORRECT
-import { JobCard } from '@/components/shared/JobCard'
-import { calculateMatchScore } from '@/modules/matching/utils/calculate-match'
-import { UserRole } from '@/constants/enums'
+import { JobCard } from "@/components/shared/JobCard";
+import { calculateMatchScore } from "@/modules/matching/utils/calculate-match";
+import { UserRole } from "@/constants/enums";
 ```
 
 ### 3.2 Always use path aliases — never relative paths across folders
 
 ```ts
 // WRONG (relative cross-folder)
-import { Button } from '../../../components/ui/button'
+import { Button } from "../../../components/ui/button";
 
 // CORRECT
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 ```
 
 ### 3.3 Relative imports are ONLY allowed within the same module folder
 
 ```ts
 // OK — same module, same folder level
-import { formatSalary } from './format-job'
-import type { JobListItem } from '../types/job.types'
+import { formatSalary } from "./format-job";
+import type { JobListItem } from "../types/job.types";
 ```
 
 ### 3.4 Enums — single source of truth
 
 ```ts
 // ALWAYS import enums from here — both client and server
-import { UserRole, JobStatus, ApplicationStatus } from '@/constants/enums'
+import { UserRole, JobStatus, ApplicationStatus } from "@/constants/enums";
 
 // NEVER import from Prisma client directly in application code
-import { UserRole } from '@prisma/client' // WRONG
+import { UserRole } from "@prisma/client"; // WRONG
 ```
 
 ### 3.5 Zod schemas — shared between client and server
 
 ```ts
 // Define in lib/validations/, import in both form components and server actions
-import { CreateJobSchema } from '@/lib/validations/job.schema'
+import { CreateJobSchema } from "@/lib/validations/job.schema";
 ```
 
 ---
@@ -263,10 +263,10 @@ src/lib/validations/application.schema.ts
 ### 7.3 Server actions validate independently — never trust client data
 
 ```ts
-'use server'
+"use server";
 export async function createJobAction(data: unknown) {
-  const parsed = CreateJobSchema.safeParse(data)
-  if (!parsed.success) return { error: parsed.error.flatten() }
+  const parsed = CreateJobSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.flatten() };
   // proceed with parsed.data — fully typed, fully safe
 }
 ```
@@ -275,21 +275,21 @@ export async function createJobAction(data: unknown) {
 
 ```ts
 const onSubmit = async (data: CreateJobInput) => {
-  setIsSubmitting(true)
+  setIsSubmitting(true);
   try {
-    const result = await createJobAction(data)
+    const result = await createJobAction(data);
     if (result?.error) {
-      toast.error('Something went wrong')
-      return
+      toast.error("Something went wrong");
+      return;
     }
-    toast.success('Job posted successfully')
-    router.push('/recruiter/jobs')
+    toast.success("Job posted successfully");
+    router.push("/recruiter/jobs");
   } catch {
-    toast.error('Unexpected error. Please try again.')
+    toast.error("Unexpected error. Please try again.");
   } finally {
-    setIsSubmitting(false)
+    setIsSubmitting(false);
   }
-}
+};
 ```
 
 ---
@@ -321,8 +321,8 @@ const onSubmit = async (data: CreateJobInput) => {
 - Invalidate related queries after mutations:
 
 ```ts
-queryClient.invalidateQueries({ queryKey: ['jobs'] })
-queryClient.invalidateQueries({ queryKey: ['recommendations'] })
+queryClient.invalidateQueries({ queryKey: ["jobs"] });
+queryClient.invalidateQueries({ queryKey: ["recommendations"] });
 ```
 
 ---
@@ -333,10 +333,10 @@ queryClient.invalidateQueries({ queryKey: ['recommendations'] })
 
 ```ts
 export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user) return new Response('Unauthorized', { status: 401 })
+  const session = await auth();
+  if (!session?.user) return new Response("Unauthorized", { status: 401 });
   if (session.user.role !== UserRole.RECRUITER)
-    return new Response('Forbidden', { status: 403 })
+    return new Response("Forbidden", { status: 403 });
   // proceed
 }
 ```
@@ -344,22 +344,22 @@ export async function POST(req: Request) {
 ### 9.2 Always validate request body with Zod
 
 ```ts
-const body = await req.json()
-const parsed = CreateJobSchema.safeParse(body)
+const body = await req.json();
+const parsed = CreateJobSchema.safeParse(body);
 if (!parsed.success)
-  return Response.json({ error: parsed.error.flatten() }, { status: 400 })
+  return Response.json({ error: parsed.error.flatten() }, { status: 400 });
 ```
 
 ### 9.3 Consistent response shape
 
 ```ts
-return Response.json({ data: result }, { status: 200 })                        // Success
-return Response.json({ data: result }, { status: 201 })                        // Created
-return Response.json({ error: parsed.error.flatten() }, { status: 400 })       // Validation error
-return new Response('Unauthorized', { status: 401 })
-return new Response('Forbidden', { status: 403 })
-return new Response('Not found', { status: 404 })
-return Response.json({ error: 'Internal server error' }, { status: 500 })
+return Response.json({ data: result }, { status: 200 }); // Success
+return Response.json({ data: result }, { status: 201 }); // Created
+return Response.json({ error: parsed.error.flatten() }, { status: 400 }); // Validation error
+return new Response("Unauthorized", { status: 401 });
+return new Response("Forbidden", { status: 403 });
+return new Response("Not found", { status: 404 });
+return Response.json({ error: "Internal server error" }, { status: 500 });
 ```
 
 ### 9.4 Rate limiting on sensitive routes
@@ -378,10 +378,10 @@ Apply Upstash Ratelimit to:
 
 ```ts
 // WRONG — local state for a modal that affects global behaviour
-const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
 // CORRECT — Zustand UI store
-const { openLoginModal, closeLoginModal } = useUIStore()
+const { openLoginModal, closeLoginModal } = useUIStore();
 ```
 
 ### 10.2 Modal components live in src/components/shared/
@@ -409,7 +409,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 // Never build custom modal from scratch — use Dialog
 ```
 
@@ -460,23 +460,23 @@ import { cn } from '@/lib/utils'
 ### 12.3 shadcn/ui variants — use cva for component variants
 
 ```ts
-import { cva } from 'class-variance-authority'
+import { cva } from "class-variance-authority";
 
-const badgeVariants = cva('base', {
+const badgeVariants = cva("base", {
   variants: {
-    intent: { success: '...', warning: '...', danger: '...' },
+    intent: { success: "...", warning: "...", danger: "..." },
   },
-})
+});
 ```
 
 ### 12.4 Responsive design — mobile first
 
 ```ts
 // CORRECT — mobile styles first, breakpoint overrides after
-className="w-full md:w-1/2 lg:w-1/3"
+className = "w-full md:w-1/2 lg:w-1/3";
 
 // WRONG
-className="lg:w-1/3 md:w-1/2 w-full"
+className = "lg:w-1/3 md:w-1/2 w-full";
 ```
 
 ---
@@ -622,16 +622,14 @@ Conditional JSX that spans multiple lines or branches belongs in a sub-component
 ```tsx
 // ❌ WRONG — logic buried inside JSX, hard to read and test
 <td className="py-6 px-4 text-sm text-slate-600">
-  {isAnnual ? 'Priority' : 'Priority + Phone'}
-</td>
+  {isAnnual ? "Priority" : "Priority + Phone"}
+</td>;
 
 // ✅ CORRECT — named component, clear intent, easy to change
 function SupportCell({ isAnnual }: { isAnnual: boolean }) {
   return (
-    <td className={CELL_BODY}>
-      {isAnnual ? 'Priority' : 'Priority + Phone'}
-    </td>
-  )
+    <td className={CELL_BODY}>{isAnnual ? "Priority" : "Priority + Phone"}</td>
+  );
 }
 ```
 
@@ -712,13 +710,14 @@ Dashboard → DashboardStats · DashboardRecentJobs · DashboardActivity
 
 ```tsx
 // ❌ WRONG — crashes on load, shows nothing on error
-return <JobList jobs={data.jobs} />
+return <JobList jobs={data.jobs} />;
 
 // ✅ CORRECT — all three states handled
-if (isLoading) return <JobListSkeleton />
-if (isError)   return <ErrorState message="Failed to load jobs" onRetry={refetch} />
-if (!data?.jobs.length) return <EmptyState message="No jobs found" />
-return <JobList jobs={data.jobs} />
+if (isLoading) return <JobListSkeleton />;
+if (isError)
+  return <ErrorState message="Failed to load jobs" onRetry={refetch} />;
+if (!data?.jobs.length) return <EmptyState message="No jobs found" />;
+return <JobList jobs={data.jobs} />;
 ```
 
 ### 15.8 Naming — components and variables must be self-documenting
