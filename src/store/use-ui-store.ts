@@ -3,7 +3,10 @@ import { create } from 'zustand';
 interface UIState {
   isApplyModalOpen: boolean;
   applyJobId: string | null;
-  openApplyModal: (jobId: string) => void;
+  selectedJobId: string | null;
+  selectedJobTitle: string;
+  selectedCompanyName: string;
+  openApplyModal: (jobId: string, title?: string, companyName?: string) => void;
   closeApplyModal: () => void;
 
   isPostJobModalOpen: boolean;
@@ -16,8 +19,23 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   isApplyModalOpen: false,
   applyJobId: null,
-  openApplyModal: (jobId) => set({ isApplyModalOpen: true, applyJobId: jobId }),
-  closeApplyModal: () => set({ isApplyModalOpen: false, applyJobId: null }),
+  selectedJobId: null,
+  selectedJobTitle: '',
+  selectedCompanyName: '',
+  openApplyModal: (jobId, title, companyName) => set({
+    isApplyModalOpen: true,
+    applyJobId: jobId,
+    selectedJobId: jobId,
+    selectedJobTitle: title ?? '',
+    selectedCompanyName: companyName ?? '',
+  }),
+  closeApplyModal: () => set({
+    isApplyModalOpen: false,
+    applyJobId: null,
+    selectedJobId: null,
+    selectedJobTitle: '',
+    selectedCompanyName: '',
+  }),
 
   isPostJobModalOpen: false,
   editJobId: null,

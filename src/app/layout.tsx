@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ApplyJobModal } from "@/components/shared/ApplyJobModal";
+import { ReactQueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -29,9 +30,11 @@ export default function RootLayout({
         />
       </head>
       <body className={`${plusJakartaSans.variable} font-sans antialiased`}>
-        {children}
-        <ApplyJobModal />
-        <Toaster />
+        <ReactQueryProvider>
+          {children}
+          <ApplyJobModal />
+          <Toaster />
+        </ReactQueryProvider>
       </body>
     </html>
   );

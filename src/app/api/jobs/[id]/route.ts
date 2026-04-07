@@ -2,26 +2,88 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { updateJobSchema } from '@/lib/validations/job';
+import { invalidateJobSkillsCache } from '@/lib/match';
 
-// GET /api/jobs/[id] — get single job for edit mode
+// GET /api/jobs/[id] — public job detail with auth-gated match breakdown
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const job = await prisma.job.findUnique({
-    where: { id: params.id, recruiterId: session.user.id },
+    where: { id: params.id, status: 'OPEN' },
     include: {
-      skills: true,
+      recruiter: {
+        select: {
+          recruiterProfile: {
+            select: { companyName: true, logo: true },
+          },
+        },
+      },
+      skills: {
+        include: { skill: { select: { id: true, name: true, slug: true } } },
+      },
     },
   });
   if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  return NextResponse.json(job);
+  let matchScore: number | null = null;
+  let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
+
+  const session = await auth();
+  if (session?.user?.role === 'SEEKER') {
+    const seekerProfile = await prisma.seekerProfile.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        skills: { select: { skillId: true, skill: { select: { name: true } } } },
+      },
+    });
+
+    if (seekerProfile) {
+      const jobMatch = await prisma.jobMatch.findUnique({
+        where: {
+          jobId_seekerProfileId: {
+            jobId: params.id,
+            seekerProfileId: seekerProfile.id,
+          },
+        },
+      });
+      matchScore = jobMatch?.score ?? null;
+
+      const seekerSkillIds = new Set(seekerProfile.skills.map((s) => s.skillId));
+      matchBreakdown = job.skills.map((s) => ({
+        skillId: s.skill.id,
+        skillName: s.skill.name,
+        isMatch: seekerSkillIds.has(s.skillId),
+      }));
+    }
+  }
+
+  return NextResponse.json({
+    job: {
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      jobType: job.jobType,
+      workType: job.workType,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      experienceLevel: job.experienceLevel,
+      applyType: job.applyType,
+      externalApplyUrl: job.externalApplyUrl,
+      companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
+      companyLogoUrl: job.recruiter.recruiterProfile?.logo ?? null,
+      skills: job.skills.map((s) => ({
+        id: s.skill.id,
+        name: s.skill.name,
+        slug: s.skill.slug,
+        level: s.level,
+      })),
+      publishedAt: job.publishedAt?.toISOString() ?? null,
+    },
+    matchScore,
+    matchBreakdown,
+  });
 }
 
 // PATCH /api/jobs/[id] — edit job fields or toggle status
@@ -81,6 +143,7 @@ export async function PATCH(
       });
       return j;
     });
+    await invalidateJobSkillsCache(params.id);
   } else {
     // No skills change — update job fields only
     updatedJob = await prisma.job.update({
