@@ -1,63 +1,56 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-
-import type { JobStatus } from '@/constants/enums';
 
 interface ActiveJob {
   id: string;
   title: string;
-  department: string;
-  location: string;
-  applicants: number;
-  status: 'Active' | 'Urgent' | 'Reviewing';
+  status: string;
+  _count: { applications: number };
+  createdAt: string;
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  Active: 'bg-emerald-100 text-emerald-800',
-  Urgent: 'bg-amber-100 text-amber-800',
-  Reviewing: 'bg-slate-100 text-slate-800',
+  OPEN: 'bg-emerald-100 text-emerald-800',
+  DRAFT: 'bg-slate-100 text-slate-800',
+  PAUSED: 'bg-amber-100 text-amber-800',
+  CLOSED: 'bg-red-100 text-red-800',
 };
 
-const ACTIVE_JOBS: ActiveJob[] = [
-  { id: '1', title: 'Senior Product Designer', department: 'Design', location: 'Remote', applicants: 84, status: 'Active' },
-  { id: '2', title: 'Engineering Manager', department: 'Tech', location: 'New York', applicants: 32, status: 'Active' },
-  { id: '3', title: 'Full Stack Developer', department: 'Engineering', location: 'Hybrid', applicants: 156, status: 'Urgent' },
-  { id: '4', title: 'Content Strategist', department: 'Marketing', location: 'Remote', applicants: 45, status: 'Active' },
-  { id: '5', title: 'HR Specialist', department: 'People', location: 'London', applicants: 12, status: 'Reviewing' },
-];
-
-function JobRow({ job }: { job: ActiveJob }) {
-  return (
-    <div className="px-8 py-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-      <div>
-        <h3 className="font-bold text-slate-900">{job.title}</h3>
-        <p className="text-sm text-slate-500">
-          {job.department} • {job.location}
-        </p>
-      </div>
-      <div className="flex items-center gap-8">
-        <div className="text-right">
-          <p className="font-bold">{job.applicants}</p>
-          <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">
-            Applicants
-          </p>
-        </div>
-        <span
-          className={cn(
-            'text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full',
-            STATUS_STYLES[job.status]
-          )}
-        >
-          {job.status}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export function ActiveJobsList() {
+  const [jobs, setJobs] = useState<ActiveJob[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/recruiter/jobs')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch jobs');
+        return res.json();
+      })
+      .then((data) => {
+        setJobs(data.jobs ?? []);
+      })
+      .catch(() => {
+        setJobs([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-8 py-6 flex items-center justify-between border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-900">My Active Jobs</h2>
+        </div>
+        <div className="px-8 py-10 text-center text-slate-400 text-sm">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-8 py-6 flex items-center justify-between border-b border-slate-200">
@@ -69,11 +62,40 @@ export function ActiveJobsList() {
           View all
         </Link>
       </div>
-      <div className="divide-y divide-slate-100">
-        {ACTIVE_JOBS.map((job) => (
-          <JobRow key={job.id} job={job} />
-        ))}
-      </div>
+      {jobs.length === 0 ? (
+        <div className="px-8 py-10 text-center text-slate-400 text-sm">
+          No active jobs yet. <Link href="/recruiter/jobs" className="text-primary hover:underline">Create your first job</Link>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100">
+          {jobs.map((job) => (
+            <Link key={job.id} href={`/recruiter/jobs?edit=${job.id}`} className="px-8 py-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <div>
+                <h3 className="font-bold text-slate-900">{job.title}</h3>
+                <p className="text-sm text-slate-500">
+                  {new Date(job.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-8">
+                <div className="text-right">
+                  <p className="font-bold">{job._count.applications}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">
+                    Applicants
+                  </p>
+                </div>
+                <span
+                  className={cn(
+                    'text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full',
+                    STATUS_STYLES[job.status] ?? 'bg-slate-100 text-slate-800'
+                  )}
+                >
+                  {job.status}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

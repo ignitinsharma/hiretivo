@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,21 +11,51 @@ import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 export function ApplyJobModal() {
-  const { isApplyModalOpen, closeApplyModal } = useUIStore();
+  const { isApplyModalOpen, closeApplyModal, selectedJobId, selectedJobTitle, selectedCompanyName } = useUIStore();
+  const [coverLetter, setCoverLetter] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedJobId) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: selectedJobId, coverLetter }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? 'Failed to apply');
+      }
+
+      toast.success('Application submitted successfully!');
+      setCoverLetter('');
+      closeApplyModal();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to submit application');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader className="pt-2 pb-4">
           <DialogTitle className="text-2xl font-extrabold tracking-tight text-slate-900">
-            Apply for Senior Product Designer
+            Apply for {selectedJobTitle || 'this position'}
           </DialogTitle>
-          <p className="text-slate-500 font-medium mt-1">at Acme Corp</p>
+          <p className="text-slate-500 font-medium mt-1">at {selectedCompanyName || 'this company'}</p>
         </DialogHeader>
 
-        <form className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <div className="flex justify-between items-end mb-2">
               <Label htmlFor="interest" className="text-sm font-bold text-slate-900">
@@ -37,8 +67,11 @@ export function ApplyJobModal() {
             </div>
             <Textarea
               id="interest"
-              placeholder="I've been following Acme's journey in the remote collaboration space..."
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              placeholder="I've been following this company's journey..."
               className="min-h-[150px] resize-none"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -48,14 +81,16 @@ export function ApplyJobModal() {
               variant="ghost"
               className="w-full sm:w-auto font-bold"
               onClick={closeApplyModal}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="w-full sm:w-auto font-bold bg-primary text-white hover:bg-primary/90"
+              disabled={isSubmitting}
             >
-              Submit Application
+              {isSubmitting ? 'Submitting...' : 'Submit Application'}
             </Button>
           </div>
         </form>

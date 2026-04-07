@@ -4,10 +4,23 @@ import React, { useState } from 'react';
 import { CheckCircle2, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const TABS = ['Overview', 'Responsibilities', 'Qualifications', 'Benefits'];
 
-export function JobDetailContent() {
+interface JobData {
+  id: string;
+  title: string;
+  description: string;
+  skills: Array<{ id: string; name: string; slug: string; level: string }>;
+  companyName: string;
+}
+
+interface JobDetailContentProps {
+  job: JobData;
+}
+
+export function JobDetailContent({ job }: JobDetailContentProps) {
   const [activeTab, setActiveTab] = useState('Overview');
 
   return (
@@ -32,45 +45,61 @@ export function JobDetailContent() {
       </div>
 
       <div className="p-6 sm:p-8 space-y-10">
-        <section>
-          <h3 className="text-xl font-bold text-slate-900 mb-4">About the Role</h3>
-          <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4">
-            <p>
-              We are looking for a visionary Senior Product Designer to join our core team. You will lead the design direction for our flagship products, ensuring a seamless and delightful user experience across all platforms. You'll collaborate closely with engineering and product management to turn complex problems into elegant solutions.
-            </p>
-            <p>
-              At Acme Corp, we value craft, curiosity, and extreme ownership. You'll be joining at a pivotal time as we scale our design system and rethink how people interact with financial data globally.
-            </p>
-          </div>
-        </section>
+        {activeTab === 'Overview' && (
+          <section>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">About the Role</h3>
+            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4">
+              {job.description.split('\n').filter((p) => p.trim()).map((paragraph, idx) => (
+                <p key={idx}>{paragraph.trim()}</p>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section>
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Key Responsibilities</h3>
-          <ul className="space-y-3">
-            {[
-              'Design end-to-end user journeys from concept to high-fidelity execution.',
-              'Facilitate design workshops and lead user research sessions to validate core hypotheses.',
-              'Maintain and evolve our design system, Orbit, ensuring consistency across Web and Mobile.',
-            ].map((item, idx) => (
-              <li key={idx} className="flex gap-3 text-slate-600">
-                <CheckCircle2 className="text-primary mt-0.5 w-5 h-5 shrink-0" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {activeTab === 'Responsibilities' && (
+          <section>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Key Responsibilities</h3>
+            <ul className="space-y-3">
+              {job.description.split('\n').filter((p) => p.trim()).map((item, idx) => (
+                <li key={idx} className="flex gap-3 text-slate-600">
+                  <CheckCircle2 className="text-primary mt-0.5 w-5 h-5 shrink-0" />
+                  <span>{item.trim()}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {activeTab === 'Qualifications' && (
+          <section>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Required Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {job.skills.map((skill) => (
+                <Badge key={skill.id} variant="secondary" className="text-sm font-medium">
+                  {skill.name}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'Benefits' && (
+          <section>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Benefits</h3>
+            <p className="text-slate-600">Contact the recruiter for details about benefits and compensation.</p>
+          </section>
+        )}
 
         <div className="pt-8 border-t border-slate-200">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-primary font-bold">
-              A
+              {job.companyName.charAt(0)}
             </div>
             <div>
-              <p className="font-bold text-slate-900">Acme Corp</p>
-              <p className="text-sm text-slate-500">Series B • Fintech • 50-100 Employees</p>
+              <p className="font-bold text-slate-900">{job.companyName}</p>
             </div>
             <Link
-              href="/companies/acme"
+              href={`/companies/${job.id}`}
               className="ml-auto text-sm font-bold text-primary hover:underline flex items-center gap-1"
             >
               Visit Profile <ArrowUpRight className="w-4 h-4" />
