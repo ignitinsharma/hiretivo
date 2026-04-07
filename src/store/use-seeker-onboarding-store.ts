@@ -183,6 +183,15 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
     }),
     {
       name: 'hiretivo-seeker-onboarding',
+      partialize: (state: SeekerOnboardingState) => ({
+        ...state,
+        step3: {
+          ...state.step3,
+          resume: state.step3.resume
+            ? { ...state.step3.resume, file: null }
+            : null,
+        },
+      }),
     }
   )
 );
