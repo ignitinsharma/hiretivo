@@ -89,7 +89,8 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
   let resumeKey: string | null = null;
 
   if (resumeFile && resumeFile.size > 0) {
-    const key = R2_KEYS.resume(session.user.id);
+    const ext = resumeFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'docx' : 'pdf';
+    const key = `resumes/${session.user.id}/resume.${ext}`;
     await uploadFile(resumeFile, key);
     resumeKey = key;
   }

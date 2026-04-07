@@ -97,6 +97,8 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
 
     if (!result.success) {
       console.error("[StepResume] saveStep3 failed:", result.error);
+      setError('Failed to save resume. Please try again.');
+      return;
     }
 
     onNext();
