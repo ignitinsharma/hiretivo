@@ -48,6 +48,8 @@ export default auth(async (req: NextRequest & { auth: any }) => {
 
   // ── Unauthenticated: redirect to appropriate login ──
   if (!session?.user) {
+    // Allow unauthenticated access to login, register, and onboarding routes
+    if (isAuthRoute) return NextResponse.next();
     if (pathname.startsWith("/seeker/")) {
       return NextResponse.redirect(new URL("/seeker/login", req.url));
     }
