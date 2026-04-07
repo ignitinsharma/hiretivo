@@ -38,14 +38,13 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
     setIsUploading(true);
 
     try {
-      const mockKey = `resumes/mock-user-${Date.now()}/resume.${file.name.split('.').pop()}`;
-      
       setResume({
         name: file.name,
         size: file.size,
         type: file.type,
-        key: mockKey,
+        key: null,
         url: URL.createObjectURL(file),
+        file,
       });
     } catch {
       setError('Failed to process file. Please try again.');
@@ -89,11 +88,12 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   }, [setResume, step3.resume]);
 
   const handleContinue = async () => {
-    // Persist to DB before advancing (per D-04)
-    const result = await saveStep3({
-      resumeKey: step3.resume?.key ?? null,
-      resumeUrl: step3.resume?.url ?? null,
-    });
+    const formData = new FormData();
+    if (step3.resume?.file) {
+      formData.append('resumeFile', step3.resume.file);
+    }
+
+    const result = await saveStep3(formData);
 
     if (!result.success) {
       console.error("[StepResume] saveStep3 failed:", result.error);
