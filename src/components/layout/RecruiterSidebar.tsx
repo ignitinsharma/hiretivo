@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Plus, LogOut, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RECRUITER_NAV_ITEMS } from '@/constants/nav';
+import { signOut } from 'next-auth/react';
 
 interface SidebarContextValue {
   collapsed: boolean;
@@ -204,6 +205,7 @@ function RecruiterSidebarInner({
       {/* Sign Out */}
       <div className="border-t border-slate-200">
         <button
+          onClick={() => signOut({ callbackUrl: '/' })}
           className={cn(
             'w-full flex items-center gap-3 py-4 px-6 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors',
             collapsed && 'justify-center px-0'
