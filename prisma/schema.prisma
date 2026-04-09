@@ -41,11 +41,12 @@ enum SkillLevel {
 }
 
 enum AppStatus {
-  PENDING
-  REVIEWED
-  SHORTLISTED
+  APPLIED
+  REVIEWING
+  INTERVIEW
+  OFFER
+  HIRED
   REJECTED
-  WITHDRAWN
 }
 
 enum WorkType {
@@ -275,7 +276,7 @@ model Application {
   jobId    String
   seekerId String
 
-  status      AppStatus @default(PENDING)
+  status      AppStatus @default(APPLIED)
   matchScore  Int
 
   coverLetter String? @db.Text
