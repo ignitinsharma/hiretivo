@@ -94,7 +94,7 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
         badgeClasses
       )}
     >
-      <span className={cn('w-1.5 h-1.5 rounded-full', dotClasses)}></span>
+      <span className={cn('w-2 h-2 rounded-full', dotClasses)}></span>
       {label}
     </span>
   );
