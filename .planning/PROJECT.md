@@ -45,6 +45,7 @@ Seekers see only the jobs they match — match score drives every surface, from 
 - ✓ Role-based layout hierarchy (seeker vs recruiter routes separated) — existing
 - ✓ Phase 1 — Auth & Onboarding complete — validated in Phase 1
 - ✓ Phase 2 — Job Posting complete — validated in Phase 2 (02-VERIFICATION.md)
+- ✓ Phase 4 — Applications & Recruiter Dashboard complete — validated in Phase 4 (04-VERIFICATION.md)
 
 ### Active
 
@@ -72,13 +73,13 @@ Seekers see only the jobs they match — match score drives every surface, from 
 - [ ] LoginModal on unauthenticated apply attempt
 
 **Phase 4 — Applications & Recruiter Dashboard:**
-- [ ] Internal apply flow with cover letter (text input)
-- [ ] External apply click-through tracking with UTM parameters
-- [ ] My Applications page for seekers with status timeline
-- [ ] Recruiter dashboard: stats bar, candidate table, 480px side drawer
-- [ ] 6-stage application status pipeline (applied → reviewing → interview → offer → hired → rejected)
-- [ ] Email notifications via Resend on every status change
-- [ ] FREE plan blur gate: applicants 21+ blurred in recruiter view
+- [x] Internal apply flow with cover letter (text input) — Validated Phase 4
+- [x] External apply click-through tracking with UTM parameters — Validated Phase 4
+- [x] My Applications page for seekers with status timeline — Validated Phase 4
+- [x] Recruiter dashboard: stats bar, candidate table, 480px side drawer — Validated Phase 4
+- [x] 6-stage application status pipeline (applied → reviewing → interview → offer → hired → rejected) — Validated Phase 4
+- [x] Email notifications via Resend on every status change — Validated Phase 4
+- [x] FREE plan blur gate: applicants 21+ blurred in recruiter view — Validated Phase 4
 
 **Phase 5 — Homepage, Public Pages & Pricing:**
 - [ ] Homepage sections wired with real data (job counts, seeker stats, featured jobs)
@@ -165,4 +166,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after milestone v1.0 started*
+*Last updated: 2026-04-09 after Phase 4 completion*
