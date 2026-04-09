@@ -52,33 +52,38 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
 function StatusBadge({ status }: { status: ApplicationStatus }) {
   let badgeClasses = '';
   let dotClasses = '';
-  let label = status;
+  let label: string = status;
 
   switch (status) {
-    case ApplicationStatus.SHORTLISTED:
+    case ApplicationStatus.INTERVIEW:
       badgeClasses = 'bg-primary/10 text-primary';
       dotClasses = 'bg-primary';
-      label = 'Shortlisted';
+      label = 'Interview';
       break;
-    case ApplicationStatus.REVIEWED:
-      badgeClasses = 'bg-primary/5 text-primary/80';
-      dotClasses = 'bg-primary/60';
+    case ApplicationStatus.REVIEWING:
+      badgeClasses = 'bg-blue-100 text-blue-700';
+      dotClasses = 'bg-blue-500';
       label = 'Under Review';
       break;
-    case ApplicationStatus.PENDING:
+    case ApplicationStatus.APPLIED:
       badgeClasses = 'bg-slate-100 text-slate-600';
       dotClasses = 'bg-slate-400';
-      label = 'Pending';
+      label = 'Applied';
+      break;
+    case ApplicationStatus.OFFER:
+      badgeClasses = 'bg-amber-100 text-amber-700';
+      dotClasses = 'bg-amber-500';
+      label = 'Offer Received';
+      break;
+    case ApplicationStatus.HIRED:
+      badgeClasses = 'bg-green-100 text-green-700';
+      dotClasses = 'bg-green-500';
+      label = 'Hired';
       break;
     case ApplicationStatus.REJECTED:
       badgeClasses = 'bg-red-100 text-red-600';
       dotClasses = 'bg-red-500';
-      label = 'Declined';
-      break;
-    case ApplicationStatus.WITHDRAWN:
-      badgeClasses = 'bg-slate-100 text-slate-500';
-      dotClasses = 'bg-slate-400';
-      label = 'Withdrawn';
+      label = 'Not Selected';
       break;
   }
 

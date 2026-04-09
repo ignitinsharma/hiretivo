@@ -14,11 +14,12 @@ export enum JobStatus {
 
 /** Same values as Prisma `AppStatus` (RULES.md uses `ApplicationStatus`). */
 export enum ApplicationStatus {
-  PENDING = "PENDING",
-  REVIEWED = "REVIEWED",
-  SHORTLISTED = "SHORTLISTED",
+  APPLIED = "APPLIED",
+  REVIEWING = "REVIEWING",
+  INTERVIEW = "INTERVIEW",
+  OFFER = "OFFER",
+  HIRED = "HIRED",
   REJECTED = "REJECTED",
-  WITHDRAWN = "WITHDRAWN",
 }
 
 export enum JobType {
