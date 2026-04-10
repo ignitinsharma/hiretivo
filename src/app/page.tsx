@@ -2,8 +2,36 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
+import { prisma } from "@/lib/prisma";
+import { UserRole, JobStatus } from "@/constants/enums";
 
-export default function Home() {
+function formatStat(n: number): string {
+  if (n >= 1000) return `${Math.round(n / 1000)}k+`;
+  if (n > 100) return `${n}+`;
+  return String(n);
+}
+
+export default async function Home() {
+  const [activeJobCount, seekerCount, companyCount, featuredJobs] = await Promise.all([
+    prisma.job.count({ where: { status: JobStatus.OPEN } }).catch(() => 0),
+    prisma.user.count({ where: { role: UserRole.SEEKER } }).catch(() => 0),
+    prisma.recruiterProfile.count().catch(() => 0),
+    prisma.job.findMany({
+      where: { status: JobStatus.OPEN },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+      include: {
+        skills: { include: { skill: true } },
+        recruiter: {
+          select: {
+            recruiterProfile: {
+              select: { companyName: true, logo: true },
+            },
+          },
+        },
+      },
+    }).catch(() => []),
+  ]);
   return (
     <>
       <Header />
@@ -12,7 +40,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-light rounded-full mb-8">
               <span className="text-brand-primary text-sm font-bold tracking-wide">
-                ✦ 2,400+ remote jobs available
+                ✦ {formatStat(activeJobCount)} remote jobs available
               </span>
             </div>
             <h1 className="text-heading text-5xl md:text-7xl font-extrabold mb-6 leading-[1.1]">
@@ -398,7 +426,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <div>
                 <div className="text-brand-primary text-4xl font-extrabold mb-2">
-                  2,400+
+                  {formatStat(activeJobCount)}
                 </div>
                 <div className="text-brand-body font-medium uppercase tracking-wider text-sm">
                   Active Jobs
@@ -406,7 +434,7 @@ export default function Home() {
               </div>
               <div>
                 <div className="text-brand-primary text-4xl font-extrabold mb-2">
-                  840
+                  {formatStat(companyCount)}
                 </div>
                 <div className="text-brand-body font-medium uppercase tracking-wider text-sm">
                   Companies Hiring
@@ -414,10 +442,10 @@ export default function Home() {
               </div>
               <div>
                 <div className="text-brand-primary text-4xl font-extrabold mb-2">
-                  12,000+
+                  {formatStat(seekerCount)}
                 </div>
                 <div className="text-brand-body font-medium uppercase tracking-wider text-sm">
-                  Talents Hired
+                  Job Seekers
                 </div>
               </div>
             </div>
@@ -443,131 +471,67 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div
-                className="bg-white border border-brand-border rounded-xl p-6 hover:border-brand-primary/50 transition-all card-shadow group"
-                data-purpose="job-card"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt="Stripe"
-                      className="w-full h-full object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuANSXVEoDLkVzxwWHoA2nZ1KMk-mDok_aWK3ZCZ4361yaQiQUc0Qb9LrRVOBJ5iUG_Uc8MBAccWdkghDG0p20qW9Mo2XQeV52pLk779e7qsvdSGPUP41lXvRAqN4be-w0mEIeKezAYrKUDpqPwk-SaNQSqEir2fU8WBuQ1G_fNr9MRktYELohIUjzHpT1qjqRf0nNr4uxZSF_8M-6Gi2XsGdSs0deo_-ex18_3JsVD4oCwX1VJ1gvxwQAzMLLCW3xY9IvkYq8Hgtg0i"
-                    />
-                  </div>
-                  <span className="px-3 py-1 bg-brand-light text-brand-primary text-xs font-bold rounded-full">
-                    New
-                  </span>
+              {featuredJobs.length === 0 ? (
+                <div className="col-span-3 text-center py-12 text-brand-body">
+                  No jobs available yet. Check back soon!
                 </div>
-                <h3 className="text-heading text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
-                  Senior Product Designer
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Full-time
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Senior
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Design
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-6">
-                  <span className="text-brand-accent font-bold text-sm">
-                    $140k – $180k
-                  </span>
-                  <Link
-                    className="text-brand-heading font-semibold text-sm hover:translate-x-1 transition-transform"
-                    href="#"
+              ) : (
+                featuredJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="bg-white border border-brand-border rounded-xl p-6 hover:border-brand-primary/50 transition-all card-shadow group"
+                    data-purpose="job-card"
                   >
-                    View Job →
-                  </Link>
-                </div>
-              </div>
-
-              <div
-                className="bg-white border border-brand-border rounded-xl p-6 hover:border-brand-primary/50 transition-all card-shadow group"
-                data-purpose="job-card"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt="Clerk"
-                      className="w-full h-full object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8LxeWeiF7dd-YJZ_uz0tdr9R7ZfpK0I6TDU8jNmSaBJB9_DBm6c82yRe7SkaBk-kXkLs4bGU563lTec2PZNWWl0LIcVpvenT70Jhy0cIuxMbqZjkrOKZupnsyO1m7OGwv241ZbI_-DWABWK9r4cJ2rDB3dAOi-7HMzTUWWlKAPlds42DFE5VUDJIaiho-SYooY3kvarcxYrNfg_CgPv7sCsbwQOidiNp34_s2oio82XU4WKEAdQTiTSLG4_AsW3Gjra0UHc3gzcMg"
-                    />
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">
+                        {job.recruiter.recruiterProfile?.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            alt={job.recruiter.recruiterProfile.companyName}
+                            className="w-full h-full object-cover"
+                            src={job.recruiter.recruiterProfile.logo}
+                          />
+                        ) : (
+                          <span className="text-brand-primary font-bold text-lg">
+                            {job.recruiter.recruiterProfile?.companyName?.[0] ?? 'H'}
+                          </span>
+                        )}
+                      </div>
+                      <span className="px-3 py-1 bg-brand-light text-brand-primary text-xs font-bold rounded-full">
+                        New
+                      </span>
+                    </div>
+                    <h3 className="text-heading text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
+                      {job.title}
+                    </h3>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {job.jobType && (
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
+                          {job.jobType.replace('_', '-')}
+                        </span>
+                      )}
+                      {job.category && (
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
+                          {job.category}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-6">
+                      <span className="text-brand-accent font-bold text-sm">
+                        {job.salaryMin && job.salaryMax
+                          ? `$${Math.round(job.salaryMin / 1000)}k – $${Math.round(job.salaryMax / 1000)}k`
+                          : 'Competitive'}
+                      </span>
+                      <Link
+                        className="text-brand-heading font-semibold text-sm hover:translate-x-1 transition-transform"
+                        href={`/jobs/${job.id}`}
+                      >
+                        View Job →
+                      </Link>
+                    </div>
                   </div>
-                </div>
-                <h3 className="text-heading text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
-                  Frontend Engineer (React)
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Contract
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Mid-Level
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Engineering
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-6">
-                  <span className="text-brand-accent font-bold text-sm">
-                    $110k – $150k
-                  </span>
-                  <Link
-                    className="text-brand-heading font-semibold text-sm hover:translate-x-1 transition-transform"
-                    href="#"
-                  >
-                    View Job →
-                  </Link>
-                </div>
-              </div>
-
-              <div
-                className="bg-white border border-brand-border rounded-xl p-6 hover:border-brand-primary/50 transition-all card-shadow group"
-                data-purpose="job-card"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt="Vercel"
-                      className="w-full h-full object-cover"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtCVGe2OQ_dtYZPFZoN3FBiXWstr2Yul-YIUmlMcMs1e09zwW7V0nolxmEOLoS59x_7958QVnChaDiMsRmjbWWBDBg8nE7mLehDuJu8zuLC78s1TmHDvTBfDcJcDl3yFjvbF6INKM7YuhCBRhFm30MVm1KNizliy39erPy_8_O2nfdOSmOIPCcNq3supfaOeo-PGz7fYeN9CJvezW8fitMQpcHO-0Yx3o1q5kwRgzMKBquHaaIXUQbpRI-elJ_NyfzfcLV1_4jdTTn"
-                    />
-                  </div>
-                </div>
-                <h3 className="text-heading text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
-                  Developer Relations Lead
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Full-time
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Lead
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                    Marketing
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-6">
-                  <span className="text-brand-accent font-bold text-sm">
-                    $160k – $210k
-                  </span>
-                  <Link
-                    className="text-brand-heading font-semibold text-sm hover:translate-x-1 transition-transform"
-                    href="#"
-                  >
-                    View Job →
-                  </Link>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
         </section>
