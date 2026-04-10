@@ -90,7 +90,11 @@ Plans:
   2. A visitor from India sees INR pricing on the pricing page; all other visitors see USD pricing (detected via CF-IPCountry header)
   3. The Monthly/Annual pricing toggle on the pricing page switches displayed prices without a page reload
   4. An unauthenticated visitor sees the public nav; a logged-in seeker sees the seeker nav; a logged-in recruiter sees the recruiter nav
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — Homepage stats + featured jobs (async Server Component, Prisma queries)
+- [ ] 05-02-PLAN.md — Pricing geo detection + INR/USD currency prop (CF-IPCountry header, PRICING_CONFIG constant)
+- [ ] 05-03-PLAN.md — Auth-aware nav (Header converted to async Server Component, NavLink client child)
 **UI hint**: yes
 
 ### Phase 6: Interview Scheduling
@@ -130,6 +134,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Job Posting | 0/TBD | Not started | - |
 | 3. Matching Engine & Feed | 0/TBD | Not started | - |
 | 4. Applications & Recruiter Dashboard | 0/TBD | Not started | - |
-| 5. Homepage, Pricing & Nav | 0/TBD | Not started | - |
+| 5. Homepage, Pricing & Nav | 0/3 | Not started | - |
 | 6. Interview Scheduling | 0/TBD | Not started | - |
 | 7. Polish & Pre-Launch | 0/TBD | Not started | - |
