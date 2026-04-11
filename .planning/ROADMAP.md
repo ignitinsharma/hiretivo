@@ -92,9 +92,9 @@ Plans:
   4. An unauthenticated visitor sees the public nav; a logged-in seeker sees the seeker nav; a logged-in recruiter sees the recruiter nav
 **Plans**: 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — Homepage stats + featured jobs (async Server Component, Prisma queries)
-- [ ] 05-02-PLAN.md — Pricing geo detection + INR/USD currency prop (CF-IPCountry header, PRICING_CONFIG constant)
-- [ ] 05-03-PLAN.md — Auth-aware nav (Header converted to async Server Component, NavLink client child)
+- [x] 05-01-PLAN.md — Homepage stats + featured jobs (async Server Component, Prisma queries)
+- [x] 05-02-PLAN.md — Pricing geo detection + INR/USD currency prop (CF-IPCountry header, PRICING_CONFIG constant)
+- [x] 05-03-PLAN.md — Auth-aware nav (Header converted to async Server Component, NavLink client child)
 **UI hint**: yes
 
 ### Phase 6: Interview Scheduling
