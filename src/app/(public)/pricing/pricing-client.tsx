@@ -4,9 +4,22 @@ import { useState } from "react";
 import { CircleCheck, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PRICING_CONFIG, CURRENCY_SYMBOL, type PricingCurrency } from "@/constants/pricing";
 
-export function PricingClient() {
+interface PricingClientProps {
+  currency: PricingCurrency;
+}
+
+export function PricingClient({ currency }: PricingClientProps) {
   const [isAnnual, setIsAnnual] = useState(false);
+
+  const sym = CURRENCY_SYMBOL[currency];
+  const starter = PRICING_CONFIG.find((t) => t.id === "starter")!;
+  const growth = PRICING_CONFIG.find((t) => t.id === "growth")!;
+  const pro = PRICING_CONFIG.find((t) => t.id === "pro")!;
+  const starterPrices = starter[currency]!;
+  const growthPrices = growth[currency]!;
+  const proPrices = pro[currency]!;
 
   return (
     <>
@@ -64,7 +77,7 @@ export function PricingClient() {
                 {isAnnual ? "Try Hiretivo, no credit card needed" : "Free Tier - Lead Generator"}
               </p>
               <div className="flex items-baseline gap-1">
-                <span className={cn("font-extrabold text-slate-900", isAnnual ? "text-4xl" : "text-4xl")}>$0</span>
+                <span className={cn("font-extrabold text-slate-900", isAnnual ? "text-4xl" : "text-4xl")}>{sym}0</span>
                 <span className={cn("text-slate-500", isAnnual ? "text-sm font-medium ml-1" : "text-sm ml-1")}>/mo</span>
               </div>
               <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
@@ -122,15 +135,15 @@ export function PricingClient() {
               </p>
               <div className="flex items-baseline gap-1">
                 <span className={cn("font-extrabold text-slate-900", isAnnual ? "text-4xl" : "text-4xl")}>
-                  {isAnnual ? "$31" : "$49"}
+                  {sym}{isAnnual ? starterPrices.annual : starterPrices.monthly}
                 </span>
                 <span className={cn("text-slate-500", isAnnual ? "text-sm font-medium ml-1" : "text-sm ml-1")}>/mo</span>
               </div>
             </div>
-            
+
             {isAnnual ? (
               <div className="bg-indigo-50 p-2.5 rounded-lg mb-6 text-center">
-                <p className="text-brand-primary text-[10px] font-bold">Save $120/yr · $375 billed annually</p>
+                <p className="text-brand-primary text-[10px] font-bold">Save {sym}{starterPrices.annualSavings}/yr · {sym}{starterPrices.annualTotal} billed annually</p>
               </div>
             ) : (
               <div className="bg-slate-50 p-2.5 rounded-lg mb-6 text-center">
@@ -211,15 +224,15 @@ export function PricingClient() {
               </p>
               <div className="flex items-baseline gap-1">
                 <span className={cn("font-extrabold", isAnnual ? "text-4xl text-white" : "text-4xl")}>
-                  {isAnnual ? "$95" : "$149"}
+                  {sym}{isAnnual ? growthPrices.annual : growthPrices.monthly}
                 </span>
                 <span className={cn("text-indigo-200", isAnnual ? "text-sm font-medium ml-1" : "text-sm ml-1")}>/mo</span>
               </div>
             </div>
-            
+
             {isAnnual ? (
               <div className="bg-white/10 p-2.5 rounded-lg mb-6 text-center">
-                <p className="text-white text-[10px] font-bold">Save $360/yr · $1,140 billed annually</p>
+                <p className="text-white text-[10px] font-bold">Save {sym}{growthPrices.annualSavings}/yr · {sym}{growthPrices.annualTotal} billed annually</p>
               </div>
             ) : (
               <div className="bg-white/10 p-2.5 rounded-lg mb-6 text-center">
@@ -304,15 +317,15 @@ export function PricingClient() {
               <p className="text-slate-500 text-xs mb-4 min-h-[32px]">For scaling teams, multiple departments</p>
               <div className="flex items-baseline gap-1">
                 <span className={cn("font-extrabold text-slate-900", isAnnual ? "text-4xl" : "text-4xl")}>
-                  {isAnnual ? "$191" : "$299"}
+                  {sym}{isAnnual ? proPrices.annual : proPrices.monthly}
                 </span>
                 <span className={cn("text-slate-500", isAnnual ? "text-sm font-medium ml-1" : "text-sm ml-1")}>/mo</span>
               </div>
             </div>
-            
+
             {isAnnual ? (
               <div className="bg-indigo-50 p-2.5 rounded-lg mb-6 text-center">
-                <p className="text-brand-primary text-[10px] font-bold">Save $720/yr · $2,295 billed annually</p>
+                <p className="text-brand-primary text-[10px] font-bold">Save {sym}{proPrices.annualSavings}/yr · {sym}{proPrices.annualTotal} billed annually</p>
               </div>
             ) : (
               <div className="bg-slate-50 p-2.5 rounded-lg mb-6 text-center">
