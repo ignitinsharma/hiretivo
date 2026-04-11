@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 
 interface FooterProps {
   className?: string;
@@ -11,9 +12,8 @@ export function Footer({ className }: FooterProps) {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
           <div className="col-span-2 lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold text-lg">H</div>
-              <span className="text-heading text-lg font-extrabold tracking-tight">Hiretivo</span>
+            <Link href="/" className="flex items-center mb-6">
+              <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-11 w-auto object-contain" />
             </Link>
             <p className="text-brand-body max-w-xs mb-6">Building the future of remote work. Connecting talent with world-class remote companies since 2021.</p>
           </div>

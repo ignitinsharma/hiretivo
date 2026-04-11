@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { UserRole } from '@/constants/enums';
@@ -35,10 +36,7 @@ export async function Header({ className }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 md:px-8 w-full flex items-center justify-between">
         {/* Logo — unchanged */}
         <Link href="/" className="flex items-center gap-2 group cursor-pointer" data-purpose="logo">
-          <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold text-xl">
-            H
-          </div>
-          <span className="text-heading text-xl font-extrabold tracking-tight">Hiretivo</span>
+          <Image src="/images/logo.png" alt="Hiretivo" width={120} height={40} className="h-6 w-auto object-contain" priority />
         </Link>
 
         {/* Seeker nav links */}

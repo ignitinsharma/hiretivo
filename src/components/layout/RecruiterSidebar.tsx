@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Plus, LogOut, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -75,13 +76,12 @@ function RecruiterSidebarInner({
       {/* Logo */}
       <div className={cn('px-5 py-5 flex items-center gap-3', collapsed && 'justify-center px-0')}>
         <Link href="/recruiter/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
-            H
-          </div>
-          {!collapsed && (
-            <span className="text-lg font-bold text-primary tracking-tight">
-              Hiretivo
-            </span>
+          {collapsed ? (
+            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
+              H
+            </div>
+          ) : (
+            <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
           )}
         </Link>
       </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { ExternalLink, Lock } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { ApplyType, JobStatus } from "@/constants/enums";
@@ -43,12 +44,7 @@ export default async function ExternalRedirectionPage({
     <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-center p-4">
       <main className="w-full max-w-md">
         <div className="flex justify-center mb-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg">
-              H
-            </div>
-            <span className="text-xl font-bold tracking-tight">Hiretivo</span>
-          </div>
+          <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
         </div>
 
         <section className="bg-white border border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl p-8 text-center">
