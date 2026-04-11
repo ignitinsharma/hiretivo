@@ -46,6 +46,7 @@ Seekers see only the jobs they match — match score drives every surface, from 
 - ✓ Phase 1 — Auth & Onboarding complete — validated in Phase 1
 - ✓ Phase 2 — Job Posting complete — validated in Phase 2 (02-VERIFICATION.md)
 - ✓ Phase 4 — Applications & Recruiter Dashboard complete — validated in Phase 4 (04-VERIFICATION.md)
+- ✓ Phase 5 — Homepage, Pricing & Nav complete — validated in Phase 5 (05-VERIFICATION.md)
 
 ### Active
 
@@ -82,9 +83,9 @@ Seekers see only the jobs they match — match score drives every surface, from 
 - [x] FREE plan blur gate: applicants 21+ blurred in recruiter view — Validated Phase 4
 
 **Phase 5 — Homepage, Public Pages & Pricing:**
-- [ ] Homepage sections wired with real data (job counts, seeker stats, featured jobs)
-- [ ] Pricing page with Monthly/Annual toggle and geo-detection (INR for India, USD otherwise)
-- [ ] 3 nav variants wired: public (unauthenticated), seeker, recruiter
+- [x] Homepage sections wired with real data (job counts, seeker stats, featured jobs) — Validated Phase 5
+- [x] Pricing page with Monthly/Annual toggle and geo-detection (INR for India, USD otherwise) — Validated Phase 5
+- [x] 3 nav variants wired: public (unauthenticated), seeker, recruiter — Validated Phase 5
 - [ ] SEO metadata for all public-facing pages
 
 **Phase 6 — Interview Scheduling:**
@@ -166,4 +167,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after Phase 4 completion*
+*Last updated: 2026-04-11 after Phase 5 completion*
