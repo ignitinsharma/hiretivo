@@ -3,11 +3,21 @@ import { prisma } from "@/lib/prisma";
 import { ChangePasswordSchema } from "@/lib/validations/interview.schema";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const passwordChangeRateLimiter = createRateLimiter("change-password", 5, "1 m");
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limiting — 5 password changes/min (security-sensitive)
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const { success } = await passwordChangeRateLimiter.limit(ip);
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
   }
 
   const body: unknown = await req.json().catch(() => null);

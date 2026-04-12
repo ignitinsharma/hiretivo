@@ -5,6 +5,9 @@ import { isValidStageTransition } from "@/lib/application-pipeline";
 import { sendApplicationStatusEmail } from "@/lib/email/application-status";
 import { prisma } from "@/lib/prisma";
 import { updateApplicationStageSchema } from "@/lib/validations/application";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const stageUpdateRateLimiter = createRateLimiter("stage-update", 30, "1 m");
 
 interface RouteContext {
   params: { id: string };
@@ -18,6 +21,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Rate limiting — 30 stage updates/min per recruiter
+  const { success } = await stageUpdateRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
   }
 
   let body: unknown;

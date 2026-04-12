@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { computeAllMatches, upsertJobMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
 
 function formatSalaryRange(min: number | null, max: number | null, currency: string | null): string {
   const cur = currency ?? 'USD';
@@ -36,6 +39,12 @@ export async function GET(req: NextRequest) {
 
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Rate limiting — 30 feed requests/min
+  const { success } = await feedRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new NextResponse('Too Many Requests', { status: 429 });
   }
 
   const seekerProfile = await prisma.seekerProfile.findUnique({

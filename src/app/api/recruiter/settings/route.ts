@@ -7,6 +7,9 @@ import {
 } from "@/lib/validations/interview.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const settingsRateLimiter = createRateLimiter("settings-save", 20, "1 m");
 
 export async function GET() {
   const session = await auth();
@@ -64,6 +67,12 @@ export async function PATCH(req: NextRequest) {
   }
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Rate limiting — 20 settings saves/min
+  const { success } = await settingsRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
   }
 
   const body: unknown = await req.json().catch(() => null);
