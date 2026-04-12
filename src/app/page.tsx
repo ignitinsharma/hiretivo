@@ -4,6 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { UserRole, JobStatus } from "@/constants/enums";
+import { generatePageMetadata } from "@/lib/metadata";
+
+export const metadata = generatePageMetadata({
+  title: "Skills-Based Remote Job Portal",
+  description: "Find remote jobs matched to your skills. No resume black holes — just skill-based matching for developers, designers, and more.",
+});
 
 function formatStat(n: number): string {
   if (n >= 1000) return `${Math.round(n / 1000)}k+`;
