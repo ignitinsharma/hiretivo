@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useForm as useHookForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useForm as useHookForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 
 export function PersonalInfoSection() {
   const { register, handleSubmit } = useHookForm({
     defaultValues: {
-      fullName: 'Alex Rivera',
-      location: '',
-      website: '',
+      fullName: "Alex Rivera",
+      location: "",
+      website: "",
     },
   });
 
@@ -18,9 +18,14 @@ export function PersonalInfoSection() {
   };
 
   return (
-    <section id="account" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <section
+      id="account"
+      className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+    >
       <div className="p-6 border-b border-slate-100">
-        <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
+        <h3 className="text-lg font-bold text-slate-900">
+          Personal Information
+        </h3>
         <p className="text-sm text-slate-500">
           This information will be displayed on your public profile.
         </p>
@@ -33,10 +38,20 @@ export function PersonalInfoSection() {
               AR
             </div>
             <div className="flex items-center gap-4">
-              <Button type="button" variant="link" size="sm" className="font-semibold px-0">
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="font-semibold px-0"
+              >
                 Change photo
               </Button>
-              <Button type="button" variant="link" size="sm" className="font-semibold text-slate-500 px-0">
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="font-semibold text-slate-500 px-0"
+              >
                 Remove
               </Button>
             </div>
@@ -44,15 +59,19 @@ export function PersonalInfoSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Full Name</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Full Name
+              </label>
               <input
-                {...register('fullName')}
+                {...register("fullName")}
                 className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
                 type="text"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Email Address</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Email Address
+              </label>
               <div className="relative">
                 <input
                   className="w-full rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-sm pr-24"
@@ -66,18 +85,22 @@ export function PersonalInfoSection() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Location</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Location
+              </label>
               <input
-                {...register('location')}
+                {...register("location")}
                 className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
                 placeholder="e.g. San Francisco, CA"
                 type="text"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Website</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Website
+              </label>
               <input
-                {...register('website')}
+                {...register("website")}
                 className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
                 placeholder="https://yourportfolio.com"
                 type="url"
@@ -87,10 +110,15 @@ export function PersonalInfoSection() {
         </div>
 
         <div className="px-6 py-4 bg-slate-50 flex items-center justify-end gap-4">
-          <Button type="button" variant="ghost" size="sm" className="font-medium">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="font-medium"
+          >
             Cancel
           </Button>
-          <Button type="submit" variant="brand" size="sm" className="px-5">
+          <Button type="submit" variant="default" size="sm" className="px-5">
             Save Changes
           </Button>
         </div>

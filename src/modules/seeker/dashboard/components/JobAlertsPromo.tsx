@@ -1,6 +1,6 @@
-import React from 'react';
-import { Megaphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Megaphone } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function JobAlertsPromo() {
   return (
@@ -12,7 +12,11 @@ export function JobAlertsPromo() {
       <p className="text-primary-foreground/90 text-sm mt-2 mb-4 relative z-10">
         We&apos;ll notify you as soon as a job matching your profile is posted.
       </p>
-      <Button variant="secondary" size="full" className="font-black text-sm relative z-10 transition-colors">
+      <Button
+        variant="secondary"
+        size="sm"
+        className="font-black text-sm relative z-10 transition-colors"
+      >
         Enable Alerts
       </Button>
     </div>

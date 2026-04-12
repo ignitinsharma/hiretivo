@@ -59,11 +59,7 @@ export function JobCard({ job, onApply, variant = "default" }: JobCardProps) {
         <span className="text-slate-700 font-semibold text-sm">
           {job.salaryRange}
         </span>
-        <Button
-          onClick={onApply}
-          variant="brand"
-          size="sm"
-        >
+        <Button onClick={onApply} variant="default" size="sm">
           Apply Now
         </Button>
       </div>

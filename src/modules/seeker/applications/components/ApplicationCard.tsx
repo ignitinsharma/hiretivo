@@ -1,11 +1,11 @@
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { MoreVertical, Building2 } from 'lucide-react';
-import { ApplicationStatus } from '@/constants/enums';
-import { cn } from '@/lib/utils';
-import type { SeekerApplicationItem } from '../types/application.types';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { MoreVertical, Building2 } from "lucide-react";
+import { ApplicationStatus } from "@/constants/enums";
+import { cn } from "@/lib/utils";
+import type { SeekerApplicationItem } from "../types/application.types";
+import { Button } from "@/components/ui/button";
 
 interface ApplicationCardProps {
   application: SeekerApplicationItem;
@@ -28,7 +28,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
             <Building2 className="w-6 h-6" />
           )}
         </div>
-        <Button variant="icon-ghost" size="icon-sm" className="px-2">
+        <Button variant="ghost" size="icon" className="px-2">
           <MoreVertical className="w-5 h-5" />
         </Button>
       </div>
@@ -53,51 +53,51 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
 }
 
 function StatusBadge({ status }: { status: ApplicationStatus }) {
-  let badgeClasses = '';
-  let dotClasses = '';
+  let badgeClasses = "";
+  let dotClasses = "";
   let label: string = status;
 
   switch (status) {
     case ApplicationStatus.INTERVIEW:
-      badgeClasses = 'bg-primary/10 text-primary';
-      dotClasses = 'bg-primary';
-      label = 'Interview';
+      badgeClasses = "bg-primary/10 text-primary";
+      dotClasses = "bg-primary";
+      label = "Interview";
       break;
     case ApplicationStatus.REVIEWING:
-      badgeClasses = 'bg-blue-100 text-blue-700';
-      dotClasses = 'bg-blue-500';
-      label = 'Under Review';
+      badgeClasses = "bg-blue-100 text-blue-700";
+      dotClasses = "bg-blue-500";
+      label = "Under Review";
       break;
     case ApplicationStatus.APPLIED:
-      badgeClasses = 'bg-slate-100 text-slate-600';
-      dotClasses = 'bg-slate-400';
-      label = 'Applied';
+      badgeClasses = "bg-slate-100 text-slate-600";
+      dotClasses = "bg-slate-400";
+      label = "Applied";
       break;
     case ApplicationStatus.OFFER:
-      badgeClasses = 'bg-amber-100 text-amber-700';
-      dotClasses = 'bg-amber-500';
-      label = 'Offer Received';
+      badgeClasses = "bg-amber-100 text-amber-700";
+      dotClasses = "bg-amber-500";
+      label = "Offer Received";
       break;
     case ApplicationStatus.HIRED:
-      badgeClasses = 'bg-green-100 text-green-700';
-      dotClasses = 'bg-green-500';
-      label = 'Hired';
+      badgeClasses = "bg-green-100 text-green-700";
+      dotClasses = "bg-green-500";
+      label = "Hired";
       break;
     case ApplicationStatus.REJECTED:
-      badgeClasses = 'bg-red-100 text-red-600';
-      dotClasses = 'bg-red-500';
-      label = 'Not Selected';
+      badgeClasses = "bg-red-100 text-red-600";
+      dotClasses = "bg-red-500";
+      label = "Not Selected";
       break;
   }
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold',
-        badgeClasses
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold",
+        badgeClasses,
       )}
     >
-      <span className={cn('w-2 h-2 rounded-full', dotClasses)}></span>
+      <span className={cn("w-2 h-2 rounded-full", dotClasses)}></span>
       {label}
     </span>
   );

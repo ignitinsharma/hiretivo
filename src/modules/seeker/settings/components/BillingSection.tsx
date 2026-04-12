@@ -74,11 +74,11 @@ export function BillingSection() {
                   <p className="text-xs text-slate-500 uppercase">Expires 12/26</p>
                 </div>
               </div>
-              <Button variant="link" size="xs" className="font-bold px-0">
+              <Button variant="link" size="sm" className="font-bold px-0">
                 Edit
               </Button>
             </div>
-            <Button variant="muted-outline" size="full" className="font-bold rounded-lg transition-colors">
+            <Button variant="outline" size="sm" className="font-bold rounded-lg transition-colors">
               View Billing History
             </Button>
           </div>

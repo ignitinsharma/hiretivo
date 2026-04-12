@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 
 export function PasswordSecuritySection() {
   const { register, handleSubmit } = useForm();
@@ -12,9 +12,14 @@ export function PasswordSecuritySection() {
   };
 
   return (
-    <section id="security" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <section
+      id="security"
+      className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+    >
       <div className="p-6 border-b border-slate-100">
-        <h3 className="text-lg font-bold text-slate-900">Password & Security</h3>
+        <h3 className="text-lg font-bold text-slate-900">
+          Password & Security
+        </h3>
         <p className="text-sm text-slate-500">
           Ensure your account is using a long, random password to stay secure.
         </p>
@@ -23,18 +28,22 @@ export function PasswordSecuritySection() {
         <div className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-slate-700">Current Password</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Current Password
+              </label>
               <input
-                {...register('currentPassword')}
+                {...register("currentPassword")}
                 className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
                 placeholder="••••••••"
                 type="password"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">New Password</label>
+              <label className="text-sm font-semibold text-slate-700">
+                New Password
+              </label>
               <input
-                {...register('newPassword')}
+                {...register("newPassword")}
                 className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
                 placeholder="••••••••"
                 type="password"
@@ -47,9 +56,11 @@ export function PasswordSecuritySection() {
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Confirm New Password</label>
+              <label className="text-sm font-semibold text-slate-700">
+                Confirm New Password
+              </label>
               <input
-                {...register('confirmPassword')}
+                {...register("confirmPassword")}
                 className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
                 placeholder="••••••••"
                 type="password"
@@ -57,7 +68,7 @@ export function PasswordSecuritySection() {
             </div>
           </div>
 
-          <Button type="submit" variant="brand" size="sm" className="px-5">
+          <Button type="submit" variant="default" size="sm" className="px-5">
             Update Password
           </Button>
 

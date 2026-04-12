@@ -1,7 +1,15 @@
-import React from 'react';
-import { Verified, Users, Globe, Calendar, Link as LinkIcon, Plus, Share2 } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import {
+  Verified,
+  Users,
+  Globe,
+  Calendar,
+  Link as LinkIcon,
+  Plus,
+  Share2,
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function CompanyHeader() {
   return (
@@ -16,16 +24,20 @@ export function CompanyHeader() {
             </div>
             <div className="flex flex-col">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Acme Corp</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+                  Acme Corp
+                </h1>
                 <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5">
                   <Verified className="w-4 h-4 text-emerald-600" />
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Verified</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                    Verified
+                  </span>
                 </div>
               </div>
               <p className="text-base sm:text-lg text-slate-500 mt-0.5">
                 Building the future of remote collaboration
               </p>
-              
+
               <div className="mt-3 flex flex-wrap gap-y-2 gap-x-4">
                 <div className="flex items-center gap-1.5 text-sm text-slate-500">
                   <Users className="w-4 h-4" />
@@ -39,19 +51,28 @@ export function CompanyHeader() {
                   <Calendar className="w-4 h-4" />
                   <span>Founded 2018</span>
                 </div>
-                <a href="#" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                <a
+                  href="#"
+                  className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
                   <LinkIcon className="w-4 h-4" />
                   <span>acmecorp.com</span>
                 </a>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button variant="muted-outline" className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-bold shadow-sm transition-all h-auto">
+            <Button
+              variant="outline"
+              className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-bold shadow-sm transition-all h-auto"
+            >
               <Plus className="w-5 h-5" /> Follow
             </Button>
-            <Button variant="brand" className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-bold shadow-sm transition-all h-auto">
+            <Button
+              variant="default"
+              className="flex flex-1 md:flex-none items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-bold shadow-sm transition-all h-auto"
+            >
               <Share2 className="w-5 h-5" /> Share
             </Button>
           </div>

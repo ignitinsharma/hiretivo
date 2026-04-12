@@ -1,6 +1,6 @@
-import React from 'react';
-import { ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function ProfileStrengthCard() {
   return (
@@ -9,7 +9,7 @@ export function ProfileStrengthCard() {
         <ShieldCheck className="text-primary w-5 h-5" />
         <h3 className="font-bold text-slate-900">Profile Strength</h3>
       </div>
-      
+
       <div className="relative pt-1">
         <div className="flex mb-2 items-center justify-between">
           <div>
@@ -26,15 +26,19 @@ export function ProfileStrengthCard() {
         <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-primary/20">
           <div
             className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
-            style={{ width: '75%' }}
+            style={{ width: "75%" }}
           ></div>
         </div>
       </div>
-      
+
       <p className="text-slate-500 text-xs leading-relaxed">
         Add a professional bio to increase your visibility to recruiters by 40%.
       </p>
-      <Button variant="brand-outline" size="full" className="mt-4 font-bold text-sm rounded-lg transition-colors">
+      <Button
+        variant="outline"
+        size="default"
+        className="mt-4 font-bold text-sm rounded-lg transition-colors"
+      >
         Improve Profile
       </Button>
     </div>

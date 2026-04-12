@@ -1,18 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Filter, Download } from 'lucide-react';
-import { ApplicationCard } from './ApplicationCard';
-import { Button } from '@/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
-import { ApplicationListSkeleton } from './ApplicationListSkeleton';
-import type { SeekerApplicationItem } from '../types/application.types';
+import React from "react";
+import { Filter, Download } from "lucide-react";
+import { ApplicationCard } from "./ApplicationCard";
+import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { ApplicationListSkeleton } from "./ApplicationListSkeleton";
+import type { SeekerApplicationItem } from "../types/application.types";
 
 async function fetchApplications(): Promise<SeekerApplicationItem[]> {
-  const response = await fetch('/api/applications');
+  const response = await fetch("/api/applications");
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error ?? 'Failed to load applications');
+    throw new Error(
+      (data as { error?: string }).error ?? "Failed to load applications",
+    );
   }
 
   const data = (await response.json()) as Array<{
@@ -21,23 +23,27 @@ async function fetchApplications(): Promise<SeekerApplicationItem[]> {
     jobTitle: string;
     companyName: string;
     companyLogoUrl?: string | null;
-    status: SeekerApplicationItem['status'];
+    status: SeekerApplicationItem["status"];
     appliedAt: string;
   }>;
 
   return data.map((application) => ({
     ...application,
     companyLogoUrl: application.companyLogoUrl ?? undefined,
-    appliedAt: new Date(application.appliedAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    appliedAt: new Date(application.appliedAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     }),
   }));
 }
 
 export function ApplicationList() {
-  const { data: applications = [], isLoading, isError } = useQuery({
-    queryKey: ['applications'],
+  const {
+    data: applications = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["applications"],
     queryFn: fetchApplications,
   });
 
@@ -48,7 +54,9 @@ export function ApplicationList() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h3 className="text-lg font-bold text-slate-900">Couldn&apos;t load your applications</h3>
+        <h3 className="text-lg font-bold text-slate-900">
+          Couldn&apos;t load your applications
+        </h3>
         <p className="text-slate-500 mt-2">Please refresh and try again.</p>
       </div>
     );
@@ -60,7 +68,9 @@ export function ApplicationList() {
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
           <span className="text-2xl">📄</span>
         </div>
-        <h3 className="text-lg font-bold text-slate-900">No applications yet</h3>
+        <h3 className="text-lg font-bold text-slate-900">
+          No applications yet
+        </h3>
         <p className="text-slate-500 mt-2">
           You haven&apos;t applied to any jobs yet. Start exploring!
         </p>
@@ -80,11 +90,19 @@ export function ApplicationList() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="muted-outline" size="sm" className="flex items-center gap-2 rounded-lg font-semibold transition-all">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 rounded-lg font-semibold transition-all"
+          >
             <Filter className="w-4 h-4" />
             Filter
           </Button>
-          <Button variant="brand" size="sm" className="flex items-center gap-2 rounded-lg font-bold transition-all">
+          <Button
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2 rounded-lg font-bold transition-all"
+          >
             <Download className="w-4 h-4" />
             Export List
           </Button>
