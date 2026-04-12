@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       );
 
       await sendStaleJobNudge({
-        recruiterEmail: job.recruiter.email,
+        recruiterEmail: job.recruiter.email ?? "",
         recruiterName: job.recruiter.name ?? "there",
         jobTitle: job.title,
         daysInactive,
