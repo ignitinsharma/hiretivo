@@ -19,6 +19,12 @@ interface UIState {
   selectedApplicationId: string | null;
   openCandidateDrawer: (id: string) => void;
   closeCandidateDrawer: () => void;
+
+  isScheduleModalOpen: boolean;
+  scheduleInterviewApplicationId: string | null;
+  scheduledInterviewId: string | null; // present when rescheduling existing interview
+  openScheduleModal: (applicationId: string, interviewId?: string | null) => void;
+  closeScheduleModal: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -52,4 +58,18 @@ export const useUIStore = create<UIState>((set) => ({
   selectedApplicationId: null,
   openCandidateDrawer: (id) => set({ isCandidateDrawerOpen: true, selectedApplicationId: id }),
   closeCandidateDrawer: () => set({ isCandidateDrawerOpen: false, selectedApplicationId: null }),
+
+  isScheduleModalOpen: false,
+  scheduleInterviewApplicationId: null,
+  scheduledInterviewId: null,
+  openScheduleModal: (applicationId, interviewId) => set({
+    isScheduleModalOpen: true,
+    scheduleInterviewApplicationId: applicationId,
+    scheduledInterviewId: interviewId ?? null,
+  }),
+  closeScheduleModal: () => set({
+    isScheduleModalOpen: false,
+    scheduleInterviewApplicationId: null,
+    scheduledInterviewId: null,
+  }),
 }));
