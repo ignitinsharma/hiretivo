@@ -1,7 +1,7 @@
 # Auth Protection Fix — Design Specification
 
-**Date:** 2026-04-12  
-**Status:** Approved  
+**Date:** 2026-04-12
+**Status:** Implemented
 **Author:** Qwen Code + User
 
 ---
