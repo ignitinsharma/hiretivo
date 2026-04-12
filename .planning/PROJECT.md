@@ -47,6 +47,7 @@ Seekers see only the jobs they match — match score drives every surface, from 
 - ✓ Phase 2 — Job Posting complete — validated in Phase 2 (02-VERIFICATION.md)
 - ✓ Phase 4 — Applications & Recruiter Dashboard complete — validated in Phase 4 (04-VERIFICATION.md)
 - ✓ Phase 5 — Homepage, Pricing & Nav complete — validated in Phase 5 (05-VERIFICATION.md)
+- ✓ Phase 6 — Interview Scheduling complete — validated in Phase 6 (06-VERIFICATION.md)
 
 ### Active
 
@@ -89,12 +90,12 @@ Seekers see only the jobs they match — match score drives every surface, from 
 - [ ] SEO metadata for all public-facing pages
 
 **Phase 6 — Interview Scheduling:**
-- [ ] Google Calendar OAuth with encrypted token storage
-- [ ] Settings page with 4 tabs (profile, notifications, calendar, security)
-- [ ] Availability API: free/busy slots for next 14 days
-- [ ] Schedule/reschedule/cancel interview with Google Meet link creation
-- [ ] GROWTH+ plan gate for scheduling features
-- [ ] Coming Soon state for calendar page when plan insufficient
+- [x] Settings page with 4 tabs (profile, notifications, calendar, security) — Validated Phase 6
+- [x] Schedule/reschedule/cancel interview with email notifications — Validated Phase 6
+- [x] Plan gate for scheduling features (FREE plan disabled with tooltip) — Validated Phase 6
+- [x] UpcomingInterviewsList dashboard widget wired to live data — Validated Phase 6
+- [x] RecruiterProfile notification preferences (emailNotifications, applicationAlerts, interviewNotifications) — Validated Phase 6
+- [ ] Google Calendar OAuth with encrypted token storage (deferred — calendar tab shows Coming Soon)
 
 **Phase 7 — Polish & Pre-Launch:**
 - [ ] Custom 404 and 500 error pages wired
@@ -167,4 +168,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after Phase 5 completion*
+*Last updated: 2026-04-12 after Phase 6 completion*
