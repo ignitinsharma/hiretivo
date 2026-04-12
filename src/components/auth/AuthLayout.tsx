@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface AuthLayoutProps {
@@ -34,9 +35,8 @@ export function AuthLayout({
         <div className="w-full max-w-md mx-auto">
           {/* Mobile-only header info / branding */}
           <div className="md:hidden mb-12">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <LogoIcon className="h-6 w-6" />
-              <span className="text-brand-primary font-bold text-xl tracking-tighter">Hiretivo</span>
+            <Link href="/" className="inline-flex items-center">
+              <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
             </Link>
           </div>
 
@@ -74,28 +74,6 @@ export function AuthLayout({
         </div>
       </section>
     </main>
-  );
-}
-
-function LogoIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect width="32" height="32" rx="8" fill="#5c54e6" />
-      <path
-        d="M8 22L12 10L16 18L20 10L24 22"
-        stroke="white"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="10" r="2" fill="white" />
-      <circle cx="20" cy="10" r="2" fill="white" />
-    </svg>
   );
 }
 

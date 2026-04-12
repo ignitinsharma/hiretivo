@@ -3,6 +3,7 @@
 import React from 'react';
 import { ChevronRight, Globe2, Bookmark } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
 
@@ -47,7 +48,13 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm p-3">
             {job.companyLogoUrl ? (
-              <img src={job.companyLogoUrl} alt={`${job.companyName} logo`} className="w-full h-full object-contain" />
+              <Image
+                src={job.companyLogoUrl}
+                alt={`${job.companyName} logo`}
+                width={80}
+                height={80}
+                className="w-full h-full object-contain"
+              />
             ) : (
               <div className="w-full h-full bg-slate-100 rounded-xl flex items-center justify-center text-primary font-bold text-2xl">
                 {job.companyName.charAt(0)}

@@ -25,6 +25,7 @@ import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { PageSkeleton } from "@/components/shared/PageSkeleton";
 
 const JOBS_PER_PAGE = 5;
 
@@ -458,11 +459,8 @@ export default function RecruiterJobsPage() {
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-8 text-center text-slate-400 text-sm"
-                    >
-                      Loading jobs...
+                    <td colSpan={4} className="px-0 py-0">
+                      <PageSkeleton lines={5} showHeader={false} />
                     </td>
                   </tr>
                 ) : jobs.length === 0 ? (

@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createJobSchema } from '@/lib/validations/job';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
 // GET /api/jobs — list recruiter's own jobs (auth-scoped)
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limiting — 60 job list requests/min (prevent scraping)
+  const { success } = await jobListRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new NextResponse('Too Many Requests', { status: 429 });
   }
 
   const jobs = await prisma.job.findMany({

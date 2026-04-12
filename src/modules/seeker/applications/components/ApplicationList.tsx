@@ -2,12 +2,57 @@
 
 import React from 'react';
 import { Filter, Download } from 'lucide-react';
-import { MOCK_APPLICATIONS } from '../data/mock-applications';
 import { ApplicationCard } from './ApplicationCard';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { ApplicationListSkeleton } from './ApplicationListSkeleton';
+import type { SeekerApplicationItem } from '../types/application.types';
+
+async function fetchApplications(): Promise<SeekerApplicationItem[]> {
+  const response = await fetch('/api/applications');
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? 'Failed to load applications');
+  }
+
+  const data = (await response.json()) as Array<{
+    id: string;
+    jobId: string;
+    jobTitle: string;
+    companyName: string;
+    companyLogoUrl?: string | null;
+    status: SeekerApplicationItem['status'];
+    appliedAt: string;
+  }>;
+
+  return data.map((application) => ({
+    ...application,
+    companyLogoUrl: application.companyLogoUrl ?? undefined,
+    appliedAt: new Date(application.appliedAt).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
+  }));
+}
 
 export function ApplicationList() {
-  const applications = MOCK_APPLICATIONS;
+  const { data: applications = [], isLoading, isError } = useQuery({
+    queryKey: ['applications'],
+    queryFn: fetchApplications,
+  });
+
+  if (isLoading) {
+    return <ApplicationListSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <h3 className="text-lg font-bold text-slate-900">Couldn&apos;t load your applications</h3>
+        <p className="text-slate-500 mt-2">Please refresh and try again.</p>
+      </div>
+    );
+  }
 
   if (!applications || applications.length === 0) {
     return (
@@ -17,7 +62,7 @@ export function ApplicationList() {
         </div>
         <h3 className="text-lg font-bold text-slate-900">No applications yet</h3>
         <p className="text-slate-500 mt-2">
-          You haven't applied to any jobs yet. Start exploring!
+          You haven&apos;t applied to any jobs yet. Start exploring!
         </p>
       </div>
     );

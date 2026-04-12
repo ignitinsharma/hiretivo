@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MoreVertical, Building2 } from 'lucide-react';
 import { ApplicationStatus } from '@/constants/enums';
 import { cn } from '@/lib/utils';
@@ -16,9 +17,11 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center p-2 border border-slate-100 text-primary font-bold overflow-hidden">
           {application.companyLogoUrl ? (
-            <img
+            <Image
               src={application.companyLogoUrl}
               alt={application.companyName}
+              width={56}
+              height={56}
               className="w-full h-full object-contain"
             />
           ) : (
@@ -52,33 +55,38 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
 function StatusBadge({ status }: { status: ApplicationStatus }) {
   let badgeClasses = '';
   let dotClasses = '';
-  let label = status;
+  let label: string = status;
 
   switch (status) {
-    case ApplicationStatus.SHORTLISTED:
+    case ApplicationStatus.INTERVIEW:
       badgeClasses = 'bg-primary/10 text-primary';
       dotClasses = 'bg-primary';
-      label = 'Shortlisted';
+      label = 'Interview';
       break;
-    case ApplicationStatus.REVIEWED:
-      badgeClasses = 'bg-primary/5 text-primary/80';
-      dotClasses = 'bg-primary/60';
+    case ApplicationStatus.REVIEWING:
+      badgeClasses = 'bg-blue-100 text-blue-700';
+      dotClasses = 'bg-blue-500';
       label = 'Under Review';
       break;
-    case ApplicationStatus.PENDING:
+    case ApplicationStatus.APPLIED:
       badgeClasses = 'bg-slate-100 text-slate-600';
       dotClasses = 'bg-slate-400';
-      label = 'Pending';
+      label = 'Applied';
+      break;
+    case ApplicationStatus.OFFER:
+      badgeClasses = 'bg-amber-100 text-amber-700';
+      dotClasses = 'bg-amber-500';
+      label = 'Offer Received';
+      break;
+    case ApplicationStatus.HIRED:
+      badgeClasses = 'bg-green-100 text-green-700';
+      dotClasses = 'bg-green-500';
+      label = 'Hired';
       break;
     case ApplicationStatus.REJECTED:
       badgeClasses = 'bg-red-100 text-red-600';
       dotClasses = 'bg-red-500';
-      label = 'Declined';
-      break;
-    case ApplicationStatus.WITHDRAWN:
-      badgeClasses = 'bg-slate-100 text-slate-500';
-      dotClasses = 'bg-slate-400';
-      label = 'Withdrawn';
+      label = 'Not Selected';
       break;
   }
 
@@ -89,7 +97,7 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
         badgeClasses
       )}
     >
-      <span className={cn('w-1.5 h-1.5 rounded-full', dotClasses)}></span>
+      <span className={cn('w-2 h-2 rounded-full', dotClasses)}></span>
       {label}
     </span>
   );

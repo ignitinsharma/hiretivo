@@ -3,6 +3,7 @@
 .claude
 .codex
 .opencode
+.qwen
 CONTEXT.md
 PROGRESS.md
 node_modules
@@ -21,3 +22,5 @@ coverage
 .planning*
 .planning
 .docs/superpowers
+PROJECT-STATUS.md
+QWEN.md

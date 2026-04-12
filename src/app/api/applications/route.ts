@@ -1,46 +1,66 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-
-const applySchema = z.object({
-  jobId: z.string().cuid(),
-  coverLetter: z.string().optional(),
-});
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { ApplicationStatus, JobStatus, UserRole } from "@/constants/enums";
+import { prisma } from "@/lib/prisma";
+import { createApplicationSchema } from "@/lib/validations/application";
+import { applyRateLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
+  const { success } = await applyRateLimiter.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  if (session.user.role !== 'SEEKER') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (session.user.role !== UserRole.SEEKER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = applySchema.safeParse(body);
+  const parsed = createApplicationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? 'Validation failed' },
-      { status: 400 }
+      { error: parsed.error.issues[0]?.message ?? "Validation failed" },
+      { status: 400 },
     );
   }
 
   const { jobId, coverLetter } = parsed.data;
 
-  const job = await prisma.job.findUnique({
-    where: { id: jobId, status: 'OPEN' },
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, status: JobStatus.OPEN },
     select: { id: true, recruiterId: true },
   });
   if (!job) {
-    return NextResponse.json({ error: 'Job not found or closed' }, { status: 404 });
+    return NextResponse.json({ error: "Job not found or closed" }, { status: 404 });
+  }
+
+  const existingApplication = await prisma.application.findUnique({
+    where: {
+      jobId_seekerId: {
+        jobId,
+        seekerId: session.user.id,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (existingApplication) {
+    return NextResponse.json(
+      { error: "You have already applied to this job" },
+      { status: 409 },
+    );
   }
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
@@ -61,28 +81,65 @@ export async function POST(req: NextRequest) {
     matchScore = jobMatch?.score ?? 0;
   }
 
-  try {
-    const application = await prisma.application.create({
-      data: {
-        jobId,
-        seekerId: session.user.id,
-        coverLetter: coverLetter ?? null,
-        matchScore,
-      },
-    });
+  const application = await prisma.application.create({
+    data: {
+      jobId,
+      seekerId: session.user.id,
+      status: ApplicationStatus.APPLIED,
+      coverLetter: coverLetter ?? null,
+      matchScore,
+    },
+  });
 
-    return NextResponse.json(application, { status: 201 });
-  } catch (error: unknown) {
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as { code: string }).code === 'P2002'
-    ) {
-      return NextResponse.json(
-        { error: 'You have already applied to this job' },
-        { status: 409 }
-      );
-    }
-    throw error;
+  return NextResponse.json(application, { status: 201 });
+}
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  if (session.user.role !== UserRole.SEEKER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const applications = await prisma.application.findMany({
+    where: { seekerId: session.user.id },
+    select: {
+      id: true,
+      jobId: true,
+      status: true,
+      createdAt: true,
+      job: {
+        select: {
+          title: true,
+          recruiter: {
+            select: {
+              recruiterProfile: {
+                select: {
+                  companyName: true,
+                  logo: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json(
+    applications.map((application) => ({
+      id: application.id,
+      jobId: application.jobId,
+      jobTitle: application.job.title,
+      companyName:
+        application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company",
+      companyLogoUrl: application.job.recruiter.recruiterProfile?.logo ?? null,
+      status: application.status,
+      appliedAt: application.createdAt.toISOString(),
+    })),
+  );
 }

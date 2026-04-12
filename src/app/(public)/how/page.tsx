@@ -15,6 +15,13 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { generatePageMetadata } from "@/lib/metadata";
+
+export const metadata = generatePageMetadata({
+  title: "How It Works",
+  description: "See how Hiretivo's skills-based matching connects job seekers with their ideal remote roles.",
+  path: "/how",
+});
 
 export default function HowPage() {
   return (

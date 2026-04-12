@@ -12,9 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function ApplyJobModal() {
   const { isApplyModalOpen, closeApplyModal, selectedJobId, selectedJobTitle, selectedCompanyName } = useUIStore();
+  const queryClient = useQueryClient();
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,11 +33,18 @@ export function ApplyJobModal() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? 'Failed to apply');
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          throw new Error("You've already applied to this job.");
+        }
+        if (res.status === 403) {
+          throw new Error('Only job seekers can apply.');
+        }
+        throw new Error((data as { error?: string }).error ?? 'Failed to apply');
       }
 
-      toast.success('Application submitted successfully!');
+      await queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Application submitted!');
       setCoverLetter('');
       closeApplyModal();
     } catch (error) {

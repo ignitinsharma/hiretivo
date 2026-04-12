@@ -81,7 +81,9 @@ export default auth(async (req: NextRequest & { auth: any }) => {
   if (pathname.startsWith("/seeker/")) {
     // Wrong role: RECRUITER trying to access seeker routes
     if (userRole !== "SEEKER") {
-      return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+      return NextResponse.redirect(
+        new URL("/recruiter/dashboard?authError=forbidden", req.url)
+      );
     }
 
     // Check Steps 1+2 completion (per D-08)
@@ -109,7 +111,9 @@ export default auth(async (req: NextRequest & { auth: any }) => {
   if (pathname.startsWith("/recruiter/")) {
     // Wrong role: SEEKER trying to access recruiter routes
     if (userRole !== "RECRUITER") {
-      return NextResponse.redirect(new URL("/seeker/dashboard", req.url));
+      return NextResponse.redirect(
+        new URL("/seeker/dashboard?authError=forbidden", req.url)
+      );
     }
 
     // Check RecruiterProfile exists (per D-08)

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,11 @@ export function JobCard({ job, onApply, variant = "default" }: JobCardProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-lg bg-slate-50 p-2 border border-slate-100 flex items-center justify-center overflow-hidden">
           {job.companyLogoUrl ? (
-            <img
+            <Image
               src={job.companyLogoUrl}
               alt={`${job.companyName} logo`}
+              width={48}
+              height={48}
               className="w-full h-full object-contain"
             />
           ) : (

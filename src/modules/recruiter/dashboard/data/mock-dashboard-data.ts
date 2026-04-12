@@ -59,7 +59,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     position: 'Senior Frontend Developer',
     matchScore: 92,
     appliedDate: '2024-01-15',
-    status: ApplicationStatus.SHORTLISTED,
+    status: ApplicationStatus.INTERVIEW,
   },
   {
     id: '2',
@@ -68,7 +68,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     position: 'Full Stack Engineer',
     matchScore: 85,
     appliedDate: '2024-01-14',
-    status: ApplicationStatus.REVIEWED,
+    status: ApplicationStatus.REVIEWING,
   },
   {
     id: '3',
@@ -77,7 +77,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     position: 'Senior Frontend Developer',
     matchScore: 78,
     appliedDate: '2024-01-13',
-    status: ApplicationStatus.PENDING,
+    status: ApplicationStatus.APPLIED,
   },
   {
     id: '4',
@@ -86,7 +86,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     position: 'Backend Developer',
     matchScore: 71,
     appliedDate: '2024-01-12',
-    status: ApplicationStatus.PENDING,
+    status: ApplicationStatus.APPLIED,
   },
   {
     id: '5',
@@ -95,7 +95,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     position: 'Full Stack Engineer',
     matchScore: 65,
     appliedDate: '2024-01-11',
-    status: ApplicationStatus.REVIEWED,
+    status: ApplicationStatus.REVIEWING,
   },
 ];
 

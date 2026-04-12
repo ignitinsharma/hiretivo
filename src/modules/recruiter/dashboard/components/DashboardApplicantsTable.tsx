@@ -7,25 +7,29 @@ import { ApplicationStatus } from '@/constants/enums';
 import { RECENT_APPLICANTS } from '../data/mock-dashboard-data';
 
 const STATUS_STYLES: Record<ApplicationStatus, { label: string; className: string }> = {
-  [ApplicationStatus.PENDING]: {
-    label: 'Pending',
+  [ApplicationStatus.APPLIED]: {
+    label: 'Applied',
     className: 'bg-gray-100 text-gray-700',
   },
-  [ApplicationStatus.REVIEWED]: {
-    label: 'Reviewed',
+  [ApplicationStatus.REVIEWING]: {
+    label: 'Under Review',
     className: 'bg-blue-100 text-blue-700',
   },
-  [ApplicationStatus.SHORTLISTED]: {
-    label: 'Shortlisted',
+  [ApplicationStatus.INTERVIEW]: {
+    label: 'Interview',
+    className: 'bg-primary/10 text-primary',
+  },
+  [ApplicationStatus.OFFER]: {
+    label: 'Offer',
+    className: 'bg-amber-100 text-amber-700',
+  },
+  [ApplicationStatus.HIRED]: {
+    label: 'Hired',
     className: 'bg-green-100 text-green-700',
   },
   [ApplicationStatus.REJECTED]: {
-    label: 'Rejected',
+    label: 'Not Selected',
     className: 'bg-red-100 text-red-700',
-  },
-  [ApplicationStatus.WITHDRAWN]: {
-    label: 'Withdrawn',
-    className: 'bg-gray-100 text-gray-500',
   },
 };
 

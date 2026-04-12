@@ -5,6 +5,13 @@ import { Globe, Heart, Zap, Linkedin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { generatePageMetadata } from "@/lib/metadata";
+
+export const metadata = generatePageMetadata({
+  title: "About Us",
+  description: "Learn about Hiretivo's mission to connect talent with opportunity through skills-based matching.",
+  path: "/about",
+});
 
 const STATS = [
   { value: "2.4k", label: "Dream Roles", colorClass: "text-[#5951E5]" },
