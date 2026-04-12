@@ -125,14 +125,6 @@ export default function RecruiterApplicationsPage() {
   const selectedApplication = applications.find((app) => app.id === selectedApplicationId) ?? null;
   const recruiterPlan = applicationsQuery.data?.meta.recruiterPlan ?? PlanTier.FREE;
 
-  if (statsQuery.isLoading || applicationsQuery.isLoading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <PageSkeleton lines={8} showHeader={true} showFilters={true} />
-      </div>
-    );
-  }
-
   const metricCards = useMemo(
     () => [
       { label: 'Total', value: statsQuery.data?.total ?? 0, stage: null as ApplicationStatus | null },
@@ -143,6 +135,14 @@ export default function RecruiterApplicationsPage() {
     ],
     [statsQuery.data],
   );
+
+  if (statsQuery.isLoading || applicationsQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <PageSkeleton lines={8} showHeader={true} showFilters={true} />
+      </div>
+    );
+  }
 
   const handleStageFilter = (stage: ApplicationStatus | null) => {
     setStageFilter(stage);
