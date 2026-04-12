@@ -63,12 +63,12 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 - [ ] **SCHED-01**: Recruiter can connect Google Calendar via OAuth
 - [ ] **SCHED-02**: Calendar OAuth tokens stored encrypted at rest (AES-256 via CALENDAR_ENCRYPTION_KEY)
 - [ ] **SCHED-03**: Availability API returns free/busy slots for next 14 days
-- [ ] **SCHED-04**: Recruiter can schedule interview with Google Meet link creation
-- [ ] **SCHED-05**: Recruiter can reschedule an interview
-- [ ] **SCHED-06**: Recruiter or Seeker can cancel an interview
-- [ ] **SCHED-07**: Scheduling features gated to GROWTH+ plan
+- [x] **SCHED-04**: Recruiter can schedule interview with Google Meet link creation
+- [x] **SCHED-05**: Recruiter can reschedule an interview
+- [x] **SCHED-06**: Recruiter or Seeker can cancel an interview
+- [x] **SCHED-07**: Scheduling features gated to GROWTH+ plan
 - [ ] **SCHED-08**: Calendar page shows Coming Soon state when plan is insufficient
-- [ ] **SCHED-09**: Settings page has 4 tabs (profile, notifications, calendar, security) wired
+- [x] **SCHED-09**: Settings page has 4 tabs (profile, notifications, calendar, security) wired
 
 ### Polish & Pre-Launch
 

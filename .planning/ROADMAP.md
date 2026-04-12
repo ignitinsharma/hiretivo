@@ -110,7 +110,7 @@ Plans:
   6. The Settings page shows all 4 tabs (profile, notifications, calendar, security) with their data wired
 **Plans**: 5 plans
 Plans:
-- [ ] 06-01-PLAN.md — Prisma schema migration (RecruiterProfile notification boolean fields)
+- [x] 06-01-PLAN.md — Prisma schema migration (RecruiterProfile notification boolean fields)
 - [ ] 06-02-PLAN.md — Resend email templates (interview lifecycle) + Zod validation schemas
 - [ ] 06-03-PLAN.md — Interview CRUD API routes + Settings API + change-password route
 - [ ] 06-04-PLAN.md — ScheduleInterviewModal + CandidateDrawer interview section wiring
