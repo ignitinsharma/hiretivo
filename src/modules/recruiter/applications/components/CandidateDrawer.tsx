@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -18,9 +18,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ApplicationStatus } from '@/constants/enums';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+import { ApplicationStatus, InterviewStatus, PlanTier } from '@/constants/enums';
 import { getStageLabel } from '@/lib/application-pipeline';
 import { useUIStore } from '@/store/use-ui-store';
+
+import { ScheduleInterviewModal } from './ScheduleInterviewModal';
 
 const STAGE_OPTIONS: ApplicationStatus[] = [
   ApplicationStatus.APPLIED,
@@ -30,6 +40,16 @@ const STAGE_OPTIONS: ApplicationStatus[] = [
   ApplicationStatus.HIRED,
   ApplicationStatus.REJECTED,
 ];
+
+// Helper functions — at module level, outside component
+function formatInterviewDate(isoString: string): string {
+  return new Date(isoString).toUTCString().replace(' GMT', ' UTC');
+}
+
+function formatInterviewDuration(startsAt: string, endsAt: string): string {
+  const mins = Math.round((new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 60_000);
+  return `${mins} min`;
+}
 
 export interface CandidateApplication {
   id: string;
@@ -50,6 +70,15 @@ export interface CandidateApplication {
   };
   appliedAt?: string;
   updatedAt?: string;
+  plan?: PlanTier;
+  scheduledInterview?: {
+    id: string;
+    status: InterviewStatus;
+    startsAt: string | null;    // ISO string (from API)
+    endsAt: string | null;
+    meetLink: string | null;
+    notes: string | null;
+  } | null;
 }
 
 interface CandidateDrawerProps {
@@ -68,7 +97,8 @@ type RecruiterApplicationsResponse = {
 
 export function CandidateDrawer({ application }: CandidateDrawerProps) {
   const queryClient = useQueryClient();
-  const { isCandidateDrawerOpen, closeCandidateDrawer } = useUIStore();
+  const { isCandidateDrawerOpen, closeCandidateDrawer, openScheduleModal } = useUIStore();
+  const [cancelConfirming, setCancelConfirming] = useState(false);
 
   const updateStageMutation = useMutation({
     mutationFn: async (stage: ApplicationStatus) => {
@@ -128,6 +158,27 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
     },
   });
 
+  const cancelInterviewMutation = useMutation({
+    mutationFn: async (interviewId: string) => {
+      const res = await fetch(`/api/recruiter/interviews/${interviewId}/cancel`, { method: 'PATCH' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? 'Failed to cancel');
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Interview cancelled — candidate notified.');
+      setCancelConfirming(false);
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to cancel interview. Try again.');
+      setCancelConfirming(false);
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['recruiter-applications'] });
+      await queryClient.invalidateQueries({ queryKey: ['recruiter-interviews-upcoming'] });
+    },
+  });
+
   return (
     <Sheet open={isCandidateDrawerOpen} onOpenChange={closeCandidateDrawer}>
       <SheetContent side="right" className="w-full sm:w-[480px] overflow-y-auto">
@@ -177,9 +228,134 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                 </Button>
               </section>
             ) : null}
+
+            {application.status === ApplicationStatus.INTERVIEW && (
+              <section className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Interview</p>
+                <Separator />
+
+                {(() => {
+                  const interview = application.scheduledInterview;
+                  const isScheduled = interview?.status === InterviewStatus.SCHEDULED;
+                  // D-07: PlanTier.FREE is the only non-paid tier — no STARTER enum value exists
+                  const isPlanGated = application.plan === PlanTier.FREE;
+
+                  // No interview or last interview was cancelled/completed → show schedule button
+                  if (!isScheduled) {
+                    if (isPlanGated) {
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block w-full">
+                                <Button
+                                  className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
+                                  disabled
+                                  aria-disabled="true"
+                                >
+                                  Schedule Interview
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Available on Pro plan</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    }
+                    return (
+                      <Button
+                        className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
+                        onClick={() => openScheduleModal(application.id, null)}
+                      >
+                        Schedule Interview
+                      </Button>
+                    );
+                  }
+
+                  // Interview exists with SCHEDULED status → show details + reschedule + cancel
+                  return (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700 space-y-1.5">
+                        <p><strong>Date:</strong> {formatInterviewDate(interview.startsAt!)}</p>
+                        {interview.startsAt && interview.endsAt && (
+                          <p><strong>Duration:</strong> {formatInterviewDuration(interview.startsAt, interview.endsAt)}</p>
+                        )}
+                        <p>
+                          <strong>Meet link:</strong>{' '}
+                          {interview.meetLink
+                            ? <a href={interview.meetLink} target="_blank" rel="noreferrer" className="text-brand-primary underline">{interview.meetLink}</a>
+                            : <span className="text-slate-400">No link provided</span>
+                          }
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => openScheduleModal(application.id, interview.id)}
+                      >
+                        Reschedule
+                      </Button>
+
+                      {!cancelConfirming ? (
+                        <Button
+                          variant="outline"
+                          className="w-full text-destructive border-destructive hover:bg-destructive/5"
+                          onClick={() => setCancelConfirming(true)}
+                        >
+                          Cancel Interview
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="destructive"
+                            className="flex-1"
+                            disabled={cancelInterviewMutation.isPending}
+                            onClick={() => cancelInterviewMutation.mutate(interview.id)}
+                            aria-label="Confirm interview cancellation"
+                          >
+                            Confirm cancellation?
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => setCancelConfirming(false)}
+                            aria-label="Keep interview"
+                          >
+                            Never mind
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </section>
+            )}
           </div>
         ) : (
           <p className="text-sm text-slate-500">Select a candidate to view details.</p>
+        )}
+
+        {application && (
+          <ScheduleInterviewModal
+            applicationId={application.id}
+            existingInterview={
+              application.scheduledInterview?.status === InterviewStatus.SCHEDULED
+                ? {
+                    id: application.scheduledInterview.id,
+                    startsAt: new Date(application.scheduledInterview.startsAt!),
+                    endsAt: new Date(application.scheduledInterview.endsAt!),
+                    meetLink: application.scheduledInterview.meetLink,
+                    notes: application.scheduledInterview.notes,
+                  }
+                : null
+            }
+            onSuccess={async () => {
+              await queryClient.invalidateQueries({ queryKey: ['recruiter-applications'] });
+              await queryClient.invalidateQueries({ queryKey: ['recruiter-interviews-upcoming'] });
+            }}
+          />
         )}
       </SheetContent>
     </Sheet>
