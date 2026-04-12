@@ -67,7 +67,7 @@ All requirements for milestone v1.0 — Full Hiretivo V1 Launch Build. Every req
 - [x] **SCHED-05**: Recruiter can reschedule an interview
 - [x] **SCHED-06**: Recruiter or Seeker can cancel an interview
 - [x] **SCHED-07**: Scheduling features gated to GROWTH+ plan
-- [ ] **SCHED-08**: Calendar page shows Coming Soon state when plan is insufficient
+- [x] **SCHED-08**: Calendar page shows Coming Soon state when plan is insufficient
 - [x] **SCHED-09**: Settings page has 4 tabs (profile, notifications, calendar, security) wired
 
 ### Polish & Pre-Launch

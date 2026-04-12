@@ -112,7 +112,7 @@ Plans:
 Plans:
 - [x] 06-01-PLAN.md — Prisma schema migration (RecruiterProfile notification boolean fields)
 - [x] 06-02-PLAN.md — Resend email templates (interview lifecycle) + Zod validation schemas
-- [ ] 06-03-PLAN.md — Interview CRUD API routes + Settings API + change-password route
+- [x] 06-03-PLAN.md — Interview CRUD API routes + Settings API + change-password route
 - [ ] 06-04-PLAN.md — ScheduleInterviewModal + CandidateDrawer interview section wiring
 - [ ] 06-05-PLAN.md — UpcomingInterviewsList real data + Settings page 4-tab wiring
 **UI hint**: yes
