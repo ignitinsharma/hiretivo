@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { cn } from '@/lib/utils';
+import { PageSkeleton } from '@/components/shared/PageSkeleton';
 import { ApplicationStatus, PlanTier } from '@/constants/enums';
 import { getStageLabel } from '@/lib/application-pipeline';
 import { CandidateDrawer, type CandidateApplication } from '@/modules/recruiter/applications/components/CandidateDrawer';
@@ -123,6 +124,14 @@ export default function RecruiterApplicationsPage() {
   const applications = applicationsQuery.data?.applications ?? [];
   const selectedApplication = applications.find((app) => app.id === selectedApplicationId) ?? null;
   const recruiterPlan = applicationsQuery.data?.meta.recruiterPlan ?? PlanTier.FREE;
+
+  if (statsQuery.isLoading || applicationsQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <PageSkeleton lines={8} showHeader={true} showFilters={true} />
+      </div>
+    );
+  }
 
   const metricCards = useMemo(
     () => [
