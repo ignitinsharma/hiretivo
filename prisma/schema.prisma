@@ -200,6 +200,10 @@ model RecruiterProfile {
   isFullyRemote Boolean  @default(false)
   logo        String?
 
+  emailNotifications     Boolean @default(true)
+  applicationAlerts      Boolean @default(true)
+  interviewNotifications Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
