@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MoreVertical, Building2 } from 'lucide-react';
 import { ApplicationStatus } from '@/constants/enums';
 import { cn } from '@/lib/utils';
@@ -16,9 +17,11 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center p-2 border border-slate-100 text-primary font-bold overflow-hidden">
           {application.companyLogoUrl ? (
-            <img
+            <Image
               src={application.companyLogoUrl}
               alt={application.companyName}
+              width={56}
+              height={56}
               className="w-full h-full object-contain"
             />
           ) : (
