@@ -49,7 +49,7 @@ export function SeekerHeader() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button variant="icon-ghost" size="icon-sm" className="bg-slate-100 rounded-xl">
+          <Button variant="ghost" size="icon" className="bg-slate-100 rounded-xl">
             <Bell className="w-5 h-5" />
           </Button>
 

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-
-// Use Node.js runtime — Prisma not supported in Edge Runtime
-export const runtime = "nodejs";
+import { prismaEdge as prisma } from "@/lib/prisma-edge";
 
 export default auth(async (req: NextRequest & { auth: any }) => {
   const { pathname } = req.nextUrl;
@@ -13,10 +10,11 @@ export default auth(async (req: NextRequest & { auth: any }) => {
   // ── Routes that need NO guard (public, auth pages, API, static) ──
   const isPublicRoute =
     pathname === "/" ||
-    pathname.startsWith("/(public)") ||
     pathname.startsWith("/about") ||
     pathname.startsWith("/jobs") ||
     pathname.startsWith("/companies") ||
+    pathname.startsWith("/feed") ||
+    pathname.startsWith("/onboarding") ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
@@ -87,16 +85,22 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     }
 
     // Check Steps 1+2 completion (per D-08)
-    const seekerProfile = await prisma.seekerProfile.findUnique({
-      where: { userId },
-      select: { situation: true, primaryRole: true },
-    });
+    try {
+      const seekerProfile = await prisma.seekerProfile.findUnique({
+        where: { userId },
+        select: { situation: true, primaryRole: true },
+      });
 
-    const isOnboarded =
-      seekerProfile?.situation != null && seekerProfile?.primaryRole != null;
+      const isOnboarded =
+        seekerProfile?.situation != null && seekerProfile?.primaryRole != null;
 
-    if (!isOnboarded) {
-      return NextResponse.redirect(new URL("/seeker/onboarding", req.url));
+      if (!isOnboarded) {
+        return NextResponse.redirect(new URL("/seeker/onboarding", req.url));
+      }
+    } catch (error) {
+      console.error("Middleware DB check failed (seeker):", error);
+      // Fail open — allow request through to avoid blocking all traffic
+      return NextResponse.next();
     }
 
     // Email verification gate for /seeker/dashboard only (per D-03)
@@ -117,13 +121,19 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     }
 
     // Check RecruiterProfile exists (per D-08)
-    const recruiterProfile = await prisma.recruiterProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
+    try {
+      const recruiterProfile = await prisma.recruiterProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
 
-    if (!recruiterProfile) {
-      return NextResponse.redirect(new URL("/recruiter/onboarding", req.url));
+      if (!recruiterProfile) {
+        return NextResponse.redirect(new URL("/recruiter/onboarding", req.url));
+      }
+    } catch (error) {
+      console.error("Middleware DB check failed (recruiter):", error);
+      // Fail open — allow request through to avoid blocking all traffic
+      return NextResponse.next();
     }
 
     // Email verification gate for /recruiter/dashboard only (per D-03)
