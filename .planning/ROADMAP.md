@@ -111,7 +111,7 @@ Plans:
 **Plans**: 5 plans
 Plans:
 - [x] 06-01-PLAN.md — Prisma schema migration (RecruiterProfile notification boolean fields)
-- [ ] 06-02-PLAN.md — Resend email templates (interview lifecycle) + Zod validation schemas
+- [x] 06-02-PLAN.md — Resend email templates (interview lifecycle) + Zod validation schemas
 - [ ] 06-03-PLAN.md — Interview CRUD API routes + Settings API + change-password route
 - [ ] 06-04-PLAN.md — ScheduleInterviewModal + CandidateDrawer interview section wiring
 - [ ] 06-05-PLAN.md — UpcomingInterviewsList real data + Settings page 4-tab wiring
@@ -141,5 +141,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Matching Engine & Feed | 0/TBD | Not started | - |
 | 4. Applications & Recruiter Dashboard | 0/TBD | Not started | - |
 | 5. Homepage, Pricing & Nav | 0/3 | Not started | - |
-| 6. Interview Scheduling | 0/5 | Not started | - |
+| 6. Interview Scheduling | 2/5 | In Progress|  |
 | 7. Polish & Pre-Launch | 0/TBD | Not started | - |
