@@ -1,9 +1,19 @@
 import { config as loadEnv } from "dotenv";
 import { resolve } from "node:path";
+import { existsSync } from "node:fs";
 import { defineConfig, env } from "prisma/config";
 
-loadEnv({ path: resolve(process.cwd(), ".env") });
-loadEnv({ path: resolve(process.cwd(), ".env.local") });
+// Only load .env files if they exist (local dev)
+// On Vercel, environment variables are injected automatically
+const envPath = resolve(process.cwd(), ".env");
+const envLocalPath = resolve(process.cwd(), ".env.local");
+
+if (existsSync(envPath)) {
+  loadEnv({ path: envPath });
+}
+if (existsSync(envLocalPath)) {
+  loadEnv({ path: envLocalPath });
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
