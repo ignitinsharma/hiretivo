@@ -62,7 +62,7 @@ export function ApplicationList() {
         </div>
         <h3 className="text-lg font-bold text-slate-900">No applications yet</h3>
         <p className="text-slate-500 mt-2">
-          You haven't applied to any jobs yet. Start exploring!
+          You haven&apos;t applied to any jobs yet. Start exploring!
         </p>
       </div>
     );

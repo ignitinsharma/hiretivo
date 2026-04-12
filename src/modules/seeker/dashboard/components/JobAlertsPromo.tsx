@@ -10,7 +10,7 @@ export function JobAlertsPromo() {
       </div>
       <h4 className="font-bold text-lg relative z-10">Get new matches!</h4>
       <p className="text-primary-foreground/90 text-sm mt-2 mb-4 relative z-10">
-        We'll notify you as soon as a job matching your profile is posted.
+        We&apos;ll notify you as soon as a job matching your profile is posted.
       </p>
       <Button variant="secondary" size="full" className="font-black text-sm relative z-10 transition-colors">
         Enable Alerts
