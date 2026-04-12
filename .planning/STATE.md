@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-12T07:50:22.126Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-04-12T07:55:16.596Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 36
-  completed_plans: 34
+  completed_plans: 35
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 ## Current Position
 
 Phase: 06 (interview-scheduling) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-interview-scheduling P01 | 5 | 2 tasks | 2 files |
 | Phase 06-interview-scheduling P02 | 1 | 2 tasks | 2 files |
 | Phase 06-interview-scheduling P03 | 1 | 3 tasks | 6 files |
+| Phase 06-interview-scheduling P04 | 3 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 06-interview-scheduling]: Plan gate checks PlanTier.FREE only — D-07 mentions STARTER but no STARTER enum value exists in codebase; route comment documents the discrepancy
 - [Phase 06-interview-scheduling]: Non-blocking interview email sends: .catch(console.error) pattern so Resend outage cannot fail the primary interview operation
 - [Phase 06-interview-scheduling]: Settings PATCH uses z.union([ProfileSchema, NotifSchema]) with 'name' in data discriminant — single endpoint for both profile and notification tab saves
+- [Phase 06-interview-scheduling]: Zustand dual-mode modal: openScheduleModal(applicationId, interviewId?) drives create vs reschedule from single action and component
+- [Phase 06-interview-scheduling]: ScheduleInterviewModal form schema separates date/startTime/duration fields — startsAt/endsAt computed on submit, not stored in form state
+- [Phase 06-interview-scheduling]: Inline cancel confirmation uses local cancelConfirming useState — avoids Dialog stacking anti-pattern
 
 ### Pending Todos
 
@@ -107,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T07:50:22.121Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-04-12T07:55:16.593Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
