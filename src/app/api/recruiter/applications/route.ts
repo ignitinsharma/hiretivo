@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { ApplicationStatus, PlanTier, UserRole } from "@/constants/enums";
+import { ApplicationStatus, InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
@@ -89,6 +89,19 @@ export async function GET(req: NextRequest) {
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
       job: { select: { id: true, title: true } },
+      interviews: {
+        where: { status: InterviewStatus.SCHEDULED },
+        take: 1,
+        orderBy: { startsAt: "desc" },
+        select: {
+          id: true,
+          startsAt: true,
+          endsAt: true,
+          meetLink: true,
+          notes: true,
+          status: true,
+        },
+      },
       seeker: {
         select: {
           id: true,
@@ -150,9 +163,11 @@ export async function GET(req: NextRequest) {
         },
         matchScore: app.matchScore,
         status: app.status,
+        plan: recruiter?.plan ?? PlanTier.FREE,
         coverLetter: app.coverLetter,
         resumeUrl,
         appliedAt: app.createdAt.toISOString(),
+        scheduledInterview: app.interviews[0] ?? null,
       };
     }),
   );
