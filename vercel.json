@@ -1,4 +1,14 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "staging": true,
+      "develop": true
+    }
+  },
+  "github": {
+    "silent": false
+  },
   "crons": [
     {
       "path": "/api/cron/match",
