@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { computeAllMatches, upsertJobMatches } from '@/lib/match';
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (session.user.role !== 'SEEKER') {
+  if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

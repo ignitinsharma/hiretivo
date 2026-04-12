@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (session.user.role !== 'RECRUITER') {
+  if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

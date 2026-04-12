@@ -98,17 +98,23 @@ Plans:
 **UI hint**: yes
 
 ### Phase 6: Interview Scheduling
-**Goal**: Recruiters on GROWTH+ plans can schedule interviews with Google Meet links via connected Google Calendar, gated by plan tier
+**Goal**: Recruiters on PRO+ plans can manually schedule interviews with Meet links via CandidateDrawer modal, with settings page fully wired
 **Depends on**: Phase 4
 **Requirements**: SCHED-01, SCHED-02, SCHED-03, SCHED-04, SCHED-05, SCHED-06, SCHED-07, SCHED-08, SCHED-09
 **Success Criteria** (what must be TRUE):
-  1. A recruiter can connect their Google Calendar via OAuth; tokens are stored encrypted (AES-256) in DB
-  2. The availability picker shows only free slots from the recruiter's calendar for the next 14 days
-  3. A recruiter can schedule an interview that creates a Google Meet event on both parties' calendars
+  1. A recruiter can connect their Google Calendar via OAuth; tokens are stored encrypted (AES-256) in DB (DEFERRED V2)
+  2. The availability picker shows only free slots from the recruiter's calendar for the next 14 days (DEFERRED V2)
+  3. A recruiter can schedule an interview with manual date/time and optional Meet link from the CandidateDrawer; Resend emails sent to both parties
   4. A recruiter or seeker can reschedule or cancel an existing interview
-  5. A recruiter on FREE or STARTER plan sees the Coming Soon state on the scheduling page instead of the calendar UI
+  5. A recruiter on FREE plan sees a disabled "Schedule Interview" button with upgrade tooltip; server returns 403 for plan gate
   6. The Settings page shows all 4 tabs (profile, notifications, calendar, security) with their data wired
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 06-01-PLAN.md — Prisma schema migration (RecruiterProfile notification boolean fields)
+- [ ] 06-02-PLAN.md — Resend email templates (interview lifecycle) + Zod validation schemas
+- [ ] 06-03-PLAN.md — Interview CRUD API routes + Settings API + change-password route
+- [ ] 06-04-PLAN.md — ScheduleInterviewModal + CandidateDrawer interview section wiring
+- [ ] 06-05-PLAN.md — UpcomingInterviewsList real data + Settings page 4-tab wiring
 **UI hint**: yes
 
 ### Phase 7: Polish & Pre-Launch
@@ -135,5 +141,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Matching Engine & Feed | 0/TBD | Not started | - |
 | 4. Applications & Recruiter Dashboard | 0/TBD | Not started | - |
 | 5. Homepage, Pricing & Nav | 0/3 | Not started | - |
-| 6. Interview Scheduling | 0/TBD | Not started | - |
+| 6. Interview Scheduling | 0/5 | Not started | - |
 | 7. Polish & Pre-Launch | 0/TBD | Not started | - |

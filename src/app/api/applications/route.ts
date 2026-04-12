@@ -3,8 +3,15 @@ import { auth } from "@/auth";
 import { ApplicationStatus, JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { createApplicationSchema } from "@/lib/validations/application";
+import { applyRateLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
+  const { success } = await applyRateLimiter.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
