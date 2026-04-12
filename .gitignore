@@ -21,7 +21,7 @@ build
 coverage
 .planning*
 .planning
-.docs/superpowers
+docs/superpowers/
 .worktrees
 PROJECT-STATUS.md
 QWEN.md
