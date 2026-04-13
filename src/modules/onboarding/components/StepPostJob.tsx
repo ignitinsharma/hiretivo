@@ -285,17 +285,17 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button type="button" onClick={handleContinue} size="lg" className="w-full">
+            <Button type="button" onClick={handleContinue} size="lg" variant="primary" className="w-full">
               Post Job & Continue
               <ArrowRight className="w-4 h-4" />
             </Button>
             <div className="flex justify-between">
-              <Button type="button" variant="ghost" onClick={onBack} className="w-auto">
+              <Button type="button" variant="ghost" onClick={onBack}>
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
               {onSkip && (
-                <Button type="button" variant="ghost" onClick={onSkip} className="w-auto">
+                <Button type="button" variant="ghost" onClick={onSkip}>
                   Skip for now
                 </Button>
               )}

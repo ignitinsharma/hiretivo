@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendStaleJobNudge } from "@/lib/email/stale-job-nudge";
+import { timingSafeEqual } from 'crypto';
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const STALE_THRESHOLD_DAYS = 30;
 
+const CRON_SECRET = process.env.CRON_SECRET || 'local-dev-secret';
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!authHeader) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Security fix: Use constant-time comparison to prevent timing attacks
+  const expectedHeader = `Bearer ${CRON_SECRET}`;
+  if (
+    authHeader.length !== expectedHeader.length ||
+    !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expectedHeader))
+  ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

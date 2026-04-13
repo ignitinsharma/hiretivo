@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
@@ -13,7 +14,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Hiretivo | Find Remote Work That Fits Your Life",
-  description: "Skills-based remote job portal connecting talented professionals with remote-first companies worldwide.",
+  description:
+    "Skills-based remote job portal connecting talented professionals with remote-first companies worldwide.",
 };
 
 export default function RootLayout({

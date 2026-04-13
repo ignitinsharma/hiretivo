@@ -281,7 +281,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button type="button" onClick={handleContinue} size="lg" className="w-full">
+            <Button type="button" onClick={handleContinue} size="lg" variant="primary" className="w-full">
               Continue
               <ArrowRight className="w-4 h-4" />
             </Button>

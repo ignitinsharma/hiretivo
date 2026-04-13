@@ -84,13 +84,14 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
           </div>
         </div>
         <div className="hidden lg:flex items-center gap-3">
-          <Button variant="outline" className="px-6 py-3 text-sm font-bold text-primary border border-primary/20 hover:bg-primary/5 rounded-xl transition-all flex items-center gap-2 h-auto">
+          <Button variant="outline" className="px-6 py-3">
             <Bookmark className="w-5 h-5" />
             Save
           </Button>
           <Button
             onClick={() => openApplyModal(job.id)}
-            className="px-8 py-3 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20 transition-all h-auto"
+            variant="primary"
+            className="px-8 py-3"
           >
             Apply Now
           </Button>

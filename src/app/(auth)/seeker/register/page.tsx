@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -66,7 +65,7 @@ const SeekerSignupLeft = (
             <p className="text-xs text-slate-500">Remote • $140k - $180k</p>
           </div>
           <div className="ml-auto">
-            <button className="bg-brand-primary text-white text-[10px] px-3 py-1.5 rounded-full font-bold">Apply</button>
+            <Button variant="primary" size="sm" className="rounded-full">Apply</Button>
           </div>
         </div>
       </div>
@@ -230,17 +229,15 @@ export default function SeekerRegisterPage() {
             </p>
           )}
 
-          <Button 
-            type="submit" 
-            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5951E5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99]" 
-            disabled={isSubmitting}
+          <Button
+            type="submit"
+            variant="primary"
+            size="xl"
+            className="w-full"
+            loading={isSubmitting}
+            loadingText="Creating account..."
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Creating account...
-              </>
-            ) : "Create Account"}
+            Create Account
           </Button>
         </form>
 

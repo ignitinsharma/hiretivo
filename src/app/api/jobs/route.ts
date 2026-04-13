@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createJobSchema } from '@/lib/validations/job';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { UserRole } from '@/constants/enums';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
@@ -38,6 +39,11 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Security fix: Only recruiters can create jobs
+  if (session.user.role !== UserRole.RECRUITER) {
+    return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
   }
 
   // D-10: FREE plan gate — check user.plan (on User model, not RecruiterProfile)

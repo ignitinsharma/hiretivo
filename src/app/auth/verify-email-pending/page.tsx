@@ -14,11 +14,7 @@ export default function VerifyEmailPendingPage() {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Didn&apos;t receive the email? Check your spam folder or{" "}
-          <Link href="/api/auth/resend-verification" className="text-primary underline underline-offset-4">
-            resend the verification email
-          </Link>
-          .
+          Didn&apos;t receive the email? Check your spam folder or try signing in again.
         </p>
 
         <Button asChild variant="outline" className="w-full">

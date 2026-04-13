@@ -80,7 +80,7 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     // Wrong role: RECRUITER trying to access seeker routes
     if (userRole !== "SEEKER") {
       return NextResponse.redirect(
-        new URL("/recruiter/dashboard?authError=forbidden", req.url)
+        new URL("/recruiter/dashboard?authError=wrong_role", req.url)
       );
     }
 
@@ -128,7 +128,7 @@ export default auth(async (req: NextRequest & { auth: any }) => {
     // Wrong role: SEEKER trying to access recruiter routes
     if (userRole !== "RECRUITER") {
       return NextResponse.redirect(
-        new URL("/seeker/dashboard?authError=forbidden", req.url)
+        new URL("/seeker/dashboard?authError=wrong_role", req.url)
       );
     }
 

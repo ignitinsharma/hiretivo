@@ -27,3 +27,5 @@ docs/superpowers/
 .worktrees
 PROJECT-STATUS.md
 QWEN.md
+BRANCHING-STRATEGY.md
+SECURITY-AUDIT-FINDINGS.md

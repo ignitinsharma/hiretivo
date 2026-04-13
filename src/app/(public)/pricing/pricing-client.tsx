@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CircleCheck, CirclePlus } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PRICING_CONFIG, CURRENCY_SYMBOL, type PricingCurrency } from "@/constants/pricing";
 
@@ -121,9 +122,9 @@ export function PricingClient({ currency }: PricingClientProps) {
                 <span className="text-slate-700 text-xs">Email support</span>
               </li>
             </ul>
-            <button className="w-full py-3 border border-slate-200 text-slate-900 bg-white text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors mt-auto">
+            <Button variant="outline" size="lg" className="w-full mt-auto">
               Get started free
-            </button>
+            </Button>
           </div>
 
           {/* Card 2: Starter */}
@@ -207,9 +208,9 @@ export function PricingClient({ currency }: PricingClientProps) {
                 <span className="text-slate-700 text-xs">Email + chat support</span>
               </li>
             </ul>
-            <button className="w-full py-3 border border-slate-200 text-slate-900 bg-white text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors mt-auto">
+            <Button variant="outline" size="lg" className="w-full mt-auto">
               Start Starter plan
-            </button>
+            </Button>
           </div>
 
           {/* Card 3: Growth (Featured) */}
@@ -305,9 +306,9 @@ export function PricingClient({ currency }: PricingClientProps) {
                 <span className="text-indigo-50 text-xs">Team seats (3)</span>
               </li>
             </ul>
-            <button className="w-full py-3 bg-white text-brand-primary text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors mt-auto shadow-lg">
+            <Button variant="primary" size="lg" className="w-full mt-auto">
               Start Growth plan
-            </button>
+            </Button>
           </div>
 
           {/* Card 4: Pro */}
@@ -398,9 +399,9 @@ export function PricingClient({ currency }: PricingClientProps) {
                 <span className="text-slate-700 text-xs">Team seats (10)</span>
               </li>
             </ul>
-            <button className="w-full py-3 border border-slate-200 text-slate-900 bg-white text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors mt-auto">
+            <Button variant="outline" size="lg" className="w-full mt-auto">
               Start Pro plan
-            </button>
+            </Button>
           </div>
 
           {/* Card 5: Enterprise */}
@@ -481,9 +482,9 @@ export function PricingClient({ currency }: PricingClientProps) {
                 <span className="text-slate-700 text-xs">Unlimited seats</span>
               </li>
             </ul>
-            <button className="w-full py-3 border border-slate-200 text-slate-900 bg-white text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors mt-auto">
+            <Button variant="outline" size="lg" className="w-full mt-auto">
               Contact sales
-            </button>
+            </Button>
           </div>
         </div>
       </section>
