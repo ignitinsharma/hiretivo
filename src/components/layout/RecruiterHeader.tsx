@@ -25,7 +25,7 @@ export function RecruiterHeader({
 
       <div className="flex items-center gap-3">
         {showPostJob && (
-          <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white gap-2">
+          <Button variant="primary" className="gap-2">
             <Plus className="w-4 h-4" />
             Post a Job
           </Button>
