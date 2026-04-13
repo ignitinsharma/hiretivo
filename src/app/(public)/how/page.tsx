@@ -51,8 +51,10 @@ export default function HowPage() {
                 asChild
               >
                 <Link href="/register">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <span>
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5 inline" />
+                  </span>
                 </Link>
               </Button>
               <Button
@@ -126,9 +128,13 @@ export default function HowPage() {
                     </div>
                   </div>
                 </div>
-                <Button variant="primary" className="px-8 py-4">
-                  Get Matched Now
-                  <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
+                <Button variant="primary" className="px-8 py-4" asChild>
+                  <Link href="/get-matched">
+                    <span>
+                      Get Matched Now
+                      <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform inline" />
+                    </span>
+                  </Link>
                 </Button>
               </div>
               <div className="lg:w-7/12">
