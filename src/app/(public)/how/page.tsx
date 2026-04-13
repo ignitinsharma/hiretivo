@@ -46,7 +46,8 @@ export default function HowPage() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button
-                className="bg-brand-primary text-white hover:bg-indigo-700 px-8 py-6 text-base font-bold"
+                variant="primary"
+                size="lg"
                 asChild
               >
                 <Link href="/register">
@@ -56,7 +57,7 @@ export default function HowPage() {
               </Button>
               <Button
                 variant="outline"
-                className="border-slate-200 text-brand-dark hover:bg-slate-50 px-8 py-6 text-base font-semibold"
+                size="lg"
                 asChild
               >
                 <Link href="/how-it-works">Learn More</Link>
@@ -125,7 +126,7 @@ export default function HowPage() {
                     </div>
                   </div>
                 </div>
-                <Button className="bg-brand-primary text-white hover:bg-indigo-700 px-8 py-4 font-bold">
+                <Button variant="primary" className="px-8 py-4">
                   Get Matched Now
                   <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -359,14 +360,15 @@ export default function HowPage() {
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Button
-                    className="bg-brand-primary text-white hover:bg-indigo-700 px-8 py-4 font-bold"
+                    variant="primary"
+                    className="px-8 py-4"
                     asChild
                   >
                     <Link href="/recruiter/post-job">Post a Job Today</Link>
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-slate-200 text-brand-dark hover:bg-slate-50 px-8 py-4 font-bold"
+                    className="px-8 py-4"
                     asChild
                   >
                     <Link href="/recruiter/talent-search">Talent Solutions</Link>
@@ -434,7 +436,7 @@ export default function HowPage() {
             <div className="flex flex-wrap justify-center gap-4">
               <Button
                 size="lg"
-                className="bg-brand-primary text-white hover:bg-indigo-700 px-8 py-6 text-lg font-bold"
+                variant="primary"
                 asChild
               >
                 <Link href="/register">Create Free Profile</Link>
@@ -442,7 +444,6 @@ export default function HowPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-slate-600 text-white hover:bg-slate-800 px-8 py-6 text-lg font-semibold"
                 asChild
               >
                 <Link href="/browse">Browse Jobs</Link>
