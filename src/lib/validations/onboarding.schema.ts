@@ -14,7 +14,7 @@ export const step2Schema = z.object({
   skills: z.array(
     z.object({
       skillId: z.string().min(1, "Skill ID is required"),
-      level: z.nativeEnum(SkillLevel).default('INTERMEDIATE'),
+      level: z.nativeEnum(SkillLevel).default(SkillLevel.INTERMEDIATE),
     })
   ).min(1, "At least one skill is required"),
 });
