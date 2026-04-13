@@ -91,7 +91,7 @@ export default function FindTalentPage() {
                   <SlidersHorizontal className="w-4 h-4" />
                   More Filters
                 </Button>
-                <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white h-11">
+                <Button variant="primary" className="h-11">
                   Search
                 </Button>
               </div>
@@ -143,7 +143,7 @@ export default function FindTalentPage() {
                 <span className="text-sm text-green-600 font-medium">
                   Available {candidate.availability}
                 </span>
-                <Button size="sm" className="bg-brand-primary hover:bg-brand-primary/90 text-white">
+                <Button variant="primary" size="sm">
                   View Profile
                 </Button>
               </div>
