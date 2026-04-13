@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -71,6 +71,7 @@ export default function RecruiterLoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  const [roleMismatch, setRoleMismatch] = React.useState(false);
 
   const form = useForm<RecruiterLoginInput>({
     resolver: zodResolver(recruiterLoginSchema),
@@ -82,6 +83,7 @@ export default function RecruiterLoginPage() {
 
   const onSubmit = async (data: RecruiterLoginInput) => {
     setIsSubmitting(true);
+    setRoleMismatch(false);
     try {
       const result = await signIn("credentials", {
         email: data.email.toLowerCase(),
@@ -91,6 +93,16 @@ export default function RecruiterLoginPage() {
 
       if (result?.error) {
         toast.error("Invalid email or password");
+        return;
+      }
+
+      // Verify the authenticated user has the RECRUITER role
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+
+      if (session?.user?.role !== "RECRUITER") {
+        await signOut({ redirect: false });
+        setRoleMismatch(true);
         return;
       }
 
@@ -116,6 +128,17 @@ export default function RecruiterLoginPage() {
       leftContent={RecruiterLoginLeft}
     >
       <div className="space-y-8">
+        {roleMismatch && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-800">
+              This account is registered as a Job Seeker.{" "}
+              <Link href="/seeker/login" className="font-bold text-brand-primary underline underline-offset-4">
+                Please use the Seeker login
+              </Link>
+            </p>
+          </div>
+        )}
+
         <OAuthButton
           provider="google"
           onClick={handleGoogleSignIn}

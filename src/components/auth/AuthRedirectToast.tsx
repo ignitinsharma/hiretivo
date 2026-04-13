@@ -11,9 +11,15 @@ export function AuthRedirectToast() {
 
   useEffect(() => {
     const authError = searchParams.get('authError');
-    if (authError !== 'forbidden') return;
+    if (!authError) return;
 
-    toast.error('You do not have permissions to perform this action');
+    if (authError === 'wrong_role') {
+      toast.info('You were redirected to your account dashboard.');
+    } else if (authError === 'forbidden') {
+      toast.error('You do not have permissions to perform this action.');
+    } else {
+      return;
+    }
 
     const next = new URLSearchParams(searchParams.toString());
     next.delete('authError');
