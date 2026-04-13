@@ -196,11 +196,11 @@ export default function RecruiterApplicationsPage() {
             <p className="text-base text-slate-500 font-medium">Deep-dive candidate analysis and management</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" className="gap-2 bg-white border-slate-200 text-slate-700 font-bold text-xs shadow-sm">
+            <Button variant="outline" className="gap-2">
               <Download className="w-4 h-4" />
               Export List
             </Button>
-            <Button className="gap-2 bg-primary text-white font-bold text-xs shadow-lg shadow-indigo-100 hover:bg-primary/90">
+            <Button variant="primary" className="gap-2">
               <Plus className="w-4 h-4" />
               Add Candidate
             </Button>
@@ -217,7 +217,7 @@ export default function RecruiterApplicationsPage() {
               placeholder="Search candidate name or email"
             />
           </div>
-          <Button type="submit" variant="outline" className="font-bold text-xs">
+          <Button type="submit" variant="outline">
             Apply Search
           </Button>
         </form>
@@ -342,7 +342,7 @@ export default function RecruiterApplicationsPage() {
             <div className="absolute inset-x-10 bottom-8 bg-white/90 rounded-2xl border border-brand-primary/20 shadow-lg p-6 text-center">
               <h3 className="text-slate-900 font-bold">Upgrade to unlock all applicants</h3>
               <p className="text-slate-500 text-sm mt-1">FREE plan shows full details for the first 20 candidates.</p>
-              <Button className="mt-4 bg-primary text-white hover:bg-primary/90">Upgrade Plan</Button>
+              <Button variant="primary" className="mt-4">Upgrade Plan</Button>
             </div>
           ) : null}
 
@@ -354,7 +354,6 @@ export default function RecruiterApplicationsPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className="w-10 h-10 rounded-xl border-slate-200 text-slate-400"
                 disabled={cursorHistory.length <= 1}
                 onClick={goPreviousPage}
               >
@@ -363,7 +362,6 @@ export default function RecruiterApplicationsPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className="w-10 h-10 rounded-xl border-slate-200 text-slate-400"
                 disabled={!applicationsQuery.data?.meta.hasMore}
                 onClick={goNextPage}
               >
