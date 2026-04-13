@@ -93,14 +93,15 @@ export function JobDetailSidebar({
         <div className="space-y-3">
           <Button
             onClick={() => openApplyModal(job.id)}
-            className="w-full py-3 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 h-auto"
+            variant="primary"
+            className="w-full py-3"
           >
             Apply Now
             <ArrowRight className="w-4 h-4" />
           </Button>
           <Button
             variant="outline"
-            className="w-full py-3 text-sm font-bold text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-xl transition-all h-auto"
+            className="w-full py-3"
           >
             Save for later
           </Button>
@@ -246,7 +247,7 @@ export function JobDetailSidebar({
         <div className="p-4">
           <Button
             variant="ghost"
-            className="w-full py-2 text-xs font-bold text-slate-500 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors h-auto"
+            className="w-full text-xs"
           >
             View All Engineering Roles
           </Button>
