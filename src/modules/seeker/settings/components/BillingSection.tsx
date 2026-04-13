@@ -26,7 +26,7 @@ export function BillingSection() {
                     Billed annually ($240/year)
                   </p>
                 </div>
-                <Button variant="link" size="sm" className="font-bold px-0">
+                <Button variant="link" size="sm">
                   Upgrade Plan
                 </Button>
               </div>
@@ -53,7 +53,7 @@ export function BillingSection() {
                     <span className="font-bold text-slate-900">October 12, 2024</span>
                   </p>
                 </div>
-                <Button variant="link" size="sm" className="font-semibold text-slate-500 hover:text-red-600 px-0">
+                <Button variant="link" size="sm" className="text-slate-500 hover:text-red-600">
                   Cancel Plan
                 </Button>
               </div>
@@ -74,11 +74,11 @@ export function BillingSection() {
                   <p className="text-xs text-slate-500 uppercase">Expires 12/26</p>
                 </div>
               </div>
-              <Button variant="link" size="sm" className="font-bold px-0">
+              <Button variant="link" size="sm">
                 Edit
               </Button>
             </div>
-            <Button variant="outline" size="sm" className="font-bold rounded-lg transition-colors">
+            <Button variant="outline" size="sm">
               View Billing History
             </Button>
           </div>

@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
@@ -74,9 +75,9 @@ export default async function Home() {
                     type="text"
                   />
                 </div>
-                <button className="bg-brand-primary text-white px-8 py-3 rounded-full font-bold hover:bg-indigo-700 transition-all">
+                <Button variant="primary" size="lg" className="rounded-full">
                   Search Jobs
-                </button>
+                </Button>
               </div>
             </div>
             <div
@@ -171,12 +172,12 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-                <button className="px-8 py-4 bg-brand-primary text-white font-bold rounded-xl hover:bg-indigo-700 transition-all btn-shadow flex items-center gap-3 group">
+                <Button variant="primary" size="xl" className="group">
                   Get Matched Now
                   <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                     arrow_forward
                   </span>
-                </button>
+                </Button>
               </div>
 
               <div
