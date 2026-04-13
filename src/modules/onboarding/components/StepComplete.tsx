@@ -40,10 +40,11 @@ export function StepComplete({ onComplete }: StepCompleteProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-foreground text-left">Next steps</h3>
           <div className="space-y-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={onComplete}
-              className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors text-left"
+              className="w-full justify-between p-4 h-auto"
             >
               <div className="flex items-center gap-3">
                 <FileText className="w-5 h-5 text-primary" />
@@ -52,11 +53,12 @@ export function StepComplete({ onComplete }: StepCompleteProps) {
               <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={onComplete}
-              className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors text-left"
+              className="w-full justify-between p-4 h-auto"
             >
               <div className="flex items-center gap-3">
                 <Users className="w-5 h-5 text-primary" />
@@ -65,11 +67,11 @@ export function StepComplete({ onComplete }: StepCompleteProps) {
               <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
 
-        <Button type="button" onClick={onComplete} size="lg" className="w-full mt-6">
+        <Button type="button" onClick={onComplete} size="lg" variant="primary" className="w-full mt-6">
           Go to Dashboard
           <ArrowRight className="w-4 h-4" />
         </Button>
