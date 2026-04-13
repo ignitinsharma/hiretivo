@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { updateJobSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
+import { UserRole } from '@/constants/enums';
 
 // GET /api/jobs/[id] — public job detail with auth-gated match breakdown
 export async function GET(
@@ -96,6 +97,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Security fix: Only recruiters can modify jobs
+  if (session.user.role !== UserRole.RECRUITER) {
+    return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
+  }
+
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     select: { recruiterId: true },
@@ -163,6 +169,11 @@ export async function DELETE(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Security fix: Only recruiters can delete jobs
+  if (session.user.role !== UserRole.RECRUITER) {
+    return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
   }
 
   const job = await prisma.job.findUnique({

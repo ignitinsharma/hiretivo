@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { recruiterProfileSchema, createJobFromOnboardingSchema } from "@/lib/validations/onboarding.schema";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -20,32 +21,33 @@ export async function saveRecruiterProfile(data: {
     return { success: false, error: "Not authenticated" };
   }
 
-  if (!data.companyName || data.companyName.trim().length === 0) {
-    return { success: false, error: "Company name is required" };
+  const parsed = recruiterProfileSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
   }
 
   await prisma.recruiterProfile.upsert({
     where: { userId: session.user.id },
     create: {
       userId: session.user.id,
-      companyName: data.companyName.trim(),
-      website: data.website ?? null,
-      companySize: data.companySize ?? null,
-      bio: data.bio ?? null,
-      industry: data.industry ?? null,
-      fundingType: data.fundingType ?? null,
-      isFullyRemote: data.isFullyRemote ?? false,
-      logo: data.logo ?? null,
+      companyName: parsed.data.companyName,
+      website: parsed.data.website ?? null,
+      companySize: parsed.data.companySize ?? null,
+      bio: parsed.data.bio ?? null,
+      industry: parsed.data.industry ?? null,
+      fundingType: parsed.data.fundingType ?? null,
+      isFullyRemote: parsed.data.isFullyRemote ?? false,
+      logo: parsed.data.logo ?? null,
     },
     update: {
-      companyName: data.companyName.trim(),
-      website: data.website ?? null,
-      companySize: data.companySize ?? null,
-      bio: data.bio ?? null,
-      industry: data.industry ?? null,
-      fundingType: data.fundingType ?? null,
-      isFullyRemote: data.isFullyRemote ?? false,
-      logo: data.logo ?? null,
+      companyName: parsed.data.companyName,
+      website: parsed.data.website ?? null,
+      companySize: parsed.data.companySize ?? null,
+      bio: parsed.data.bio ?? null,
+      industry: parsed.data.industry ?? null,
+      fundingType: parsed.data.fundingType ?? null,
+      isFullyRemote: parsed.data.isFullyRemote ?? false,
+      logo: parsed.data.logo ?? null,
     },
   });
 
@@ -68,28 +70,25 @@ export async function createJobFromOnboarding(data: {
     return { success: false, error: "Not authenticated" };
   }
 
-  if (!data.title || data.title.trim().length === 0) {
-    return { success: false, error: "Job title is required" };
-  }
-
-  if (!data.description || data.description.trim().length < 50) {
-    return { success: false, error: "Job description must be at least 50 characters" };
+  const parsed = createJobFromOnboardingSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
   }
 
   try {
     const job = await prisma.job.create({
       data: {
         recruiterId: session.user.id,
-        title: data.title.trim(),
-        description: data.description.trim(),
-        jobType: data.jobType as any,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        jobType: parsed.data.jobType,
         applyType: "INTERNAL",
         status: "OPEN",
-        salaryMin: data.salaryMin,
-        salaryMax: data.salaryMax,
+        salaryMin: parsed.data.salaryMin,
+        salaryMax: parsed.data.salaryMax,
         currency: "USD",
-        experienceLevel: data.experienceLevel,
-        category: data.category,
+        experienceLevel: parsed.data.experienceLevel,
+        category: parsed.data.category,
       },
     });
 

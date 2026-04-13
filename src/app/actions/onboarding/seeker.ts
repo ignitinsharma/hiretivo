@@ -2,16 +2,13 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { WorkType } from "@/constants/enums";
 import { invalidateSeekerCache } from "@/lib/match";
-import { uploadFile, R2_KEYS } from "@/lib/r2";
+import { uploadFile } from "@/lib/r2";
+import { step1Schema, step2Schema, step4Schema } from "@/lib/validations/onboarding.schema";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
 // --- Step 1: Situation ---
-// experienceLevel is not a DB column on SeekerProfile; situation is the only Step 1 field
-// persisted to DB. Per D-05, the schema has: situation, primaryRole, salaryMin, salaryMax,
-// currency, availability. experienceLevel informs the UI wizard but is not stored separately.
 export async function saveStep1(data: {
   situation: string;
   experienceLevel: string;
@@ -19,14 +16,19 @@ export async function saveStep1(data: {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
+  const parsed = step1Schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
+  }
+
   await prisma.seekerProfile.upsert({
     where: { userId: session.user.id },
     create: {
       userId: session.user.id,
-      situation: data.situation,
+      situation: parsed.data.situation,
     },
     update: {
-      situation: data.situation,
+      situation: parsed.data.situation,
     },
   });
 
@@ -34,7 +36,6 @@ export async function saveStep1(data: {
 }
 
 // --- Step 2: Primary Role + Years + Skills ---
-// Skills are stored as SeekerSkill records (D-11).
 export async function saveStep2(data: {
   primaryRole: string;
   yearsOfExperience: string | null;
@@ -43,11 +44,16 @@ export async function saveStep2(data: {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
+  const parsed = step2Schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
+  }
+
   await prisma.$transaction(async (tx) => {
     const profile = await tx.seekerProfile.upsert({
       where: { userId: session.user.id },
-      create: { userId: session.user.id, primaryRole: data.primaryRole },
-      update: { primaryRole: data.primaryRole },
+      create: { userId: session.user.id, primaryRole: parsed.data.primaryRole },
+      update: { primaryRole: parsed.data.primaryRole },
       select: { id: true },
     });
 
@@ -55,12 +61,12 @@ export async function saveStep2(data: {
       where: { seekerProfileId: profile.id },
     });
 
-    if (data.skills.length > 0) {
+    if (parsed.data.skills.length > 0) {
       await tx.seekerSkill.createMany({
-        data: data.skills.map((s) => ({
+        data: parsed.data.skills.map((s) => ({
           seekerProfileId: profile.id,
           skillId: s.skillId,
-          level: (s.level as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT') ?? 'INTERMEDIATE',
+          level: s.level,
         })),
       });
     }
@@ -94,6 +100,21 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
   let resumeKey: string | null = null;
 
   if (resumeFile && resumeFile.size > 0) {
+    // Security fix: Validate file size (max 5MB)
+    const MAX_RESUME_SIZE = 5 * 1024 * 1024; // 5MB
+    if (resumeFile.size > MAX_RESUME_SIZE) {
+      return { success: false, error: "Resume must be under 5MB" };
+    }
+
+    // Security fix: Validate file type (only PDF and DOCX allowed)
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (!allowedTypes.includes(resumeFile.type)) {
+      return { success: false, error: "Only PDF and DOCX files are allowed" };
+    }
+
     try {
       const ext = resumeFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'docx' : 'pdf';
       const key = `resumes/${session.user.id}/resume.${ext}`;
@@ -119,14 +140,6 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
   return { success: true };
 }
 
-function isWorkType(value: string | null): value is WorkType {
-  return (
-    value === WorkType.REMOTE ||
-    value === WorkType.HYBRID ||
-    value === WorkType.ONSITE
-  );
-}
-
 // --- Step 4: Job Preferences ---
 export async function saveStep4(data: {
   salaryMin: number | null;
@@ -138,28 +151,27 @@ export async function saveStep4(data: {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
-  // workPreference must be a valid WorkType enum value or null for the DB field.
-  // Values come from the seeker onboarding UI which only emits valid WorkType strings.
-  const workPreference = isWorkType(data.workPreference)
-    ? data.workPreference
-    : null;
+  const parsed = step4Schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
+  }
 
   await prisma.seekerProfile.upsert({
     where: { userId: session.user.id },
     create: {
       userId: session.user.id,
-      salaryMin: data.salaryMin,
-      salaryMax: data.salaryMax,
-      currency: data.currency,
-      availability: data.availability,
-      workPreference,
+      salaryMin: parsed.data.salaryMin,
+      salaryMax: parsed.data.salaryMax,
+      currency: parsed.data.currency,
+      availability: parsed.data.availability,
+      workPreference: parsed.data.workPreference,
     },
     update: {
-      salaryMin: data.salaryMin,
-      salaryMax: data.salaryMax,
-      currency: data.currency,
-      availability: data.availability,
-      workPreference,
+      salaryMin: parsed.data.salaryMin,
+      salaryMax: parsed.data.salaryMax,
+      currency: parsed.data.currency,
+      availability: parsed.data.availability,
+      workPreference: parsed.data.workPreference,
     },
   });
 
