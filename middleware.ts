@@ -99,7 +99,19 @@ export default auth(async (req: NextRequest & { auth: any }) => {
       }
     } catch (error) {
       console.error("Middleware DB check failed (seeker):", error);
-      // Fail open — allow request through to avoid blocking all traffic
+
+      // If database tables don't exist yet (fresh deployment), allow request through
+      // to avoid blocking all traffic during initial setup
+      const errorMessage = error instanceof Error ? error.message : "";
+      if (
+        errorMessage.includes("does not exist") ||
+        errorMessage.includes("relation")
+      ) {
+        console.warn("[middleware] Database tables not ready — allowing request through");
+        return NextResponse.next();
+      }
+
+      // For other errors, fail open to avoid blocking traffic
       return NextResponse.next();
     }
 
@@ -132,7 +144,16 @@ export default auth(async (req: NextRequest & { auth: any }) => {
       }
     } catch (error) {
       console.error("Middleware DB check failed (recruiter):", error);
-      // Fail open — allow request through to avoid blocking all traffic
+
+      const errorMessage = error instanceof Error ? error.message : "";
+      if (
+        errorMessage.includes("does not exist") ||
+        errorMessage.includes("relation")
+      ) {
+        console.warn("[middleware] Database tables not ready — allowing request through");
+        return NextResponse.next();
+      }
+
       return NextResponse.next();
     }
 
