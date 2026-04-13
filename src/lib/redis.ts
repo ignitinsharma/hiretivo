@@ -1,7 +1,17 @@
 import { Redis } from "@upstash/redis";
 import { IS_PRODUCTION, IS_STAGING, IS_DEVELOP } from "./config";
 
-function createRedis(): Redis {
+// Lazy Redis client — not initialized at module load time.
+// This prevents import-time failures when UPSTASH env vars are absent,
+// which would otherwise cascade and break all server actions that import
+// anything from this module (e.g. the entire seeker onboarding flow).
+const _globalForRedis = globalThis as unknown as {
+  _redisClient: Redis | undefined;
+};
+
+function getRedis(): Redis {
+  if (_globalForRedis._redisClient) return _globalForRedis._redisClient;
+
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -11,16 +21,24 @@ function createRedis(): Redis {
     );
   }
 
-  return new Redis({ url, token });
+  const instance = new Redis({ url, token });
+
+  if (process.env.NODE_ENV !== "production") {
+    _globalForRedis._redisClient = instance;
+  }
+
+  return instance;
 }
 
-const globalForRedis = globalThis as unknown as { redis: Redis | undefined };
-
-export const redis: Redis = globalForRedis.redis ?? createRedis();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForRedis.redis = redis;
-}
+// Proxy-based lazy export: safe to import even when UPSTASH env vars are not
+// set. Throws only when a method is actually called, not at import time.
+export const redis = new Proxy({} as Redis, {
+  get(_, prop) {
+    const instance = getRedis();
+    const value = Reflect.get(instance, prop);
+    return typeof value === "function" ? value.bind(instance) : value;
+  },
+});
 
 /**
  * Get environment-specific key prefix

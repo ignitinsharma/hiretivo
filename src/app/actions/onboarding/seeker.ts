@@ -71,7 +71,12 @@ export async function saveStep2(data: {
     select: { id: true },
   });
   if (seekerProfile) {
-    await invalidateSeekerCache(seekerProfile.id);
+    // Fire-and-forget: cache invalidation must not block or fail the save.
+    // If Redis is unconfigured or the match computation fails, onboarding
+    // still completes — matches will recompute on the next cron run.
+    invalidateSeekerCache(seekerProfile.id).catch((err) => {
+      console.error("[saveStep2] Cache invalidation failed (non-fatal):", err);
+    });
   }
 
   return { success: true };
@@ -89,10 +94,15 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
   let resumeKey: string | null = null;
 
   if (resumeFile && resumeFile.size > 0) {
-    const ext = resumeFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'docx' : 'pdf';
-    const key = `resumes/${session.user.id}/resume.${ext}`;
-    await uploadFile(resumeFile, key);
-    resumeKey = key;
+    try {
+      const ext = resumeFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'docx' : 'pdf';
+      const key = `resumes/${session.user.id}/resume.${ext}`;
+      await uploadFile(resumeFile, key);
+      resumeKey = key;
+    } catch (err) {
+      console.error("[saveStep3] R2 upload failed:", err);
+      return { success: false, error: "Resume upload failed. Please try again or skip this step." };
+    }
   }
 
   await prisma.seekerProfile.upsert({

@@ -78,7 +78,13 @@ export async function invalidateSeekerCache(seekerProfileId: string): Promise<vo
     await prisma.jobMatch.deleteMany({ where: { seekerProfileId } });
   }
 
-  await redis.del(`match:${seekerProfileId}`);
+  // Redis deletion is best-effort: don't let a missing/misconfigured Redis
+  // instance block profile saves or onboarding completion.
+  try {
+    await redis.del(`match:${seekerProfileId}`);
+  } catch (err) {
+    console.error("[match] Redis cache invalidation failed (non-fatal):", err);
+  }
 }
 
 export async function invalidateJobSkillsCache(jobId: string): Promise<void> {
