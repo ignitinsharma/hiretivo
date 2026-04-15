@@ -181,7 +181,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
 
   return (
     <Sheet open={isCandidateDrawerOpen} onOpenChange={closeCandidateDrawer}>
-      <SheetContent side="right" className="w-full sm:w-[480px] overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
         {application ? (
           <div className="space-y-6 pr-2">
             <SheetHeader>
