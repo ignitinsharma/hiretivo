@@ -1,11 +1,18 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { ActiveJobsList } from '@/modules/recruiter/dashboard/components/ActiveJobsList';
 import { RecentApplicantsList } from '@/modules/recruiter/dashboard/components/RecentApplicantsList';
 import { ApplicationTrendChart } from '@/modules/recruiter/dashboard/components/ApplicationTrendChart';
-import { RECRUITER_STATS } from '@/modules/recruiter/dashboard/data/mock-dashboard-data';
 import { cn } from '@/lib/utils';
+
+interface DashboardStats {
+  activeJobs: number;
+  totalApplications: number;
+  newThisWeek: number;
+  avgMatchScore: number;
+}
 
 interface DashboardStatItem {
   label: string;
@@ -13,27 +20,6 @@ interface DashboardStatItem {
   trend?: string;
   variant?: 'default' | 'primary';
 }
-
-const DASHBOARD_STATS: DashboardStatItem[] = [
-  {
-    label: 'Active Jobs',
-    value: RECRUITER_STATS.activeJobs,
-    trend: '+5%',
-  },
-  {
-    label: 'Total Applications',
-    value: 482,
-  },
-  {
-    label: 'New This Week',
-    value: 28,
-    variant: 'primary',
-  },
-  {
-    label: 'Avg. Match Score',
-    value: '78%',
-  },
-];
 
 function StatCard({ stat }: { stat: DashboardStatItem }) {
   const isPrimary = stat.variant === 'primary';
@@ -61,9 +47,9 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
             {stat.trend}
           </span>
         )}
-        {stat.label === 'Avg. Match Score' && (
+        {stat.label === 'Avg. Match Score' && typeof stat.value === 'number' && (
           <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
-            <div className="bg-primary h-full w-[78%]" />
+            <div className="bg-primary h-full" style={{ width: `${stat.value}%` }} />
           </div>
         )}
       </div>
@@ -71,16 +57,53 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm animate-pulse">
+      <div className="h-4 bg-slate-100 rounded w-24 mb-4" />
+      <div className="h-8 bg-slate-100 rounded w-16" />
+    </div>
+  );
+}
+
 export default function RecruiterDashboardPage() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/recruiter/dashboard')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load dashboard');
+        return res.json();
+      })
+      .then((data) => {
+        setStats(data.stats ?? null);
+      })
+      .catch(() => {
+        setStats(null);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
+  const dashboardStats: DashboardStatItem[] = stats
+    ? [
+        { label: 'Active Jobs', value: stats.activeJobs },
+        { label: 'Total Applications', value: stats.totalApplications },
+        { label: 'New This Week', value: stats.newThisWeek, variant: 'primary' },
+        { label: 'Avg. Match Score', value: stats.avgMatchScore ? `${stats.avgMatchScore}%` : 'N/A' },
+      ]
+    : [];
+
   return (
     <div className="min-h-screen bg-white">
       <div className="w-full p-8 space-y-10">
-        {/* Header */}
         <section className="flex items-start gap-4">
           <SidebarToggle className="mt-2" />
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">
-              Good morning, Nitin.
+              Dashboard
             </h1>
             <p className="text-slate-500 text-lg">
               Here&apos;s what&apos;s happening with your recruitment pipeline
@@ -89,14 +112,21 @@ export default function RecruiterDashboardPage() {
           </div>
         </section>
 
-        {/* Stats Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {DASHBOARD_STATS.map((stat) => (
-            <StatCard key={stat.label} stat={stat} />
-          ))}
+          {isLoading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            dashboardStats.map((stat) => (
+              <StatCard key={stat.label} stat={stat} />
+            ))
+          )}
         </section>
 
-        {/* Jobs + Applicants Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-3">
             <ActiveJobsList />
@@ -106,7 +136,6 @@ export default function RecruiterDashboardPage() {
           </div>
         </section>
 
-        {/* Application Trend */}
         <ApplicationTrendChart />
       </div>
     </div>

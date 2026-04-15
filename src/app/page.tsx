@@ -9,7 +9,8 @@ import { generatePageMetadata } from "@/lib/metadata";
 
 export const metadata = generatePageMetadata({
   title: "Skills-Based Remote Job Portal",
-  description: "Find remote jobs matched to your skills. No resume black holes — just skill-based matching for developers, designers, and more.",
+  description:
+    "Find remote jobs matched to your skills. No resume black holes — just skill-based matching for developers, designers, and more.",
 });
 
 function formatStat(n: number): string {
@@ -19,26 +20,29 @@ function formatStat(n: number): string {
 }
 
 export default async function Home() {
-  const [activeJobCount, seekerCount, companyCount, featuredJobs] = await Promise.all([
-    prisma.job.count({ where: { status: JobStatus.OPEN } }).catch(() => 0),
-    prisma.user.count({ where: { role: UserRole.SEEKER } }).catch(() => 0),
-    prisma.recruiterProfile.count().catch(() => 0),
-    prisma.job.findMany({
-      where: { status: JobStatus.OPEN },
-      orderBy: { createdAt: 'desc' },
-      take: 6,
-      include: {
-        skills: { include: { skill: true } },
-        recruiter: {
-          select: {
-            recruiterProfile: {
-              select: { companyName: true, logo: true },
+  const [activeJobCount, seekerCount, companyCount, featuredJobs] =
+    await Promise.all([
+      prisma.job.count({ where: { status: JobStatus.OPEN } }).catch(() => 0),
+      prisma.user.count({ where: { role: UserRole.SEEKER } }).catch(() => 0),
+      prisma.recruiterProfile.count().catch(() => 0),
+      prisma.job
+        .findMany({
+          where: { status: JobStatus.OPEN },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          include: {
+            skills: { include: { skill: true } },
+            recruiter: {
+              select: {
+                recruiterProfile: {
+                  select: { companyName: true, logo: true },
+                },
+              },
             },
           },
-        },
-      },
-    }).catch(() => []),
-  ]);
+        })
+        .catch(() => []),
+    ]);
   return (
     <>
       <Header />
@@ -66,11 +70,11 @@ export default async function Home() {
             >
               <div className="flex items-center bg-white border border-brand-border p-2 rounded-full card-shadow">
                 <div className="pl-6 flex items-center grow">
-                  <span className="material-symbols-outlined text-gray-400">
+                  <span className="material-symbols-outlined mr-2 text-gray-400">
                     search
                   </span>
                   <input
-                    className="w-full border-none focus:ring-0 text-brand-heading font-medium placeholder-gray-400 focus:outline-none"
+                    className="w-full  border-none focus:ring-0 text-brand-heading font-medium placeholder-gray-400 focus:outline-none"
                     placeholder="Job title, keywords, or company..."
                     type="text"
                   />
@@ -500,7 +504,8 @@ export default async function Home() {
                           />
                         ) : (
                           <span className="text-brand-primary font-bold text-lg">
-                            {job.recruiter.recruiterProfile?.companyName?.[0] ?? 'H'}
+                            {job.recruiter.recruiterProfile?.companyName?.[0] ??
+                              "H"}
                           </span>
                         )}
                       </div>
@@ -514,7 +519,7 @@ export default async function Home() {
                     <div className="flex flex-wrap gap-2 mb-4">
                       {job.jobType && (
                         <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                          {job.jobType.replace('_', '-')}
+                          {job.jobType.replace("_", "-")}
                         </span>
                       )}
                       {job.category && (
@@ -527,7 +532,7 @@ export default async function Home() {
                       <span className="text-brand-accent font-bold text-sm">
                         {job.salaryMin && job.salaryMax
                           ? `$${Math.round(job.salaryMin / 1000)}k – $${Math.round(job.salaryMax / 1000)}k`
-                          : 'Competitive'}
+                          : "Competitive"}
                       </span>
                       <Link
                         className="text-brand-heading font-semibold text-sm hover:translate-x-1 transition-transform"
@@ -587,7 +592,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="py-24 bg-brand-light" data-purpose="recruiters-cta">
+        <section className="py-24 bg-[#f9fafb]" data-purpose="recruiters-cta">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="bg-white rounded-3xl p-8 md:p-16 card-shadow flex flex-col md:flex-row items-center gap-12">
               <div className="md:w-1/2">

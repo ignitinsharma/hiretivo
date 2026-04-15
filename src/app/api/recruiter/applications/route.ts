@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { ApplicationStatus, InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { getSignedFileUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 20;
@@ -131,23 +130,15 @@ export async function GET(req: NextRequest) {
     ? (pageItems[pageItems.length - 1]?.id ?? null)
     : null;
 
-  const result = await Promise.all(
-    pageItems.map(async (app) => {
+  const result = pageItems.map((app) => {
       const seeker = app.seeker;
       const profile = seeker.seekerProfile;
-      let resumeUrl: string | null = null;
-      if (profile?.resumeKey) {
-        try {
-          resumeUrl = await getSignedFileUrl(profile.resumeKey);
-        } catch {
-          resumeUrl = null;
-        }
-      }
 
       return {
         id: app.id,
         jobId: app.jobId,
         jobTitle: app.job.title,
+        seekerId: seeker.id,
         candidateName: seeker.name ?? "Anonymous",
         candidateEmail: seeker.email ?? "",
         candidateAvatar: seeker.image,
@@ -165,12 +156,11 @@ export async function GET(req: NextRequest) {
         status: app.status,
         plan: recruiter?.plan ?? PlanTier.FREE,
         coverLetter: app.coverLetter,
-        resumeUrl,
+        hasResume: !!profile?.resumeKey,
         appliedAt: app.createdAt.toISOString(),
         scheduledInterview: app.interviews[0] ?? null,
       };
-    }),
-  );
+    });
 
   return NextResponse.json({
     applications: result,

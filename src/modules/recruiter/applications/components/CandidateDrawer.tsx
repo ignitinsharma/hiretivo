@@ -54,6 +54,7 @@ function formatInterviewDuration(startsAt: string, endsAt: string): string {
 export interface CandidateApplication {
   id: string;
   jobId?: string;
+  seekerId: string;
   candidateName: string;
   candidateEmail: string;
   candidateAvatar?: string | null;
@@ -61,7 +62,7 @@ export interface CandidateApplication {
   matchScore: number;
   status: ApplicationStatus;
   coverLetter: string | null;
-  resumeUrl: string | null;
+  hasResume: boolean;
   candidateProfile?: {
     primaryRole: string | null;
     headline: string | null;
@@ -218,11 +219,11 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
               </div>
             </section>
 
-            {application.resumeUrl ? (
+            {application.hasResume ? (
               <section className="space-y-2">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Resume</p>
                 <Button asChild className="w-full sm:w-auto">
-                  <a href={application.resumeUrl} target="_blank" rel="noreferrer">
+                  <a href={`/api/resume/${application.seekerId}`} target="_blank" rel="noreferrer">
                     View Resume
                   </a>
                 </Button>

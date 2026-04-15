@@ -15,7 +15,7 @@ function requireEnv(name: string): string {
   return value;
 }
 
-function getR2Client(): S3Client {
+export function getR2Client(): S3Client {
   const accountId = requireEnv("R2_ACCOUNT_ID");
   const accessKeyId = requireEnv("R2_ACCESS_KEY_ID");
   const secretAccessKey = requireEnv("R2_SECRET_ACCESS_KEY");

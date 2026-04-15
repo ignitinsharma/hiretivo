@@ -1,36 +1,79 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { ApplicationStatus } from "@/constants/enums";
 
 interface RecentApplicant {
   id: string;
   name: string;
+  email: string;
+  avatar?: string | null;
   position: string;
-  status: 'NEW' | 'INTERVIEW' | 'REVIEW' | 'REJECT';
-  timeAgo: string;
-  initials: string;
+  matchScore: number;
+  appliedDate: string;
+  status: ApplicationStatus;
+  primaryRole?: string | null;
 }
 
 const APPLICANT_STATUS_STYLES: Record<string, string> = {
-  NEW: 'bg-primary/10 text-primary',
-  INTERVIEW: 'bg-primary/10 text-primary',
-  REVIEW: 'bg-primary/10 text-primary',
-  REJECT: 'bg-slate-100 text-slate-800',
+  APPLIED: "bg-slate-100 text-slate-700",
+  REVIEWING: "bg-blue-100 text-blue-700",
+  INTERVIEW: "bg-primary/10 text-primary",
+  OFFER: "bg-amber-100 text-amber-700",
+  HIRED: "bg-green-100 text-green-700",
+  REJECTED: "bg-red-100 text-red-700",
 };
 
-const RECENT_APPLICANTS_DATA: RecentApplicant[] = [
-  { id: '1', name: 'Elena Rossi', position: 'Senior Product Designer', status: 'NEW', timeAgo: '2m ago', initials: 'ER' },
-  { id: '2', name: 'Marcus Chen', position: 'Engineering Manager', status: 'INTERVIEW', timeAgo: '1h ago', initials: 'MC' },
-  { id: '3', name: 'Sarah Williams', position: 'Full Stack Developer', status: 'NEW', timeAgo: '3h ago', initials: 'SW' },
-  { id: '4', name: 'James Miller', position: 'Content Strategist', status: 'REJECT', timeAgo: '5h ago', initials: 'JM' },
-  { id: '5', name: 'Amara Okoro', position: 'HR Specialist', status: 'REVIEW', timeAgo: '1d ago', initials: 'AO' },
-];
+const STATUS_LABELS: Record<string, string> = {
+  APPLIED: "New",
+  REVIEWING: "Reviewing",
+  INTERVIEW: "Interview",
+  OFFER: "Offer",
+  HIRED: "Hired",
+  REJECTED: "Rejected",
+};
+
+function getMatchLabel(score: number): string {
+  if (score >= 80) return "Strong";
+  if (score >= 60) return "Good";
+  return "Partial";
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 function ApplicantRow({ applicant }: { applicant: RecentApplicant }) {
+  const initials = applicant.name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2);
+
   return (
-    <div className="flex items-center gap-4">
+    <Link
+      href={`/recruiter/applications?applicant=${applicant.id}`}
+      className="flex items-center gap-4 hover:bg-slate-50 -mx-2 px-2 py-1 rounded-lg transition-colors"
+    >
       <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-sm font-semibold shrink-0">
-        {applicant.initials}
+        {applicant.avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={applicant.avatar}
+            alt={applicant.name}
+            className="h-10 w-10 rounded-full object-cover"
+          />
+        ) : (
+          initials
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-bold text-sm truncate">{applicant.name}</p>
@@ -41,28 +84,88 @@ function ApplicantRow({ applicant }: { applicant: RecentApplicant }) {
       <div className="flex flex-col items-end shrink-0">
         <span
           className={cn(
-            'text-[10px] font-bold px-2 py-0.5 rounded-full mb-1',
-            APPLICANT_STATUS_STYLES[applicant.status]
+            "text-[10px] font-bold px-2 py-0.5 rounded-full mb-1",
+            APPLICANT_STATUS_STYLES[applicant.status] ??
+              "bg-slate-100 text-slate-600",
           )}
         >
-          {applicant.status}
+          {STATUS_LABELS[applicant.status] ?? applicant.status}
         </span>
-        <span className="text-[10px] text-slate-500">{applicant.timeAgo}</span>
+        <span className="text-[10px] font-medium text-primary">
+          {getMatchLabel(applicant.matchScore)} · {applicant.matchScore}%
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function ApplicantSkeleton() {
+  return (
+    <div className="flex items-center gap-4 animate-pulse">
+      <div className="h-10 w-10 rounded-full bg-slate-100" />
+      <div className="flex-1">
+        <div className="h-4 bg-slate-100 rounded w-24 mb-1" />
+        <div className="h-3 bg-slate-100 rounded w-32" />
       </div>
     </div>
   );
 }
 
 export function RecentApplicantsList() {
+  const [applicants, setApplicants] = useState<RecentApplicant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/recruiter/dashboard")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load");
+        return res.json();
+      })
+      .then((data) => {
+        setApplicants(data.recentApplicants ?? []);
+      })
+      .catch(() => {
+        setApplicants([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-6 border-b border-slate-200">
+      <div className="px-6 py-6 border-b border-slate-200 flex items-center justify-between">
         <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
+        <Link
+          href="/recruiter/applications"
+          className="text-primary font-semibold text-sm hover:underline"
+        >
+          View all
+        </Link>
       </div>
       <div className="p-6 space-y-6">
-        {RECENT_APPLICANTS_DATA.map((applicant) => (
-          <ApplicantRow key={applicant.id} applicant={applicant} />
-        ))}
+        {isLoading ? (
+          <>
+            <ApplicantSkeleton />
+            <ApplicantSkeleton />
+            <ApplicantSkeleton />
+          </>
+        ) : applicants.length === 0 ? (
+          <p className="text-sm text-slate-400 text-center py-4">
+            No applicants yet.{" "}
+            <Link
+              href="/recruiter/jobs"
+              className="text-primary hover:underline"
+            >
+              Post a job
+            </Link>{" "}
+            to get started.
+          </p>
+        ) : (
+          applicants.map((applicant) => (
+            <ApplicantRow key={applicant.id} applicant={applicant} />
+          ))
+        )}
       </div>
     </div>
   );
