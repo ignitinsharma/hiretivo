@@ -14,9 +14,8 @@ interface ActiveJob {
 
 const STATUS_STYLES: Record<string, string> = {
   OPEN: 'bg-emerald-100 text-emerald-800',
-  DRAFT: 'bg-slate-100 text-slate-800',
-  PAUSED: 'bg-amber-100 text-amber-800',
-  CLOSED: 'bg-red-100 text-red-800',
+  UNPUBLISHED: 'bg-amber-100 text-amber-800',
+  DELETED: 'bg-red-100 text-red-800',
 };
 
 export function ActiveJobsList() {
