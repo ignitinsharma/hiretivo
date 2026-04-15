@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Rocket, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -15,13 +14,7 @@ const stepLabels = ['Role', 'Company', 'Job', 'Complete'];
 
 export function OnboardingContainer() {
   const router = useRouter();
-  const { currentStep, nextStep, previousStep, completeOnboarding, isCompleted } = useOnboardingStore();
-
-  useEffect(() => {
-    if (isCompleted) {
-      router.push('/recruiter/dashboard');
-    }
-  }, [isCompleted, router]);
+  const { currentStep, nextStep, previousStep, completeOnboarding } = useOnboardingStore();
 
   const progressPercent = ((currentStep - 1) / 3) * 100;
 

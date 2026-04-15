@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
 import {
-  NotificationSettingsSchema,
   RecruiterProfileSettingsSchema,
 } from "@/lib/validations/interview.schema";
 import { NextRequest, NextResponse } from "next/server";
@@ -29,9 +28,6 @@ export async function GET() {
         select: {
           companyName: true,
           bio: true,
-          emailNotifications: true,
-          applicationAlerts: true,
-          interviewNotifications: true,
         },
       },
     },
@@ -47,18 +43,11 @@ export async function GET() {
       email: user.email ?? "",
       companyName: user.recruiterProfile.companyName,
       bio: user.recruiterProfile.bio ?? "",
-      emailNotifications: user.recruiterProfile.emailNotifications,
-      applicationAlerts: user.recruiterProfile.applicationAlerts,
-      interviewNotifications: user.recruiterProfile.interviewNotifications,
     },
   });
 }
 
-// Combined schema: profile fields OR notification fields
-const PatchSettingsSchema = z.union([
-  RecruiterProfileSettingsSchema,
-  NotificationSettingsSchema,
-]);
+const PatchSettingsSchema = RecruiterProfileSettingsSchema;
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
@@ -69,7 +58,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Rate limiting — 20 settings saves/min
   const { success } = await settingsRateLimiter.limit(session.user.id);
   if (!success) {
     return new NextResponse("Too Many Requests", { status: 429 });
@@ -82,35 +70,19 @@ export async function PATCH(req: NextRequest) {
   }
 
   const data = parsed.data;
+  const profileData = data as z.infer<typeof RecruiterProfileSettingsSchema>;
 
-  // Determine which fields to update based on discriminant field
-  if ("name" in data) {
-    // Profile tab save — discriminated by 'name' field (only in RecruiterProfileSettingsSchema).
-    // Cast is safe because Zod has already validated the shape above.
-    const profileData = data as z.infer<typeof RecruiterProfileSettingsSchema>;
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { name: profileData.name },
-    });
-    await prisma.recruiterProfile.update({
-      where: { userId: session.user.id },
-      data: {
-        companyName: profileData.companyName,
-        bio: profileData.bio ?? null,
-      },
-    });
-  } else {
-    // Notifications tab save
-    const notifData = data as z.infer<typeof NotificationSettingsSchema>;
-    await prisma.recruiterProfile.update({
-      where: { userId: session.user.id },
-      data: {
-        emailNotifications: notifData.emailNotifications,
-        applicationAlerts: notifData.applicationAlerts,
-        interviewNotifications: notifData.interviewNotifications,
-      },
-    });
-  }
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { name: profileData.name },
+  });
+  await prisma.recruiterProfile.update({
+    where: { userId: session.user.id },
+    data: {
+      companyName: profileData.companyName,
+      bio: profileData.bio ?? null,
+    },
+  });
 
   return NextResponse.json({ data: { success: true } }, { status: 200 });
 }

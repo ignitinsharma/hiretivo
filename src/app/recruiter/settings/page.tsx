@@ -9,10 +9,8 @@ import { toast } from "sonner";
 import {
   User,
   Building,
-  Bell,
   Shield,
   CreditCard,
-  Calendar,
 } from "lucide-react";
 import { RecruiterHeader } from "@/components/layout/RecruiterHeader";
 import { Button } from "@/components/ui/button";
@@ -22,22 +20,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   RecruiterProfileSettingsSchema,
-  NotificationSettingsSchema,
   ChangePasswordSchema,
 } from "@/lib/validations/interview.schema";
 import type {
   RecruiterProfileSettingsInput,
-  NotificationSettingsInput,
   ChangePasswordInput,
 } from "@/lib/validations/interview.schema";
 
 const SETTINGS_TABS = [
   { id: "profile", label: "Profile", icon: User },
   { id: "company", label: "Company", icon: Building },
-  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: Shield },
   { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "calendar", label: "Calendar", icon: Calendar },
 ];
 
 interface SettingsData {
@@ -45,9 +39,6 @@ interface SettingsData {
   email: string;
   companyName: string;
   bio: string;
-  emailNotifications: boolean;
-  applicationAlerts: boolean;
-  interviewNotifications: boolean;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -217,241 +208,6 @@ function ProfileTabContent({
               disabled={saveProfileMutation.isPending || isSettingsLoading}
             >
               {saveProfileMutation.isPending ? "Saving…" : "Save Changes"}
-            </Button>
-          </div>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-interface NotifTabProps {
-  settingsData: SettingsData | undefined;
-  isSettingsLoading: boolean;
-  isSettingsError: boolean;
-}
-
-function NotificationsTabContent({
-  settingsData,
-  isSettingsLoading,
-  isSettingsError,
-}: NotifTabProps) {
-  const queryClient = useQueryClient();
-
-  const notifForm = useForm<NotificationSettingsInput>({
-    resolver: zodResolver(NotificationSettingsSchema),
-    defaultValues: {
-      emailNotifications: false,
-      applicationAlerts: false,
-      interviewNotifications: false,
-    },
-  });
-
-  useEffect(() => {
-    if (settingsData) {
-      notifForm.reset({
-        emailNotifications: settingsData.emailNotifications,
-        applicationAlerts: settingsData.applicationAlerts,
-        interviewNotifications: settingsData.interviewNotifications,
-      });
-    }
-  }, [settingsData]);
-
-  const saveNotifMutation = useMutation({
-    mutationFn: async (values: NotificationSettingsInput) => {
-      const res = await fetch("/api/recruiter/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-    },
-    onSuccess: () => {
-      toast.success("Notification settings saved.");
-      queryClient.invalidateQueries({ queryKey: ["recruiter-settings"] });
-    },
-    onError: () => toast.error("Failed to save settings. Try again."),
-  });
-
-  return (
-    <div className="max-w-xl">
-      <h2 className="text-lg font-bold text-gray-900 mb-6">
-        Notification Settings
-      </h2>
-
-      {isSettingsError && (
-        <p className="text-sm text-red-500 mb-4">
-          Failed to load settings. Try again.
-        </p>
-      )}
-
-      <form
-        onSubmit={notifForm.handleSubmit((data) =>
-          saveNotifMutation.mutate(data),
-        )}
-      >
-        <div className="space-y-2">
-          {isSettingsLoading ? (
-            <>
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </>
-          ) : (
-            <>
-              <div className="flex items-center justify-between py-4 border-t border-gray-100">
-                <div>
-                  <label
-                    htmlFor="emailNotifications"
-                    className="font-medium text-gray-900"
-                  >
-                    Email Notifications
-                  </label>
-                  <p className="text-sm text-gray-500">
-                    Receive email updates about your job postings
-                  </p>
-                </div>
-                <Switch
-                  id="emailNotifications"
-                  checked={notifForm.watch("emailNotifications")}
-                  onCheckedChange={(checked) =>
-                    notifForm.setValue("emailNotifications", checked)
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between py-4 border-t border-gray-100">
-                <div>
-                  <label
-                    htmlFor="applicationAlerts"
-                    className="font-medium text-gray-900"
-                  >
-                    Application Alerts
-                  </label>
-                  <p className="text-sm text-gray-500">
-                    Get notified when new candidates apply
-                  </p>
-                </div>
-                <Switch
-                  id="applicationAlerts"
-                  checked={notifForm.watch("applicationAlerts")}
-                  onCheckedChange={(checked) =>
-                    notifForm.setValue("applicationAlerts", checked)
-                  }
-                />
-              </div>
-            </>
-          )}
-
-          <div className="pt-4">
-            <Button
-              type="submit"
-              className="bg-brand-primary hover:bg-brand-primary/90 text-white"
-              disabled={saveNotifMutation.isPending || isSettingsLoading}
-            >
-              {saveNotifMutation.isPending ? "Saving…" : "Save Changes"}
-            </Button>
-          </div>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-interface CalendarTabProps {
-  settingsData: SettingsData | undefined;
-  isSettingsLoading: boolean;
-  isSettingsError: boolean;
-}
-
-function CalendarTabContent({
-  settingsData,
-  isSettingsLoading,
-  isSettingsError,
-}: CalendarTabProps) {
-  const queryClient = useQueryClient();
-
-  const notifForm = useForm<NotificationSettingsInput>({
-    resolver: zodResolver(NotificationSettingsSchema),
-    defaultValues: {
-      emailNotifications: false,
-      applicationAlerts: false,
-      interviewNotifications: false,
-    },
-  });
-
-  useEffect(() => {
-    if (settingsData) {
-      notifForm.reset({
-        emailNotifications: settingsData.emailNotifications,
-        applicationAlerts: settingsData.applicationAlerts,
-        interviewNotifications: settingsData.interviewNotifications,
-      });
-    }
-  }, [settingsData]);
-
-  const saveCalendarMutation = useMutation({
-    mutationFn: async (values: NotificationSettingsInput) => {
-      const res = await fetch("/api/recruiter/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-    },
-    onSuccess: () => {
-      toast.success("Calendar settings saved.");
-      queryClient.invalidateQueries({ queryKey: ["recruiter-settings"] });
-    },
-    onError: () => toast.error("Failed to save settings. Try again."),
-  });
-
-  return (
-    <div className="max-w-xl">
-      <h2 className="text-lg font-bold text-gray-900 mb-6">
-        Calendar Settings
-      </h2>
-
-      {isSettingsError && (
-        <p className="text-sm text-red-500 mb-4">
-          Failed to load settings. Try again.
-        </p>
-      )}
-
-      <form
-        onSubmit={notifForm.handleSubmit((data) =>
-          saveCalendarMutation.mutate(data),
-        )}
-      >
-        <div className="space-y-2">
-          {isSettingsLoading ? (
-            <Skeleton className="h-10 w-full" />
-          ) : (
-            <div className="flex items-center justify-between py-4 border-t border-gray-100">
-              <div>
-                <label
-                  htmlFor="interviewNotifications"
-                  className="font-medium text-gray-900"
-                >
-                  Send me email reminders for upcoming interviews
-                </label>
-              </div>
-              <Switch
-                id="interviewNotifications"
-                checked={notifForm.watch("interviewNotifications")}
-                onCheckedChange={(checked) =>
-                  notifForm.setValue("interviewNotifications", checked)
-                }
-              />
-            </div>
-          )}
-
-          <div className="pt-4">
-            <Button
-              type="submit"
-              className="bg-brand-primary hover:bg-brand-primary/90 text-white"
-              disabled={saveCalendarMutation.isPending || isSettingsLoading}
-            >
-              {saveCalendarMutation.isPending ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -638,20 +394,6 @@ export default function SettingsPage() {
             <div className="flex-1 p-6">
               {activeTab === "profile" && (
                 <ProfileTabContent
-                  settingsData={settingsData}
-                  isSettingsLoading={isSettingsLoading}
-                  isSettingsError={isSettingsError}
-                />
-              )}
-              {activeTab === "notifications" && (
-                <NotificationsTabContent
-                  settingsData={settingsData}
-                  isSettingsLoading={isSettingsLoading}
-                  isSettingsError={isSettingsError}
-                />
-              )}
-              {activeTab === "calendar" && (
-                <CalendarTabContent
                   settingsData={settingsData}
                   isSettingsLoading={isSettingsLoading}
                   isSettingsError={isSettingsError}
