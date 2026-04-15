@@ -13,7 +13,7 @@ import {
   List,
   SlidersHorizontal,
   Pencil,
-  Archive,
+  EyeOff,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ interface ApiJob {
   title: string;
   category: string | null;
   location: string | null;
-  status: "DRAFT" | "OPEN" | "PAUSED" | "CLOSED";
+  status: "OPEN" | "UNPUBLISHED" | "DELETED";
   createdAt: string;
   _count: { applications: number };
   skills: { skill: { id: string; name: string; category: string } }[];
@@ -85,7 +85,7 @@ function JobRow({
 }: {
   job: ApiJob;
   onEdit: (id: string) => void;
-  onToggle: (id: string, newStatus: "OPEN" | "PAUSED") => void;
+  onToggle: (id: string, newStatus: "OPEN" | "UNPUBLISHED") => void;
   onDeleteRequest: (job: ApiJob) => void;
 }) {
   return (
@@ -103,9 +103,9 @@ function JobRow({
                   Active
                 </span>
               )}
-              {job.status === "PAUSED" && (
+              {job.status === "UNPUBLISHED" && (
                 <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded-sm font-bold uppercase tracking-tighter">
-                  Archived
+                  Unpublished
                 </span>
               )}
             </div>
@@ -172,12 +172,12 @@ function JobRow({
                   onClick={() =>
                     onToggle(
                       job.id,
-                      job.status === "OPEN" ? "PAUSED" : "OPEN",
+                      job.status === "OPEN" ? "UNPUBLISHED" : "OPEN",
                     )
                   }
                 >
-                  <Archive className="w-4 h-4" />
-                  {job.status === "OPEN" ? "Archive Job" : "Reactivate Job"}
+                  <EyeOff className="w-4 h-4" />
+                  {job.status === "OPEN" ? "Unpublish Job" : "Republish Job"}
                 </button>
                 <div className="h-px bg-slate-100 my-1" />
                 <button
@@ -297,7 +297,7 @@ export default function RecruiterJobsPage() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: "OPEN" | "PAUSED" }) =>
+    mutationFn: ({ id, status }: { id: string; status: "OPEN" | "UNPUBLISHED" }) =>
       fetch(`/api/jobs/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
