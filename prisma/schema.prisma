@@ -27,10 +27,9 @@ enum ApplyType {
 }
 
 enum JobStatus {
-  DRAFT
   OPEN
-  PAUSED
-  CLOSED
+  UNPUBLISHED
+  DELETED
 }
 
 enum SkillLevel {
@@ -79,6 +78,9 @@ model User {
   plan          PlanTier  @default(FREE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  stripeCustomerId String?
+  digestEnabled  Boolean @default(false)
 
   accounts Account[]
   sessions Session[]
@@ -200,10 +202,6 @@ model RecruiterProfile {
   isFullyRemote Boolean  @default(false)
   logo        String?
 
-  emailNotifications     Boolean @default(true)
-  applicationAlerts      Boolean @default(true)
-  interviewNotifications Boolean @default(true)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -218,7 +216,7 @@ model Job {
   jobType     JobType
   applyType   ApplyType
   workType    WorkType?
-  status      JobStatus   @default(DRAFT)
+  status      JobStatus   @default(OPEN)
 
   salaryMin Int?
   salaryMax Int?
