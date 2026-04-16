@@ -1,4 +1,34 @@
-export function ApplicationTrendChart() {
+'use client';
+
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import type { TrendDataPoint } from '@/modules/recruiter/dashboard/types/dashboard.types';
+
+interface ApplicationTrendChartProps {
+  trendData: TrendDataPoint[];
+}
+
+const chartConfig = {
+  count: {
+    label: 'Applications',
+    color: 'hsl(239 84% 67%)',
+  },
+} satisfies ChartConfig;
+
+export function ApplicationTrendChart({ trendData }: ApplicationTrendChartProps) {
+  const formattedData = trendData.map((point) => ({
+    ...point,
+    date: new Date(point.date + 'T00:00:00').toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
+  }));
+
   return (
     <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-200">
@@ -9,60 +39,56 @@ export function ApplicationTrendChart() {
           Total applications received over the last 30 days
         </p>
       </div>
-      <div className="p-8 h-80 relative">
-        <div className="absolute inset-0 p-8 flex flex-col justify-end">
-          <div className="flex items-end justify-between w-full h-48 relative">
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              <div className="border-b border-slate-100 w-full" />
-              <div className="border-b border-slate-100 w-full" />
-              <div className="border-b border-slate-100 w-full" />
-              <div className="border-b border-slate-100 w-full" />
-            </div>
-
-            {/* Chart SVG */}
-            <svg
-              className="absolute inset-0 w-full h-full"
-              preserveAspectRatio="none"
-              viewBox="0 0 100 100"
-            >
-              <defs>
-                <linearGradient id="trendGrad" x1="0" x2="0" y1="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="hsl(239 84% 67%)"
-                    stopOpacity="0.2"
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="hsl(239 84% 67%)"
-                    stopOpacity="0"
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,80 Q10,75 20,85 T40,60 T60,50 T80,45 T100,20 L100,100 L0,100 Z"
-                fill="url(#trendGrad)"
-              />
-              <path
-                d="M0,80 Q10,75 20,85 T40,60 T60,50 T80,45 T100,20"
-                fill="none"
-                stroke="hsl(239 84% 67%)"
-                strokeWidth="2"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-
-            {/* X-axis labels */}
-            <div className="absolute bottom-[-32px] left-0 right-0 flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-              <span>1 May</span>
-              <span>8 May</span>
-              <span>15 May</span>
-              <span>22 May</span>
-              <span>Today</span>
-            </div>
-          </div>
-        </div>
+      <div className="p-6 h-80">
+        <ChartContainer config={chartConfig} className="h-full w-full">
+          <AreaChart
+            data={formattedData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="fillGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor="hsl(239 84% 67%)"
+                  stopOpacity={0.2}
+                />
+                <stop
+                  offset="100%"
+                  stopColor="hsl(239 84% 67%)"
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#f1f5f9"
+            />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              className="text-[10px]"
+              interval="preserveStartEnd"
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              allowDecimals={false}
+              className="text-[10px]"
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Area
+              dataKey="count"
+              type="monotone"
+              fill="url(#fillGradient)"
+              stroke="hsl(239 84% 67%)"
+              strokeWidth={2}
+            />
+          </AreaChart>
+        </ChartContainer>
       </div>
     </section>
   );
