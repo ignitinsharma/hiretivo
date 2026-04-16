@@ -1,86 +1,54 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
 import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { ActiveJobsList } from '@/modules/recruiter/dashboard/components/ActiveJobsList';
 import { RecentApplicantsList } from '@/modules/recruiter/dashboard/components/RecentApplicantsList';
 import { ApplicationTrendChart } from '@/modules/recruiter/dashboard/components/ApplicationTrendChart';
-import { RECRUITER_STATS } from '@/modules/recruiter/dashboard/data/mock-dashboard-data';
-import { cn } from '@/lib/utils';
+import { DashboardStats } from '@/modules/recruiter/dashboard/components/DashboardStats';
+import { DashboardSkeleton } from '@/modules/recruiter/dashboard/components/DashboardSkeleton';
+import { useFetchRecruiterDashboard } from '@/modules/recruiter/dashboard/hooks/use-fetch-recruiter-dashboard';
 
-interface DashboardStatItem {
-  label: string;
-  value: string | number;
-  trend?: string;
-  variant?: 'default' | 'primary';
-}
-
-const DASHBOARD_STATS: DashboardStatItem[] = [
-  {
-    label: 'Active Jobs',
-    value: RECRUITER_STATS.activeJobs,
-    trend: '+5%',
-  },
-  {
-    label: 'Total Applications',
-    value: 482,
-  },
-  {
-    label: 'New This Week',
-    value: 28,
-    variant: 'primary',
-  },
-  {
-    label: 'Avg. Match Score',
-    value: '78%',
-  },
-];
-
-function StatCard({ stat }: { stat: DashboardStatItem }) {
-  const isPrimary = stat.variant === 'primary';
-  return (
-    <div
-      className={cn(
-        'p-6 rounded-xl',
-        isPrimary
-          ? 'bg-primary text-white shadow-lg shadow-primary/20'
-          : 'bg-white border border-slate-200 shadow-sm'
-      )}
-    >
-      <p
-        className={cn(
-          'text-sm font-medium mb-4',
-          isPrimary ? 'opacity-80' : 'text-slate-500'
-        )}
-      >
-        {stat.label}
-      </p>
-      <div className="flex items-baseline gap-3">
-        <span className="text-3xl font-bold">{stat.value}</span>
-        {stat.trend && (
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-            {stat.trend}
-          </span>
-        )}
-        {stat.label === 'Avg. Match Score' && (
-          <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
-            <div className="bg-primary h-full w-[78%]" />
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export default function RecruiterDashboardPage() {
+  const { data: session } = useSession();
+  const { data, isLoading, isError, refetch } = useFetchRecruiterDashboard();
+
+  const displayName = session?.user?.name?.split(' ')[0] ?? 'there';
+
+  if (isLoading) return <DashboardSkeleton />;
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-slate-500">Failed to load dashboard data.</p>
+          <button
+            onClick={() => refetch()}
+            className="text-primary font-semibold hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return <DashboardSkeleton />;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="w-full p-8 space-y-10">
-        {/* Header */}
         <section className="flex items-start gap-4">
           <SidebarToggle className="mt-2" />
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">
-              Good morning, Nitin.
+              {getGreeting()}, {displayName}.
             </h1>
             <p className="text-slate-500 text-lg">
               Here&apos;s what&apos;s happening with your recruitment pipeline
@@ -89,25 +57,18 @@ export default function RecruiterDashboardPage() {
           </div>
         </section>
 
-        {/* Stats Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {DASHBOARD_STATS.map((stat) => (
-            <StatCard key={stat.label} stat={stat} />
-          ))}
-        </section>
+        <DashboardStats stats={data.stats} />
 
-        {/* Jobs + Applicants Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-3">
             <ActiveJobsList />
           </div>
           <div className="lg:col-span-2">
-            <RecentApplicantsList />
+            <RecentApplicantsList applicants={data.recentApplicants} />
           </div>
         </section>
 
-        {/* Application Trend */}
-        <ApplicationTrendChart />
+        <ApplicationTrendChart trendData={data.trendData} />
       </div>
     </div>
   );
