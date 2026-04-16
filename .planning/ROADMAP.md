@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 8: Bug Fixes, Schema Foundation & Cleanup** - Fix broken flows, apply schema migrations for v1.1, remove dead features
 - [ ] **Phase 9: Recruiter Dashboard & Job Management** - Live dashboard data, dynamic sidebar, remove dead UI pages
-- [ ] **Phase 10: Settings Restructure & Auth Guards** - Rebuild settings for both roles, auth redirects, header avatar
+- [x] **Phase 10: Settings Restructure & Auth Guards** - Rebuild settings for both roles, auth redirects, header avatar (completed 2026-04-16)
 - [ ] **Phase 11: Payments Integration** - Stripe checkout, webhooks, customer portal, billing tab
 - [ ] **Phase 12: Seeker Dashboard & Engagement** - Live seeker data, match explainer, skill gap tracker, weekly digest
 - [ ] **Phase 13: Recruiter Intelligence** - AI candidate summaries, real analytics, boost job
@@ -58,7 +58,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Both recruiter and seeker can delete their account from Security (with confirmation dialog; recruiter deletion also cancels Stripe subscription if active)
   4. Seeker settings page allows full profile update (resume upload, all profile fields) with no 2FA, export data, or notification options visible
   5. Logged-in users visiting the homepage are redirected to their role-specific dashboard, and the header shows an avatar dropdown with sign-out option
-**Plans**: TBD
+**Plans:** 3/3 plans complete
+Plans:
+- [ ] 10-01-PLAN.md — Recruiter settings restructure + backend APIs (schema, seeker settings, delete account)
+- [ ] 10-02-PLAN.md — Seeker settings UI rebuild (profile form, password, delete account, remove dead features)
+- [ ] 10-03-PLAN.md — Homepage auth redirect + header avatar dropdown verification
 **UI hint**: yes
 
 ### Phase 11: Payments Integration
@@ -106,7 +110,7 @@ Phases execute in numeric order: 8 -> 8.1 (if any) -> 9 -> ... -> 13
 |-------|-----------|----------------|--------|-----------|
 | 8. Bug Fixes, Schema Foundation & Cleanup | v1.1 | 0/0 | Not started | - |
 | 9. Recruiter Dashboard & Job Management | v1.1 | 0/0 | Not started | - |
-| 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Not started | - |
+| 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Complete    | 2026-04-16 |
 | 11. Payments Integration | v1.1 | 0/0 | Not started | - |
 | 12. Seeker Dashboard & Engagement | v1.1 | 0/0 | Not started | - |
 | 13. Recruiter Intelligence | v1.1 | 0/0 | Not started | - |
