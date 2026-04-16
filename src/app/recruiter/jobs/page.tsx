@@ -3,21 +3,15 @@
 import { useState, useMemo } from "react";
 import {
   Plus,
-  Upload,
-  Search,
   ChevronLeft,
   ChevronRight,
   MoreVertical,
   Briefcase,
-  LayoutGrid,
-  List,
-  SlidersHorizontal,
   Pencil,
   EyeOff,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SidebarToggle } from "@/components/layout/RecruiterSidebar";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -367,10 +361,6 @@ export default function RecruiterJobsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="gap-2 border-slate-200">
-              <Upload className="w-4 h-4" />
-              Export
-            </Button>
             <Button
               className="bg-primary text-white gap-2 shadow-md shadow-indigo-100 hover:bg-primary/90"
               onClick={openPostJobModal}
@@ -388,56 +378,8 @@ export default function RecruiterJobsPage() {
           ))}
         </div>
 
-        {/* Filter bar */}
-        <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex flex-wrap items-center gap-3">
-          <div className="flex-1 min-w-[240px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <Input
-              className="w-full pl-9 bg-slate-50 border-slate-200 text-sm"
-              placeholder="Quick search listings..."
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <select className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20">
-              <option>Department: All</option>
-              <option>Engineering</option>
-              <option>Design</option>
-              <option>Finance</option>
-            </select>
-            <select className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20">
-              <option>Status: Active</option>
-              <option>Unpublished</option>
-              <option>Deleted</option>
-            </select>
-          </div>
-          <div className="h-6 w-px bg-slate-200 mx-1" />
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-slate-500"
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-primary bg-indigo-50 border border-indigo-200"
-            >
-              <List className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-slate-500"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-
         {/* Table */}
-        <div className="bg-white border-x border-b border-slate-200 rounded-b-xl shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
