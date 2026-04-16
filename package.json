@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma migrate deploy && (prisma db seed || echo 'WARNING: Seed failed, but continuing build') && next build",
+    "vercel-build": "prisma generate && next build",
     "verify:route-access": "tsx scripts/verify/route-access-control.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:generate": "prisma generate",
