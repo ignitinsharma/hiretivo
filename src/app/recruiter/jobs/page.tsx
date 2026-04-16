@@ -406,8 +406,8 @@ export default function RecruiterJobsPage() {
             </select>
             <select className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20">
               <option>Status: Active</option>
-              <option>Draft</option>
-              <option>Archived</option>
+              <option>Unpublished</option>
+              <option>Deleted</option>
             </select>
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1" />
