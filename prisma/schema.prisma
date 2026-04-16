@@ -81,6 +81,7 @@ model User {
 
   stripeCustomerId String?
   digestEnabled  Boolean @default(false)
+  deletedAt      DateTime?
 
   accounts Account[]
   sessions Session[]

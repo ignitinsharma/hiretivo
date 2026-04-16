@@ -8,9 +8,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   User,
-  Building,
   Shield,
   CreditCard,
+  AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import { RecruiterHeader } from "@/components/layout/RecruiterHeader";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,17 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   RecruiterProfileSettingsSchema,
   ChangePasswordSchema,
@@ -29,7 +41,6 @@ import type {
 
 const SETTINGS_TABS = [
   { id: "profile", label: "Profile", icon: User },
-  { id: "company", label: "Company", icon: Building },
   { id: "security", label: "Security", icon: Shield },
   { id: "billing", label: "Billing", icon: CreditCard },
 ];
@@ -105,15 +116,14 @@ function ProfileTabContent({
         <div className="space-y-6">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary text-2xl font-bold">
-              AC
-            </div>
-            <div>
-              <Button variant="outline" size="sm" type="button">
-                Change Avatar
-              </Button>
-              <p className="text-xs text-gray-500 mt-1">
-                JPG, PNG or GIF. Max 2MB.
-              </p>
+              {settingsData?.name
+                ? settingsData.name
+                    .split(" ")
+                    .map((w) => w[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)
+                : "??"}
             </div>
           </div>
 
@@ -336,11 +346,87 @@ function SecurityTabContent() {
           </div>
         </div>
       </form>
+
+      <DeleteAccountSection />
     </div>
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
+function DeleteAccountSection() {
+  const [confirmText, setConfirmText] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/auth/delete-account", { method: "POST" });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(body.error ?? "Failed to delete account");
+        return;
+      }
+      toast.success("Account deleted");
+      window.location.href = "/";
+    } catch {
+      toast.error("Failed to delete account");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="mt-8 pt-8 border-t border-gray-200">
+      <h3 className="text-lg font-bold text-red-600 mb-2">Delete Account</h3>
+      <p className="text-sm text-gray-600 mb-4">
+        Once you delete your account, there is no going back. Please be certain.
+      </p>
+      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm">
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Account
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              Are you absolutely sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers. If you have an
+              active subscription, it will be cancelled.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Type <span className="font-bold text-red-600">DELETE</span> to
+              confirm
+            </label>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DELETE"
+              className="max-w-xs"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={confirmText !== "DELETE" || isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete Account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -400,7 +486,7 @@ export default function SettingsPage() {
                 />
               )}
               {activeTab === "security" && <SecurityTabContent />}
-              {(activeTab === "company" || activeTab === "billing") && (
+              {activeTab === "billing" && (
                 <p className="text-sm text-gray-500">Coming soon.</p>
               )}
             </div>
