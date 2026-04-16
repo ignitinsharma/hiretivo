@@ -1,68 +1,113 @@
 'use client';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { ApplicationStatus } from '@/constants/enums';
+import type { RecentApplicant } from '@/modules/recruiter/dashboard/types/dashboard.types';
 
-interface RecentApplicant {
-  id: string;
-  name: string;
-  position: string;
-  status: 'NEW' | 'INTERVIEW' | 'REVIEW' | 'REJECT';
-  timeAgo: string;
-  initials: string;
-}
-
-const APPLICANT_STATUS_STYLES: Record<string, string> = {
-  NEW: 'bg-primary/10 text-primary',
-  INTERVIEW: 'bg-primary/10 text-primary',
-  REVIEW: 'bg-primary/10 text-primary',
-  REJECT: 'bg-slate-100 text-slate-800',
+const STATUS_STYLES: Record<string, string> = {
+  [ApplicationStatus.APPLIED]: 'bg-blue-100 text-blue-700',
+  [ApplicationStatus.REVIEWING]: 'bg-amber-100 text-amber-700',
+  [ApplicationStatus.INTERVIEW]: 'bg-primary/10 text-primary',
+  [ApplicationStatus.OFFER]: 'bg-emerald-100 text-emerald-700',
+  [ApplicationStatus.HIRED]: 'bg-emerald-100 text-emerald-700',
+  [ApplicationStatus.REJECTED]: 'bg-slate-100 text-slate-600',
 };
 
-const RECENT_APPLICANTS_DATA: RecentApplicant[] = [
-  { id: '1', name: 'Elena Rossi', position: 'Senior Product Designer', status: 'NEW', timeAgo: '2m ago', initials: 'ER' },
-  { id: '2', name: 'Marcus Chen', position: 'Engineering Manager', status: 'INTERVIEW', timeAgo: '1h ago', initials: 'MC' },
-  { id: '3', name: 'Sarah Williams', position: 'Full Stack Developer', status: 'NEW', timeAgo: '3h ago', initials: 'SW' },
-  { id: '4', name: 'James Miller', position: 'Content Strategist', status: 'REJECT', timeAgo: '5h ago', initials: 'JM' },
-  { id: '5', name: 'Amara Okoro', position: 'HR Specialist', status: 'REVIEW', timeAgo: '1d ago', initials: 'AO' },
-];
+const STATUS_LABELS: Record<string, string> = {
+  [ApplicationStatus.APPLIED]: 'New',
+  [ApplicationStatus.REVIEWING]: 'Reviewing',
+  [ApplicationStatus.INTERVIEW]: 'Interview',
+  [ApplicationStatus.OFFER]: 'Offer',
+  [ApplicationStatus.HIRED]: 'Hired',
+  [ApplicationStatus.REJECTED]: 'Rejected',
+};
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 function ApplicantRow({ applicant }: { applicant: RecentApplicant }) {
   return (
     <div className="flex items-center gap-4">
-      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-sm font-semibold shrink-0">
-        {applicant.initials}
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+        {getInitials(applicant.seekerName)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm truncate">{applicant.name}</p>
+        <p className="font-bold text-sm truncate">{applicant.seekerName}</p>
         <p className="text-xs text-slate-500 truncate">
-          for {applicant.position}
+          for {applicant.jobTitle}
         </p>
       </div>
       <div className="flex flex-col items-end shrink-0">
         <span
           className={cn(
             'text-[10px] font-bold px-2 py-0.5 rounded-full mb-1',
-            APPLICANT_STATUS_STYLES[applicant.status]
+            STATUS_STYLES[applicant.status] ?? 'bg-slate-100 text-slate-600'
           )}
         >
-          {applicant.status}
+          {STATUS_LABELS[applicant.status] ?? applicant.status}
         </span>
-        <span className="text-[10px] text-slate-500">{applicant.timeAgo}</span>
+        <span className="text-[10px] text-slate-500">
+          {formatTimeAgo(applicant.appliedDate)}
+        </span>
       </div>
     </div>
   );
 }
 
-export function RecentApplicantsList() {
+interface RecentApplicantsListProps {
+  applicants: RecentApplicant[];
+  isLoading?: boolean;
+}
+
+export function RecentApplicantsList({ applicants, isLoading }: RecentApplicantsListProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="px-6 py-6 border-b border-slate-200">
         <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
       </div>
       <div className="p-6 space-y-6">
-        {RECENT_APPLICANTS_DATA.map((applicant) => (
-          <ApplicantRow key={applicant.id} applicant={applicant} />
-        ))}
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            </div>
+          ))
+        ) : applicants.length === 0 ? (
+          <p className="text-slate-400 text-sm text-center py-8">No applicants yet</p>
+        ) : (
+          applicants.map((applicant) => (
+            <ApplicantRow key={applicant.id} applicant={applicant} />
+          ))
+        )}
       </div>
     </div>
   );
