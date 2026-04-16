@@ -67,6 +67,12 @@ enum InterviewStatus {
   NO_SHOW
 }
 
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -84,6 +90,7 @@ model User {
   deletedAt      DateTime?
 
   accounts Account[]
+  subscription Subscription?
   sessions Session[]
 
   seekerProfile   SeekerProfile?
@@ -341,4 +348,27 @@ model ClickEvent {
   @@index([jobId])
   @@index([userId])
   @@index([createdAt])
+}
+
+model EarlyAccessEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  stripeSubscriptionId String    @unique
+  stripePriceId        String
+  status               SubStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean   @default(false)
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([stripeSubscriptionId])
 }
