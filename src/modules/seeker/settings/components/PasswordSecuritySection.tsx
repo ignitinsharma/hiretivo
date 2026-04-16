@@ -1,94 +1,113 @@
 "use client";
 
-import React from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  ChangePasswordSchema,
+  type ChangePasswordInput,
+} from "@/lib/validations/interview.schema";
 
 export function PasswordSecuritySection() {
-  const { register, handleSubmit } = useForm();
+  const form = useForm<ChangePasswordInput>({
+    resolver: zodResolver(ChangePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
-  const onSubmit = (data: any) => {
-    console.log(data);
-  };
+  const changePasswordMutation = useMutation({
+    mutationFn: async (values: ChangePasswordInput) => {
+      const res = await fetch("/api/auth/change-password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "Failed to update password");
+      }
+    },
+    onSuccess: () => {
+      toast.success("Password updated successfully.");
+      form.reset();
+    },
+    onError: (error: Error) => {
+      if (error.message === "Current password is incorrect.") {
+        form.setError("currentPassword", {
+          message: "Current password is incorrect.",
+        });
+      } else {
+        toast.error("Failed to update password. Try again.");
+      }
+    },
+  });
 
   return (
-    <section
-      id="security"
-      className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
-    >
+    <section id="security" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <div className="p-6 border-b border-slate-100">
-        <h3 className="text-lg font-bold text-slate-900">
-          Password & Security
-        </h3>
+        <h3 className="text-lg font-bold text-slate-900">Password & Security</h3>
         <p className="text-sm text-slate-500">
           Ensure your account is using a long, random password to stay secure.
         </p>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit((data) => changePasswordMutation.mutate(data))}>
         <div className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-slate-700">
-                Current Password
-              </label>
-              <input
-                {...register("currentPassword")}
-                className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
-                placeholder="••••••••"
+              <label className="text-sm font-semibold text-slate-700">Current Password</label>
+              <Input
+                id="sec-current-password"
                 type="password"
+                {...form.register("currentPassword")}
+                aria-invalid={!!form.formState.errors.currentPassword}
+                placeholder="••••••••"
               />
+              {form.formState.errors.currentPassword && (
+                <p className="text-xs text-red-500">{form.formState.errors.currentPassword.message}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">
-                New Password
-              </label>
-              <input
-                {...register("newPassword")}
-                className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
-                placeholder="••••••••"
+              <label className="text-sm font-semibold text-slate-700">New Password</label>
+              <Input
+                id="sec-new-password"
                 type="password"
+                {...form.register("newPassword")}
+                aria-invalid={!!form.formState.errors.newPassword}
+                placeholder="••••••••"
               />
-              <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full w-2/3 bg-emerald-500"></div>
-              </div>
-              <p className="text-[10px] text-slate-400 font-medium uppercase">
-                Strength: Strong
-              </p>
+              {form.formState.errors.newPassword && (
+                <p className="text-xs text-red-500">{form.formState.errors.newPassword.message}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">
-                Confirm New Password
-              </label>
-              <input
-                {...register("confirmPassword")}
-                className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
-                placeholder="••••••••"
+              <label className="text-sm font-semibold text-slate-700">Confirm New Password</label>
+              <Input
+                id="sec-confirm-password"
                 type="password"
+                {...form.register("confirmPassword")}
+                aria-invalid={!!form.formState.errors.confirmPassword}
+                placeholder="••••••••"
               />
+              {form.formState.errors.confirmPassword && (
+                <p className="text-xs text-red-500">{form.formState.errors.confirmPassword.message}</p>
+              )}
             </div>
           </div>
-
-          <Button type="submit" variant="default" size="sm" className="px-5">
-            Update Password
+          <Button
+            type="submit"
+            variant="default"
+            size="sm"
+            className="px-5"
+            disabled={changePasswordMutation.isPending}
+          >
+            {changePasswordMutation.isPending ? "Updating..." : "Update Password"}
           </Button>
-
-          <div className="border-t border-slate-100 pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <p className="text-sm font-bold text-slate-900">
-                  Two-Factor Authentication (2FA)
-                </p>
-                <p className="text-xs text-slate-500">
-                  Add an extra layer of security to your account.
-                </p>
-              </div>
-              {/* Note: In a real app we'd use the switch from shadcn */}
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-          </div>
         </div>
       </form>
     </section>
