@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ApplyJobModal } from "@/components/shared/ApplyJobModal";
 import { ReactQueryProvider } from "@/providers/query-provider";
+import { AuthSessionProvider } from "@/providers/session-provider";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -33,11 +34,13 @@ export default function RootLayout({
         <link rel="icon" href="/images/fevicon.png" type="image/png" />
       </head>
       <body className={`${plusJakartaSans.variable} font-sans antialiased`}>
-        <ReactQueryProvider>
-          {children}
-          <ApplyJobModal />
-          <Toaster />
-        </ReactQueryProvider>
+        <AuthSessionProvider>
+          <ReactQueryProvider>
+            {children}
+            <ApplyJobModal />
+            <Toaster />
+          </ReactQueryProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );
