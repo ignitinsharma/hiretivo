@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Bug Fixes, Schema Foundation & Cleanup** - Fix broken flows, apply schema migrations for v1.1, remove dead features
 - [ ] **Phase 9: Recruiter Dashboard & Job Management** - Live dashboard data, dynamic sidebar, remove dead UI pages
 - [x] **Phase 10: Settings Restructure & Auth Guards** - Rebuild settings for both roles, auth redirects, header avatar (completed 2026-04-16)
-- [ ] **Phase 11: Payments Integration** - Stripe checkout, webhooks, customer portal, billing tab
+- [x] **Phase 11: Payments Integration** - Stripe checkout, webhooks, customer portal, billing tab (completed 2026-04-17)
 - [ ] **Phase 12: Seeker Dashboard & Engagement** - Live seeker data, match explainer, skill gap tracker, weekly digest
 - [ ] **Phase 13: Recruiter Intelligence** - AI candidate summaries, real analytics, boost job
 
@@ -74,11 +74,11 @@ Plans:
   2. Recruiter can open Stripe Customer Portal from the Billing settings tab to cancel subscription or update payment method
   3. Recruiter Billing tab displays current plan name, subscription status, period end date, and cancel-at-period-end state from the database
   4. When a subscription is canceled, payment fails, or renews in Stripe, the webhook handler automatically updates User.plan and Subscription records
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 11-01-PLAN.md — Stripe foundation, Subscription model, 3-tier pricing page
 - [x] 11-02-PLAN.md — Stripe Checkout, Portal, Webhooks, Success page
-- [ ] 11-03-PLAN.md — Billing tab UI, Delete account Stripe cancellation
+- [x] 11-03-PLAN.md — Billing tab UI, Delete account Stripe cancellation
 **UI hint**: yes
 
 ### Phase 12: Seeker Dashboard & Engagement
@@ -115,7 +115,7 @@ Phases execute in numeric order: 8 -> 8.1 (if any) -> 9 -> ... -> 13
 | 8. Bug Fixes, Schema Foundation & Cleanup | v1.1 | 0/0 | Not started | - |
 | 9. Recruiter Dashboard & Job Management | v1.1 | 0/0 | Not started | - |
 | 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Complete    | 2026-04-16 |
-| 11. Payments Integration | v1.1 | 2/3 | In Progress|  |
+| 11. Payments Integration | v1.1 | 3/3 | Complete   | 2026-04-17 |
 | 12. Seeker Dashboard & Engagement | v1.1 | 0/0 | Not started | - |
 | 13. Recruiter Intelligence | v1.1 | 0/0 | Not started | - |
 
