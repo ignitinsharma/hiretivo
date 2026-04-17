@@ -58,7 +58,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Both recruiter and seeker can delete their account from Security (with confirmation dialog; recruiter deletion also cancels Stripe subscription if active)
   4. Seeker settings page allows full profile update (resume upload, all profile fields) with no 2FA, export data, or notification options visible
   5. Logged-in users visiting the homepage are redirected to their role-specific dashboard, and the header shows an avatar dropdown with sign-out option
-**Plans:** 3/3 plans complete
+**Plans:** 3/3 plans executed — verification gaps found
 Plans:
 - [ ] 10-01-PLAN.md — Recruiter settings restructure + backend APIs (schema, seeker settings, delete account)
 - [ ] 10-02-PLAN.md — Seeker settings UI rebuild (profile form, password, delete account, remove dead features)
@@ -115,7 +115,7 @@ Phases execute in numeric order: 8 -> 8.1 (if any) -> 9 -> ... -> 13
 | 8. Bug Fixes, Schema Foundation & Cleanup | v1.1 | 0/0 | Not started | - |
 | 9. Recruiter Dashboard & Job Management | v1.1 | 0/0 | Not started | - |
 | 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Complete    | 2026-04-16 |
-| 11. Payments Integration | v1.1 | 3/3 | Complete   | 2026-04-17 |
+| 11. Payments Integration | v1.1 | 3/3 | Gaps found | - |
 | 12. Seeker Dashboard & Engagement | v1.1 | 0/0 | Not started | - |
 | 13. Recruiter Intelligence | v1.1 | 0/0 | Not started | - |
 
