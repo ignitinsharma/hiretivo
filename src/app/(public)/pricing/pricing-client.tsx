@@ -381,15 +381,9 @@ interface StripeSessionResponse {
   error?: string;
 }
 
-async function createStripeSession(
-  url: "/api/stripe/checkout" | "/api/stripe/portal",
-  body?: unknown,
+async function parseStripeSessionResponse(
+  response: Response,
 ): Promise<string> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
   const payload = (await response.json()) as StripeSessionResponse;
 
   if (!response.ok || !payload.data?.url) {
@@ -397,6 +391,27 @@ async function createStripeSession(
   }
 
   return payload.data.url;
+}
+
+async function createCheckoutSession(
+  body?: unknown,
+): Promise<string> {
+  const response = await fetch("/api/stripe/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  return parseStripeSessionResponse(response);
+}
+
+async function createPortalSession(): Promise<string> {
+  const response = await fetch("/api/stripe/portal", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  return parseStripeSessionResponse(response);
 }
 
 export function PricingClient({ currency }: PricingClientProps) {
@@ -408,7 +423,7 @@ export function PricingClient({ currency }: PricingClientProps) {
   const userPlan = session?.user?.plan as PlanTier | undefined;
   const checkoutMutation = useMutation({
     mutationFn: () =>
-      createStripeSession("/api/stripe/checkout", {
+      createCheckoutSession({
         planId: "pro",
         period: isAnnual ? "annual" : "monthly",
         currency,
@@ -422,7 +437,7 @@ export function PricingClient({ currency }: PricingClientProps) {
   });
 
   const portalMutation = useMutation({
-    mutationFn: () => createStripeSession("/api/stripe/portal"),
+    mutationFn: createPortalSession,
     onSuccess: (url) => {
       window.location.href = url;
     },
