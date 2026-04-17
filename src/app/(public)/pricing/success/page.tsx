@@ -26,7 +26,7 @@ interface SubscriptionStatusResponse {
 }
 
 async function fetchSubscriptionStatus(): Promise<SubscriptionStatusResponse> {
-  const response = await fetch("/api/stripe/subscription-status", {
+  const response = await fetch("/api/billing/subscription-status", {
     cache: "no-store",
   });
   const payload = (await response.json()) as SubscriptionStatusResponse;

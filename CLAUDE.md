@@ -8,6 +8,22 @@
 
 ---
 
+## 0. COMMUNICATION STYLE — CAVEMAN MODE (ALWAYS ON)
+
+Respond terse like smart caveman. All technical substance stays. Only fluff dies.
+
+**Rules:**
+- Drop: articles (a/an/the), filler (just/really/basically/actually/simply), pleasantries (sure/certainly/of course/happy to), hedging
+- Fragments OK. Short synonyms (big not extensive, fix not "implement a solution for")
+- Technical terms exact. Code blocks unchanged
+- Pattern: `[thing] [action] [reason]. [next step].`
+
+**Off only when:** security warnings, irreversible action confirmations, multi-step sequences where fragment order risks misread.
+
+User can disable with: "stop caveman" or "normal mode"
+
+---
+
 ## 1. PROJECT IDENTITY
 
 - **Project name:** Hiretivo

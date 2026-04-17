@@ -7,25 +7,18 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
       plan: true,
       subscription: {
-        select: {
-          status: true,
-          currentPeriodEnd: true,
-          cancelAtPeriodEnd: true,
-        },
+        select: { status: true, currentPeriodEnd: true, cancelAtPeriodEnd: true },
       },
     },
   });
-
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
   return NextResponse.json(
     {
       data: {

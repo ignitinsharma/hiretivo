@@ -396,7 +396,7 @@ async function parseStripeSessionResponse(
 async function createCheckoutSession(
   body?: unknown,
 ): Promise<string> {
-  const response = await fetch("/api/stripe/checkout", {
+  const response = await fetch("/api/billing/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
@@ -406,7 +406,7 @@ async function createCheckoutSession(
 }
 
 async function createPortalSession(): Promise<string> {
-  const response = await fetch("/api/stripe/portal", {
+  const response = await fetch("/api/billing/portal", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
@@ -426,7 +426,6 @@ export function PricingClient({ currency }: PricingClientProps) {
       createCheckoutSession({
         planId: "pro",
         period: isAnnual ? "annual" : "monthly",
-        currency,
       }),
     onSuccess: (url) => {
       window.location.href = url;

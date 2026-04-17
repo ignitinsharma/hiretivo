@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
-import { stripe } from "@/lib/stripe";
+import { dodo } from "@/lib/dodo";
 
 const deleteAccountRateLimiter = createRateLimiter("delete-account", 3, "1 m");
 
@@ -11,41 +11,26 @@ export async function POST() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   const { success } = await deleteAccountRateLimiter.limit(session.user.id);
   if (!success) {
     return new NextResponse("Too Many Requests", { status: 429 });
   }
-
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { stripeCustomerId: true },
+    select: { subscription: { select: { dodoSubscriptionId: true, status: true } } },
   });
-
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
-  if (user.stripeCustomerId) {
+  if (user.subscription?.dodoSubscriptionId && user.subscription.status === "ACTIVE") {
     try {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        status: "active",
-        limit: 1,
+      await dodo.subscriptions.update(user.subscription.dodoSubscriptionId, {
+        cancel_at_next_billing_date: true,
       });
-
-      const activeSubscription = subscriptions.data[0];
-      if (activeSubscription) {
-        await stripe.subscriptions.cancel(activeSubscription.id, {
-          prorate: true,
-        });
-      }
     } catch (error) {
-      console.error("Failed to cancel Stripe subscription:", error);
-      // Log error but don't block deletion per D-13
+      console.error("Failed to cancel DodoPayments subscription on account deletion:", error);
     }
   }
-
   await prisma.user.update({
     where: { id: session.user.id },
     data: {
@@ -56,6 +41,5 @@ export async function POST() {
       image: null,
     },
   });
-
   return NextResponse.json({ data: { success: true } }, { status: 200 });
 }

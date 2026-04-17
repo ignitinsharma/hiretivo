@@ -1,13 +1,13 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { getStripePriceId, STRIPE_PRICE_TO_PLAN } from "@/constants/stripe";
+import { getDodoProductId, DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
 import { PlanTier, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { dodo } from "@/lib/dodo";
 import { CheckoutRequestSchema } from "@/lib/validations/checkout.schema";
 
-const checkoutRateLimiter = createRateLimiter("stripe-checkout", 5, "1 m");
+const checkoutRateLimiter = createRateLimiter("billing-checkout", 5, "1 m");
 
 function getAppUrl(req: NextRequest): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
@@ -37,60 +37,62 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { planId, period, currency } = parsed.data;
-  const priceId = getStripePriceId(planId, period, currency);
-  if (!priceId) {
+  const { planId, period } = parsed.data;
+  const productId = getDodoProductId(period);
+  if (!productId) {
     return NextResponse.json(
       { error: "Selected plan is not available" },
       { status: 400 },
     );
   }
 
-  const planTier = STRIPE_PRICE_TO_PLAN[priceId] ?? PlanTier.PRO;
+  if (planId !== "pro") {
+    return NextResponse.json(
+      { error: "Selected plan is not available for self-serve checkout" },
+      { status: 400 },
+    );
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, stripeCustomerId: true, plan: true },
+    select: { email: true, name: true, billingCustomerId: true },
   });
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const stripeCustomerId =
-    user.stripeCustomerId ??
-    (
-      await stripe.customers.create({
-        email: user.email ?? session.user.email ?? undefined,
-        metadata: { userId: session.user.id },
-      })
-    ).id;
-
-  if (!user.stripeCustomerId) {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { stripeCustomerId },
-    });
-  }
-
   const appUrl = getAppUrl(req);
-  const checkoutSession = await stripe.checkout.sessions.create({
-    customer: stripeCustomerId,
-    mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${appUrl}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/pricing`,
-    metadata: { userId: session.user.id },
-    subscription_data: {
-      metadata: {
-        userId: session.user.id,
-        plan: planTier,
-      },
+
+  const customerPayload = user.billingCustomerId
+    ? ({ customer_id: user.billingCustomerId } as const)
+    : ({
+        email: user.email ?? session.user.email ?? "",
+        name: user.name ?? session.user.name ?? "",
+      } as const);
+
+  const subscription = await dodo.subscriptions.create({
+    billing: { country: "IN" },
+    customer: customerPayload,
+    product_id: productId,
+    quantity: 1,
+    payment_link: true,
+    return_url: `${appUrl}/pricing/success`,
+    metadata: {
+      userId: session.user.id,
+      plan: DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO,
     },
   });
 
+  if (subscription.customer.customer_id && !user.billingCustomerId) {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { billingCustomerId: subscription.customer.customer_id },
+    });
+  }
+
   return NextResponse.json(
-    { data: { url: checkoutSession.url } },
+    { data: { url: subscription.payment_link } },
     { status: 200 },
   );
 }

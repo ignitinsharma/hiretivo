@@ -31,7 +31,7 @@ interface SubscriptionStatusResponse {
   error?: string;
 }
 
-interface StripePortalResponse {
+interface BillingPortalResponse {
   data?: {
     url?: string | null;
   };
@@ -65,7 +65,7 @@ function formatDate(value: string): string {
 }
 
 async function fetchSubscriptionStatus(): Promise<SubscriptionStatusResponse["data"]> {
-  const response = await fetch("/api/stripe/subscription-status");
+  const response = await fetch("/api/billing/subscription-status");
   const payload = (await response.json().catch(() => ({}))) as SubscriptionStatusResponse;
 
   if (!response.ok) {
@@ -76,11 +76,11 @@ async function fetchSubscriptionStatus(): Promise<SubscriptionStatusResponse["da
 }
 
 async function createPortalSession(): Promise<string> {
-  const response = await fetch("/api/stripe/portal", {
+  const response = await fetch("/api/billing/portal", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
-  const payload = (await response.json().catch(() => ({}))) as StripePortalResponse;
+  const payload = (await response.json().catch(() => ({}))) as BillingPortalResponse;
 
   if (!response.ok || !payload.data?.url) {
     throw new Error(payload.error ?? "Billing is unavailable right now");
@@ -105,7 +105,7 @@ function FreePlanCard() {
   return (
     <Card className="max-w-2xl border-slate-200 bg-white">
       <CardHeader>
-        <CardTitle className="text-xl">You're on the Free plan</CardTitle>
+        <CardTitle className="text-xl">You&apos;re on the Free plan</CardTitle>
         <CardDescription>
           Start with matching basics, then upgrade when your hiring volume grows.
         </CardDescription>
