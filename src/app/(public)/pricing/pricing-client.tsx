@@ -24,9 +24,15 @@ const TD_BASE = "py-6 px-4 text-sm";
 const CELL_LABEL = cn(TD_BASE, "font-semibold text-slate-700");
 const CELL_MUTED = cn(TD_BASE, "text-slate-400");
 const CELL_BODY = cn(TD_BASE, "text-slate-600");
-const CELL_PRO = cn(TD_BASE, "font-bold text-brand-primary bg-brand-primary-light/50");
+const CELL_PRO = cn(
+  TD_BASE,
+  "font-bold text-brand-primary bg-brand-primary-light/50",
+);
 const CELL_CHECK_GREEN = cn(TD_BASE, "text-emerald-500 font-bold");
-const CELL_PRO_CHECK = cn(TD_BASE, "font-bold text-brand-primary bg-brand-primary-light/50");
+const CELL_PRO_CHECK = cn(
+  TD_BASE,
+  "font-bold text-brand-primary bg-brand-primary-light/50",
+);
 
 // ─── Feature comparison data (CLAUDE.md §15.4) ──────────────────────────────
 
@@ -40,17 +46,43 @@ interface FeatureRow {
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Active Jobs",                free: "1",       pro: "8",         enterprise: "Unlimited"            },
-  { feature: "Applicant View Limit",       free: "20/mo",   pro: "Unlimited", enterprise: "Unlimited"            },
-  { feature: "AI Candidate Matching",      free: "Basic",   pro: "Yes",       enterprise: "Advanced Assistant"   },
-  { feature: "Candidate Contact Info",     free: null,      pro: true,        enterprise: true                   },
-  { feature: "Resume Database Search",     free: null,      pro: "Unlimited", enterprise: "Unlimited"            },
-  { feature: "AI Candidate Ranking",       free: null,      pro: true,        enterprise: true                   },
-  { feature: "Smart Interview Scheduling", free: null,      pro: true,        enterprise: true                   },
-  { feature: "ATS Dashboard",             free: null,      pro: "Yes",       enterprise: "Internal Integration" },
-  { feature: "API Access",                free: null,      pro: null,        enterprise: true                   },
-  { feature: "Support",                   free: "Email",   pro: "Priority",  enterprise: "Dedicated Manager"    },
-  { feature: "Team Seats",                free: null,      pro: "3",         enterprise: "Unlimited"            },
+  { feature: "Active Jobs", free: "1", pro: "10", enterprise: "Unlimited" },
+  {
+    feature: "Applicant View Limit",
+    free: "20/mo",
+    pro: "Unlimited",
+    enterprise: "Unlimited",
+  },
+  {
+    feature: "AI Skill Matching",
+    free: "Basic",
+    pro: "Advanced",
+    enterprise: "Advanced",
+  },
+  {
+    feature: "Candidate Contact Info",
+    free: null,
+    pro: true,
+    enterprise: true,
+  },
+  {
+    feature: "Resume Database Search",
+    free: null,
+    pro: "Unlimited",
+    enterprise: "Unlimited",
+  },
+  { feature: "AI Candidate Ranking", free: null, pro: true, enterprise: true },
+  { feature: "Interview Scheduling", free: null, pro: true, enterprise: true },
+  { feature: "ATS Integration", free: null, pro: true, enterprise: true },
+  { feature: "API Access", free: null, pro: null, enterprise: true },
+  { feature: "SSO / SAML", free: null, pro: null, enterprise: true },
+  {
+    feature: "Support",
+    free: "Email",
+    pro: "Priority",
+    enterprise: "Dedicated CSM",
+  },
+  { feature: "Team Members", free: null, pro: "2", enterprise: "Unlimited" },
 ];
 
 // ─── FAQ data (CLAUDE.md §15.4) ─────────────────────────────────────────────
@@ -108,7 +140,7 @@ function PricingCardFeatureList({
               "mt-0.5 shrink-0",
               highlighted
                 ? "fill-white text-brand-primary"
-                : "fill-brand-primary text-white"
+                : "fill-brand-primary text-white",
             )}
             size={16}
             strokeWidth={2.5}
@@ -117,7 +149,7 @@ function PricingCardFeatureList({
           <span
             className={cn(
               "text-xs",
-              highlighted ? "text-indigo-50" : "text-slate-700"
+              highlighted ? "text-indigo-50" : "text-slate-700",
             )}
           >
             {feature}
@@ -162,7 +194,7 @@ function PricingCard({
         "p-6 rounded-2xl flex flex-col h-full text-left relative",
         isHighlighted
           ? "bg-brand-primary border-2 border-brand-primary shadow-xl transform lg:scale-105 z-10 text-white"
-          : "bg-white border border-slate-200 shadow-sm"
+          : "bg-white border border-slate-200 shadow-sm",
       )}
     >
       {isHighlighted && (
@@ -175,7 +207,7 @@ function PricingCard({
         <h3
           className={cn(
             "font-bold uppercase tracking-wider text-xs mb-2",
-            isHighlighted ? "text-indigo-100" : "text-slate-900"
+            isHighlighted ? "text-indigo-100" : "text-slate-900",
           )}
         >
           {tier.name}
@@ -183,7 +215,7 @@ function PricingCard({
         <p
           className={cn(
             "text-xs mb-4 min-h-[32px]",
-            isHighlighted ? "text-indigo-100" : "text-slate-500"
+            isHighlighted ? "text-indigo-100" : "text-slate-500",
           )}
         >
           {tier.description}
@@ -193,7 +225,8 @@ function PricingCard({
           <>
             <div className="flex items-baseline gap-1">
               <span className="text-4xl font-extrabold text-slate-900">
-                Starting at {sym}{displayedPrice}/mo
+                Starting at {sym}
+                {displayedPrice}/mo
               </span>
             </div>
             <p className="mt-2 text-slate-400 text-[10px]">Custom contract</p>
@@ -204,15 +237,16 @@ function PricingCard({
               <span
                 className={cn(
                   "text-4xl font-extrabold",
-                  isHighlighted ? "text-white" : "text-slate-900"
+                  isHighlighted ? "text-white" : "text-slate-900",
                 )}
               >
-                {sym}{displayedPrice}
+                {sym}
+                {displayedPrice}
               </span>
               <span
                 className={cn(
                   "text-sm ml-1",
-                  isHighlighted ? "text-indigo-200" : "text-slate-500"
+                  isHighlighted ? "text-indigo-200" : "text-slate-500",
                 )}
               >
                 /mo
@@ -220,6 +254,16 @@ function PricingCard({
             </div>
             {tier.id === "free" && (
               <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
+            )}
+            {tier.id !== "free" && currency === "INR" && (
+              <p
+                className={cn(
+                  "mt-1 text-[10px] font-bold",
+                  isHighlighted ? "text-white" : "text-slate-400",
+                )}
+              >
+                + GST included
+              </p>
             )}
           </>
         )}
@@ -229,23 +273,25 @@ function PricingCard({
         <div
           className={cn(
             "p-2.5 rounded-lg mb-6 text-center",
-            isHighlighted ? "bg-white/10" : "bg-indigo-50"
+            isHighlighted ? "bg-white/10" : "bg-indigo-50",
           )}
         >
           {isAnnual && annualSavings && annualTotal ? (
             <p
               className={cn(
                 "text-[10px] font-bold",
-                isHighlighted ? "text-white" : "text-brand-primary"
+                isHighlighted ? "text-white" : "text-brand-primary",
               )}
             >
-              Save {sym}{annualSavings}/yr · {sym}{annualTotal} billed annually
+              Save {sym}
+              {annualSavings}/yr · {sym}
+              {annualTotal} billed annually
             </p>
           ) : (
             <p
               className={cn(
                 "text-[10px] font-bold",
-                isHighlighted ? "text-white" : "text-slate-600"
+                isHighlighted ? "text-white" : "text-slate-600",
               )}
             >
               Billed monthly
@@ -254,13 +300,9 @@ function PricingCard({
         </div>
       )}
 
-      {tier.id === "free" && (
-        <div className="h-px bg-slate-100 mb-6" />
-      )}
+      {tier.id === "free" && <div className="h-px bg-slate-100 mb-6" />}
 
-      {isEnterprise && (
-        <div className="h-px bg-slate-100 mb-6" />
-      )}
+      {isEnterprise && <div className="h-px bg-slate-100 mb-6" />}
 
       <PricingCardFeatureList
         features={tier.features}
@@ -279,7 +321,9 @@ function PricingCard({
           size="lg"
           className="w-full mt-auto"
           loading={isPending}
-          loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
+          loadingText={
+            isCurrentPlan ? "Opening billing..." : "Opening checkout..."
+          }
           onClick={() => onCtaClick(tier.id)}
         >
           {displayedCtaText}
@@ -301,17 +345,31 @@ function PricingCompareTable(_props: { isAnnual: boolean }) {
           <table className="w-full border-collapse">
             <thead>
               <tr className="text-left border-b border-slate-200">
-                <th className={cn(TD_BASE, "font-bold text-slate-500 uppercase tracking-wider")}>
+                <th
+                  className={cn(
+                    TD_BASE,
+                    "font-bold text-slate-500 uppercase tracking-wider",
+                  )}
+                >
                   Feature
                 </th>
-                <th className={cn(TD_BASE, "font-bold text-slate-900")}>Free</th>
+                <th className={cn(TD_BASE, "font-bold text-slate-900")}>
+                  Free
+                </th>
                 <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>PRO</th>
-                <th className={cn(TD_BASE, "font-bold text-slate-900")}>Enterprise</th>
+                <th className={cn(TD_BASE, "font-bold text-slate-900")}>
+                  Enterprise
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {FEATURE_ROWS.map((row, idx) => (
-                <tr key={row.feature} className={idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""}>
+                <tr
+                  key={row.feature}
+                  className={
+                    idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""
+                  }
+                >
                   <td className={CELL_LABEL}>{row.feature}</td>
                   <FeatureCell value={row.free} />
                   <FeatureCell value={row.pro} isPro />
@@ -374,17 +432,17 @@ interface PricingClientProps {
   currency: PricingCurrency;
 }
 
-interface StripeSessionResponse {
+interface BillingSessionResponse {
   data?: {
     url?: string | null;
   };
   error?: string;
 }
 
-async function parseStripeSessionResponse(
+async function parseBillingSessionResponse(
   response: Response,
 ): Promise<string> {
-  const payload = (await response.json()) as StripeSessionResponse;
+  const payload = (await response.json()) as BillingSessionResponse;
 
   if (!response.ok || !payload.data?.url) {
     throw new Error(payload.error ?? "Billing is unavailable right now");
@@ -393,16 +451,14 @@ async function parseStripeSessionResponse(
   return payload.data.url;
 }
 
-async function createCheckoutSession(
-  body?: unknown,
-): Promise<string> {
+async function createCheckoutSession(body?: unknown): Promise<string> {
   const response = await fetch("/api/billing/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  return parseStripeSessionResponse(response);
+  return parseBillingSessionResponse(response);
 }
 
 async function createPortalSession(): Promise<string> {
@@ -411,7 +467,7 @@ async function createPortalSession(): Promise<string> {
     headers: { "Content-Type": "application/json" },
   });
 
-  return parseStripeSessionResponse(response);
+  return parseBillingSessionResponse(response);
 }
 
 export function PricingClient({ currency }: PricingClientProps) {
@@ -426,6 +482,7 @@ export function PricingClient({ currency }: PricingClientProps) {
       createCheckoutSession({
         planId: "pro",
         period: isAnnual ? "annual" : "monthly",
+        currency,
       }),
     onSuccess: (url) => {
       window.location.href = url;
@@ -480,7 +537,8 @@ export function PricingClient({ currency }: PricingClientProps) {
             Pricing that scales with your hiring
           </h1>
           <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
-            Choose the plan that fits your team&apos;s needs. Join 5,000+ remote-first companies.
+            Choose the plan that fits your team&apos;s needs. Join 5,000+
+            remote-first companies.
           </p>
 
           {/* Monthly / Annual toggle */}
@@ -494,7 +552,7 @@ export function PricingClient({ currency }: PricingClientProps) {
                   "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
                   !isAnnual
                     ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    : "text-slate-500 hover:text-slate-800",
                 )}
               >
                 Monthly
@@ -507,7 +565,7 @@ export function PricingClient({ currency }: PricingClientProps) {
                   "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
                   isAnnual
                     ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    : "text-slate-500 hover:text-slate-800",
                 )}
               >
                 Annual
@@ -536,6 +594,12 @@ export function PricingClient({ currency }: PricingClientProps) {
             />
           ))}
         </div>
+
+        {currency === "INR" && (
+          <p className="mt-6 text-xs text-slate-400 text-center">
+            All prices include 18% GST. No extra charges at checkout.
+          </p>
+        )}
       </section>
 
       <PricingCompareTable isAnnual={isAnnual} />

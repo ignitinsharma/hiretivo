@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { planId, period } = parsed.data;
-  const productId = getDodoProductId(period);
+  const { planId, period, currency } = parsed.data;
+  const productId = getDodoProductId(period, currency);
   if (!productId) {
     return NextResponse.json(
       { error: "Selected plan is not available" },

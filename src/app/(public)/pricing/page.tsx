@@ -11,10 +11,20 @@ export const metadata = generatePageMetadata({
   path: "/pricing",
 });
 
-export default async function PricingPage() {
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ currency?: string }>;
+}) {
   const headersList = await headers();
+  const params = await searchParams;
   const country = headersList.get("CF-IPCountry") ?? headersList.get("x-vercel-ip-country") ?? "US";
-  const currency: PricingCurrency = country === "IN" ? "INR" : "USD";
+  const detectedCurrency: PricingCurrency = country === "IN" ? "INR" : "USD";
+  const forcedCurrency = params.currency?.toUpperCase();
+  const currency: PricingCurrency =
+    forcedCurrency === "INR" || forcedCurrency === "USD"
+      ? forcedCurrency
+      : detectedCurrency;
 
   return (
     <div className="min-h-screen bg-white font-sans">
