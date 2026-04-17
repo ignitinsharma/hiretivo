@@ -13,6 +13,16 @@ export const SeekerSettingsSchema = z
     currency: z.string().max(10).optional().or(z.literal("")),
     availability: z.string().max(100).optional().or(z.literal("")),
   })
+  .refine(
+    (data) =>
+      data.salaryMax == null ||
+      data.salaryMin == null ||
+      data.salaryMin <= data.salaryMax,
+    {
+      message: "Minimum salary must be less than or equal to maximum salary",
+      path: ["salaryMax"],
+    },
+  )
   .transform((data) => ({
     ...data,
     salaryMin: data.salaryMin ?? null,

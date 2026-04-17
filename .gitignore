@@ -21,7 +21,6 @@ build
 .vercel
 .turbo
 coverage
-.planning*
 .planning
 docs/superpowers/
 .worktrees

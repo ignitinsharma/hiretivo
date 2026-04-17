@@ -289,8 +289,8 @@ function PricingCard({
   );
 }
 
-function PricingCompareTable({ isAnnual }: { isAnnual: boolean }) {
-  void isAnnual; // reserved for future dynamic cells
+function PricingCompareTable(_props: { isAnnual: boolean }) {
+  // isAnnual reserved for future dynamic feature cells
   return (
     <section className="py-24 px-6 overflow-x-auto border-t border-slate-100">
       <div className="max-w-5xl mx-auto">

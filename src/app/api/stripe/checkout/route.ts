@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { getStripePriceId } from "@/constants/stripe";
+import { getStripePriceId, STRIPE_PRICE_TO_PLAN } from "@/constants/stripe";
 import { PlanTier, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
@@ -46,6 +46,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const planTier = STRIPE_PRICE_TO_PLAN[priceId] ?? PlanTier.PRO;
+
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { email: true, stripeCustomerId: true, plan: true },
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
     subscription_data: {
       metadata: {
         userId: session.user.id,
-        plan: PlanTier.PRO,
+        plan: planTier,
       },
     },
   });

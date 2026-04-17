@@ -221,6 +221,10 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void
       data: { status: "PAST_DUE" },
     }),
   ]);
+
+  // Note: User's plan tier is intentionally NOT downgraded here.
+  // Users retain access during grace period — Stripe's dunning handles recovery.
+  // Plan downgrade on subscription cancellation (handleSubscriptionDeleted) instead.
 }
 
 export async function POST(req: NextRequest) {
