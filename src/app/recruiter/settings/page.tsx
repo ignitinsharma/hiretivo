@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { BillingTabContent } from "@/modules/billing/components/BillingTabContent";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -486,9 +487,7 @@ export default function SettingsPage() {
                 />
               )}
               {activeTab === "security" && <SecurityTabContent />}
-              {activeTab === "billing" && (
-                <p className="text-sm text-gray-500">Coming soon.</p>
-              )}
+              {activeTab === "billing" && <BillingTabContent />}
             </div>
           </div>
         </div>
