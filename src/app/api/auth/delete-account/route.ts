@@ -4,11 +4,7 @@ import { NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { stripe } from "@/lib/stripe";
 
-const deleteAccountRateLimiter = createRateLimiter(
-  "delete-account",
-  3,
-  "1 m",
-);
+const deleteAccountRateLimiter = createRateLimiter("delete-account", 3, "1 m");
 
 export async function POST() {
   const session = await auth();
