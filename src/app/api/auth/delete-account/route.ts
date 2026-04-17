@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { stripe } from "@/lib/stripe";
 
 const deleteAccountRateLimiter = createRateLimiter(
   "delete-account",
@@ -31,8 +32,20 @@ export async function POST() {
 
   if (user.stripeCustomerId) {
     try {
-      // TODO: Cancel Stripe subscription when @/lib/stripe is created (Phase 11)
-    } catch {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        status: "active",
+        limit: 1,
+      });
+
+      const activeSubscription = subscriptions.data[0];
+      if (activeSubscription) {
+        await stripe.subscriptions.cancel(activeSubscription.id, {
+          prorate: true,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to cancel Stripe subscription:", error);
       // Log error but don't block deletion per D-13
     }
   }
