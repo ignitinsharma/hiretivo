@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Bug Fixes, Schema Foundation & Cleanup** - Fix broken flows, apply schema migrations for v1.1, remove dead features
 - [ ] **Phase 9: Recruiter Dashboard & Job Management** - Live dashboard data, dynamic sidebar, remove dead UI pages
 - [x] **Phase 10: Settings Restructure & Auth Guards** - Rebuild settings for both roles, auth redirects, header avatar (completed 2026-04-16)
-- [x] **Phase 11: Payments Integration** - Stripe checkout, webhooks, customer portal, billing tab (completed 2026-04-17)
+- [x] **Phase 11: Payments Integration** - PRO Stripe checkout, webhooks, customer portal, billing tab, Enterprise contact-sales (completed 2026-04-17)
 - [ ] **Phase 12: Seeker Dashboard & Engagement** - Live seeker data, match explainer, skill gap tracker, weekly digest
 - [ ] **Phase 13: Recruiter Intelligence** - AI candidate summaries, real analytics, boost job
 
@@ -70,15 +70,16 @@ Plans:
 **Depends on**: Phase 10
 **Requirements**: PAY-01, PAY-02, PAY-03, PAY-04
 **Success Criteria** (what must be TRUE):
-  1. Recruiter can select PRO or ENTERPRISE on the pricing page, complete Stripe Checkout, and return to the app with their plan upgraded
+  1. Recruiter can select PRO on the pricing page, complete Stripe Checkout, and return to the app with their plan upgraded; Enterprise routes to contact sales
   2. Recruiter can open Stripe Customer Portal from the Billing settings tab to cancel subscription or update payment method
   3. Recruiter Billing tab displays current plan name, subscription status, period end date, and cancel-at-period-end state from the database
   4. When a subscription is canceled, payment fails, or renews in Stripe, the webhook handler automatically updates User.plan and Subscription records
-**Plans:** 3/3 plans complete
+**Plans:** 4 plans in 4 waves (including 1 gap-closure plan)
 Plans:
 - [x] 11-01-PLAN.md — Stripe foundation, Subscription model, 3-tier pricing page
 - [x] 11-02-PLAN.md — Stripe Checkout, Portal, Webhooks, Success page
 - [x] 11-03-PLAN.md — Billing tab UI, Delete account Stripe cancellation
+- [ ] 11-04-PLAN.md — PAY-01 contract alignment gap closure
 **UI hint**: yes
 
 ### Phase 12: Seeker Dashboard & Engagement
