@@ -92,7 +92,12 @@ Plans:
   3. Jobs the seeker has already applied to are hidden from the dashboard recommendation feed
   4. On low-match job cards, the seeker sees exactly which skills they are missing (e.g., "You need Docker and AWS")
   5. Seeker dashboard includes a skill gap tracker widget showing the most-demanded missing skills across their matched jobs
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 12-01-PLAN.md — Seeker dashboard summary contracts + API
+- [ ] 12-02-PLAN.md — Feed enrichment, applied-job exclusion, and job-view tracking
+- [ ] 12-03-PLAN.md — Weekly digest preference, email delivery, and cron scheduling
+- [ ] 12-04-PLAN.md — Seeker dashboard UI wiring and nav polish
 **UI hint**: yes
 
 ### Phase 13: Recruiter Intelligence
