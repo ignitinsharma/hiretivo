@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CircleCheck, CirclePlus } from "lucide-react";
 import Link from "next/link";
@@ -88,6 +89,7 @@ interface PricingCardProps {
   isAnnual: boolean;
   userPlan?: PlanTier;
   onCtaClick: (tierId: string) => void;
+  isPending?: boolean;
 }
 
 function PricingCardFeatureList({
@@ -132,6 +134,7 @@ function PricingCard({
   isAnnual,
   userPlan,
   onCtaClick,
+  isPending = false,
 }: PricingCardProps) {
   const sym = CURRENCY_SYMBOL[currency];
   const prices = tier[currency];
@@ -275,6 +278,8 @@ function PricingCard({
           variant={isHighlighted ? "primary" : "outline"}
           size="lg"
           className="w-full mt-auto"
+          loading={isPending}
+          loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
           onClick={() => onCtaClick(tier.id)}
         >
           {displayedCtaText}
@@ -369,6 +374,31 @@ interface PricingClientProps {
   currency: PricingCurrency;
 }
 
+interface StripeSessionResponse {
+  data?: {
+    url?: string | null;
+  };
+  error?: string;
+}
+
+async function createStripeSession(
+  url: "/api/stripe/checkout" | "/api/stripe/portal",
+  body?: unknown,
+): Promise<string> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const payload = (await response.json()) as StripeSessionResponse;
+
+  if (!response.ok || !payload.data?.url) {
+    throw new Error(payload.error ?? "Billing is unavailable right now");
+  }
+
+  return payload.data.url;
+}
+
 export function PricingClient({ currency }: PricingClientProps) {
   const [isAnnual, setIsAnnual] = useState(false);
   const { data: session } = useSession();
@@ -376,6 +406,30 @@ export function PricingClient({ currency }: PricingClientProps) {
   const { openLoginModal } = useUIStore();
 
   const userPlan = session?.user?.plan as PlanTier | undefined;
+  const checkoutMutation = useMutation({
+    mutationFn: () =>
+      createStripeSession("/api/stripe/checkout", {
+        planId: "pro",
+        period: isAnnual ? "annual" : "monthly",
+        currency,
+      }),
+    onSuccess: (url) => {
+      window.location.href = url;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: () => createStripeSession("/api/stripe/portal"),
+    onSuccess: (url) => {
+      window.location.href = url;
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   function handleCtaClick(tierId: string) {
     if (tierId === "free") {
@@ -392,9 +446,13 @@ export function PricingClient({ currency }: PricingClientProps) {
         toast.error("This plan is for recruiters only");
         return;
       }
-      // Recruiter — checkout or portal (wired in Plan 02)
-      // eslint-disable-next-line no-console
-      console.log("checkout pro", { isAnnual, currency });
+
+      if (session.user.plan === PlanTier.PRO) {
+        portalMutation.mutate();
+        return;
+      }
+
+      checkoutMutation.mutate();
       return;
     }
   }
@@ -457,6 +515,10 @@ export function PricingClient({ currency }: PricingClientProps) {
               isAnnual={isAnnual}
               userPlan={userPlan}
               onCtaClick={handleCtaClick}
+              isPending={
+                tier.id === "pro" &&
+                (checkoutMutation.isPending || portalMutation.isPending)
+              }
             />
           ))}
         </div>
