@@ -74,10 +74,10 @@ Plans:
   2. Recruiter can open Stripe Customer Portal from the Billing settings tab to cancel subscription or update payment method
   3. Recruiter Billing tab displays current plan name, subscription status, period end date, and cancel-at-period-end state from the database
   4. When a subscription is canceled, payment fails, or renews in Stripe, the webhook handler automatically updates User.plan and Subscription records
-**Plans:** 3 plans in 3 waves
+**Plans:** 2/3 plans executed
 Plans:
-- [ ] 11-01-PLAN.md — Stripe foundation, Subscription model, 3-tier pricing page
-- [ ] 11-02-PLAN.md — Stripe Checkout, Portal, Webhooks, Success page
+- [x] 11-01-PLAN.md — Stripe foundation, Subscription model, 3-tier pricing page
+- [x] 11-02-PLAN.md — Stripe Checkout, Portal, Webhooks, Success page
 - [ ] 11-03-PLAN.md — Billing tab UI, Delete account Stripe cancellation
 **UI hint**: yes
 
@@ -115,7 +115,7 @@ Phases execute in numeric order: 8 -> 8.1 (if any) -> 9 -> ... -> 13
 | 8. Bug Fixes, Schema Foundation & Cleanup | v1.1 | 0/0 | Not started | - |
 | 9. Recruiter Dashboard & Job Management | v1.1 | 0/0 | Not started | - |
 | 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Complete    | 2026-04-16 |
-| 11. Payments Integration | v1.1 | 0/0 | Not started | - |
+| 11. Payments Integration | v1.1 | 2/3 | In Progress|  |
 | 12. Seeker Dashboard & Engagement | v1.1 | 0/0 | Not started | - |
 | 13. Recruiter Intelligence | v1.1 | 0/0 | Not started | - |
 
