@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 9: Recruiter Dashboard & Job Management** - Live dashboard data, dynamic sidebar, remove dead UI pages
 - [x] **Phase 10: Settings Restructure & Auth Guards** - Rebuild settings for both roles, auth redirects, header avatar (completed 2026-04-16)
 - [x] **Phase 11: Payments Integration** - PRO Stripe checkout, webhooks, customer portal, billing tab, Enterprise contact-sales (completed 2026-04-17)
-- [ ] **Phase 12: Seeker Dashboard & Engagement** - Live seeker data, match explainer, skill gap tracker, weekly digest
+- [x] **Phase 12: Seeker Dashboard & Engagement** - Live seeker data, match explainer, skill gap tracker, weekly digest (completed 2026-04-18)
 - [ ] **Phase 13: Recruiter Intelligence** - AI candidate summaries, real analytics, boost job
 
 ## Phase Details
@@ -97,7 +97,7 @@ Plans:
 - [x] 12-01-PLAN.md — Seeker dashboard summary contracts + API
 - [x] 12-02-PLAN.md — Feed enrichment, applied-job exclusion, and job-view tracking
 - [x] 12-03-PLAN.md — Weekly digest preference, email delivery, and cron scheduling
-- [ ] 12-04-PLAN.md — Seeker dashboard UI wiring and nav polish
+- [x] 12-04-PLAN.md — Seeker dashboard UI wiring and nav polish
 **UI hint**: yes
 
 ### Phase 13: Recruiter Intelligence
@@ -122,7 +122,7 @@ Phases execute in numeric order: 8 -> 8.1 (if any) -> 9 -> ... -> 13
 | 9. Recruiter Dashboard & Job Management | v1.1 | 0/0 | Not started | - |
 | 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Complete    | 2026-04-16 |
 | 11. Payments Integration | v1.1 | 4/4 | Human verification required | - |
-| 12. Seeker Dashboard & Engagement | v1.1 | 3/4 | In Progress|  |
+| 12. Seeker Dashboard & Engagement | v1.1 | 4/4 | Complete   | 2026-04-18 |
 | 13. Recruiter Intelligence | v1.1 | 0/0 | Not started | - |
 
 ---
