@@ -21,10 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, PlusCircle, Plus, AlertTriangle } from "lucide-react";
+import { X, PlusCircle, Plus, AlertTriangle, Wand2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+import { JdGeneratorPanel } from "./JdGeneratorPanel";
+import { SkillSuggestChips } from "./SkillSuggestChips";
 
 interface JobFormValues {
   title: string;
@@ -156,6 +159,7 @@ export function PostJobModal() {
   const [skillSearch, setSkillSearch] = useState("");
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isJdPanelOpen, setIsJdPanelOpen] = useState(false);
   const [workType, setWorkType] = useState<"REMOTE" | "HYBRID" | "ONSITE">(
     "REMOTE",
   );
@@ -589,9 +593,20 @@ export function PostJobModal() {
           </div>
 
           <div>
-            <Label className="block text-sm font-semibold text-slate-700 mb-2">
-              Job Description <span className="text-red-500">*</span>
-            </Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-semibold text-slate-700">
+                Job Description <span className="text-red-500">*</span>
+              </Label>
+              <button
+                type="button"
+                onClick={() => setIsJdPanelOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                aria-label="Open AI job description generator"
+              >
+                <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Generate with AI
+              </button>
+            </div>
             <Textarea
               placeholder="Describe the role, responsibilities, and impact..."
               className={`resize-none min-h-[120px] ${inputErrorClass(!!errors.description)}`}
@@ -703,6 +718,19 @@ export function PostJobModal() {
             {errors.selectedSkillIds && (
               <p className="text-xs text-red-500 mt-1">At least one skill is required</p>
             )}
+            <SkillSuggestChips
+              descriptionText={watch("description")}
+              selectedSkillIds={selectedSkillIds}
+              allSkills={skills as Array<{ id: string; name: string }>}
+              onAddSkill={(skillName) => {
+                const match = (skills as Array<{ id: string; name: string }>).find(
+                  (s) => s.name.toLowerCase() === skillName.toLowerCase(),
+                );
+                if (match && !selectedSkillIds.includes(match.id)) {
+                  setValue("selectedSkillIds", [...selectedSkillIds, match.id]);
+                }
+              }}
+            />
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-4 mt-6">
@@ -723,6 +751,16 @@ export function PostJobModal() {
             </Button>
           </div>
         </form>
+
+        <JdGeneratorPanel
+          open={isJdPanelOpen}
+          onOpenChange={setIsJdPanelOpen}
+          prefillTitle={watch("title")}
+          onGenerated={(jd) => {
+            setValue("description", jd);
+            setIsJdPanelOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
