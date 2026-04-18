@@ -1,10 +1,12 @@
+/** Seeker dashboard data contracts — consumed by UI components and API. */
+
 export interface ProfileStrengthSummary {
   percentage: number;
   completedCount: number;
-  totalCount: number;
+  totalFields: number;
   nextMissingField: string | null;
-  ctaLabel: string | null;
-  ctaHref: string | null;
+  ctaLabel: string;
+  ctaHref: string;
 }
 
 export interface QuickStatsSummary {
@@ -28,6 +30,7 @@ export interface DigestPreferenceSummary {
 }
 
 export interface SeekerDashboardData {
+  greetingName: string | null;
   profileStrength: ProfileStrengthSummary;
   quickStats: QuickStatsSummary;
   skillGap: SkillGapSummary;

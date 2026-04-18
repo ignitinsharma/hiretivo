@@ -1,74 +1,81 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { UserRole } from '@/constants/enums';
 import { z } from 'zod';
 
-const digestRateLimiter = createRateLimiter("seeker-digest", 10, "1 m");
+const rateLimiter = createRateLimiter('seeker-digest', 10, '1 m');
 
-const DigestPreferenceSchema = z.object({
+const PatchBodySchema = z.object({
   enabled: z.boolean(),
 });
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
-
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return new Response('Unauthorized', { status: 401 });
   }
-
   if (session.user.role !== UserRole.SEEKER) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return new Response('Forbidden', { status: 403 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      digestEnabled: true,
-      lastDigestSentAt: true,
-    },
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { digestEnabled: true },
   });
 
-  const lastSentAt = user?.lastDigestSentAt;
-  return NextResponse.json({
-    data: {
-      enabled: user?.digestEnabled ?? false,
-      lastSentAt: lastSentAt ? String(lastSentAt) : null,
+  return Response.json(
+    {
+      data: {
+        enabled: seekerProfile?.digestEnabled ?? false,
+        lastSentAt: null,
+      },
     },
-  });
+    { status: 200 },
+  );
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(req: Request) {
   const session = await auth();
-
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return new Response('Unauthorized', { status: 401 });
   }
-
   if (session.user.role !== UserRole.SEEKER) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return new Response('Forbidden', { status: 403 });
   }
 
-  const { success } = await digestRateLimiter.limit(session.user.id);
+  const { success } = await rateLimiter.limit(session.user.id);
   if (!success) {
-    return new NextResponse('Too Many Requests', { status: 429 });
+    return new Response('Too Many Requests', { status: 429 });
   }
 
-  const body: unknown = await req.json().catch(() => null);
-  const parsed = DigestPreferenceSchema.safeParse(body);
-
+  const body: unknown = await req.json();
+  const parsed = PatchBodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten() },
-      { status: 400 }
-    );
+    return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  await prisma.user.update({
-    where: { id: session.user.id },
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+
+  if (!seekerProfile) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  await prisma.seekerProfile.update({
+    where: { id: seekerProfile.id },
     data: { digestEnabled: parsed.data.enabled },
   });
 
-  return NextResponse.json({ data: { success: true } });
+  return Response.json(
+    {
+      data: {
+        enabled: parsed.data.enabled,
+        lastSentAt: null,
+      },
+    },
+    { status: 200 },
+  );
 }
