@@ -45,7 +45,7 @@ const FREE_FEATURES = [
 ];
 
 const STATUS_STYLES: Record<SubscriptionStatus, string> = {
-  ACTIVE: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  ACTIVE: "border-brand-primary-light bg-brand-primary-light text-brand-primary",
   PAST_DUE: "border-amber-200 bg-amber-50 text-amber-700",
   CANCELED: "border-red-200 bg-red-50 text-red-700",
 };
@@ -114,7 +114,7 @@ function FreePlanCard() {
         <ul className="space-y-3">
           {FREE_FEATURES.map((feature) => (
             <li key={feature} className="flex items-center gap-2 text-sm text-slate-700">
-              <Check className="h-4 w-4 text-emerald-500" aria-hidden />
+              <Check className="h-4 w-4 text-brand-primary" aria-hidden />
               {feature}
             </li>
           ))}

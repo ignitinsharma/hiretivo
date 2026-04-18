@@ -33,7 +33,7 @@ const TEAM = [
     name: "Sarah Chen",
     role: "Product Lead",
     bgColor: "bg-[#D8F3DC]",
-    iconColor: "text-emerald-500",
+    iconColor: "text-brand-primary",
     initial: "SC",
     rotation: "-rotate-6 group-hover:-rotate-12",
   },
@@ -80,11 +80,11 @@ const VALUES = [
     title: "Builder mindset",
     description:
       "We're constantly iterating. If something's broken, we fix it together. Progress is our only metric.",
-    containerClass: "bg-emerald-50/50 hover:bg-emerald-500",
-    iconContainerClass: "text-emerald-500",
+    containerClass: "bg-brand-primary-light/50 hover:bg-brand-primary",
+    iconContainerClass: "text-brand-primary",
     icon: Zap,
     titleClass: "group-hover:text-white",
-    descClass: "group-hover:text-emerald-50",
+    descClass: "group-hover:text-white",
   },
 ];
 
@@ -132,7 +132,7 @@ export default function AboutPage() {
           <div className="mx-auto max-w-7xl">
             <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
               <div className="order-2 space-y-8 lg:order-1">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#D8F3DC] px-4 py-2 text-sm font-bold tracking-wide text-emerald-700">
+                <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary-light px-4 py-2 text-sm font-bold tracking-wide text-brand-primary">
                   <Heart className="h-5 w-5" /> OUR WHY
                 </div>
                 <h2 className="font-['Fraunces',serif] text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">

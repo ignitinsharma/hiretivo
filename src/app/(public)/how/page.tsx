@@ -153,7 +153,7 @@ export default function HowPage() {
                             Sr. Product Designer
                           </p>
                         </div>
-                        <Badge className="bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                        <Badge className="bg-brand-primary-light text-brand-primary text-[10px] font-bold">
                           <Check className="w-3 h-3 mr-1" />
                           Verified
                         </Badge>
@@ -228,7 +228,7 @@ export default function HowPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-slate-100 p-2 rounded-lg">
-                            <div className="text-[10px] font-bold text-emerald-600">
+                            <div className="text-[10px] font-bold text-brand-primary">
                               98.4%
                             </div>
                             <div className="text-[8px] font-medium text-slate-400">
@@ -383,8 +383,8 @@ export default function HowPage() {
               </div>
               <div className="md:w-1/2 space-y-6">
                 <div className="flex gap-4 items-start">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-emerald-600 font-bold" />
+                  <div className="w-8 h-8 bg-brand-primary-light rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-brand-primary font-bold" />
                   </div>
                   <div>
                     <h4 className="text-brand-dark font-bold mb-1">
@@ -397,8 +397,8 @@ export default function HowPage() {
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-emerald-600 font-bold" />
+                  <div className="w-8 h-8 bg-brand-primary-light rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-brand-primary font-bold" />
                   </div>
                   <div>
                     <h4 className="text-brand-dark font-bold mb-1">
@@ -411,8 +411,8 @@ export default function HowPage() {
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-emerald-600 font-bold" />
+                  <div className="w-8 h-8 bg-brand-primary-light rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-brand-primary font-bold" />
                   </div>
                   <div>
                     <h4 className="text-brand-dark font-bold mb-1">

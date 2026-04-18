@@ -30,10 +30,11 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  const lastSentAt = user?.lastDigestSentAt;
   return NextResponse.json({
     data: {
       enabled: user?.digestEnabled ?? false,
-      lastSentAt: user?.lastDigestSentAt?.toISO() ?? null,
+      lastSentAt: lastSentAt ? String(lastSentAt) : null,
     },
   });
 }

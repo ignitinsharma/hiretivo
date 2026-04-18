@@ -38,8 +38,8 @@ const RecruiterSignupLeft = (
       
       <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm mb-12 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-12 h-12 bg-brand-primary-light rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>

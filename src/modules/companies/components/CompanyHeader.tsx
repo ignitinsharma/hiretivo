@@ -27,9 +27,9 @@ export function CompanyHeader() {
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
                   Acme Corp
                 </h1>
-                <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5">
-                  <Verified className="w-4 h-4 text-emerald-600" />
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                <div className="flex items-center gap-1.5 rounded-full bg-brand-primary-light px-2 py-0.5">
+                  <Verified className="w-4 h-4 text-brand-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-brand-primary">
                     Verified
                   </span>
                 </div>

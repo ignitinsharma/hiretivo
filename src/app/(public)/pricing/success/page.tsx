@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -36,7 +37,7 @@ async function fetchSubscriptionStatus(): Promise<SubscriptionStatusResponse> {
   return payload;
 }
 
-export default function PricingSuccessPage() {
+function PricingSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const { data: session, update } = useSession();
@@ -117,7 +118,7 @@ export default function PricingSuccessPage() {
           />
         ) : (
           <CheckCircle2
-            className="mb-6 h-12 w-12 text-emerald-500"
+            className="mb-6 h-12 w-12 text-brand-primary"
             aria-hidden
           />
         )}
@@ -145,3 +146,9 @@ export default function PricingSuccessPage() {
     </main>
   );
 }
+
+const DynamicPricingSuccess = dynamic(() => Promise.resolve(PricingSuccessContent), {
+  ssr: false,
+});
+
+export default DynamicPricingSuccess;

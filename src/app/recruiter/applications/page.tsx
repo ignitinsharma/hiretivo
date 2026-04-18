@@ -96,7 +96,7 @@ function getStatusPillClasses(status: ApplicationStatus): string {
     case ApplicationStatus.OFFER:
       return 'bg-amber-100 text-amber-700';
     case ApplicationStatus.HIRED:
-      return 'bg-green-100 text-green-700';
+      return 'bg-brand-primary-light text-brand-primary';
     case ApplicationStatus.REJECTED:
       return 'bg-red-100 text-red-700';
   }

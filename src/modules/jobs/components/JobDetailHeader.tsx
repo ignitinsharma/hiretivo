@@ -75,7 +75,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
                 <>
                   <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                   <span className="flex items-center gap-1">
-                    <Globe2 className="w-4 h-4 text-green-500" />
+                    <Globe2 className="w-4 h-4 text-brand-primary" />
                     {job.workType === 'REMOTE' ? '100% Remote' : job.workType}
                   </span>
                 </>
