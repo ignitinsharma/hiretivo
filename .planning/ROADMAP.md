@@ -107,8 +107,13 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Recruiter sees an AI-generated one-line candidate summary in the applicant drawer, available only on PRO or ENTERPRISE plans
   2. Recruiter sees real analytics per job including view count, apply rate, top candidate skills, and average match score
-  3. Recruiter can boost a job to pin it at the top of skill-matched seeker feeds for 7 days, paid via a one-time Stripe checkout
-**Plans**: TBD
+  3. Recruiter can boost a job to pin it at the top of skill-matched seeker feeds for 7 days, paid via a one-time DodoPayments checkout
+**Plans:** 4 plans
+Plans:
+- [ ] 13-01-PLAN.md — AI foundation: packages, schema migration, OpenRouter singleton, AI summary API (INT-01 back-end)
+- [ ] 13-02-PLAN.md — Job analytics API + /recruiter/jobs/[id] page with Analytics tab (INT-02)
+- [ ] 13-03-PLAN.md — AI summary UI in CandidateDrawer + JD Generator Sheet + Skill Suggest chips (INT-01 front-end)
+- [ ] 13-04-PLAN.md — Boost Job checkout, webhook, seeker feed pinning, BoostJobButton UI (INT-03)
 **UI hint**: yes
 
 ## Progress
@@ -123,7 +128,7 @@ Phases execute in numeric order: 8 -> 8.1 (if any) -> 9 -> ... -> 13
 | 10. Settings Restructure & Auth Guards | v1.1 | 0/0 | Complete    | 2026-04-16 |
 | 11. Payments Integration | v1.1 | 4/4 | Human verification required | - |
 | 12. Seeker Dashboard & Engagement | v1.1 | 4/4 | Complete   | 2026-04-18 |
-| 13. Recruiter Intelligence | v1.1 | 0/0 | Not started | - |
+| 13. Recruiter Intelligence | v1.1 | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-04-14*
