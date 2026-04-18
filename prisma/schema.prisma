@@ -153,6 +153,8 @@ model SeekerProfile {
   availability    String?
   resumeKey       String?
 
+  digestEnabled Boolean @default(false)
+
   skills     SeekerSkill[]
   jobMatches JobMatch[]
 

@@ -1,24 +1,79 @@
-import React from "react";
-import { Megaphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
+'use client';
 
-export function JobAlertsPromo() {
+import React from 'react';
+import { Mail, TrendingUp } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import type { SkillGapSummary } from '../types/dashboard.types';
+
+interface JobAlertsPromoProps {
+  digestEnabled: boolean;
+  skillGap: SkillGapSummary;
+  onToggleDigest: (enabled: boolean) => void;
+  isTogglingDigest: boolean;
+}
+
+export function JobAlertsPromo({
+  digestEnabled,
+  skillGap,
+  onToggleDigest,
+  isTogglingDigest,
+}: JobAlertsPromoProps) {
   return (
-    <div className="bg-primary p-6 rounded-xl text-white shadow-lg relative overflow-hidden group">
-      <div className="absolute top-0 right-0 -mr-4 -mt-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
-        <Megaphone className="w-[100px] h-[100px]" />
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+      {/* Weekly digest toggle */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Mail className="w-4 h-4 text-primary" />
+          <h4 className="font-bold text-slate-900 text-sm">Weekly Digest</h4>
+        </div>
+        <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+          Get your top matched jobs delivered every Monday morning.
+        </p>
+        <div className="flex items-center gap-3">
+          <Switch
+            id="digest-toggle"
+            checked={digestEnabled}
+            onCheckedChange={onToggleDigest}
+            disabled={isTogglingDigest}
+            aria-label="Toggle weekly digest emails"
+          />
+          <Label
+            htmlFor="digest-toggle"
+            className="text-sm font-medium text-slate-700 cursor-pointer"
+          >
+            {digestEnabled ? 'Enabled' : 'Disabled'}
+          </Label>
+        </div>
       </div>
-      <h4 className="font-bold text-lg relative z-10">Get new matches!</h4>
-      <p className="text-primary-foreground/90 text-sm mt-2 mb-4 relative z-10">
-        We&apos;ll notify you as soon as a job matching your profile is posted.
-      </p>
-      <Button
-        variant="secondary"
-        size="sm"
-        className="font-black text-sm relative z-10 transition-colors"
-      >
-        Enable Alerts
-      </Button>
+
+      {/* Skill gap tracker */}
+      {skillGap.items.length > 0 && (
+        <div className="border-t border-slate-100 pt-5">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="w-4 h-4 text-amber-500" />
+            <h4 className="font-bold text-slate-900 text-sm">Skill Gap</h4>
+          </div>
+          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+            Top skills missing from jobs in your feed:
+          </p>
+          <ul className="space-y-1">
+            {skillGap.items.map((item) => (
+              <li
+                key={item.skillName}
+                className="flex items-center justify-between"
+              >
+                <span className="text-xs font-medium text-slate-700">
+                  {item.skillName}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {item.frequency} {item.frequency === 1 ? 'job' : 'jobs'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
