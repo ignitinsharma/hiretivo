@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendSeekerDigest } from '@/lib/email/seeker-digest';
 import { computeAllMatches } from '@/lib/match';
 
-const CRON_SECRET = process.env.CRON_SECRET || 'local-dev-secret';
+const CRON_SECRET = process.env.CRON_SECRET ?? 'local-dev-secret';
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -13,22 +13,22 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date();
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const optedInSeekers = await prisma.user.findMany({
+  // digestEnabled lives on SeekerProfile (not User); select via seekerProfile relation
+  const optedInSeekerProfiles = await prisma.seekerProfile.findMany({
     where: {
       digestEnabled: true,
-      role: 'SEEKER',
-      email: { not: null },
-      OR: [
-        { lastDigestSentAt: null },
-        { lastDigestSentAt: { lt: oneWeekAgo } },
-      ],
+      user: {
+        role: 'SEEKER',
+        email: { not: null },
+      },
     },
     select: {
       id: true,
-      email: true,
-      name: true,
+      userId: true,
+      user: {
+        select: { email: true, name: true },
+      },
     },
     take: 100,
   });
@@ -37,38 +37,24 @@ export async function GET(req: NextRequest) {
   let sent = 0;
   let failed = 0;
 
-  for (const seeker of optedInSeekers) {
+  for (const profile of optedInSeekerProfiles) {
     processed++;
 
-    if (!seeker.email) {
+    if (!profile.user.email) {
       failed++;
       continue;
     }
 
     try {
-      const seekerProfile = await prisma.seekerProfile.findUnique({
-        where: { userId: seeker.id },
-        select: { id: true },
-      });
-
-      if (!seekerProfile) {
-        failed++;
-        continue;
-      }
-
       const appliedJobIds = await prisma.application.findMany({
-        where: { seekerId: seeker.id },
+        where: { seekerId: profile.userId },
         select: { jobId: true },
       });
       const appliedIds = new Set(appliedJobIds.map((a) => a.jobId));
 
-      const matches = await computeAllMatches(seekerProfile.id);
+      const matches = await computeAllMatches(profile.id);
 
       if (matches.length === 0) {
-        await prisma.user.update({
-          where: { id: seeker.id },
-          data: { lastDigestSentAt: now },
-        });
         continue;
       }
 
@@ -102,14 +88,9 @@ export async function GET(req: NextRequest) {
         });
 
       if (filteredJobs.length > 0) {
-        await sendSeekerDigest(seeker.email, seeker.name, filteredJobs);
+        await sendSeekerDigest(profile.user.email, profile.user.name, filteredJobs);
         sent++;
       }
-
-      await prisma.user.update({
-        where: { id: seeker.id },
-        data: { lastDigestSentAt: now },
-      });
     } catch {
       failed++;
     }

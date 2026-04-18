@@ -1,21 +1,13 @@
 import { ApplicationStatus, JobStatus } from '@/constants/enums';
+import type { RecentApplicant } from '@/modules/recruiter/dashboard/types/dashboard.types';
+
+export type { RecentApplicant };
 
 export interface RecruiterStats {
   activeJobs: number;
   totalApplicants: number;
   matchesThisWeek: number;
   interviewsScheduled: number;
-}
-
-export interface RecentApplicant {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  position: string;
-  matchScore: number;
-  appliedDate: string;
-  status: ApplicationStatus;
 }
 
 export interface UpcomingInterview {
@@ -54,45 +46,45 @@ export const RECRUITER_STATS: RecruiterStats = {
 export const RECENT_APPLICANTS: RecentApplicant[] = [
   {
     id: '1',
-    name: 'Sarah Chen',
-    email: 'sarah.chen@email.com',
-    position: 'Senior Frontend Developer',
+    seekerName: 'Sarah Chen',
+    seekerImage: null,
+    jobTitle: 'Senior Frontend Developer',
     matchScore: 92,
     appliedDate: '2024-01-15',
     status: ApplicationStatus.INTERVIEW,
   },
   {
     id: '2',
-    name: 'Marcus Johnson',
-    email: 'marcus.j@email.com',
-    position: 'Full Stack Engineer',
+    seekerName: 'Marcus Johnson',
+    seekerImage: null,
+    jobTitle: 'Full Stack Engineer',
     matchScore: 85,
     appliedDate: '2024-01-14',
     status: ApplicationStatus.REVIEWING,
   },
   {
     id: '3',
-    name: 'Emily Rodriguez',
-    email: 'emily.r@email.com',
-    position: 'Senior Frontend Developer',
+    seekerName: 'Emily Rodriguez',
+    seekerImage: null,
+    jobTitle: 'Senior Frontend Developer',
     matchScore: 78,
     appliedDate: '2024-01-13',
     status: ApplicationStatus.APPLIED,
   },
   {
     id: '4',
-    name: 'David Kim',
-    email: 'david.kim@email.com',
-    position: 'Backend Developer',
+    seekerName: 'David Kim',
+    seekerImage: null,
+    jobTitle: 'Backend Developer',
     matchScore: 71,
     appliedDate: '2024-01-12',
     status: ApplicationStatus.APPLIED,
   },
   {
     id: '5',
-    name: 'Lisa Wang',
-    email: 'lisa.wang@email.com',
-    position: 'Full Stack Engineer',
+    seekerName: 'Lisa Wang',
+    seekerImage: null,
+    jobTitle: 'Full Stack Engineer',
     matchScore: 65,
     appliedDate: '2024-01-11',
     status: ApplicationStatus.REVIEWING,

@@ -10,6 +10,8 @@ export enum JobStatus {
   OPEN = "OPEN",
   PAUSED = "PAUSED",
   CLOSED = "CLOSED",
+  UNPUBLISHED = "UNPUBLISHED",
+  DELETED = "DELETED",
 }
 
 /** Same values as Prisma `AppStatus` (RULES.md uses `ApplicationStatus`). */
