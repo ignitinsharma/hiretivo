@@ -208,6 +208,15 @@ None — all new code is wired to real data sources (Prisma + OpenRouter).
 | threat_flag: information-disclosure | src/app/api/recruiter/applications/[id]/ai-summary/route.ts | Ownership check returns 404 per T-13-02 |
 | threat_flag: prompt-injection | src/app/api/recruiter/applications/[id]/ai-summary/route.ts | HTML strip + 200-char truncation per T-13-03 |
 
+## Self-Check: PASSED
+
+- FOUND: src/lib/openrouter.ts
+- FOUND: src/lib/validations/ai-summary.schema.ts
+- FOUND: src/app/api/recruiter/applications/[id]/ai-summary/route.ts
+- FOUND: .planning/phases/13-recruiter-intelligence/13-01-SUMMARY.md
+- FOUND: commit 670970d (Task 1)
+- FOUND: commit 7a48886 (Task 2)
+
 ---
 *Phase: 13-recruiter-intelligence*
 *Completed: 2026-04-18*
