@@ -4,6 +4,7 @@ import { UserRole } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { buildJdGeneratorMessages, JD_GENERATOR_CONFIG } from '@/lib/ai-prompts';
 
 const generateJdRateLimiter = createRateLimiter('generate-jd', 10, '1 m');
 
@@ -33,28 +34,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // 5. Call OpenRouter
+  const { system, user } = buildJdGeneratorMessages(parsed.data);
   const completion = await openrouter.chat.completions.create({
     model: getAIModel(),
+    ...JD_GENERATOR_CONFIG,
     messages: [
-      {
-        role: 'system',
-        content: `You are an expert technical recruiter. Write a complete, professional job description with exactly these sections in order:
-1. About the Role
-2. Responsibilities
-3. Requirements
-4. Nice to Have
-5. What We Offer
-
-Use the exact placeholder tokens (do not replace them): [SALARY RANGE], [YEARS OF EXPERIENCE], [LOCATION / REMOTE POLICY], [JOINING DATE].
-Return only the job description text with no preamble or explanation.`,
-      },
-      {
-        role: 'user',
-        content: `Role: ${parsed.data.title}\nAbout this role: ${parsed.data.shortDesc}${parsed.data.vibe ? `\nCulture/vibe: ${parsed.data.vibe}` : ''}`,
-      },
+      { role: 'system', content: system },
+      { role: 'user', content: user },
     ],
-    max_tokens: 800,
-    temperature: 0.6,
   });
 
   // 6. Extract JD text

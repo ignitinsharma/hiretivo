@@ -4,6 +4,7 @@ import { UserRole } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
 
 const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 20, '1 m');
 
@@ -33,21 +34,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // 5. Call OpenRouter
+  const { system, user } = buildSkillSuggestMessages(parsed.data);
   const completion = await openrouter.chat.completions.create({
     model: getAIModel(),
+    ...SKILL_SUGGEST_CONFIG,
     messages: [
-      {
-        role: 'system',
-        content:
-          'You are a technical skills extractor. Given a job description, return a JSON array of the 8 most relevant technical skills required. Return ONLY a valid JSON array of strings — no markdown, no explanation, no code fences. Example: ["TypeScript","React","Node.js"]',
-      },
-      {
-        role: 'user',
-        content: parsed.data.descriptionText.slice(0, 3000), // truncate to avoid token waste
-      },
+      { role: 'system', content: system },
+      { role: 'user', content: user },
     ],
-    max_tokens: 150,
-    temperature: 0.1,
   });
 
   // 6. Parse response — handle malformed JSON from model (T-13-11)
