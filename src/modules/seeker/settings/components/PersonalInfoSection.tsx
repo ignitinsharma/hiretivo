@@ -1,208 +1,125 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import React from "react";
+import { useForm as useHookForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  SeekerSettingsSchema,
-  type SeekerSettingsInput,
-} from "@/lib/validations/seeker.schema";
-
-interface SeekerSettingsData {
-  name: string;
-  email: string;
-  headline: string;
-  bio: string;
-  location: string;
-  situation: string;
-  primaryRole: string;
-  salaryMin: number | null;
-  salaryMax: number | null;
-  currency: string;
-  availability: string;
-}
 
 export function PersonalInfoSection() {
-  const queryClient = useQueryClient();
-
-  const { data: settingsData, isLoading, isError } = useQuery<{ data: SeekerSettingsData }>({
-    queryKey: ["seeker-settings"],
-    queryFn: async () => {
-      const res = await fetch("/api/seeker/settings");
-      if (!res.ok) throw new Error("Failed to load settings");
-      return res.json() as Promise<{ data: SeekerSettingsData }>;
-    },
-    staleTime: 60_000,
-  });
-
-  const profile = settingsData?.data;
-
-  const form = useForm<SeekerSettingsInput>({
-    resolver: zodResolver(SeekerSettingsSchema),
+  const { register, handleSubmit } = useHookForm({
     defaultValues: {
-      name: "", headline: "", bio: "", location: "",
-      situation: "", primaryRole: "", salaryMin: null, salaryMax: null,
-      currency: "", availability: "",
+      fullName: "Alex Rivera",
+      location: "",
+      website: "",
     },
   });
 
-  useEffect(() => {
-    if (profile) {
-      form.reset({
-        name: profile.name ?? "",
-        headline: profile.headline ?? "",
-        bio: profile.bio ?? "",
-        location: profile.location ?? "",
-        situation: profile.situation ?? "",
-        primaryRole: profile.primaryRole ?? "",
-        salaryMin: profile.salaryMin ?? null,
-        salaryMax: profile.salaryMax ?? null,
-        currency: profile.currency ?? "",
-        availability: profile.availability ?? "",
-      });
-    }
-  }, [profile, form]);
-
-  const saveMutation = useMutation({
-    mutationFn: async (values: SeekerSettingsInput) => {
-      const res = await fetch("/api/seeker/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-    },
-    onSuccess: () => {
-      toast.success("Profile updated successfully.");
-      queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
-    },
-    onError: () => toast.error("Failed to save profile. Try again."),
-  });
+  const onSubmit = (data: any) => {
+    console.log(data);
+  };
 
   return (
-    <section id="account" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <section
+      id="account"
+      className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+    >
       <div className="p-6 border-b border-slate-100">
-        <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
+        <h3 className="text-lg font-bold text-slate-900">
+          Personal Information
+        </h3>
         <p className="text-sm text-slate-500">
-          Update your profile information that recruiters will see.
+          This information will be displayed on your public profile.
         </p>
       </div>
 
-      {isError && (
-        <div className="px-6 pt-4">
-          <p className="text-sm text-red-500">Failed to load profile data. Please refresh.</p>
-        </div>
-      )}
-
-      <form onSubmit={form.handleSubmit((data) => saveMutation.mutate(data))}>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="p-6 space-y-8">
+          <div className="flex items-center gap-6">
             <div className="h-[72px] w-[72px] rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center font-bold text-slate-400 text-xl">
-              {profile?.name
-                ? profile.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
-                : "??"}
+              AR
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="font-semibold px-0"
+              >
+                Change photo
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="font-semibold text-slate-500 px-0"
+              >
+                Remove
+              </Button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Full Name</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <>
-                  <Input {...form.register("name")} aria-invalid={!!form.formState.errors.name} />
-                  {form.formState.errors.name && (
-                    <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
-                  )}
-                </>
-              )}
+              <label className="text-sm font-semibold text-slate-700">
+                Full Name
+              </label>
+              <input
+                {...register("fullName")}
+                className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
+                type="text"
+              />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Email Address</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <div className="relative">
-                  <Input value={profile?.email ?? ""} readOnly className="bg-slate-50 text-slate-500 pr-24" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                    Verified
-                  </span>
-                </div>
-              )}
+              <label className="text-sm font-semibold text-slate-700">
+                Email Address
+              </label>
+              <div className="relative">
+                <input
+                  className="w-full rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-sm pr-24"
+                  disabled
+                  type="email"
+                  value="alex.rivera@example.com"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded">
+                  Verified
+                </span>
+              </div>
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Professional Headline</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("headline")} placeholder="e.g. Senior Frontend Developer" />
-              )}
+              <label className="text-sm font-semibold text-slate-700">
+                Location
+              </label>
+              <input
+                {...register("location")}
+                className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
+                placeholder="e.g. San Francisco, CA"
+                type="text"
+              />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Primary Role</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("primaryRole")} placeholder="e.g. Frontend Developer" />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Job Search Status</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("situation")} placeholder="e.g. Actively looking" />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Availability</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("availability")} placeholder="e.g. Immediately" />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Location</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("location")} placeholder="e.g. San Francisco, CA" />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Preferred Currency</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("currency")} placeholder="e.g. USD, INR" />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Minimum Salary</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input type="number" {...form.register("salaryMin")} placeholder="e.g. 80000" />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Maximum Salary</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input type="number" {...form.register("salaryMax")} placeholder="e.g. 120000" />
-              )}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-slate-700">Bio</label>
-              {isLoading ? <Skeleton className="h-24 w-full" /> : (
-                <Textarea rows={3} {...form.register("bio")} placeholder="Tell recruiters about yourself..." />
-              )}
+              <label className="text-sm font-semibold text-slate-700">
+                Website
+              </label>
+              <input
+                {...register("website")}
+                className="w-full rounded-lg border-slate-300 focus:border-primary focus:ring-primary text-sm"
+                placeholder="https://yourportfolio.com"
+                type="url"
+              />
             </div>
           </div>
         </div>
 
         <div className="px-6 py-4 bg-slate-50 flex items-center justify-end gap-4">
-          <Button type="submit" variant="default" size="sm" className="px-5" disabled={saveMutation.isPending || isLoading}>
-            {saveMutation.isPending ? "Saving..." : "Save Changes"}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="font-medium"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="default" size="sm" className="px-5">
+            Save Changes
           </Button>
         </div>
       </form>

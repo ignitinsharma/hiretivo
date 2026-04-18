@@ -8,10 +8,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   User,
+  Building,
+  Bell,
   Shield,
   CreditCard,
-  AlertTriangle,
-  Trash2,
+  Calendar,
 } from "lucide-react";
 import { RecruiterHeader } from "@/components/layout/RecruiterHeader";
 import { Button } from "@/components/ui/button";
@@ -19,31 +20,24 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { BillingTabContent } from "@/modules/billing/components/BillingTabContent";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   RecruiterProfileSettingsSchema,
+  NotificationSettingsSchema,
   ChangePasswordSchema,
 } from "@/lib/validations/interview.schema";
 import type {
   RecruiterProfileSettingsInput,
+  NotificationSettingsInput,
   ChangePasswordInput,
 } from "@/lib/validations/interview.schema";
 
 const SETTINGS_TABS = [
   { id: "profile", label: "Profile", icon: User },
+  { id: "company", label: "Company", icon: Building },
+  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: Shield },
   { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "calendar", label: "Calendar", icon: Calendar },
 ];
 
 interface SettingsData {
@@ -51,6 +45,9 @@ interface SettingsData {
   email: string;
   companyName: string;
   bio: string;
+  emailNotifications: boolean;
+  applicationAlerts: boolean;
+  interviewNotifications: boolean;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -117,14 +114,15 @@ function ProfileTabContent({
         <div className="space-y-6">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary text-2xl font-bold">
-              {settingsData?.name
-                ? settingsData.name
-                    .split(" ")
-                    .map((w) => w[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2)
-                : "??"}
+              AC
+            </div>
+            <div>
+              <Button variant="outline" size="sm" type="button">
+                Change Avatar
+              </Button>
+              <p className="text-xs text-gray-500 mt-1">
+                JPG, PNG or GIF. Max 2MB.
+              </p>
             </div>
           </div>
 
@@ -219,6 +217,241 @@ function ProfileTabContent({
               disabled={saveProfileMutation.isPending || isSettingsLoading}
             >
               {saveProfileMutation.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+interface NotifTabProps {
+  settingsData: SettingsData | undefined;
+  isSettingsLoading: boolean;
+  isSettingsError: boolean;
+}
+
+function NotificationsTabContent({
+  settingsData,
+  isSettingsLoading,
+  isSettingsError,
+}: NotifTabProps) {
+  const queryClient = useQueryClient();
+
+  const notifForm = useForm<NotificationSettingsInput>({
+    resolver: zodResolver(NotificationSettingsSchema),
+    defaultValues: {
+      emailNotifications: false,
+      applicationAlerts: false,
+      interviewNotifications: false,
+    },
+  });
+
+  useEffect(() => {
+    if (settingsData) {
+      notifForm.reset({
+        emailNotifications: settingsData.emailNotifications,
+        applicationAlerts: settingsData.applicationAlerts,
+        interviewNotifications: settingsData.interviewNotifications,
+      });
+    }
+  }, [settingsData]);
+
+  const saveNotifMutation = useMutation({
+    mutationFn: async (values: NotificationSettingsInput) => {
+      const res = await fetch("/api/recruiter/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+    },
+    onSuccess: () => {
+      toast.success("Notification settings saved.");
+      queryClient.invalidateQueries({ queryKey: ["recruiter-settings"] });
+    },
+    onError: () => toast.error("Failed to save settings. Try again."),
+  });
+
+  return (
+    <div className="max-w-xl">
+      <h2 className="text-lg font-bold text-gray-900 mb-6">
+        Notification Settings
+      </h2>
+
+      {isSettingsError && (
+        <p className="text-sm text-red-500 mb-4">
+          Failed to load settings. Try again.
+        </p>
+      )}
+
+      <form
+        onSubmit={notifForm.handleSubmit((data) =>
+          saveNotifMutation.mutate(data),
+        )}
+      >
+        <div className="space-y-2">
+          {isSettingsLoading ? (
+            <>
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between py-4 border-t border-gray-100">
+                <div>
+                  <label
+                    htmlFor="emailNotifications"
+                    className="font-medium text-gray-900"
+                  >
+                    Email Notifications
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Receive email updates about your job postings
+                  </p>
+                </div>
+                <Switch
+                  id="emailNotifications"
+                  checked={notifForm.watch("emailNotifications")}
+                  onCheckedChange={(checked) =>
+                    notifForm.setValue("emailNotifications", checked)
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-4 border-t border-gray-100">
+                <div>
+                  <label
+                    htmlFor="applicationAlerts"
+                    className="font-medium text-gray-900"
+                  >
+                    Application Alerts
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Get notified when new candidates apply
+                  </p>
+                </div>
+                <Switch
+                  id="applicationAlerts"
+                  checked={notifForm.watch("applicationAlerts")}
+                  onCheckedChange={(checked) =>
+                    notifForm.setValue("applicationAlerts", checked)
+                  }
+                />
+              </div>
+            </>
+          )}
+
+          <div className="pt-4">
+            <Button
+              type="submit"
+              className="bg-brand-primary hover:bg-brand-primary/90 text-white"
+              disabled={saveNotifMutation.isPending || isSettingsLoading}
+            >
+              {saveNotifMutation.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+interface CalendarTabProps {
+  settingsData: SettingsData | undefined;
+  isSettingsLoading: boolean;
+  isSettingsError: boolean;
+}
+
+function CalendarTabContent({
+  settingsData,
+  isSettingsLoading,
+  isSettingsError,
+}: CalendarTabProps) {
+  const queryClient = useQueryClient();
+
+  const notifForm = useForm<NotificationSettingsInput>({
+    resolver: zodResolver(NotificationSettingsSchema),
+    defaultValues: {
+      emailNotifications: false,
+      applicationAlerts: false,
+      interviewNotifications: false,
+    },
+  });
+
+  useEffect(() => {
+    if (settingsData) {
+      notifForm.reset({
+        emailNotifications: settingsData.emailNotifications,
+        applicationAlerts: settingsData.applicationAlerts,
+        interviewNotifications: settingsData.interviewNotifications,
+      });
+    }
+  }, [settingsData]);
+
+  const saveCalendarMutation = useMutation({
+    mutationFn: async (values: NotificationSettingsInput) => {
+      const res = await fetch("/api/recruiter/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+    },
+    onSuccess: () => {
+      toast.success("Calendar settings saved.");
+      queryClient.invalidateQueries({ queryKey: ["recruiter-settings"] });
+    },
+    onError: () => toast.error("Failed to save settings. Try again."),
+  });
+
+  return (
+    <div className="max-w-xl">
+      <h2 className="text-lg font-bold text-gray-900 mb-6">
+        Calendar Settings
+      </h2>
+
+      {isSettingsError && (
+        <p className="text-sm text-red-500 mb-4">
+          Failed to load settings. Try again.
+        </p>
+      )}
+
+      <form
+        onSubmit={notifForm.handleSubmit((data) =>
+          saveCalendarMutation.mutate(data),
+        )}
+      >
+        <div className="space-y-2">
+          {isSettingsLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <div className="flex items-center justify-between py-4 border-t border-gray-100">
+              <div>
+                <label
+                  htmlFor="interviewNotifications"
+                  className="font-medium text-gray-900"
+                >
+                  Send me email reminders for upcoming interviews
+                </label>
+              </div>
+              <Switch
+                id="interviewNotifications"
+                checked={notifForm.watch("interviewNotifications")}
+                onCheckedChange={(checked) =>
+                  notifForm.setValue("interviewNotifications", checked)
+                }
+              />
+            </div>
+          )}
+
+          <div className="pt-4">
+            <Button
+              type="submit"
+              className="bg-brand-primary hover:bg-brand-primary/90 text-white"
+              disabled={saveCalendarMutation.isPending || isSettingsLoading}
+            >
+              {saveCalendarMutation.isPending ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -347,87 +580,11 @@ function SecurityTabContent() {
           </div>
         </div>
       </form>
-
-      <DeleteAccountSection />
     </div>
   );
 }
 
-function DeleteAccountSection() {
-  const [confirmText, setConfirmText] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const res = await fetch("/api/auth/delete-account", { method: "POST" });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(body.error ?? "Failed to delete account");
-        return;
-      }
-      toast.success("Account deleted");
-      window.location.href = "/";
-    } catch {
-      toast.error("Failed to delete account");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  return (
-    <div className="mt-8 pt-8 border-t border-gray-200">
-      <h3 className="text-lg font-bold text-red-600 mb-2">Delete Account</h3>
-      <p className="text-sm text-gray-600 mb-4">
-        Once you delete your account, there is no going back. Please be certain.
-      </p>
-      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogTrigger asChild>
-          <Button variant="destructive" size="sm">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Account
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-              Are you absolutely sure?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers. If you have an
-              active subscription, it will be cancelled.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="my-4">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
-              Type <span className="font-bold text-red-600">DELETE</span> to
-              confirm
-            </label>
-            <Input
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="DELETE"
-              className="max-w-xs"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={confirmText !== "DELETE" || isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? "Deleting..." : "Delete Account"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
+// ── Main page ────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -486,8 +643,24 @@ export default function SettingsPage() {
                   isSettingsError={isSettingsError}
                 />
               )}
+              {activeTab === "notifications" && (
+                <NotificationsTabContent
+                  settingsData={settingsData}
+                  isSettingsLoading={isSettingsLoading}
+                  isSettingsError={isSettingsError}
+                />
+              )}
+              {activeTab === "calendar" && (
+                <CalendarTabContent
+                  settingsData={settingsData}
+                  isSettingsLoading={isSettingsLoading}
+                  isSettingsError={isSettingsError}
+                />
+              )}
               {activeTab === "security" && <SecurityTabContent />}
-              {activeTab === "billing" && <BillingTabContent />}
+              {(activeTab === "company" || activeTab === "billing") && (
+                <p className="text-sm text-gray-500">Coming soon.</p>
+              )}
             </div>
           </div>
         </div>

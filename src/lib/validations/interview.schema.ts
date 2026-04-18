@@ -19,6 +19,12 @@ export const RecruiterProfileSettingsSchema = z.object({
   bio: z.string().max(500).optional(),
 });
 
+export const NotificationSettingsSchema = z.object({
+  emailNotifications: z.boolean(),
+  applicationAlerts: z.boolean(),
+  interviewNotifications: z.boolean(),
+});
+
 export const ChangePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -33,5 +39,8 @@ export const ChangePasswordSchema = z
 export type ScheduleInterviewInput = z.infer<typeof ScheduleInterviewSchema>;
 export type RecruiterProfileSettingsInput = z.infer<
   typeof RecruiterProfileSettingsSchema
+>;
+export type NotificationSettingsInput = z.infer<
+  typeof NotificationSettingsSchema
 >;
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;

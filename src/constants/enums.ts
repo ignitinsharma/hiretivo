@@ -6,9 +6,10 @@ export enum UserRole {
 }
 
 export enum JobStatus {
+  DRAFT = "DRAFT",
   OPEN = "OPEN",
-  UNPUBLISHED = "UNPUBLISHED",
-  DELETED = "DELETED",
+  PAUSED = "PAUSED",
+  CLOSED = "CLOSED",
 }
 
 /** Same values as Prisma `AppStatus` (RULES.md uses `ApplicationStatus`). */

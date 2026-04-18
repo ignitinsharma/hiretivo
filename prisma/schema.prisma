@@ -27,9 +27,10 @@ enum ApplyType {
 }
 
 enum JobStatus {
+  DRAFT
   OPEN
-  UNPUBLISHED
-  DELETED
+  PAUSED
+  CLOSED
 }
 
 enum SkillLevel {
@@ -67,12 +68,6 @@ enum InterviewStatus {
   NO_SHOW
 }
 
-enum SubStatus {
-  ACTIVE
-  PAST_DUE
-  CANCELED
-}
-
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -85,13 +80,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  billingCustomerId String?
-  digestEnabled  Boolean @default(false)
-  lastDigestSentAt DateTime?
-  deletedAt      DateTime?
-
   accounts Account[]
-  subscription Subscription?
   sessions Session[]
 
   seekerProfile   SeekerProfile?
@@ -211,6 +200,10 @@ model RecruiterProfile {
   isFullyRemote Boolean  @default(false)
   logo        String?
 
+  emailNotifications     Boolean @default(true)
+  applicationAlerts      Boolean @default(true)
+  interviewNotifications Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -225,7 +218,7 @@ model Job {
   jobType     JobType
   applyType   ApplyType
   workType    WorkType?
-  status      JobStatus   @default(OPEN)
+  status      JobStatus   @default(DRAFT)
 
   salaryMin Int?
   salaryMax Int?
@@ -355,21 +348,4 @@ model EarlyAccessEmail {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
-}
-
-model Subscription {
-  id                   String    @id @default(cuid())
-  dodoSubscriptionId   String    @unique
-  productId            String
-  status               SubStatus
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean   @default(false)
-  userId               String    @unique
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([dodoSubscriptionId])
 }

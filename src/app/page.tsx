@@ -3,11 +3,12 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { UserRole, JobStatus } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
+import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
+
+const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === 'true';
 
 export const metadata = generatePageMetadata({
   title: "Skills-Based Remote Job Portal",
@@ -21,14 +22,8 @@ function formatStat(n: number): string {
 }
 
 export default async function Home() {
-  const session = await auth();
-  if (session?.user) {
-    if (session.user.role === UserRole.SEEKER) {
-      redirect("/seeker/dashboard");
-    }
-    if (session.user.role === UserRole.RECRUITER) {
-      redirect("/recruiter/dashboard");
-    }
+  if (SHOW_COMING_SOON) {
+    return <ComingSoonPage />;
   }
 
   const [activeJobCount, seekerCount, companyCount, featuredJobs] = await Promise.all([

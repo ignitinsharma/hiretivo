@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const jobTypeValues = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"] as const;
 const applyTypeValues = ["INTERNAL", "EXTERNAL"] as const;
-const jobStatusValues = ["OPEN", "UNPUBLISHED", "DELETED"] as const;
+const jobStatusValues = ["DRAFT", "OPEN", "PAUSED", "CLOSED"] as const;
 const workTypeValues = ["REMOTE", "HYBRID", "ONSITE"] as const;
 const skillLevelValues = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"] as const;
 
@@ -17,7 +17,7 @@ const baseJobSchema = z.object({
   jobType: z.enum(jobTypeValues),
   applyType: z.enum(applyTypeValues),
   workType: z.enum(workTypeValues).optional(),
-  status: z.enum(jobStatusValues).default("OPEN"),
+  status: z.enum(jobStatusValues).default("DRAFT"),
   salaryMin: z.number().int().nonnegative().optional(),
   salaryMax: z.number().int().nonnegative().optional(),
   currency: z.string().trim().length(3).optional(),

@@ -8,6 +8,10 @@ export interface JobListItem {
   matchScore?: number;
   tags?: string[];
   postedAt?: string;
+  /** Exact skill names the seeker is missing for this job (seeker feed only). */
+  missingSkills?: string[];
+  /** Compact inline explainer for low-match cards, e.g. "Missing: Docker, AWS". Null when not applicable. */
+  missingSkillsHint?: string | null;
 }
 
 export interface JobSkillItem {
