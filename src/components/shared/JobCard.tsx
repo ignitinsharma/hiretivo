@@ -50,6 +50,12 @@ export function JobCard({ job, onApply, variant = "default" }: JobCardProps) {
         </p>
       </div>
 
+      {job.missingSkillsHint && (
+        <p className="mt-2 text-xs text-amber-600 font-medium truncate">
+          {job.missingSkillsHint}
+        </p>
+      )}
+
       <div
         className={cn(
           "mt-4 pt-4 border-t border-slate-100 flex items-center justify-between",

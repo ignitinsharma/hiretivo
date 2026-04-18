@@ -62,6 +62,20 @@ export default async function JobDescriptionPage({
         skillName: s.skill.name,
         isMatch: seekerSkillIds.has(s.skillId),
       }));
+
+      // Best-effort view event for SKR-02 (Viewed counter).
+      // Failures must not block page rendering — wrap and log only.
+      prisma.clickEvent
+        .create({
+          data: {
+            jobId: params.id,
+            userId: session.user.id,
+            source: 'job_detail_view',
+          },
+        })
+        .catch((err: unknown) => {
+          console.error('[job-detail-view] failed to record click event:', err);
+        });
     }
   }
 
