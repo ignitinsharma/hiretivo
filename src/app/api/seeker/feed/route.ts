@@ -132,6 +132,27 @@ export async function GET(req: NextRequest) {
     return true;
   });
 
+  // INT-03: Prepend boosted jobs that are active and within the seeker's matched set.
+  // Boosted jobs only pin for skill-matched seekers — non-matched jobs are excluded by
+  // filteredMatches already, so we only check BoostedJob within the current filtered set.
+  if (filteredMatches.length > 0) {
+    const now = new Date();
+    const filteredJobIds = filteredMatches.map((m) => m.jobId);
+    const activeBoosted = await prisma.boostedJob.findMany({
+      where: {
+        jobId: { in: filteredJobIds },
+        expiresAt: { gt: now },
+      },
+      select: { jobId: true },
+    });
+    if (activeBoosted.length > 0) {
+      const boostedJobIdSet = new Set(activeBoosted.map((b) => b.jobId));
+      const boostedMatches = filteredMatches.filter((m) => boostedJobIdSet.has(m.jobId));
+      const regularMatches = filteredMatches.filter((m) => !boostedJobIdSet.has(m.jobId));
+      filteredMatches = [...boostedMatches, ...regularMatches];
+    }
+  }
+
   // Cursor pagination
   if (cursor) {
     try {

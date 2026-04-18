@@ -5,10 +5,12 @@ import type {
   SubscriptionCancelledWebhookEvent,
   SubscriptionRenewedWebhookEvent,
   PaymentFailedWebhookEvent,
+  PaymentSucceededWebhookEvent,
 } from "dodopayments/resources/webhooks/webhooks";
 import type { Subscription } from "dodopayments/resources/subscriptions";
 import { PlanTier } from "@/constants/enums";
 import { DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
+import { BOOST_DURATION_MS } from "@/constants/boost";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -81,6 +83,36 @@ async function handlePaymentFailed(_sub: unknown): Promise<void> {
   console.info("payment.failed received — no immediate plan downgrade");
 }
 
+// INT-03: Activate a BoostedJob record on successful one-time boost payment.
+// Upsert is idempotent — replaying the same event resets expiresAt to same value (T-13-14).
+async function handleBoostPaymentSucceeded(
+  data: PaymentSucceededWebhookEvent['data'],
+): Promise<void> {
+  const meta = data.metadata as Record<string, string> | undefined;
+  if (!meta?.userId || !meta?.jobId || meta?.type !== 'boost') return;
+
+  const { userId, jobId } = meta;
+  const startsAt = new Date();
+  const expiresAt = new Date(startsAt.getTime() + BOOST_DURATION_MS);
+
+  await prisma.boostedJob.upsert({
+    where: { jobId },
+    create: {
+      jobId,
+      recruiterId: userId,
+      paymentId: data.payment_id,
+      startsAt,
+      expiresAt,
+    },
+    update: {
+      recruiterId: userId,
+      paymentId: data.payment_id,
+      startsAt,
+      expiresAt,
+    },
+  });
+}
+
 export async function POST(req: NextRequest) {
   const { success } = await webhookRateLimiter.limit(getClientIp(req));
   if (!success) {
@@ -95,6 +127,7 @@ export async function POST(req: NextRequest) {
     | SubscriptionRenewedWebhookEvent
     | SubscriptionCancelledWebhookEvent
     | PaymentFailedWebhookEvent
+    | PaymentSucceededWebhookEvent
     | { type: string; data: unknown };
 
   try {
@@ -130,6 +163,11 @@ export async function POST(req: NextRequest) {
         break;
       case "payment.failed":
         await handlePaymentFailed((event as PaymentFailedWebhookEvent).data);
+        break;
+      case "payment.succeeded":
+        await handleBoostPaymentSucceeded(
+          (event as PaymentSucceededWebhookEvent).data,
+        );
         break;
       default:
         console.info(`Unhandled DodoPayments webhook event: ${event.type}`);
