@@ -753,6 +753,114 @@ Run through this before every PR. Any unchecked item is a reason to block merge.
 
 ---
 
+## 16. DESIGN SYSTEM — MANDATORY FOR ALL UI CODE
+
+> `DESIGN.md` at the repo root is the single source of truth for all visual decisions.
+> Every UI feature MUST follow it. No exceptions.
+
+### 16.1 Always reference DESIGN.md before writing any UI
+
+Before writing any component, page, or layout:
+1. Read `DESIGN.md` for colors, typography, spacing, and component patterns
+2. Use only colors defined in `DESIGN.md` — never invent new hex values
+3. Use only typography scale from `DESIGN.md` — never freestyle font sizes
+
+### 16.2 Color usage rules (from DESIGN.md)
+
+```tsx
+// Primary CTA button — always Wise Green + Dark Green text
+className="bg-[#9fe870] text-[#163300] rounded-full hover:scale-105 active:scale-95"
+
+// Primary text
+className="text-[#0e0f0c]"
+
+// Muted / secondary text
+className="text-[#868685]"
+
+// Card / container border
+className="border border-[rgba(14,15,12,0.12)] rounded-[30px]"
+
+// Soft green surface / badge background
+className="bg-[#e2f6d5]"
+```
+
+### 16.3 Typography rules (from DESIGN.md)
+
+```tsx
+// Display hero — Wise Sans 900, 0.85 line-height, calt
+className="font-display text-[96px] font-black leading-[0.85] [font-feature-settings:'calt']"
+
+// Section heading
+className="font-display text-[64px] font-black leading-[0.85] [font-feature-settings:'calt']"
+
+// Card title
+className="font-sans text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] [font-feature-settings:'calt']"
+
+// Body
+className="font-sans text-[18px] font-normal leading-[1.44] tracking-[0.18px] [font-feature-settings:'calt']"
+
+// Body semibold (default reading weight)
+className="font-sans text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] [font-feature-settings:'calt']"
+```
+
+### 16.4 Button rules (from DESIGN.md)
+
+```tsx
+// Primary pill button — always this pattern
+<button className="bg-[#9fe870] text-[#163300] font-semibold px-[16px] py-[5px] rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2">
+  Label
+</button>
+
+// Secondary subtle pill
+<button className="bg-[rgba(22,51,0,0.08)] text-[#0e0f0c] font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95">
+  Label
+</button>
+```
+
+### 16.5 Card / container rules (from DESIGN.md)
+
+```tsx
+// Standard card
+className="rounded-[30px] border border-[rgba(14,15,12,0.12)] p-6"
+
+// Large card / table container
+className="rounded-[40px] border border-[rgba(14,15,12,0.12)] p-8"
+
+// Small card
+className="rounded-2xl border border-[rgba(14,15,12,0.12)] p-4"
+```
+
+### 16.6 Animation rules (from DESIGN.md)
+
+```tsx
+// All interactive elements use scale — never color-only hover
+className="transition-transform hover:scale-105 active:scale-95"
+
+// Never do this (color-only hover, no scale)
+className="hover:bg-green-400"  // WRONG
+```
+
+### 16.7 What NOT to do
+
+```tsx
+// WRONG — inventing colors not in DESIGN.md
+className="bg-indigo-600 text-white rounded-lg"
+
+// WRONG — light font weights on display text
+className="text-6xl font-medium"
+
+// WRONG — relaxed line-height on display
+className="font-black text-8xl leading-tight"  // leading-tight = 1.25, not 0.85
+
+// WRONG — traditional box shadow
+className="shadow-lg"
+
+// CORRECT — ring shadow only (from DESIGN.md)
+className="shadow-[rgba(14,15,12,0.12)_0px_0px_0px_1px]"
+```
+
+---
+
 ## TypeScript (quick reference)
 
 - `strict: true` always — no exceptions
