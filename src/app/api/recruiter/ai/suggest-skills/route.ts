@@ -6,7 +6,7 @@ import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
 
-const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 20, '1 m');
+const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 10, '1 m');
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // 1. Auth check

@@ -6,7 +6,7 @@ import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildJdGeneratorMessages, JD_GENERATOR_CONFIG } from '@/lib/ai-prompts';
 
-const generateJdRateLimiter = createRateLimiter('generate-jd', 10, '1 m');
+const generateJdRateLimiter = createRateLimiter('generate-jd', 5, '1 m');
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // 1. Auth check

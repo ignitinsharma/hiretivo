@@ -10,7 +10,7 @@ import {
   CANDIDATE_SUMMARY_CONFIG,
 } from "@/lib/ai-prompts";
 
-const aiSummaryRateLimiter = createRateLimiter("ai-summary", 20, "1 m");
+const aiSummaryRateLimiter = createRateLimiter("ai-summary", 10, "1 m");
 
 export async function POST(
   _req: NextRequest,
