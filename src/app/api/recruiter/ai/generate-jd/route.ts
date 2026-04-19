@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole } from '@/constants/enums';
+import { UserRole, PlanTier } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildJdGeneratorMessages, JD_GENERATOR_CONFIG } from '@/lib/ai-prompts';
+import { isAiTrialActive } from '@/lib/ai-trial';
 
 const generateJdRateLimiter = createRateLimiter('generate-jd', 5, '1 m');
 
@@ -26,14 +27,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  // 4. Parse + Zod validate
+  // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
+  if (session.user.plan === PlanTier.FREE && !isAiTrialActive()) {
+    return NextResponse.json(
+      { error: 'AI job description generation requires a PRO or ENTERPRISE plan.' },
+      { status: 403 },
+    );
+  }
+
+  // 5. Parse + Zod validate
   const body = await req.json().catch(() => null);
   const parsed = JdGeneratorSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // 5. Call OpenRouter
+  // 6. Call OpenRouter
   const { system, user } = buildJdGeneratorMessages(parsed.data);
   const completion = await openrouter.chat.completions.create({
     model: getAIModel(),

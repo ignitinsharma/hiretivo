@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole } from '@/constants/enums';
+import { UserRole, PlanTier } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
+import { isAiTrialActive } from '@/lib/ai-trial';
 
 const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 10, '1 m');
 
@@ -26,14 +27,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  // 4. Parse + Zod validate
+  // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
+  if (session.user.plan === PlanTier.FREE && !isAiTrialActive()) {
+    return NextResponse.json(
+      { error: 'AI skill suggestions require a PRO or ENTERPRISE plan.' },
+      { status: 403 },
+    );
+  }
+
+  // 5. Parse + Zod validate
   const body = await req.json().catch(() => null);
   const parsed = SkillSuggestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // 5. Call OpenRouter
+  // 6. Call OpenRouter
   const { system, user } = buildSkillSuggestMessages(parsed.data);
   const completion = await openrouter.chat.completions.create({
     model: getAIModel(),
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ],
   });
 
-  // 6. Parse response — handle malformed JSON from model (T-13-11)
+  // 7. Parse response — handle malformed JSON from model (T-13-11)
   let skills: string[] = [];
   try {
     const raw = completion.choices[0]?.message?.content?.trim() ?? '[]';
@@ -58,6 +67,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     skills = []; // safe fallback — return empty array, never 500
   }
 
-  // 7. Return
+  // 8. Return
   return NextResponse.json({ data: { skills } }, { status: 200 });
 }
