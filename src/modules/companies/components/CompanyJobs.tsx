@@ -57,7 +57,7 @@ export function CompanyJobs() {
                 <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   {job.exp}
                 </span>
-                <span className="text-sm font-semibold text-emerald-600">{job.salary}</span>
+                <span className="text-sm font-semibold text-brand-primary">{job.salary}</span>
               </div>
             </div>
             <Link href={`/jobs/${job.id}`} className="flex items-center gap-1 text-sm font-bold text-primary shrink-0">

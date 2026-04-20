@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Sparkles } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -30,7 +31,50 @@ import { ApplicationStatus, InterviewStatus, PlanTier } from '@/constants/enums'
 import { getStageLabel } from '@/lib/application-pipeline';
 import { useUIStore } from '@/store/use-ui-store';
 
+import { useFetchAiSummary } from '@/modules/recruiter/applications/queries/use-fetch-ai-summary';
 import { ScheduleInterviewModal } from './ScheduleInterviewModal';
+
+interface AiSummarySectionProps {
+  isPending: boolean;
+  isError: boolean;
+  errorMessage: string | undefined;
+  summary: string | undefined;
+  isPlanGated: boolean;
+}
+
+function AiSummarySection({ isPending, isError, errorMessage, summary, isPlanGated }: AiSummarySectionProps) {
+  if (isPlanGated) {
+    return (
+      <section className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+        <p>
+          AI candidate summaries are available on PRO and ENTERPRISE plans.{' '}
+          <a href="/recruiter/settings?tab=billing" className="font-semibold underline">
+            Upgrade
+          </a>
+        </p>
+      </section>
+    );
+  }
+  if (isPending) {
+    return (
+      <section className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+        <Sparkles className="h-4 w-4 shrink-0 animate-pulse text-indigo-400" aria-hidden="true" />
+        <span>Generating AI summary...</span>
+      </section>
+    );
+  }
+  if (isError && errorMessage !== 'PLAN_GATED') {
+    return null; // silent fail — do not interrupt the drawer UX on AI error
+  }
+  if (!summary) return null;
+  return (
+    <section className="flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-800">
+      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" aria-hidden="true" />
+      <p>{summary}</p>
+    </section>
+  );
+}
 
 const STAGE_OPTIONS: ApplicationStatus[] = [
   ApplicationStatus.APPLIED,
@@ -99,6 +143,13 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
   const queryClient = useQueryClient();
   const { isCandidateDrawerOpen, closeCandidateDrawer, openScheduleModal } = useUIStore();
   const [cancelConfirming, setCancelConfirming] = useState(false);
+  const aiSummaryMutation = useFetchAiSummary();
+
+  useEffect(() => {
+    if (!isCandidateDrawerOpen || !application?.id) return;
+    aiSummaryMutation.mutate(application.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCandidateDrawerOpen, application?.id]);
 
   const updateStageMutation = useMutation({
     mutationFn: async (stage: ApplicationStatus) => {
@@ -190,6 +241,14 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                 {application.candidateEmail} · {application.jobTitle}
               </SheetDescription>
             </SheetHeader>
+
+            <AiSummarySection
+              isPending={aiSummaryMutation.isPending}
+              isError={aiSummaryMutation.isError}
+              errorMessage={aiSummaryMutation.error instanceof Error ? aiSummaryMutation.error.message : undefined}
+              summary={aiSummaryMutation.data?.summary}
+              isPlanGated={application.plan === PlanTier.FREE}
+            />
 
             <section className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Current Stage</p>

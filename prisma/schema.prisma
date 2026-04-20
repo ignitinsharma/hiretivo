@@ -31,6 +31,8 @@ enum JobStatus {
   OPEN
   PAUSED
   CLOSED
+  UNPUBLISHED
+  DELETED
 }
 
 enum SkillLevel {
@@ -75,8 +77,9 @@ model User {
   emailVerified DateTime?
   image         String?
   passwordHash  String?
-  role          Role      @default(SEEKER)
-  plan          PlanTier  @default(FREE)
+  role              Role      @default(SEEKER)
+  plan              PlanTier  @default(FREE)
+  billingCustomerId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -94,6 +97,8 @@ model User {
   interviewsAsSeeker    Interview[] @relation("InterviewSeeker")
 
   clickEvents ClickEvent[]
+
+  boostedJobs BoostedJob[] @relation("BoostedJobs")
 }
 
 model Account {
@@ -152,6 +157,8 @@ model SeekerProfile {
   currency        String?
   availability    String?
   resumeKey       String?
+
+  digestEnabled Boolean @default(false)
 
   skills     SeekerSkill[]
   jobMatches JobMatch[]
@@ -236,6 +243,7 @@ model Job {
   applications  Application[]
   jobMatches    JobMatch[]
   clickEvents   ClickEvent[]
+  boostedJob    BoostedJob?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -284,6 +292,7 @@ model Application {
   matchScore  Int
 
   coverLetter String? @db.Text
+  aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
 
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
   seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
@@ -342,4 +351,27 @@ model ClickEvent {
   @@index([jobId])
   @@index([userId])
   @@index([createdAt])
+}
+
+model EarlyAccessEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model BoostedJob {
+  id          String   @id @default(cuid())
+  jobId       String   @unique
+  recruiterId String
+  paymentId   String?
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recruiter User @relation("BoostedJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([recruiterId])
 }

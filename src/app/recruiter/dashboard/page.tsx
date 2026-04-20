@@ -4,7 +4,7 @@ import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { ActiveJobsList } from '@/modules/recruiter/dashboard/components/ActiveJobsList';
 import { RecentApplicantsList } from '@/modules/recruiter/dashboard/components/RecentApplicantsList';
 import { ApplicationTrendChart } from '@/modules/recruiter/dashboard/components/ApplicationTrendChart';
-import { RECRUITER_STATS } from '@/modules/recruiter/dashboard/data/mock-dashboard-data';
+import { RECRUITER_STATS, RECENT_APPLICANTS } from '@/modules/recruiter/dashboard/data/mock-dashboard-data';
 import { cn } from '@/lib/utils';
 
 interface DashboardStatItem {
@@ -102,7 +102,7 @@ export default function RecruiterDashboardPage() {
             <ActiveJobsList />
           </div>
           <div className="lg:col-span-2">
-            <RecentApplicantsList />
+            <RecentApplicantsList applicants={RECENT_APPLICANTS} />
           </div>
         </section>
 

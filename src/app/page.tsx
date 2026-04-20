@@ -6,6 +6,9 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { UserRole, JobStatus } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
+import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
+
+const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === 'true';
 
 export const metadata = generatePageMetadata({
   title: "Skills-Based Remote Job Portal",
@@ -19,6 +22,10 @@ function formatStat(n: number): string {
 }
 
 export default async function Home() {
+  if (SHOW_COMING_SOON) {
+    return <ComingSoonPage />;
+  }
+
   const [activeJobCount, seekerCount, companyCount, featuredJobs] = await Promise.all([
     prisma.job.count({ where: { status: JobStatus.OPEN } }).catch(() => 0),
     prisma.user.count({ where: { role: UserRole.SEEKER } }).catch(() => 0),

@@ -45,8 +45,8 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-          <CheckCircle2 className="w-8 h-8 text-green-600" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-primary-light mb-4">
+          <CheckCircle2 className="w-8 h-8 text-brand-primary" />
         </div>
 
         <div className="space-y-2">

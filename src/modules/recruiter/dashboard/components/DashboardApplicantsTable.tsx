@@ -82,18 +82,17 @@ export function DashboardApplicantsTable() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold">
-                        {applicant.name.split(' ').map((n) => n[0]).join('')}
+                        {applicant.seekerName.split(' ').map((n) => n[0]).join('')}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          {applicant.name}
+                          {applicant.seekerName}
                         </p>
-                        <p className="text-xs text-gray-500">{applicant.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-4 text-sm text-gray-600">
-                    {applicant.position}
+                    {applicant.jobTitle}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">

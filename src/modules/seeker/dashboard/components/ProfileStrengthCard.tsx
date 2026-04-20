@@ -1,8 +1,28 @@
-import React from "react";
-import { ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import type { ProfileStrengthSummary } from '../types/dashboard.types';
 
-export function ProfileStrengthCard() {
+interface ProfileStrengthCardProps {
+  profileStrength: ProfileStrengthSummary;
+}
+
+function strengthLabel(percentage: number): string {
+  if (percentage >= 90) return 'Expert';
+  if (percentage >= 70) return 'Strong';
+  if (percentage >= 50) return 'Intermediate';
+  if (percentage >= 30) return 'Basic';
+  return 'Starter';
+}
+
+export function ProfileStrengthCard({
+  profileStrength,
+}: ProfileStrengthCardProps) {
+  const { percentage, ctaLabel, ctaHref } = profileStrength;
+  const label = strengthLabel(percentage);
+
   return (
     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
@@ -10,36 +30,33 @@ export function ProfileStrengthCard() {
         <h3 className="font-bold text-slate-900">Profile Strength</h3>
       </div>
 
-      <div className="relative pt-1">
-        <div className="flex mb-2 items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary/10">
-              Intermediate
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="text-xs font-semibold inline-block text-primary">
-              75%
-            </span>
-          </div>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold py-1 px-2 uppercase rounded-full text-primary bg-primary/10">
+            {label}
+          </span>
+          <span className="text-xs font-semibold text-primary">
+            {percentage}%
+          </span>
         </div>
-        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-primary/20">
-          <div
-            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
-            style={{ width: "75%" }}
-          ></div>
-        </div>
+        <Progress value={percentage} className="h-2" />
       </div>
 
-      <p className="text-slate-500 text-xs leading-relaxed">
-        Add a professional bio to increase your visibility to recruiters by 40%.
-      </p>
+      {ctaLabel !== 'Profile complete' && (
+        <p className="text-slate-500 text-xs leading-relaxed mb-4">
+          {ctaLabel} to improve your visibility to recruiters.
+        </p>
+      )}
+
       <Button
         variant="outline"
         size="default"
-        className="mt-4 font-bold text-sm rounded-lg transition-colors"
+        className="w-full font-bold text-sm rounded-lg transition-colors"
+        asChild
       >
-        Improve Profile
+        <Link href={ctaHref}>
+          {percentage >= 100 ? 'View Profile' : 'Improve Profile'}
+        </Link>
       </Button>
     </div>
   );

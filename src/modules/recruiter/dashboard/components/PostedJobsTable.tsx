@@ -11,6 +11,8 @@ const JOB_STATUS_STYLES: Record<JobStatus, { label: string; className: string }>
   [JobStatus.PAUSED]: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
   [JobStatus.DRAFT]: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
   [JobStatus.CLOSED]: { label: 'Closed', className: 'bg-red-100 text-red-700' },
+  [JobStatus.UNPUBLISHED]: { label: 'Unpublished', className: 'bg-amber-100 text-amber-800' },
+  [JobStatus.DELETED]: { label: 'Deleted', className: 'bg-red-100 text-red-800' },
 };
 
 export function PostedJobsTable() {

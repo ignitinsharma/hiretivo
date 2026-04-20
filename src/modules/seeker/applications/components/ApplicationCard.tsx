@@ -79,8 +79,8 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
       label = "Offer Received";
       break;
     case ApplicationStatus.HIRED:
-      badgeClasses = "bg-green-100 text-green-700";
-      dotClasses = "bg-green-500";
+      badgeClasses = "bg-brand-primary-light text-brand-primary";
+      dotClasses = "bg-brand-primary";
       label = "Hired";
       break;
     case ApplicationStatus.REJECTED:

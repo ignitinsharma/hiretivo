@@ -137,7 +137,7 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-brand-primary" />
                 <button
                   type="button"
                   onClick={handleRemove}
