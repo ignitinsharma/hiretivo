@@ -51,10 +51,10 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
 
   if (isAlreadyBoosted && boostExpiresAt) {
     return (
-      <div className="rounded-xl border border-green-200 bg-green-50 p-5 space-y-3">
+      <div className="rounded-xl border border-brand-primary/20 bg-brand-primary-light p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-green-600" aria-hidden="true" />
-          <p className="text-sm font-semibold text-green-800">
+          <Zap className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+          <p className="text-sm font-semibold text-brand-primary">
             Boosted — active until {formatBoostExpiry(boostExpiresAt)}
           </p>
         </div>
@@ -79,14 +79,14 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
       <ul className="space-y-1">
         {BOOST_FEATURES.map((feature) => (
           <li key={feature} className="text-xs text-slate-600 flex items-center gap-1.5">
-            <span className="text-green-500" aria-hidden="true">✓</span> {feature}
+            <span className="text-brand-primary" aria-hidden="true">✓</span> {feature}
           </li>
         ))}
       </ul>
       <Button
         onClick={handleBoost}
         disabled={isLoading}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+        className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold"
         aria-label="Boost this job listing"
       >
         {isLoading ? 'Redirecting...' : 'Boost for $9'}

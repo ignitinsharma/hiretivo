@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Wise Design System */
+    /* Design System */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -16,9 +16,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Primary: Wise Green accent */
-    --primary: 88 66% 63%; /* #9fe870 */
-    --primary-foreground: 96 73% 14%; /* #163300 */
+    /* Primary: Indigo accent */
+    --primary: 243 76% 60%; /* #5952e5 */
+    --primary-foreground: 0 0% 100%; /* white */
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -26,18 +26,18 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 88 66% 63%; /* Wise Green */
-    --accent-foreground: 96 73% 14%; /* Dark Green */
+    --accent: 243 76% 60%; /* Primary Indigo */
+    --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 243 76% 60%; /* primary indigo */
 
-    /* Wise border radius */
-    --radius: 9999px; /* Pill buttons */
+    /* Border radius */
+    --radius: 0.5rem; /* Standard radius */
   }
 
 }
@@ -53,7 +53,7 @@
 }
 
 @layer utilities {
-  /* Wise button animations */
+  /* Button animations */
   .btn-hover-grow {
     transition: transform 0.15s ease-out;
   }
@@ -64,9 +64,9 @@
     transform: scale(0.95);
   }
 
-  .btn-shadow { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-  .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
-  .dashboard-shadow { box-shadow: 0 20px 50px -12px rgba(89, 81, 229, 0.15); }
+  .btn-shadow { box-shadow: 0 1px 2px 0 rgba(89, 82, 229, 0.08); }
+  .card-shadow { box-shadow: 0 4px 6px -1px rgba(89, 82, 229, 0.06), 0 2px 4px -1px rgba(89, 82, 229, 0.04); }
+  .dashboard-shadow { box-shadow: 0 20px 50px -12px rgba(89, 82, 229, 0.15); }
   .sticky-nav {
     position: sticky;
     top: 0;
@@ -74,7 +74,7 @@
     backdrop-filter: blur(8px);
   }
   .glow-path {
-    filter: drop-shadow(0 0 4px rgba(89, 81, 229, 0.6));
+    filter: drop-shadow(0 0 4px rgba(89, 82, 229, 0.6));
   }
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;

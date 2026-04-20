@@ -38,7 +38,7 @@ export function SeekerHeader() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center">
+        <Link href="/seeker/dashboard" className="flex items-center">
           <Image
             src="/images/logo.png"
             alt="Hiretivo"

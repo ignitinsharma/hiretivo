@@ -140,7 +140,7 @@ export default function FindTalentPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-600 font-medium">
+                <span className="text-sm text-brand-primary font-medium">
                   Available {candidate.availability}
                 </span>
                 <Button variant="primary" size="sm">

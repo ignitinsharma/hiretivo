@@ -21,7 +21,7 @@ export function SeekerOnboardingContainer() {
 
   const handleComplete = () => {
     completeOnboarding();
-    router.push('/seeker/dashboard');
+    router.replace('/seeker/dashboard');
   };
 
   const renderStep = () => {

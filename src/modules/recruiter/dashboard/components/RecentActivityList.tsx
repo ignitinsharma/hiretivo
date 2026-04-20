@@ -14,7 +14,7 @@ const ACTIVITY_ICONS = {
 const ACTIVITY_STYLES = {
   application: 'bg-blue-100 text-blue-600',
   interview: 'bg-purple-100 text-purple-600',
-  shortlist: 'bg-green-100 text-green-600',
+  shortlist: 'bg-brand-primary-light text-brand-primary',
   rejection: 'bg-red-100 text-red-600',
 };
 

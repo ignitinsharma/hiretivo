@@ -14,9 +14,9 @@ export const metadata = generatePageMetadata({
 });
 
 const STATS = [
-  { value: "2.4k", label: "Dream Roles", colorClass: "text-[#5951E5]" },
+  { value: "2.4k", label: "Dream Roles", colorClass: "text-[#5952e5]" },
   { value: "840", label: "Partners", colorClass: "text-[#FFD166]" },
-  { value: "12k", label: "Hired", colorClass: "text-[#5951E5]" },
+  { value: "12k", label: "Hired", colorClass: "text-[#5952e5]" },
   { value: "48", label: "Countries", colorClass: "text-[#FFD166]" },
 ];
 
@@ -41,7 +41,7 @@ const TEAM = [
     name: "Marcus Thorne",
     role: "Engineering",
     bgColor: "bg-indigo-100",
-    iconColor: "text-[#5951E5]",
+    iconColor: "text-[#5952e5]",
     initial: "MT",
     rotation: "rotate-2 group-hover:rotate-6",
   },
@@ -60,8 +60,8 @@ const VALUES = [
     title: "Remote-first, always",
     description:
       "We don't just post jobs; we live the lifestyle. Every process we build is crafted for asynchronous freedom.",
-    containerClass: "bg-indigo-50/50 hover:bg-[#5951E5]",
-    iconContainerClass: "text-[#5951E5]",
+    containerClass: "bg-indigo-50/50 hover:bg-[#5952e5]",
+    iconContainerClass: "text-[#5952e5]",
     icon: Globe,
     titleClass: "group-hover:text-white",
     descClass: "group-hover:text-indigo-50",
@@ -99,11 +99,11 @@ export default function AboutPage() {
           <div className="relative mx-auto max-w-7xl text-center">
             {/* Decorative blobs */}
             <div className="absolute -left-12 -top-12 h-32 w-32 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-[#FFD166]/20 blur-2xl"></div>
-            <div className="absolute -bottom-12 -right-12 h-48 w-48 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-[#5951E5]/10 blur-2xl"></div>
+            <div className="absolute -bottom-12 -right-12 h-48 w-48 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-[#5952e5]/10 blur-2xl"></div>
 
             <h1 className="mx-auto max-w-4xl font-['Fraunces',serif] text-5xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-6xl md:text-7xl">
               We believe work should{" "}
-              <span className="italic text-[#5951E5]">fit your life</span>, not
+              <span className="italic text-[#5952e5]">fit your life</span>, not
               the other way around.
             </h1>
             <p className="mx-auto mt-10 max-w-2xl text-xl leading-relaxed text-slate-600">
@@ -113,7 +113,7 @@ export default function AboutPage() {
             </p>
 
             <div className="group relative mt-16">
-              <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-r from-[#5951E5]/10 to-[#FFD166]/10 opacity-50 blur-xl transition duration-1000 group-hover:opacity-75"></div>
+              <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-r from-[#5952e5]/10 to-[#FFD166]/10 opacity-50 blur-xl transition duration-1000 group-hover:opacity-75"></div>
               <div className="relative aspect-[16/7] overflow-hidden rounded-[3rem] bg-slate-100 shadow-2xl">
                 <Image
                   alt="Remote workers"
@@ -154,7 +154,7 @@ export default function AboutPage() {
               </div>
               <div className="relative order-1 lg:order-2">
                 <div className="absolute -left-12 -top-12 h-24 w-24 animate-pulse rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-[#FFD166] opacity-20"></div>
-                <blockquote className="relative z-10 font-['Fraunces',serif] text-3xl font-medium italic leading-[1.3] text-[#5951E5] md:text-5xl md:leading-[1.4]">
+                <blockquote className="relative z-10 font-['Fraunces',serif] text-3xl font-medium italic leading-[1.3] text-[#5952e5] md:text-5xl md:leading-[1.4]">
                   &quot;Remote work isn&apos;t just a trend—it&apos;s a{" "}
                   <span className="rounded-lg bg-[#FFD166]/30 px-2">
                     movement
@@ -221,12 +221,12 @@ export default function AboutPage() {
                     <h3 className="mt-12 text-xl font-bold text-slate-900">
                       {member.name}
                     </h3>
-                    <p className="mb-6 text-sm font-medium uppercase tracking-wider text-[#5951E5]">
+                    <p className="mb-6 text-sm font-medium uppercase tracking-wider text-[#5952e5]">
                       {member.role}
                     </p>
                     <div className="flex gap-4">
                       <a
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors hover:bg-[#5951E5]/10 hover:text-[#5951E5]"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors hover:bg-[#5952e5]/10 hover:text-[#5952e5]"
                         href="#"
                       >
                         <Linkedin className="h-5 w-5" />
@@ -287,7 +287,7 @@ export default function AboutPage() {
         {/* CTA Section */}
         <section className="px-6 pb-24">
           <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[4rem] bg-slate-900 py-24 px-10 text-center">
-            <div className="absolute right-0 top-0 -mt-48 -mr-48 h-96 w-96 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-[#5951E5]/20 blur-3xl"></div>
+            <div className="absolute right-0 top-0 -mt-48 -mr-48 h-96 w-96 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-[#5952e5]/20 blur-3xl"></div>
             <div className="relative z-10">
               <h2 className="mx-auto max-w-3xl font-['Fraunces',serif] text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">
                 Your next adventure is just one click away.

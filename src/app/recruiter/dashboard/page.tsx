@@ -1,39 +1,39 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
+import { useQuery } from '@tanstack/react-query';
 import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { ActiveJobsList } from '@/modules/recruiter/dashboard/components/ActiveJobsList';
 import { RecentApplicantsList } from '@/modules/recruiter/dashboard/components/RecentApplicantsList';
 import { ApplicationTrendChart } from '@/modules/recruiter/dashboard/components/ApplicationTrendChart';
-import { RECRUITER_STATS, RECENT_APPLICANTS } from '@/modules/recruiter/dashboard/data/mock-dashboard-data';
+import { DashboardSkeleton } from '@/modules/recruiter/dashboard/components/DashboardSkeleton';
+import { ApplicationStatus } from '@/constants/enums';
+import type { RecentApplicant } from '@/modules/recruiter/dashboard/types/dashboard.types';
 import { cn } from '@/lib/utils';
+
+interface DashboardStats {
+  activeJobsCount: number;
+  totalApplications: number;
+  newThisWeek: number;
+  avgMatchScore: number;
+}
 
 interface DashboardStatItem {
   label: string;
   value: string | number;
-  trend?: string;
   variant?: 'default' | 'primary';
+  /** Numeric value for progress bars (0-100) */
+  numericValue?: number;
 }
 
-const DASHBOARD_STATS: DashboardStatItem[] = [
-  {
-    label: 'Active Jobs',
-    value: RECRUITER_STATS.activeJobs,
-    trend: '+5%',
-  },
-  {
-    label: 'Total Applications',
-    value: 482,
-  },
-  {
-    label: 'New This Week',
-    value: 28,
-    variant: 'primary',
-  },
-  {
-    label: 'Avg. Match Score',
-    value: '78%',
-  },
-];
+function getStatsItems(stats: DashboardStats): DashboardStatItem[] {
+  return [
+    { label: 'Active Jobs', value: stats.activeJobsCount },
+    { label: 'Total Applications', value: stats.totalApplications },
+    { label: 'New This Week', value: stats.newThisWeek, variant: 'primary' },
+    { label: 'Avg. Match Score', value: `${Math.round(stats.avgMatchScore)}%`, numericValue: stats.avgMatchScore },
+  ];
+}
 
 function StatCard({ stat }: { stat: DashboardStatItem }) {
   const isPrimary = stat.variant === 'primary';
@@ -56,14 +56,12 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
       </p>
       <div className="flex items-baseline gap-3">
         <span className="text-3xl font-bold">{stat.value}</span>
-        {stat.trend && (
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-            {stat.trend}
-          </span>
-        )}
         {stat.label === 'Avg. Match Score' && (
           <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
-            <div className="bg-primary h-full w-[78%]" />
+            <div
+              className="bg-primary h-full"
+              style={{ width: `${Math.min(stat.numericValue ?? 0, 100)}%` }}
+            />
           </div>
         )}
       </div>
@@ -71,7 +69,64 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
   );
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function RecruiterDashboardPage() {
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? 'Recruiter';
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['recruiter-dashboard'],
+    queryFn: async () => {
+      const res = await fetch('/api/recruiter/dashboard');
+      if (!res.ok) throw new Error('Failed to fetch dashboard data');
+      const json = (await res.json()) as { data: {
+        activeJobsCount: number;
+        totalApplications: number;
+        newThisWeek: number;
+        avgMatchScore: number;
+        recentApplicants: Array<{
+          id: string;
+          seekerName: string;
+          seekerImage: string | null;
+          jobTitle: string;
+          matchScore: number;
+          status: string;
+          appliedDate: string;
+        }>;
+        trendData: Array<{ date: string; count: number }>;
+      } };
+      return json.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  const stats: DashboardStats = {
+    activeJobsCount: data?.activeJobsCount ?? 0,
+    totalApplications: data?.totalApplications ?? 0,
+    newThisWeek: data?.newThisWeek ?? 0,
+    avgMatchScore: data?.avgMatchScore ?? 0,
+  };
+
+  const statItems = getStatsItems(stats);
+
+  const typedApplicants: RecentApplicant[] = (data?.recentApplicants ?? []).map(
+    (app) => ({
+      ...app,
+      status: app.status as ApplicationStatus,
+    }),
+  );
+
   return (
     <div className="min-h-screen bg-white">
       <div className="w-full p-8 space-y-10">
@@ -80,7 +135,7 @@ export default function RecruiterDashboardPage() {
           <SidebarToggle className="mt-2" />
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">
-              Good morning, Nitin.
+              {getGreeting()}, {userName.split(' ')[0]}.
             </h1>
             <p className="text-slate-500 text-lg">
               Here&apos;s what&apos;s happening with your recruitment pipeline
@@ -91,7 +146,7 @@ export default function RecruiterDashboardPage() {
 
         {/* Stats Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {DASHBOARD_STATS.map((stat) => (
+          {statItems.map((stat) => (
             <StatCard key={stat.label} stat={stat} />
           ))}
         </section>
@@ -102,7 +157,7 @@ export default function RecruiterDashboardPage() {
             <ActiveJobsList />
           </div>
           <div className="lg:col-span-2">
-            <RecentApplicantsList applicants={RECENT_APPLICANTS} />
+            <RecentApplicantsList applicants={typedApplicants} />
           </div>
         </section>
 

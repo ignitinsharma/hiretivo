@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
     const activeCount = await prisma.job.count({
       where: { recruiterId: session.user.id, status: 'OPEN' },
     });
-    if (activeCount >= 1) {
+    if (activeCount >= 2) {
       return NextResponse.json(
-        { error: 'FREE plan allows 1 active job. Upgrade to post more.' },
+        { error: 'FREE plan allows 3 active jobs. Upgrade to post more.' },
         { status: 403 }
       );
     }

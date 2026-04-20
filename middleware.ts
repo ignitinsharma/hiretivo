@@ -63,10 +63,30 @@ export default auth(async (req: NextRequest & { auth: any }) => {
 
   // ── Redirect logged-in users away from login/register pages ──
   if (isLoginOrRegister) {
-    const dest =
-      userRole === "RECRUITER"
-        ? "/recruiter/dashboard"
-        : "/seeker/dashboard";
+    let dest: string;
+    if (userRole === "RECRUITER") {
+      try {
+        const recruiterProfile = await prisma.recruiterProfile.findUnique({
+          where: { userId },
+          select: { id: true },
+        });
+        dest = recruiterProfile ? "/recruiter/dashboard" : "/recruiter/onboarding";
+      } catch {
+        dest = "/recruiter/dashboard";
+      }
+    } else {
+      try { 
+        const seekerProfile = await prisma.seekerProfile.findUnique({
+          where: { userId },
+          select: { situation: true, primaryRole: true },
+        });
+        const isOnboarded =
+          seekerProfile?.situation != null && seekerProfile?.primaryRole != null;
+        dest = isOnboarded ? "/seeker/dashboard" : "/seeker/onboarding";
+      } catch {
+        dest = "/seeker/dashboard";
+      }
+    }
     return NextResponse.redirect(new URL(dest, req.url));
   }
 

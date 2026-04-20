@@ -49,7 +49,7 @@ export function PasswordSecuritySection() {
                 type="password"
               />
               <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full w-2/3 bg-emerald-500"></div>
+                <div className="h-full w-2/3 bg-brand-primary"></div>
               </div>
               <p className="text-[10px] text-slate-400 font-medium uppercase">
                 Strength: Strong
