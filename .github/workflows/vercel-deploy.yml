@@ -22,8 +22,6 @@ jobs:
           node-version: 20
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Install Vercel CLI
         run: npm install -g vercel@41.4.0
