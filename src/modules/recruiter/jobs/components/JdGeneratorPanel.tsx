@@ -56,8 +56,26 @@ export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, onGenerated
         return;
       }
 
-      const json = (await res.json()) as { data: { jd: string } };
-      onGenerated(json.data.jd);
+      // Consume the streaming response — build the JD text incrementally
+      const reader = res.body?.getReader();
+      if (!reader) {
+        toast.error('Failed to read response stream.');
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let jd = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        jd += decoder.decode(value, { stream: true });
+      }
+
+      // Final flush
+      jd += decoder.decode();
+
+      onGenerated(jd.trim());
       onOpenChange(false);
     } catch {
       toast.error('Failed to generate JD. Try again.');

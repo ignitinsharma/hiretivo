@@ -160,6 +160,7 @@ export function PostJobModal() {
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isJdPanelOpen, setIsJdPanelOpen] = useState(false);
+  const [autoSuggestTrigger, setAutoSuggestTrigger] = useState(0);
   const [workType, setWorkType] = useState<"REMOTE" | "HYBRID" | "ONSITE">(
     "REMOTE",
   );
@@ -722,12 +723,19 @@ export function PostJobModal() {
               descriptionText={watch("description")}
               selectedSkillIds={selectedSkillIds}
               allSkills={skills as Array<{ id: string; name: string }>}
+              autoTriggerTrigger={autoSuggestTrigger}
               onAddSkill={(skillName) => {
-                const match = (skills as Array<{ id: string; name: string }>).find(
+                const allSkillsArr = skills as Array<{ id: string; name: string }>;
+                const match = allSkillsArr.find(
                   (s) => s.name.toLowerCase() === skillName.toLowerCase(),
                 );
-                if (match && !selectedSkillIds.includes(match.id)) {
-                  setValue("selectedSkillIds", [...selectedSkillIds, match.id]);
+                if (match) {
+                  if (!selectedSkillIds.includes(match.id)) {
+                    setValue("selectedSkillIds", [...selectedSkillIds, match.id]);
+                  }
+                } else {
+                  // Skill doesn't exist in DB yet — create it automatically
+                  createSkillMutation.mutate(skillName);
                 }
               }}
             />
@@ -759,6 +767,8 @@ export function PostJobModal() {
           onGenerated={(jd) => {
             setValue("description", jd);
             setIsJdPanelOpen(false);
+            // Auto-trigger skill suggestions after JD is generated
+            setAutoSuggestTrigger((prev) => prev + 1);
           }}
         />
       </DialogContent>

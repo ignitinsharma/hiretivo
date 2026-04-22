@@ -178,7 +178,7 @@ export default function SeekerLoginPage() {
 
           <Button 
             type="submit" 
-            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5951E5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99] mt-2" 
+            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5952e5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99] mt-2" 
             disabled={isSubmitting}
           >
             {isSubmitting ? (

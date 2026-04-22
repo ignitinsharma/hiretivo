@@ -326,19 +326,19 @@ export default function RecruiterJobsPage() {
   const JOB_STATS: JobStatItem[] = [
     {
       label: "Total Listings",
-      value: String(totalJobs),
+      value: isLoading ? "—" : String(totalJobs),
       badge: "",
       badgeColor: "",
     },
     {
       label: "Active Jobs",
-      value: String(activeJobs),
+      value: isLoading ? "—" : String(activeJobs),
       badge: "",
       badgeColor: "",
     },
     {
       label: "Total Applicants",
-      value: String(totalApplicants),
+      value: isLoading ? "—" : String(totalApplicants),
       badge: "",
       badgeColor: "",
     },

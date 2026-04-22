@@ -200,7 +200,7 @@ export default async function Home() {
                     d="M220 185 Q350 185 450 365"
                     fill="none"
                     opacity="0.4"
-                    stroke="#5951E5"
+                    stroke="#5952e5"
                     strokeDasharray="4 4"
                     strokeWidth="1.5"
                   ></path>
@@ -209,7 +209,7 @@ export default async function Home() {
                     d="M220 225 Q350 255 450 405"
                     fill="none"
                     opacity="0.4"
-                    stroke="#5951E5"
+                    stroke="#5952e5"
                     strokeDasharray="4 4"
                     strokeWidth="1.5"
                   ></path>
@@ -218,7 +218,7 @@ export default async function Home() {
                     d="M100 280 Q250 450 450 445"
                     fill="none"
                     opacity="0.4"
-                    stroke="#5951E5"
+                    stroke="#5952e5"
                     strokeDasharray="4 4"
                     strokeWidth="1.5"
                   ></path>
@@ -316,7 +316,7 @@ export default async function Home() {
                         cy="48"
                         fill="transparent"
                         r="40"
-                        stroke="#5951E5"
+                        stroke="#5952e5"
                         strokeDasharray="251.2"
                         strokeDashoffset="2.5"
                         strokeWidth="8"

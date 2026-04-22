@@ -544,15 +544,8 @@ The pattern seen in the screenshot — raw `<tr>` blocks repeated for every feat
   <td className="py-6 px-4 text-sm font-semibold text-slate-700">Smart Interview Scheduling</td>
   <td className="py-6 px-4 text-sm text-slate-400">—</td>
   <td className="py-6 px-4 text-sm text-slate-600">Basic</td>
-  <td className="py-6 px-4 text-sm font-bold text-brand-primary bg-brand-primary-light/50">✓</td>
-  <td className="py-6 px-4 text-sm text-emerald-500 font-bold">✓</td>
-</tr>
-<tr>
-  <td className="py-6 px-4 text-sm font-semibold text-slate-700">ATS Dashboard</td>
-  <td className="py-6 px-4 text-sm text-slate-400">—</td>
-  <td className="py-6 px-4 text-sm text-slate-600">Basic</td>
-  <td className="py-6 px-4 text-sm font-bold text-brand-primary bg-brand-primary-light/50">✓</td>
-  <td className="py-6 px-4 text-sm text-slate-600">{isAnnual ? 'Full' : 'Custom Pipeline'}</td>
+<td className="py-6 px-4 text-sm font-bold text-brand-primary bg-brand-primary-light/50">✓</td>
+<td className="py-6 px-4 text-sm text-slate-600">{isAnnual ? 'Full' : 'Custom Pipeline'}</td>
 </tr>
 // ... same pattern repeated 8 more times
 
@@ -577,7 +570,7 @@ const FEATURE_ROWS: FeatureRow[] = [
 
 function FeatureCell({ value, isAnnual }: { value: PlanValue; isAnnual?: boolean }) {
   if (value === null)  return <td className={cn(TD_BASE, 'text-slate-400')}>—</td>
-  if (value === true)  return <td className={cn(TD_BASE, 'text-emerald-500 font-bold')}>✓</td>
+  if (value === true)  return <td className={cn(TD_BASE, 'text-brand-primary font-bold')}>✓</td>
   if (value === 'pipeline') {
     return <td className={cn(TD_BASE, 'text-slate-600')}>{isAnnual ? 'Full' : 'Custom Pipeline'}</td>
   }
@@ -612,7 +605,7 @@ const CELL_MUTED = cn(TD_BASE, 'text-slate-400')
 const CELL_BODY  = cn(TD_BASE, 'text-slate-600')
 const CELL_LABEL = cn(TD_BASE, 'font-semibold text-slate-700')
 const CELL_PRO   = cn(TD_BASE, 'font-bold text-brand-primary bg-brand-primary-light/50')
-const CELL_CHECK = cn(TD_BASE, 'font-bold text-emerald-500')
+const CELL_CHECK = cn(TD_BASE, 'font-bold text-brand-primary')
 ```
 
 ### 15.3 Conditional rendering — no inline ternary sprawl in JSX
@@ -768,8 +761,8 @@ Before writing any component, page, or layout:
 ### 16.2 Color usage rules (from DESIGN.md)
 
 ```tsx
-// Primary CTA button — always Wise Green + Dark Green text
-className="bg-[#9fe870] text-[#163300] rounded-full hover:scale-105 active:scale-95"
+// Primary CTA button — always Primary Indigo + White text
+className="bg-[#5952e5] text-white rounded-full hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
 
 // Primary text
 className="text-[#0e0f0c]"
@@ -778,10 +771,14 @@ className="text-[#0e0f0c]"
 className="text-[#868685]"
 
 // Card / container border
-className="border border-[rgba(14,15,12,0.12)] rounded-[30px]"
+className="border border-[rgba(14,15,12,0.12)] rounded-2xl"
 
-// Soft green surface / badge background
-className="bg-[#e2f6d5]"
+// Light primary surface / badge background
+className="bg-[rgba(89,82,229,0.1)]"
+
+// NEVER use green/lime colors for brand elements:
+// ❌ bg-[#9fe870], text-[#163300], bg-[#e2f6d5], emerald-*, green-*
+// ✅ Use bg-[#5952e5], text-white, bg-[rgba(89,82,229,0.1)] instead
 ```
 
 ### 16.3 Typography rules (from DESIGN.md)
@@ -807,12 +804,12 @@ className="font-sans text-[18px] font-semibold leading-[1.44] tracking-[-0.108px
 
 ```tsx
 // Primary pill button — always this pattern
-<button className="bg-[#9fe870] text-[#163300] font-semibold px-[16px] py-[5px] rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2">
+<button className="bg-[#5952e5] text-white font-semibold px-[16px] py-[5px] rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30">
   Label
 </button>
 
 // Secondary subtle pill
-<button className="bg-[rgba(22,51,0,0.08)] text-[#0e0f0c] font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95">
+<button className="bg-[rgba(89,82,229,0.08)] text-[#0e0f0c] font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95">
   Label
 </button>
 ```
@@ -820,14 +817,27 @@ className="font-sans text-[18px] font-semibold leading-[1.44] tracking-[-0.108px
 ### 16.5 Card / container rules (from DESIGN.md)
 
 ```tsx
-// Standard card
-className="rounded-[30px] border border-[rgba(14,15,12,0.12)] p-6"
+// Standard card (max 16px radius)
+className="rounded-2xl border border-[rgba(14,15,12,0.12)] p-6"
 
-// Large card / table container
-className="rounded-[40px] border border-[rgba(14,15,12,0.12)] p-8"
+// Large card / table container (max 24px)
+className="rounded-3xl border border-[rgba(14,15,12,0.12)] p-8"
 
 // Small card
 className="rounded-2xl border border-[rgba(14,15,12,0.12)] p-4"
+```
+
+### 16.6 Input / modal rules (from DESIGN.md)
+
+```tsx
+// Input fields — max 16px border-radius, primary color focus
+className="rounded-2xl border border-input focus-visible:border-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary/30"
+
+// Modal / Dialog — max 16px border-radius
+className="rounded-2xl"
+
+// NEVER use rounded-[30px] or rounded-[40px] on inputs/modals
+// NEVER use rounded-full on input fields
 ```
 
 ### 16.6 Animation rules (from DESIGN.md)
@@ -843,6 +853,10 @@ className="hover:bg-green-400"  // WRONG
 ### 16.7 What NOT to do
 
 ```tsx
+// WRONG — using green/lime colors (old brand)
+className="bg-[#9fe870] text-[#163300]"  // WRONG — old Wise green
+className="bg-emerald-500 text-emerald-100"  // WRONG — use primary instead
+
 // WRONG — inventing colors not in DESIGN.md
 className="bg-indigo-600 text-white rounded-lg"
 
@@ -855,8 +869,18 @@ className="font-black text-8xl leading-tight"  // leading-tight = 1.25, not 0.85
 // WRONG — traditional box shadow
 className="shadow-lg"
 
+// WRONG — excessive border-radius on inputs/modals
+className="rounded-[30px]"  // WRONG — max 16px on inputs/modals
+className="rounded-[40px]"  // WRONG — max 24px on cards
+
+// CORRECT — primary color CTA
+className="bg-[#5952e5] text-white rounded-full"
+
 // CORRECT — ring shadow only (from DESIGN.md)
-className="shadow-[rgba(14,15,12,0.12)_0px_0px_0px_1px]"
+className="shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]"
+
+// CORRECT — input with primary focus
+className="rounded-2xl border border-input focus-visible:border-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary/30"
 ```
 
 ---
