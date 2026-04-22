@@ -51,10 +51,10 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
 
   if (isAlreadyBoosted && boostExpiresAt) {
     return (
-      <div className="rounded-xl border border-green-200 bg-green-50 p-5 space-y-3">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-green-600" aria-hidden="true" />
-          <p className="text-sm font-semibold text-green-800">
+          <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
+          <p className="text-sm font-semibold text-primary">
             Boosted — active until {formatBoostExpiry(boostExpiresAt)}
           </p>
         </div>
@@ -79,7 +79,7 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
       <ul className="space-y-1">
         {BOOST_FEATURES.map((feature) => (
           <li key={feature} className="text-xs text-slate-600 flex items-center gap-1.5">
-            <span className="text-green-500" aria-hidden="true">✓</span> {feature}
+            <span className="text-primary" aria-hidden="true">✓</span> {feature}
           </li>
         ))}
       </ul>

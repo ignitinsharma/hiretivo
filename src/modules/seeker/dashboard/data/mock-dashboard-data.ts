@@ -71,6 +71,6 @@ export const QUICK_STATS = [
     label: 'Interviews',
     value: 1,
     icon: 'chat_bubble',
-    colorClass: 'text-green-600 bg-green-100',
+    colorClass: 'text-primary bg-primary/10',
   },
 ];

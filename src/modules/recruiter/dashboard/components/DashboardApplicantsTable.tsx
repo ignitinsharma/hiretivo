@@ -25,7 +25,7 @@ const STATUS_STYLES: Record<ApplicationStatus, { label: string; className: strin
   },
   [ApplicationStatus.HIRED]: {
     label: 'Hired',
-    className: 'bg-green-100 text-green-700',
+    className: 'bg-primary/10 text-primary',
   },
   [ApplicationStatus.REJECTED]: {
     label: 'Not Selected',
@@ -101,7 +101,7 @@ export function DashboardApplicantsTable() {
                           className={cn(
                             'h-full rounded-full',
                             applicant.matchScore >= 80
-                              ? 'bg-green-500'
+                              ? 'bg-primary'
                               : applicant.matchScore >= 60
                                 ? 'bg-blue-500'
                                 : 'bg-yellow-500'

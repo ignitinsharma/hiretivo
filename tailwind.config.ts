@@ -51,15 +51,15 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        /** Wise Design System palette */
+        /** Hiretivo Design System palette */
         brand: {
-          /* Primary - stays purple */
-          primary: '#5951E5',
+          /* Primary - indigo (#5952e5 family) */
+          primary: '#5952e5',
           "primary-foreground": '#ffffff',
           heading: '#0A0A0F',
           body: '#4B5563',
-          /* Accent - purple variants (#5951E5 family) */
-          accent: '#5951E5',
+          /* Accent - indigo variants */
+          accent: '#5952e5',
           "accent-foreground": '#ffffff',
           "accent-50": '#F3F3FD',
           "accent-100": '#E7E6FB',
@@ -68,26 +68,26 @@ const config = {
           "accent-400": '#A09CF0',
           "accent-500": '#8883EC',
           "accent-600": '#716AE9',
-          "accent-700": '#5951E5',
+          "accent-700": '#5952e5',
           "accent-800": '#3B3699',
           "accent-900": '#1E1B4C',
           "accent-950": '#0F0E26',
-          "accent-subtle": '#e2f6d5', /* Light Mint */
-          "accent-pastel": '#cdffad', /* Pastel Green */
+          "accent-subtle": 'rgba(89,82,229,0.1)', /* Light indigo tint */
+          "accent-pastel": 'rgba(89,82,229,0.15)', /* Pastel indigo */
           /* Semantic */
-          success: '#054d28',       /* Positive Green */
-          danger: '#d03238',       /* Danger Red */
-          warning: '#ffd11a',      /* Warning Yellow */
-          info: 'rgba(56,200,255,0.10)', /* Background Cyan */
-          orange: '#ffc091',       /* Bright Orange */
+          success: '#059669',       /* Emerald green for success states only */
+          danger: '#d03238',
+          warning: '#ffd11a',
+          info: 'rgba(56,200,255,0.10)',
+          orange: '#ffc091',
           /* Neutrals */
-          muted: '#454745',       /* Warm Dark - secondary text */
-          "muted-secondary": '#868685', /* Gray - tertiary */
-          surface: '#e8ebe6',     /* Light Surface */
-          light: '#F3F3FD',    /* brand-primary-50 */
+          muted: '#454745',
+          "muted-secondary": '#868685',
+          surface: '#f5f5f7',
+          light: '#F3F3FD',
           gray: '#F9FAFB',
           border: '#E5E7EB',
-          "primary-light": "rgba(89, 81, 229, 0.15)", /* Transparent purple for backgrounds */
+          "primary-light": "rgba(89, 82, 229, 0.15)",
           dark: "#1a1a2e",
         },
       },

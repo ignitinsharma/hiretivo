@@ -30,7 +30,7 @@ const STAT_ROWS: StatRow[] = [
     id: 'interviews',
     label: 'Interviews',
     icon: <MessageSquare className="w-5 h-5" />,
-    colorClass: 'text-green-600 bg-green-100',
+    colorClass: 'text-primary bg-primary/10',
   },
 ];
 

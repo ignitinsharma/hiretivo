@@ -22,7 +22,7 @@ function SkillChip({ name, isAdded, onClick }: SkillChipProps) {
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors',
         isAdded
-          ? 'cursor-not-allowed border-green-200 bg-green-50 text-green-700 opacity-70'
+          ? 'cursor-not-allowed border-primary/30 bg-primary/10 text-primary opacity-70'
           : 'border-slate-200 bg-white text-slate-700 hover:border-primary hover:bg-primary/5 hover:text-primary',
       )}
     >

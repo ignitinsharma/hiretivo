@@ -128,8 +128,8 @@ export function ComingSoonPage() {
           <div className="w-full max-w-lg mx-auto space-y-4">
             {isSuccess ? (
               <div className="p-8 bg-white rounded-3xl shadow-xl text-center">
-                <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Check className="w-8 h-8 text-green-600" />
+                <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-brand-heading mb-2">Thanks!</h3>
                 <p className="text-brand-body">We&apos;ll notify you when we launch.</p>

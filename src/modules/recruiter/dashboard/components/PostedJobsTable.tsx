@@ -7,7 +7,7 @@ import { POSTED_JOBS } from '../data/mock-dashboard-data';
 import { cn } from '@/lib/utils';
 
 const JOB_STATUS_STYLES: Record<JobStatus, { label: string; className: string }> = {
-  [JobStatus.OPEN]: { label: 'Active', className: 'bg-green-100 text-green-700' },
+  [JobStatus.OPEN]: { label: 'Active', className: 'bg-primary/10 text-primary' },
   [JobStatus.PAUSED]: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
   [JobStatus.DRAFT]: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
   [JobStatus.CLOSED]: { label: 'Closed', className: 'bg-red-100 text-red-700' },

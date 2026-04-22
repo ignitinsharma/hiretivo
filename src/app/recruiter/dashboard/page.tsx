@@ -57,7 +57,7 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
       <div className="flex items-baseline gap-3">
         <span className="text-3xl font-bold">{stat.value}</span>
         {stat.trend && (
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
             {stat.trend}
           </span>
         )}
