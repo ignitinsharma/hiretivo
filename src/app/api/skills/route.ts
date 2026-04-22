@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { UserRole } from '@/constants/enums';
 
 // GET /api/skills — all skills for the skills picker
 // Public endpoint — no auth required (skills are non-sensitive global data)
@@ -24,15 +23,12 @@ export async function GET() {
 }
 
 // POST /api/skills — create a new skill (auth required)
+// Any authenticated user can create skills — seekers need this during onboarding
+// Skills are global shared data; there is no security reason to restrict creation to recruiters.
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Security fix: Only recruiters or admins can create skills
-  if (session.user.role !== UserRole.RECRUITER) {
-    return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
   }
 
   let body: unknown;
