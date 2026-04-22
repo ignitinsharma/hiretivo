@@ -159,7 +159,7 @@ export default function RecruiterLoginPage() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-black outline-none transition-all placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -178,7 +178,7 @@ export default function RecruiterLoginPage() {
               id="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-black outline-none transition-all placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />

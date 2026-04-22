@@ -161,7 +161,7 @@ export default function RecruiterRegisterPage() {
                 type="text"
                 placeholder="John Doe"
                 autoComplete="name"
-                className="w-full px-5 h-14 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-black outline-none transition-all placeholder:text-slate-400 text-slate-900"
                 {...form.register("name")}
               />
               {form.formState.errors.name && (
@@ -176,7 +176,7 @@ export default function RecruiterRegisterPage() {
                 type="text"
                 placeholder="Acme Inc"
                 autoComplete="organization"
-                className="w-full px-5 h-14 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-black outline-none transition-all placeholder:text-slate-400 text-slate-900"
                 {...form.register("companyName")}
               />
               {form.formState.errors.companyName && (
@@ -192,7 +192,7 @@ export default function RecruiterRegisterPage() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-black outline-none transition-all placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -206,7 +206,7 @@ export default function RecruiterRegisterPage() {
               id="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
-              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-xl focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-black outline-none transition-all placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />

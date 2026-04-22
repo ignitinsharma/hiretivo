@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Plus, LogOut, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RECRUITER_NAV_ITEMS } from '@/constants/nav';
@@ -65,6 +66,15 @@ function RecruiterSidebarInner({
   toggle: () => void;
 }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const userName = session?.user?.name ?? 'Recruiter';
+  const initials = userName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'R';
 
   return (
     <aside
@@ -98,19 +108,19 @@ function RecruiterSidebarInner({
       >
         <div className="relative shrink-0">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm ring-2 ring-primary/10">
-            AS
+            {initials}
           </div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-brand-primary rounded-full border-2 border-white" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white" />
         </div>
         {!collapsed && (
           <div className="flex flex-col overflow-hidden">
             <span className="font-bold text-sm text-slate-900 truncate">
-              Alex Sterling
+              {userName}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
-                Premium Active
+                Recruiter
               </span>
             </div>
           </div>
