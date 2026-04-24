@@ -7,31 +7,85 @@ import { UserRole } from '@/constants/enums';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
-// GET /api/jobs — list recruiter's own jobs (auth-scoped)
+// GET /api/jobs — list recruiter's own jobs with server-side filtering, search, pagination
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Rate limiting — 60 job list requests/min (prevent scraping)
+  if (session.user.role !== UserRole.RECRUITER) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const { success } = await jobListRateLimiter.limit(session.user.id);
   if (!success) {
     return new NextResponse('Too Many Requests', { status: 429 });
   }
 
-  const jobs = await prisma.job.findMany({
-    where: { recruiterId: session.user.id },
-    include: {
-      skills: {
-        include: { skill: true },
-      },
-      _count: { select: { applications: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const searchParams = req.nextUrl.searchParams;
+  const page = parseInt(searchParams.get('page') ?? '1', 10);
+  const limit = parseInt(searchParams.get('limit') ?? '10', 10);
+  const search = searchParams.get('search')?.trim() ?? '';
+  const status = searchParams.get('status') ?? '';
+  const category = searchParams.get('category') ?? '';
 
-  return NextResponse.json(jobs);
+  const skip = (page - 1) * limit;
+  const safeLimit = Math.min(Math.max(limit, 1), 100);
+
+  const where: Record<string, unknown> = { recruiterId: session.user.id };
+
+  if (status) where.status = status;
+  if (category && category !== 'All') where.category = category;
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { category: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const recruiterId = session.user.id;
+
+  const [jobs, total, totalAll, activeCount, totalApplicants, categories] = await Promise.all([
+    prisma.job.findMany({
+      where,
+      include: {
+        skills: { include: { skill: true } },
+        _count: { select: { applications: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: safeLimit,
+    }),
+    prisma.job.count({ where }),
+    prisma.job.count({ where: { recruiterId } }),
+    prisma.job.count({ where: { recruiterId, status: 'OPEN' } }),
+    prisma.application.count({
+      where: { job: { recruiterId } },
+    }),
+    prisma.job.findMany({
+      where: { recruiterId, category: { not: null } },
+      select: { category: true },
+      distinct: ['category'],
+      orderBy: { category: 'asc' },
+    }),
+  ]);
+
+  return NextResponse.json({
+    jobs,
+    pagination: {
+      page,
+      limit: safeLimit,
+      total,
+      totalPages: Math.ceil(total / safeLimit),
+    },
+    stats: {
+      totalAll,
+      activeCount,
+      totalApplicants,
+    },
+    categories: categories.map((c) => c.category).filter(Boolean),
+  });
 }
 
 // POST /api/jobs — create job with plan gate check
@@ -41,12 +95,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Security fix: Only recruiters can create jobs
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
   }
 
-  // D-10: FREE plan gate — check user.plan (on User model, not RecruiterProfile)
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { plan: true },
@@ -81,7 +133,6 @@ export async function POST(req: NextRequest) {
 
   const { skills, status: _status, ...jobData } = parsed.data;
 
-  // Create job + skills atomically (D-08)
   const job = await prisma.$transaction(async (tx) => {
     const j = await tx.job.create({
       data: {

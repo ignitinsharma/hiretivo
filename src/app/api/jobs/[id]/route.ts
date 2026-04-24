@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { updateJobSchema } from '@/lib/validations/job';
+import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
 import { UserRole } from '@/constants/enums';
 
@@ -11,10 +11,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const job = await prisma.job.findUnique({
-    where: { id: params.id, status: 'OPEN' },
+    where: { id: params.id },
     include: {
       recruiter: {
         select: {
+          id: true,
           recruiterProfile: {
             select: { companyName: true, logo: true },
           },
@@ -25,12 +26,15 @@ export async function GET(
       },
     },
   });
-  if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const session = await auth();
+  const isOwner = session?.user?.id === job?.recruiter?.id;
+  if (!job || (job.status !== 'OPEN' && !isOwner)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 
   let matchScore: number | null = null;
   let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
 
-  const session = await auth();
   if (session?.user?.role === 'SEEKER') {
     const seekerProfile = await prisma.seekerProfile.findUnique({
       where: { userId: session.user.id },
@@ -70,6 +74,7 @@ export async function GET(
       salaryMax: job.salaryMax,
       currency: job.currency,
       experienceLevel: job.experienceLevel,
+      category: job.category,
       applyType: job.applyType,
       externalApplyUrl: job.externalApplyUrl,
       companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
@@ -120,7 +125,7 @@ export async function PATCH(
 
   // updateJobSchema is createJobSchema.partial() — all fields optional
   // Remove 'id' from body before parsing (id comes from URL, not body)
-  const parsed = updateJobSchema.omit({ id: true }).safeParse(body);
+  const parsed = updateJobBaseSchema.omit({ id: true }).safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? 'Validation failed' },

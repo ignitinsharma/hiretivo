@@ -1,87 +1,129 @@
-import React from 'react';
-import { CheckCircle2, Calendar, CreditCard } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+"use client";
+
+import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { CheckCircle2, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PlanTier } from "@/constants/enums";
+
+const FREE_FEATURES = [
+  "Apply to 10 jobs/month",
+  "Basic profile listing",
+  "Email support",
+];
+
+const PRO_FEATURES = [
+  "Unlimited job applications",
+  "AI resume optimizer",
+  "Priority profile listing",
+  "Early access to new jobs",
+  "Dedicated support",
+];
 
 export function BillingSection() {
+  const { data: session } = useSession();
+  const plan = (session?.user as { plan?: string } | undefined)?.plan ?? PlanTier.FREE;
+  const isPro = plan === PlanTier.PRO;
+
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/billing/checkout", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to start checkout");
+      const body = (await res.json()) as { data?: { url?: string } };
+      if (body.data?.url) window.location.href = body.data.url;
+    },
+    onError: () => toast.error("Could not start checkout. Try again."),
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/billing/portal", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to open portal");
+      const body = (await res.json()) as { data?: { url?: string } };
+      if (body.data?.url) window.location.href = body.data.url;
+    },
+    onError: () => toast.error("Could not open billing portal. Try again."),
+  });
+
   return (
     <section id="billing" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <div className="p-6 border-b border-slate-100">
         <h3 className="text-lg font-bold text-slate-900">Billing & Subscription</h3>
-        <p className="text-sm text-slate-500">
-          Manage your plan, billing cycle, and payment information.
-        </p>
+        <p className="text-sm text-slate-500">Manage your plan and billing information.</p>
       </div>
 
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="p-5 border border-primary/20 bg-primary/5 rounded-xl">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary text-white mb-2">
-                    Current Plan
-                  </span>
-                  <h4 className="text-2xl font-bold text-slate-900">Professional Plan</h4>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Billed annually ($240/year)
-                  </p>
-                </div>
-                <Button variant="link" size="sm">
-                  Upgrade Plan
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  'Unlimited Job Applications',
-                  'AI Resume Optimizer',
-                  'Priority Profile Listing',
-                  'Early Access to New Jobs',
-                ].map((feature) => (
-                  <div key={feature} className="flex items-start gap-2">
-                    <CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                    <span className="text-sm text-slate-700">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-primary/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="text-slate-400 w-5 h-5" />
-                  <p className="text-sm text-slate-600">
-                    Next billing date:{' '}
-                    <span className="font-bold text-slate-900">October 12, 2024</span>
-                  </p>
-                </div>
-                <Button variant="link" size="sm" className="text-slate-500 hover:text-red-600">
-                  Cancel Plan
-                </Button>
-              </div>
-            </div>
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          className={`p-5 rounded-xl border-2 transition-colors ${
+            !isPro ? "border-primary bg-primary/5" : "border-slate-200"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-bold text-slate-900">Free</span>
+            {!isPro && (
+              <span className="px-2 py-0.5 bg-primary text-white text-[10px] font-bold uppercase rounded">
+                Current
+              </span>
+            )}
           </div>
+          <p className="text-2xl font-bold text-slate-900 mb-4">$0</p>
+          <ul className="space-y-2">
+            {FREE_FEATURES.map((f) => (
+              <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
+                <CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" />
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <div className="space-y-4">
-            <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Payment Method
-            </h4>
-            <div className="p-4 border border-slate-200 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-12 bg-slate-100 rounded flex items-center justify-center">
-                  <CreditCard className="text-slate-500 w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">Visa •••• 4242</p>
-                  <p className="text-xs text-slate-500 uppercase">Expires 12/26</p>
-                </div>
-              </div>
-              <Button variant="link" size="sm">
-                Edit
-              </Button>
+        <div
+          className={`p-5 rounded-xl border-2 transition-colors ${
+            isPro ? "border-primary bg-primary/5" : "border-slate-200"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="font-bold text-slate-900">Pro</span>
             </div>
-            <Button variant="outline" size="sm">
-              View Billing History
+            {isPro && (
+              <span className="px-2 py-0.5 bg-primary text-white text-[10px] font-bold uppercase rounded">
+                Current
+              </span>
+            )}
+          </div>
+          <p className="text-2xl font-bold text-slate-900 mb-4">
+            $19 <span className="text-sm font-normal text-slate-500">/month</span>
+          </p>
+          <ul className="space-y-2 mb-5">
+            {PRO_FEATURES.map((f) => (
+              <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
+                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                {f}
+              </li>
+            ))}
+          </ul>
+          {isPro ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => portalMutation.mutate()}
+              disabled={portalMutation.isPending}
+            >
+              {portalMutation.isPending ? "Opening…" : "Manage Billing"}
             </Button>
-          </div>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => checkoutMutation.mutate()}
+              disabled={checkoutMutation.isPending}
+            >
+              {checkoutMutation.isPending ? "Loading…" : "Upgrade to Pro"}
+            </Button>
+          )}
         </div>
       </div>
     </section>

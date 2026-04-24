@@ -17,6 +17,9 @@ export const RecruiterProfileSettingsSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   companyName: z.string().min(1, "Company name is required").max(100),
   bio: z.string().max(500).optional(),
+  companySize: z.string().max(50).optional(),
+  industry: z.string().max(100).optional(),
+  website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 export const NotificationSettingsSchema = z.object({

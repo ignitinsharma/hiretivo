@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { UserRole } from '@/constants/enums';
 import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from '@/constants/nav';
 import { NavLink } from '@/components/layout/NavLink';
+import { SeekerNavLink } from '@/components/layout/SeekerNavLink';
 import { ChevronDown, Settings } from 'lucide-react';
 import {
   DropdownMenu,
@@ -19,6 +20,11 @@ interface HeaderProps {
   className?: string;
 }
 
+/** Nav items to show — only Jobs and Applied Jobs, no Settings. */
+const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
+  (item) => item.href !== '/seeker/settings',
+);
+
 export async function Header({ className }: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
@@ -28,22 +34,26 @@ export async function Header({ className }: HeaderProps) {
   return (
     <nav
       className={cn(
-        'sticky-nav bg-white/90 border-b border-brand-border h-20 flex items-center',
+        'sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3',
         className
       )}
       data-purpose="main-navigation"
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-8 w-full flex items-center justify-between">
-        {/* Logo — unchanged */}
-        <Link href="/" className="flex items-center gap-2 group cursor-pointer" data-purpose="logo">
-          <Image src="/images/logo.png" alt="Hiretivo" width={120} height={40} className="h-6 w-auto object-contain" priority />
+      <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+        {/* Logo */}
+        <Link
+          href={session ? (isRecruiter ? '/recruiter/dashboard' : '/seeker/dashboard') : '/'}
+          className="flex items-center"
+          data-purpose="logo"
+        >
+          <Image src="/images/logo.png" alt="Hiretivo" width={120} height={24} className="h-6 w-auto object-contain" priority />
         </Link>
 
         {/* Seeker nav links */}
         {isSeeker && (
-          <nav className="hidden md:flex flex-1 justify-center gap-8">
-            {SEEKER_NAV_ITEMS.map((item) => (
-              <NavLink key={item.href} href={item.href} label={item.label} />
+          <nav className="hidden md:flex flex-1 justify-center gap-8" aria-label="Seeker navigation">
+            {SEEKER_HEADER_ITEMS.map((item) => (
+              <SeekerNavLink key={item.href} href={item.href} iconName={item.iconName} label={item.label} />
             ))}
           </nav>
         )}

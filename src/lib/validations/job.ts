@@ -22,6 +22,8 @@ const baseJobSchema = z.object({
   salaryMax: z.number().int().nonnegative().optional(),
   currency: z.string().trim().length(3).optional(),
   externalApplyUrl: z.string().url().optional(),
+  experienceLevel: z.string().trim().max(50).optional(),
+  category: z.string().trim().max(100).optional(),
   skills: z.array(jobSkillSchema).min(1),
 });
 
@@ -65,9 +67,12 @@ export const createJobSchema = baseJobSchema.superRefine(jobRefinements);
 
 export type CreateJobInput = z.infer<typeof createJobSchema>;
 
-export const updateJobSchema = baseJobSchema
+const updateJobBase = baseJobSchema
   .partial()
-  .extend({ id: z.cuid() })
-  .superRefine(jobRefinements);
+  .extend({ id: z.cuid() });
+
+export const updateJobSchema = updateJobBase.superRefine(jobRefinements);
+
+export const updateJobBaseSchema = updateJobBase;
 
 export type UpdateJobInput = z.infer<typeof updateJobSchema>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Upload,
@@ -9,9 +9,6 @@ import {
   ChevronRight,
   MoreVertical,
   Briefcase,
-  LayoutGrid,
-  List,
-  SlidersHorizontal,
   Pencil,
   Archive,
   Trash2,
@@ -24,10 +21,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 
 const JOBS_PER_PAGE = 5;
+
+function useDebouncedValue(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
 
 interface JobStatItem {
   label: string;
@@ -45,6 +55,26 @@ interface ApiJob {
   createdAt: string;
   _count: { applications: number };
   skills: { skill: { id: string; name: string; category: string } }[];
+}
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface StatsInfo {
+  totalAll: number;
+  activeCount: number;
+  totalApplicants: number;
+}
+
+interface JobsApiResponse {
+  jobs: ApiJob[];
+  pagination: PaginationInfo;
+  stats: StatsInfo;
+  categories: string[];
 }
 
 function JobStatCard({ stat }: { stat: JobStatItem }) {
@@ -88,6 +118,7 @@ function JobRow({
   onToggle: (id: string, newStatus: "OPEN" | "PAUSED") => void;
   onDeleteRequest: (job: ApiJob) => void;
 }) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   return (
     <tr className="hover:bg-indigo-50/30 transition-colors">
       <td className="px-6 py-4">
@@ -143,12 +174,12 @@ function JobRow({
           >
             View Talent
           </Button>
-          <Popover>
+          <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-slate-400 hover:text-slate-900"
+                className="h-8 w-8 text-slate-400 hover:bg-primary hover:text-white"
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>
@@ -162,19 +193,20 @@ function JobRow({
               <div className="py-1.5">
                 <button
                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                  onClick={() => onEdit(job.id)}
+                  onClick={() => {
+                    onEdit(job.id);
+                    setDropdownOpen(false);
+                  }}
                 >
                   <Pencil className="w-4 h-4" />
                   Edit Job
                 </button>
                 <button
                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                  onClick={() =>
-                    onToggle(
-                      job.id,
-                      job.status === "OPEN" ? "PAUSED" : "OPEN",
-                    )
-                  }
+                  onClick={() => {
+                    onToggle(job.id, job.status === "OPEN" ? "PAUSED" : "OPEN");
+                    setDropdownOpen(false);
+                  }}
                 >
                   <Archive className="w-4 h-4" />
                   {job.status === "OPEN" ? "Archive Job" : "Reactivate Job"}
@@ -182,7 +214,10 @@ function JobRow({
                 <div className="h-px bg-slate-100 my-1" />
                 <button
                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                  onClick={() => onDeleteRequest(job)}
+                  onClick={() => {
+                    onDeleteRequest(job);
+                    setDropdownOpen(false);
+                  }}
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete Job
@@ -275,15 +310,38 @@ export default function RecruiterJobsPage() {
   const { openEditJobModal, openPostJobModal } = useUIStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<ApiJob | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
 
-  const { data: jobs = [], isLoading } = useQuery<ApiJob[]>({
-    queryKey: ["jobs"],
-    queryFn: () => fetch("/api/jobs").then((r) => r.json()),
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, statusFilter, categoryFilter]);
+
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("page", String(currentPage));
+    params.set("limit", String(JOBS_PER_PAGE));
+    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+    if (statusFilter) params.set("status", statusFilter);
+    if (categoryFilter && categoryFilter !== "All") params.set("category", categoryFilter);
+    return params.toString();
+  }, [currentPage, debouncedSearch, statusFilter, categoryFilter]);
+
+  const { data, isLoading } = useQuery<JobsApiResponse>({
+    queryKey: ["jobs", queryParams],
+    queryFn: () => fetch(`/api/jobs?${queryParams}`).then((r) => r.json()),
   });
+
+  const jobs = data?.jobs ?? [];
+  const pagination = data?.pagination;
+  const stats = data?.stats;
+  const serverCategories = data?.categories ?? [];
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/recruiter/jobs/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to delete");
       return data;
@@ -297,12 +355,24 @@ export default function RecruiterJobsPage() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: "OPEN" | "PAUSED" }) =>
-      fetch(`/api/jobs/${id}`, {
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "OPEN" | "PAUSED";
+    }) => {
+      const res = await fetch(`/api/recruiter/jobs/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
-      }).then((r) => r.json()),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error ?? "Failed to update job");
+      }
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       toast.success("Job updated");
@@ -310,201 +380,173 @@ export default function RecruiterJobsPage() {
     onError: () => toast.error("Failed to update job"),
   });
 
-  const totalPages = Math.max(1, Math.ceil(jobs.length / JOBS_PER_PAGE));
-  const paginatedJobs = useMemo(() => {
-    const start = (currentPage - 1) * JOBS_PER_PAGE;
-    return jobs.slice(start, start + JOBS_PER_PAGE);
-  }, [jobs, currentPage]);
-
-  const totalJobs = jobs.length;
-  const activeJobs = jobs.filter((j) => j.status === "OPEN").length;
-  const totalApplicants = jobs.reduce(
-    (sum, j) => sum + j._count.applications,
-    0,
-  );
-
   const JOB_STATS: JobStatItem[] = [
     {
       label: "Total Listings",
-      value: isLoading ? "—" : String(totalJobs),
+      value: isLoading ? "—" : String(stats?.totalAll ?? 0),
       badge: "",
       badgeColor: "",
     },
     {
       label: "Active Jobs",
-      value: isLoading ? "—" : String(activeJobs),
+      value: isLoading ? "—" : String(stats?.activeCount ?? 0),
       badge: "",
       badgeColor: "",
     },
     {
       label: "Total Applicants",
-      value: isLoading ? "—" : String(totalApplicants),
+      value: isLoading ? "—" : String(stats?.totalApplicants ?? 0),
       badge: "",
       badgeColor: "",
     },
     { label: "Talent Score Avg.", value: "-", badge: "", badgeColor: "" },
   ];
 
-  const showStart = Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs);
-  const showEnd = Math.min(currentPage * JOBS_PER_PAGE, totalJobs);
+  const showStart = pagination ? Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, pagination.total) : 0;
+  const showEnd = pagination ? Math.min(currentPage * JOBS_PER_PAGE, pagination.total) : 0;
+
 
   return (
     <div className="w-full p-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6 mb-10">
-          <div className="flex items-start gap-4">
-            <SidebarToggle className="mt-2" />
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-                  Active Jobs
-                </h1>
-              </div>
-              <p className="text-slate-500 text-lg">
-                Curate and manage your active job listings.
-              </p>
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6 mb-10">
+        <div className="flex items-start gap-4">
+          <SidebarToggle className="mt-2" />
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+                Active Jobs
+              </h1>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="gap-2 border-slate-200">
-              <Upload className="w-4 h-4" />
-              Export
-            </Button>
-            <Button
-              className="bg-primary text-white gap-2 shadow-md shadow-indigo-100 hover:bg-primary/90"
-              onClick={openPostJobModal}
-            >
-              <Plus className="w-4 h-4" />
-              Post New Job
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {JOB_STATS.map((stat) => (
-            <JobStatCard key={stat.label} stat={stat} />
-          ))}
-        </div>
-
-        {/* Filter bar */}
-        <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex flex-wrap items-center gap-3">
-          <div className="flex-1 min-w-[240px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <Input
-              className="w-full pl-9 bg-slate-50 border-slate-200 text-sm"
-              placeholder="Quick search listings..."
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <select className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20">
-              <option>Department: All</option>
-              <option>Engineering</option>
-              <option>Design</option>
-              <option>Finance</option>
-            </select>
-            <select className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20">
-              <option>Status: Active</option>
-              <option>Draft</option>
-              <option>Archived</option>
-            </select>
-          </div>
-          <div className="h-6 w-px bg-slate-200 mx-1" />
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-slate-500"
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-primary bg-indigo-50 border border-indigo-200"
-            >
-              <List className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-slate-500"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="bg-white border-x border-b border-slate-200 rounded-b-xl shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[800px]">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200">
-                  <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Job Details
-                  </th>
-                  <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">
-                    Applicants
-                  </th>
-                  <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Posted Date
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={4} className="px-0 py-0">
-                      <PageSkeleton lines={5} showHeader={false} />
-                    </td>
-                  </tr>
-                ) : jobs.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-8 text-center text-slate-400 text-sm"
-                    >
-                      No jobs posted yet. Click &quot;Post New Job&quot; to get
-                      started.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedJobs.map((job) => (
-                    <JobRow
-                      key={job.id}
-                      job={job}
-                      onEdit={(id) => openEditJobModal(id)}
-                      onToggle={(id, status) =>
-                        toggleMutation.mutate({ id, status })
-                      }
-                      onDeleteRequest={(j) => setDeleteTarget(j)}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-200">
-            <p className="text-[11px] text-slate-500 font-medium">
-              Showing{" "}
-              <span className="text-slate-900 font-bold">{showStart}</span>–
-              <span className="text-slate-900 font-bold">{showEnd}</span> of{" "}
-              <span className="text-slate-900 font-bold">{totalJobs}</span>{" "}
-              listings
+            <p className="text-slate-500 text-lg">
+              Curate and manage your active job listings.
             </p>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="gap-2 border-slate-200">
+            <Upload className="w-4 h-4" />
+            Export
+          </Button>
+          <Button variant="subtle" onClick={openPostJobModal}>
+            <Plus className="w-4 h-4" />
+            Post New Job
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        {JOB_STATS.map((stat) => (
+          <JobStatCard key={stat.label} stat={stat} />
+        ))}
+      </div>
+
+      {/* Filter bar */}
+      <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-[240px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+          <Input
+            className="w-full pl-9 bg-slate-50 border-slate-200 text-sm"
+            placeholder="Quick search listings..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="">Department: All</option>
+            {serverCategories.map((cat) => (
+              <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+            ))}
+          </select>
+          <select
+            className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">Status: All</option>
+            <option value="OPEN">Active</option>
+            <option value="PAUSED">Archived</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white border-x border-b border-slate-200 rounded-b-xl shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-200">
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Job Details
+                </th>
+                <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">
+                  Applicants
+                </th>
+                <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Posted Date
+                </th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="px-0 py-0">
+                    <PageSkeleton lines={5} showHeader={false} />
+                  </td>
+                </tr>
+              ) : jobs.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-8 text-center text-slate-400 text-sm"
+                  >
+                    {debouncedSearch || statusFilter || categoryFilter
+                      ? "No jobs match your filters."
+                      : "No jobs posted yet. Click &quot;Post New Job&quot; to get started."}
+                  </td>
+                </tr>
+              ) : (
+                jobs.map((job) => (
+                  <JobRow
+                    key={job.id}
+                    job={job}
+                    onEdit={(id) => openEditJobModal(id)}
+                    onToggle={(id, status) =>
+                      toggleMutation.mutate({ id, status })
+                    }
+                    onDeleteRequest={(j) => setDeleteTarget(j)}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-200">
+          <p className="text-[11px] text-slate-500 font-medium">
+            Showing{" "}
+            <span className="text-slate-900 font-bold">{showStart}</span>–
+            <span className="text-slate-900 font-bold">{showEnd}</span> of{" "}
+            <span className="text-slate-900 font-bold">{pagination?.total ?? 0}</span>{" "}
+            listings
+          </p>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPages ?? 1}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <ConfirmDeleteModal

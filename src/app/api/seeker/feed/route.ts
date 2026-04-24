@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
   // Fetch job data for all matched jobs (needed for filtering + applied-exclusion)
   const jobIds = matches.map((m) => m.jobId);
   const jobs = await prisma.job.findMany({
-    where: { id: { in: jobIds } },
+    where: { id: { in: jobIds }, status: 'OPEN' },
     select: {
       id: true,
       jobType: true,
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
   // Enrich with full job data including skills for missing-skills hint
   const paginatedJobIds = pageItems.map((m) => m.jobId);
   const enrichedJobs = await prisma.job.findMany({
-    where: { id: { in: paginatedJobIds } },
+    where: { id: { in: paginatedJobIds }, status: 'OPEN' },
     include: {
       recruiter: {
         select: {

@@ -23,7 +23,10 @@ export interface TrendDataPoint {
 }
 
 export interface DashboardData {
-  stats: DashboardStats;
+  activeJobsCount: number;
+  totalApplications: number;
+  newThisWeek: number;
+  avgMatchScore: number;
   recentApplicants: RecentApplicant[];
   trendData: TrendDataPoint[];
 }

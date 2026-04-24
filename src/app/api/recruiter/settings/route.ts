@@ -29,6 +29,9 @@ export async function GET() {
         select: {
           companyName: true,
           bio: true,
+          companySize: true,
+          industry: true,
+          website: true,
           emailNotifications: true,
           applicationAlerts: true,
           interviewNotifications: true,
@@ -47,6 +50,9 @@ export async function GET() {
       email: user.email ?? "",
       companyName: user.recruiterProfile.companyName,
       bio: user.recruiterProfile.bio ?? "",
+      companySize: user.recruiterProfile.companySize ?? "",
+      industry: user.recruiterProfile.industry ?? "",
+      website: user.recruiterProfile.website ?? "",
       emailNotifications: user.recruiterProfile.emailNotifications,
       applicationAlerts: user.recruiterProfile.applicationAlerts,
       interviewNotifications: user.recruiterProfile.interviewNotifications,
@@ -97,6 +103,9 @@ export async function PATCH(req: NextRequest) {
       data: {
         companyName: profileData.companyName,
         bio: profileData.bio ?? null,
+        companySize: profileData.companySize ?? null,
+        industry: profileData.industry ?? null,
+        website: profileData.website ?? null,
       },
     });
   } else {

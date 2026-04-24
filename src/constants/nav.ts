@@ -5,6 +5,7 @@ import {
   Briefcase,
   UserSearch,
   Settings,
+  Send,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -27,10 +28,11 @@ export const RECRUITER_NAV_ITEMS: NavItem[] = [
 export interface SeekerNavItem {
   label: string;
   href: string;
+  iconName: string;
 }
 
 export const SEEKER_NAV_ITEMS: SeekerNavItem[] = [
-  { label: 'Jobs', href: '/seeker/dashboard' },
-  { label: 'Applied Jobs', href: '/seeker/applications' },
-  { label: 'Settings', href: '/seeker/settings' },
+  { label: 'Jobs', href: '/seeker/dashboard', iconName: 'briefcase' },
+  { label: 'Applied Jobs', href: '/seeker/applications', iconName: 'send' },
+  { label: 'Settings', href: '/seeker/settings', iconName: 'settings' },
 ];

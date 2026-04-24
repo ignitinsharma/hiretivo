@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Settings, LogOut, User } from 'lucide-react';
+import { ChevronDown, Settings, LogOut, User, Briefcase, Send } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { SEEKER_NAV_ITEMS } from '@/constants/nav';
@@ -29,6 +29,11 @@ const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
   (item) => item.href !== '/seeker/settings',
 );
 
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  briefcase: Briefcase,
+  send: Send,
+};
+
 export function SeekerHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -42,9 +47,9 @@ export function SeekerHeader() {
           <Image
             src="/images/logo.png"
             alt="Hiretivo"
-            width={130}
-            height={36}
-            className="h-9 w-auto object-contain"
+            width={120}
+            height={24}
+            className="h-6 w-auto object-contain"
             priority
           />
         </Link>
@@ -53,18 +58,20 @@ export function SeekerHeader() {
           {NAV_ITEMS.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = ICON_MAP[item.iconName] ?? Briefcase;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'font-bold text-sm transition-colors',
+                  'flex items-center gap-2 font-bold text-sm transition-colors',
                   isActive
                     ? 'text-primary border-b-2 border-primary pb-0.5'
                     : 'text-slate-600 hover:text-primary'
                 )}
                 aria-current={isActive ? 'page' : undefined}
               >
+                <Icon className="w-4 h-4" />
                 {item.label}
               </Link>
             );

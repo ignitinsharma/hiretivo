@@ -91,13 +91,13 @@ function RecruiterSidebarInner({
               H
             </div>
           ) : (
-            <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
+            <Image src="/images/logo.png" alt="Hiretivo" width={64} height={28} className="h-6 w-auto object-contain" priority />
           )}
         </Link>
       </div>
 
       {/* Divider */}
-      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-50" />
+      <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
 
       {/* User profile */}
       <div

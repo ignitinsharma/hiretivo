@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -75,8 +75,18 @@ const SeekerSignupLeft = (
 
 export default function SeekerRegisterPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      const dest = session.user.role === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
+      router.replace(dest);
+    }
+  }, [status, session, router]);
+
+  if (status === "loading" || status === "authenticated") return null;
 
   const form = useForm<SeekerRegisterInput>({
     resolver: zodResolver(seekerRegisterSchema),

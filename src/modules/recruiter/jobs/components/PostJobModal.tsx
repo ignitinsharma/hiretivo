@@ -219,7 +219,7 @@ export function PostJobModal() {
     enabled: isPostJobModalOpen,
   });
 
-  const { data: editJob } = useQuery({
+  const { data: editJob, isLoading: isEditJobLoading } = useQuery({
     queryKey: ["job", editJobId],
     queryFn: () => fetch(`/api/jobs/${editJobId}`).then((r) => r.json()),
     enabled: isPostJobModalOpen && !!editJobId,
@@ -254,19 +254,20 @@ export function PostJobModal() {
 
   useEffect(() => {
     if (editJob && editJobId) {
-      setWorkType(editJob.workType ?? "REMOTE");
+      const j = editJob.job ?? editJob;
+      setWorkType(j.workType ?? "REMOTE");
 
       reset({
-        title: editJob.title || "",
-        category: editJob.category || "",
-        jobType: editJob.jobType?.toLowerCase().replace("_", "-") || "",
-        experienceLevel: editJob.experienceLevel || "",
-        salaryMin: editJob.salaryMin != null ? String(editJob.salaryMin) : "",
-        salaryMax: editJob.salaryMax != null ? String(editJob.salaryMax) : "",
-        currency: editJob.currency ?? "USD",
-        description: editJob.description || "",
+        title: j.title || "",
+        category: j.category || "",
+        jobType: j.jobType?.toLowerCase().replace("_", "-") || "",
+        experienceLevel: j.experienceLevel || "",
+        salaryMin: j.salaryMin != null ? String(j.salaryMin) : "",
+        salaryMax: j.salaryMax != null ? String(j.salaryMax) : "",
+        currency: j.currency ?? "USD",
+        description: j.description || "",
         selectedSkillIds:
-          editJob.skills?.map((s: { skillId: string }) => s.skillId) || [],
+          j.skills?.map((s: { id: string; skillId?: string }) => s.skillId ?? s.id) || [],
       });
     } else if (!editJobId) {
       setWorkType("REMOTE");
@@ -384,7 +385,15 @@ export function PostJobModal() {
           </DialogTitle>
         </DialogHeader>
 
-        <form className="space-y-6 overflow-y-auto px-6 pb-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+        {isEditJobLoading && editJobId ? (
+          <div className="px-6 py-8 space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : null}
+
+        <form className={`space-y-6 overflow-y-auto px-6 pb-6 ${isEditJobLoading && editJobId ? "hidden" : ""}`} onSubmit={handleSubmit(onSubmit)} noValidate>
           <div>
             <Label className="block text-sm font-semibold text-slate-700 mb-2">
               Job Title <span className="text-red-500">*</span>

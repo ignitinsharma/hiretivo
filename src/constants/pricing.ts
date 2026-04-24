@@ -67,8 +67,8 @@ export const PRICING_CONFIG: PricingTier[] = [
     highlighted: true,
     isEnterprise: false,
     features: ["Everything in Growth", "Boost jobs", "AI candidate summaries", "Advanced analytics", "Dedicated account manager"],
-    USD: { monthly: 299, annual: 191, annualTotal: 2295, annualSavings: 720 },
-    INR: { monthly: 24999, annual: 15999, annualTotal: 191999, annualSavings: 60000 },
+    USD: { monthly: 149, annual: 119, annualTotal: 1426, annualSavings: 362 },
+    INR: { monthly: 7999, annual: 5999, annualTotal: 71986, annualSavings: 24002 },
   },
   {
     id: "enterprise",
