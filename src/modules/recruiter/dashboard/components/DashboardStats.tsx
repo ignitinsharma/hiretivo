@@ -32,7 +32,7 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
       <p
         className={cn(
           'text-sm font-medium mb-4',
-          isPrimary ? 'opacity-80' : 'text-slate-500'
+          isPrimary ? 'opacity-60' : 'text-slate-500'
         )}
       >
         {stat.label}

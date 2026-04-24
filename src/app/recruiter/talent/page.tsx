@@ -60,15 +60,14 @@ const MOCK_TALENT = [
 
 export default function FindTalentPage() {
   return (
-    <div>
+    <div className="w-full p-6">
       <RecruiterHeader
         title="Find Talent"
         subtitle="Discover candidates that match your requirements"
         showPostJob={false}
       />
 
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-6">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-6 mt-6">
           <div className="p-4">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
@@ -97,7 +96,6 @@ export default function FindTalentPage() {
               </div>
             </div>
           </div>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {MOCK_TALENT.map((candidate) => (

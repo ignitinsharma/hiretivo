@@ -138,7 +138,7 @@ export default function RecruiterApplicationsPage() {
 
   if (statsQuery.isLoading || applicationsQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="w-full p-8">
         <PageSkeleton lines={8} showHeader={true} showFilters={true} />
       </div>
     );
@@ -175,9 +175,8 @@ export default function RecruiterApplicationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="w-full p-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="w-full p-8 space-y-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-4">
               <SidebarToggle />
@@ -370,7 +369,6 @@ export default function RecruiterApplicationsPage() {
             </div>
           </div>
         </div>
-      </div>
 
       <CandidateDrawer application={selectedApplication} />
     </div>

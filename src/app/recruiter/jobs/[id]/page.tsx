@@ -22,20 +22,18 @@ export default async function RecruiterJobDetailPage({ params }: PageProps) {
 
   if (!job || job.recruiterId !== session?.user?.id) {
     return (
-      <div className="min-h-screen bg-white">
-        <main className="w-full p-8">
-          <div className="flex items-start gap-4 mb-10">
-            <SidebarToggle className="mt-2" />
-            <div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-                Job not found
-              </h1>
-              <p className="text-slate-500 text-lg mt-1">
-                This job does not exist or you do not have access.
-              </p>
-            </div>
+      <div className="w-full p-8">
+        <div className="flex items-start gap-4 mb-10">
+          <SidebarToggle className="mt-2" />
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+              Job not found
+            </h1>
+            <p className="text-slate-500 text-lg mt-1">
+              This job does not exist or you do not have access.
+            </p>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -50,48 +48,46 @@ export default async function RecruiterJobDetailPage({ params }: PageProps) {
   const boostExpiresAt = isAlreadyBoosted ? activeBoost.expiresAt.toISOString() : null;
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="w-full p-8">
-        {/* Boost success toast — fires when returning from DodoPayments with ?boost=success */}
-        <Suspense fallback={null}>
-          <BoostSuccessNotifier />
-        </Suspense>
+    <div className="w-full p-8">
+      {/* Boost success toast — fires when returning from DodoPayments with ?boost=success */}
+      <Suspense fallback={null}>
+        <BoostSuccessNotifier />
+      </Suspense>
 
-        {/* Header */}
-        <div className="flex items-start gap-4 mb-10">
-          <SidebarToggle className="mt-2" />
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-              {job.title}
-            </h1>
-            <p className="text-slate-500 text-lg mt-1">
-              Job details and performance analytics
-            </p>
-          </div>
+      {/* Header */}
+      <div className="flex items-start gap-4 mb-10">
+        <SidebarToggle className="mt-2" />
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+            {job.title}
+          </h1>
+          <p className="text-slate-500 text-lg mt-1">
+            Job details and performance analytics
+          </p>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+      {/* Tabs */}
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="overview">
-            <div className="max-w-sm pt-2">
-              <BoostJobButton
-                jobId={id}
-                isAlreadyBoosted={isAlreadyBoosted}
-                boostExpiresAt={boostExpiresAt}
-              />
-            </div>
-          </TabsContent>
+        <TabsContent value="overview">
+          <div className="max-w-sm pt-2">
+            <BoostJobButton
+              jobId={id}
+              isAlreadyBoosted={isAlreadyBoosted}
+              boostExpiresAt={boostExpiresAt}
+            />
+          </div>
+        </TabsContent>
 
-          <TabsContent value="analytics">
-            <JobAnalyticsTab jobId={id} />
-          </TabsContent>
-        </Tabs>
-      </main>
+        <TabsContent value="analytics">
+          <JobAnalyticsTab jobId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

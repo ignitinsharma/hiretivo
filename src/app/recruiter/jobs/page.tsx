@@ -349,8 +349,7 @@ export default function RecruiterJobsPage() {
   const showEnd = Math.min(currentPage * JOBS_PER_PAGE, totalJobs);
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="w-full p-8">
+    <div className="w-full p-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6 mb-10">
           <div className="flex items-start gap-4">
@@ -506,7 +505,6 @@ export default function RecruiterJobsPage() {
             />
           </div>
         </div>
-      </main>
 
       {/* Delete Confirmation Modal */}
       <ConfirmDeleteModal

@@ -606,14 +606,13 @@ export default function SettingsPage() {
   const settingsData = settingsQueryData?.data;
 
   return (
-    <div>
+    <div className="w-full p-6">
       <RecruiterHeader
         title="Settings"
         subtitle="Manage your account and preferences"
       />
 
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm mt-6">
           <div className="flex flex-col md:flex-row">
             <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-100 p-4">
               <nav className="space-y-1">
@@ -665,6 +664,5 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

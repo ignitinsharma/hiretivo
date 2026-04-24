@@ -1,71 +1,122 @@
-'use client';
+"use client";
 
-import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
-import { ActiveJobsList } from '@/modules/recruiter/dashboard/components/ActiveJobsList';
-import { RecentApplicantsList } from '@/modules/recruiter/dashboard/components/RecentApplicantsList';
-import { ApplicationTrendChart } from '@/modules/recruiter/dashboard/components/ApplicationTrendChart';
-import { RECRUITER_STATS, RECENT_APPLICANTS } from '@/modules/recruiter/dashboard/data/mock-dashboard-data';
-import { cn } from '@/lib/utils';
+import { SidebarToggle } from "@/components/layout/RecruiterSidebar";
+import { ActiveJobsList } from "@/modules/recruiter/dashboard/components/ActiveJobsList";
+import { RecentApplicantsList } from "@/modules/recruiter/dashboard/components/RecentApplicantsList";
+import { ApplicationTrendChart } from "@/modules/recruiter/dashboard/components/ApplicationTrendChart";
+import {
+  RECRUITER_STATS,
+  RECENT_APPLICANTS,
+} from "@/modules/recruiter/dashboard/data/mock-dashboard-data";
+import { cn } from "@/lib/utils";
+import { Briefcase, FileText, Calendar, Users } from "lucide-react";
 
 interface DashboardStatItem {
   label: string;
   value: string | number;
   trend?: string;
-  variant?: 'default' | 'primary';
+  variant?: "default" | "primary";
+  icon: React.ReactNode;
 }
 
 const DASHBOARD_STATS: DashboardStatItem[] = [
   {
-    label: 'Active Jobs',
+    label: "Active Jobs",
     value: RECRUITER_STATS.activeJobs,
-    trend: '+5%',
+    trend: "+5%",
+    icon: <Briefcase className="w-5 h-5" />,
   },
   {
-    label: 'Total Applications',
+    label: "Total Applications",
     value: 482,
+    icon: <FileText className="w-5 h-5" />,
   },
   {
-    label: 'New This Week',
+    label: "New This Week",
     value: 28,
-    variant: 'primary',
+    variant: "primary",
+    icon: <Calendar className="w-5 h-5" />,
   },
   {
-    label: 'Avg. Match Score',
-    value: '78%',
+    label: "Avg. Match Score",
+    value: "78%",
+    icon: <Users className="w-5 h-5" />,
   },
 ];
 
+function Sparkline({ isPrimary }: { isPrimary: boolean }) {
+  const strokeColor = isPrimary ? "rgba(255,255,255,0.6)" : "currentColor";
+  return (
+    <svg className="w-20 h-8" viewBox="0 0 80 32" fill="none">
+      <path
+        d="M2 24 C8 24, 12 16, 20 18 C28 20, 32 26, 40 22 C48 18, 52 10, 60 12 C68 14, 72 8, 78 6"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function StatCard({ stat }: { stat: DashboardStatItem }) {
-  const isPrimary = stat.variant === 'primary';
+  const isPrimary = stat.variant === "primary";
   return (
     <div
       className={cn(
-        'p-6 rounded-xl',
+        "p-6 rounded-xl flex flex-col justify-between",
         isPrimary
-          ? 'bg-primary text-white shadow-lg shadow-primary/20'
-          : 'bg-white border border-slate-200 shadow-sm'
+          ? "bg-linear-to-br from-primary to-primary/80 text-white shadow-lg shadow-primary/25"
+          : "bg-white border border-slate-200 shadow-sm",
       )}
     >
-      <p
-        className={cn(
-          'text-sm font-medium mb-4',
-          isPrimary ? 'opacity-80' : 'text-slate-500'
-        )}
-      >
-        {stat.label}
-      </p>
-      <div className="flex items-baseline gap-3">
-        <span className="text-3xl font-bold">{stat.value}</span>
-        {stat.trend && (
-          <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-            {stat.trend}
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          className={cn(
+            "flex items-center justify-center w-10 h-10 rounded-lg",
+            isPrimary ? "bg-white/20" : "bg-primary/10",
+          )}
+        >
+          <span className={cn(isPrimary ? "text-white" : "text-primary")}>
+            {stat.icon}
           </span>
-        )}
-        {stat.label === 'Avg. Match Score' && (
-          <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
-            <div className="bg-primary h-full w-[78%]" />
+        </div>
+        <p
+          className={cn(
+            "text-sm font-medium",
+            isPrimary ? "opacity-80" : "text-slate-600",
+          )}
+        >
+          {stat.label}
+        </p>
+      </div>
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold">{stat.value}</span>
+            {stat.trend && (
+              <span
+                className={cn(
+                  "text-xs font-semibold px-1.5 py-0.5 rounded",
+                  isPrimary
+                    ? "bg-white/20 text-white"
+                    : "text-emerald-600 bg-emerald-50",
+                )}
+              >
+                {stat.trend}
+              </span>
+            )}
           </div>
-        )}
+          <p
+            className={cn(
+              "text-xs mt-1",
+              isPrimary ? "opacity-70" : "text-slate-400",
+            )}
+          >
+            vs last week
+          </p>
+        </div>
+        <Sparkline isPrimary={isPrimary} />
       </div>
     </div>
   );
@@ -73,42 +124,39 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
 
 export default function RecruiterDashboardPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="w-full p-8 space-y-10">
-        {/* Header */}
-        <section className="flex items-start gap-4">
-          <SidebarToggle className="mt-2" />
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">
-              Good morning, Nitin.
-            </h1>
-            <p className="text-slate-500 text-lg">
-              Here&apos;s what&apos;s happening with your recruitment pipeline
-              today.
-            </p>
-          </div>
-        </section>
+    <div className="w-full p-8 space-y-8">
+      {/* Header */}
+      <section className="flex items-start gap-4">
+        <SidebarToggle className="mt-2" />
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">
+            Good morning, Nitin.
+          </h1>
+          <p className="text-slate-500">
+            Here&apos;s what&apos;s happening with your recruitment pipeline today.
+          </p>
+        </div>
+      </section>
 
-        {/* Stats Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {DASHBOARD_STATS.map((stat) => (
-            <StatCard key={stat.label} stat={stat} />
-          ))}
-        </section>
+      {/* Stats Grid */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {DASHBOARD_STATS.map((stat) => (
+          <StatCard key={stat.label} stat={stat} />
+        ))}
+      </section>
 
-        {/* Jobs + Applicants Grid */}
-        <section className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-          <div className="lg:col-span-3">
-            <ActiveJobsList />
-          </div>
-          <div className="lg:col-span-2">
-            <RecentApplicantsList applicants={RECENT_APPLICANTS} />
-          </div>
-        </section>
+      {/* Jobs + Applicants Grid */}
+      <section className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3 flex">
+          <ActiveJobsList />
+        </div>
+        <div className="lg:col-span-2 flex">
+          <RecentApplicantsList applicants={RECENT_APPLICANTS} />
+        </div>
+      </section>
 
-        {/* Application Trend */}
-        <ApplicationTrendChart />
-      </div>
+      {/* Application Trend */}
+      <ApplicationTrendChart />
     </div>
   );
 }

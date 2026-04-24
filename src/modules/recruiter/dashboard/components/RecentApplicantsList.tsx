@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ApplicationStatus } from '@/constants/enums';
@@ -53,21 +54,21 @@ function ApplicantRow({ applicant }: { applicant: RecentApplicant }) {
         {getInitials(applicant.seekerName)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm truncate">{applicant.seekerName}</p>
+        <p className="font-bold text-sm text-slate-900 truncate">{applicant.seekerName}</p>
         <p className="text-xs text-slate-500 truncate">
           for {applicant.jobTitle}
         </p>
       </div>
-      <div className="flex flex-col items-end shrink-0">
+      <div className="flex flex-col items-end shrink-0 gap-1">
         <span
           className={cn(
-            'text-[10px] font-bold px-2 py-0.5 rounded-full mb-1',
+            'text-[10px] font-bold px-2.5 py-0.5 rounded-full',
             STATUS_STYLES[applicant.status] ?? 'bg-slate-100 text-slate-600'
           )}
         >
           {STATUS_LABELS[applicant.status] ?? applicant.status}
         </span>
-        <span className="text-[10px] text-slate-500">
+        <span className="text-[10px] text-slate-400">
           {formatTimeAgo(applicant.appliedDate)}
         </span>
       </div>
@@ -82,11 +83,17 @@ interface RecentApplicantsListProps {
 
 export function RecentApplicantsList({ applicants, isLoading }: RecentApplicantsListProps) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-6 border-b border-slate-200">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full h-full">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
         <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
+        <Link
+          href="/recruiter/applicants"
+          className="text-primary font-semibold text-sm hover:underline"
+        >
+          View all
+        </Link>
       </div>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-5 flex-1">
         {isLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4">

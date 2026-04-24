@@ -11,19 +11,21 @@ export default function RecruiterLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthGuard
-      requiredRole={UserRole.RECRUITER}
-      loginPath="/recruiter/login"
-      onboardingPath="/recruiter/onboarding"
-      fallbackDashboard="/recruiter/dashboard"
-    >
-      <ReactQueryProvider>
-        <RecruiterSidebarProvider>
-          <AuthRedirectToast />
-          {children}
-          <PostJobModal />
-        </RecruiterSidebarProvider>
-      </ReactQueryProvider>
-    </AuthGuard>
+    <div className="min-h-screen bg-slate-50">
+      <AuthGuard
+        requiredRole={UserRole.RECRUITER}
+        loginPath="/recruiter/login"
+        onboardingPath="/recruiter/onboarding"
+        fallbackDashboard="/recruiter/dashboard"
+      >
+        <ReactQueryProvider>
+          <RecruiterSidebarProvider>
+            <AuthRedirectToast />
+            {children}
+            <PostJobModal />
+          </RecruiterSidebarProvider>
+        </ReactQueryProvider>
+      </AuthGuard>
+    </div>
   );
 }
