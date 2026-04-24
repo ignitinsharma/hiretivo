@@ -2,6 +2,7 @@
 
 import { Rocket, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
@@ -9,16 +10,36 @@ import { StepRoleHiring } from './StepRoleHiring';
 import { StepCompanyProfile } from './StepCompanyProfile';
 import { StepPostJob } from './StepPostJob';
 import { StepComplete } from './StepComplete';
+import { saveRecruiterProfile } from '@/app/actions/onboarding/recruiter';
 
 const stepLabels = ['Role', 'Company', 'Job', 'Complete'];
 
 export function OnboardingContainer() {
   const router = useRouter();
-  const { currentStep, nextStep, previousStep, completeOnboarding } = useOnboardingStore();
+  const { currentStep, nextStep, previousStep, completeOnboarding, step2 } = useOnboardingStore();
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const progressPercent = ((currentStep - 1) / 3) * 100;
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+
+    // Ensure recruiterProfile exists in DB before navigating to dashboard
+    // This is a safety net in case StepCompanyProfile's save failed
+    if (step2.companyName) {
+      await saveRecruiterProfile({
+        companyName: step2.companyName,
+        website: step2.companyWebsite || null,
+        companySize: step2.companySize,
+        bio: null,
+        industry: step2.industry,
+        fundingType: step2.fundingType,
+        isFullyRemote: step2.isFullyRemote,
+        logo: step2.logoUrl,
+      });
+    }
+
     completeOnboarding();
     router.push('/recruiter/dashboard');
   };
@@ -48,7 +69,7 @@ export function OnboardingContainer() {
           />
         );
       case 4:
-        return <StepComplete onComplete={handleComplete} />;
+        return <StepComplete onComplete={handleComplete} isLoading={isNavigating} />;
       default:
         return null;
     }

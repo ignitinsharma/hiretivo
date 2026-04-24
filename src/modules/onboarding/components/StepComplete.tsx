@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 
 interface StepCompleteProps {
   onComplete: () => void;
+  isLoading?: boolean;
 }
 
-export function StepComplete({ onComplete }: StepCompleteProps) {
+export function StepComplete({ onComplete, isLoading }: StepCompleteProps) {
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="text-center space-y-6">
@@ -55,8 +56,8 @@ export function StepComplete({ onComplete }: StepCompleteProps) {
         </div>
       </div>
 
-      <Button type="button" onClick={onComplete} size="lg" variant="primary" className="w-full mt-6">
-        Go to Dashboard
+      <Button type="button" onClick={onComplete} size="lg" variant="primary" className="w-full mt-6" disabled={isLoading}>
+        {isLoading ? 'Setting up your dashboard...' : 'Go to Dashboard'}
         <ArrowRight className="w-4 h-4" />
       </Button>
 
