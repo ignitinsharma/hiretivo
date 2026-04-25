@@ -38,4 +38,16 @@ export const authService = {
   changePassword: async (payload: ChangePasswordInput): Promise<void> => {
     await apiClient.patch('/auth/change-password', payload);
   },
+
+  requestPasswordReset: async (email: string): Promise<void> => {
+    await apiClient.post('/auth/reset-password/request', { email });
+  },
+
+  confirmPasswordReset: async (input: {
+    email: string;
+    token: string;
+    newPassword: string;
+  }): Promise<void> => {
+    await apiClient.post('/auth/reset-password/confirm', input);
+  },
 };
