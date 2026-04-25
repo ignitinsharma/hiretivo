@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 
+import { PAID_FEATURE_COPY } from '@/lib/billing/plan-access';
+
+import type { RecruiterPaidFeature } from '@/constants/enums';
+
 interface UIState {
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
@@ -29,6 +33,19 @@ interface UIState {
   scheduledInterviewId: string | null; // present when rescheduling existing interview
   openScheduleModal: (applicationId: string, interviewId?: string | null) => void;
   closeScheduleModal: () => void;
+
+  paidFeatureModal: {
+    isOpen: boolean;
+    feature: RecruiterPaidFeature | null;
+    title: string;
+    description: string;
+  };
+  openPaidFeatureModal: (input: {
+    feature: RecruiterPaidFeature;
+    title?: string;
+    description?: string;
+  }) => void;
+  closePaidFeatureModal: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -79,5 +96,28 @@ export const useUIStore = create<UIState>((set) => ({
     isScheduleModalOpen: false,
     scheduleInterviewApplicationId: null,
     scheduledInterviewId: null,
+  }),
+
+  paidFeatureModal: {
+    isOpen: false,
+    feature: null,
+    title: '',
+    description: '',
+  },
+  openPaidFeatureModal: ({ feature, title, description }) => set({
+    paidFeatureModal: {
+      isOpen: true,
+      feature,
+      title: title ?? PAID_FEATURE_COPY[feature].title,
+      description: description ?? PAID_FEATURE_COPY[feature].description,
+    },
+  }),
+  closePaidFeatureModal: () => set({
+    paidFeatureModal: {
+      isOpen: false,
+      feature: null,
+      title: '',
+      description: '',
+    },
   }),
 }));
