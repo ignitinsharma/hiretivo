@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PricingClient } from "./pricing-client";
+import { CurrencyCode } from "@/constants/enums";
 import type { PricingCurrency } from "@/constants/pricing";
 import { generatePageMetadata } from "@/lib/metadata";
 
@@ -14,7 +15,7 @@ export const metadata = generatePageMetadata({
 export default async function PricingPage() {
   const headersList = await headers();
   const country = headersList.get("CF-IPCountry") ?? headersList.get("x-vercel-ip-country") ?? "US";
-  const currency: PricingCurrency = country === "IN" ? "INR" : "USD";
+  const currency: PricingCurrency = country === "IN" ? CurrencyCode.INR : CurrencyCode.USD;
 
   return (
     <div className="min-h-screen bg-white font-sans">

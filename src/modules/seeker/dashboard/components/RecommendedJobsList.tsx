@@ -6,25 +6,14 @@ import { JobCard } from '@/components/shared/JobCard';
 import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import type { JobListItem } from '@/modules/jobs/types/job.types';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface FeedResponse {
-  jobs: JobListItem[];
-  nextCursor: string | null;
-}
-
-async function fetchFeed(): Promise<FeedResponse> {
-  const res = await fetch('/api/seeker/feed');
-  if (!res.ok) throw new Error('Failed to fetch feed');
-  return res.json();
-}
+import { seekerService } from '@/services/seeker.service';
 
 export function RecommendedJobsList() {
   const { openApplyModal } = useUIStore();
   const { data, isLoading, error } = useQuery({
     queryKey: ['seeker-feed'],
-    queryFn: fetchFeed,
+    queryFn: seekerService.getFeed,
   });
 
   const handleApply = (jobId: string) => {

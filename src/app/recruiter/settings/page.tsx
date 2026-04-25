@@ -17,6 +17,9 @@ import {
   RecruiterProfileSettingsSchema,
   ChangePasswordSchema,
 } from "@/lib/validations/interview.schema";
+import { authService } from "@/services/auth.service";
+import { billingService } from "@/services/billing.service";
+import { recruiterService } from "@/services/recruiter.service";
 import type {
   RecruiterProfileSettingsInput,
   ChangePasswordInput,
@@ -71,14 +74,7 @@ function ProfileTabContent({ settingsData, isSettingsLoading, isSettingsError }:
   }, [settingsData, form]);
 
   const saveMutation = useMutation({
-    mutationFn: async (values: RecruiterProfileSettingsInput) => {
-      const res = await fetch("/api/recruiter/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-    },
+    mutationFn: recruiterService.updateSettings,
     onSuccess: () => {
       toast.success("Settings saved.");
       queryClient.invalidateQueries({ queryKey: ["recruiter-settings"] });
@@ -208,17 +204,7 @@ function SecurityTabContent() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: ChangePasswordInput) => {
-      const res = await fetch("/api/auth/change-password", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? "Failed to update password");
-      }
-    },
+    mutationFn: authService.changePassword,
     onSuccess: () => {
       toast.success("Password updated successfully.");
       form.reset();
@@ -301,20 +287,16 @@ function BillingTabContent() {
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/billing/checkout", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to start checkout");
-      const body = (await res.json()) as { data?: { url?: string } };
-      if (body.data?.url) window.location.href = body.data.url;
+      const url = await billingService.createCheckoutSession();
+      window.location.href = url;
     },
     onError: () => toast.error("Could not start checkout. Try again."),
   });
 
   const portalMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/billing/portal", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to open portal");
-      const body = (await res.json()) as { data?: { url?: string } };
-      if (body.data?.url) window.location.href = body.data.url;
+      const url = await billingService.createPortalSession();
+      window.location.href = url;
     },
     onError: () => toast.error("Could not open billing portal. Try again."),
   });
@@ -393,11 +375,7 @@ export default function SettingsPage() {
     isError: isSettingsError,
   } = useQuery<{ data: SettingsData }>({
     queryKey: ["recruiter-settings"],
-    queryFn: async () => {
-      const res = await fetch("/api/recruiter/settings");
-      if (!res.ok) throw new Error("Failed to load settings");
-      return res.json() as Promise<{ data: SettingsData }>;
-    },
+    queryFn: recruiterService.getSettings,
     staleTime: 60_000,
   });
 

@@ -5,27 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ProfileStrengthCard } from './ProfileStrengthCard';
 import { QuickStatsCard } from './QuickStatsCard';
 import { JobAlertsPromo } from './JobAlertsPromo';
-import type { SeekerDashboardData } from '../types/dashboard.types';
-
-interface DashboardApiResponse {
-  data: SeekerDashboardData;
-}
-
-async function fetchDashboardSummary(): Promise<SeekerDashboardData> {
-  const res = await fetch('/api/seeker/dashboard');
-  if (!res.ok) throw new Error('Failed to fetch dashboard summary');
-  const json = (await res.json()) as DashboardApiResponse;
-  return json.data;
-}
-
-async function patchDigest(enabled: boolean): Promise<void> {
-  const res = await fetch('/api/seeker/digest', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ enabled }),
-  });
-  if (!res.ok) throw new Error('Failed to update digest preference');
-}
+import { seekerService } from '@/services/seeker.service';
 
 const QUERY_KEY = ['seeker-dashboard-summary'] as const;
 
@@ -63,12 +43,12 @@ export function SeekerDashboardSidebar() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: QUERY_KEY,
-    queryFn: fetchDashboardSummary,
+    queryFn: seekerService.getDashboardSummary,
     staleTime: 60_000,
   });
 
   const digestMutation = useMutation({
-    mutationFn: patchDigest,
+    mutationFn: seekerService.updateDigestPreference,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

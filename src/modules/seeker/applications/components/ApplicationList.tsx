@@ -6,36 +6,8 @@ import { ApplicationCard } from "./ApplicationCard";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { ApplicationListSkeleton } from "./ApplicationListSkeleton";
+import { applicationService } from "@/services/application.service";
 import type { SeekerApplicationItem } from "../types/application.types";
-
-async function fetchApplications(): Promise<SeekerApplicationItem[]> {
-  const response = await fetch("/api/applications");
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(
-      (data as { error?: string }).error ?? "Failed to load applications",
-    );
-  }
-
-  const data = (await response.json()) as Array<{
-    id: string;
-    jobId: string;
-    jobTitle: string;
-    companyName: string;
-    companyLogoUrl?: string | null;
-    status: SeekerApplicationItem["status"];
-    appliedAt: string;
-  }>;
-
-  return data.map((application) => ({
-    ...application,
-    companyLogoUrl: application.companyLogoUrl ?? undefined,
-    appliedAt: new Date(application.appliedAt).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-  }));
-}
 
 export function ApplicationList() {
   const {
@@ -44,7 +16,7 @@ export function ApplicationList() {
     isError,
   } = useQuery({
     queryKey: ["applications"],
-    queryFn: fetchApplications,
+    queryFn: applicationService.getMyApplications,
   });
 
   if (isLoading) {

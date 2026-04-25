@@ -13,31 +13,15 @@ import {
   SeekerSettingsSchema,
   type SeekerSettingsInput,
 } from "@/lib/validations/seeker.schema";
-
-interface SeekerSettingsData {
-  name: string;
-  email: string;
-  headline: string;
-  bio: string;
-  location: string;
-  situation: string;
-  primaryRole: string;
-  salaryMin: number | null;
-  salaryMax: number | null;
-  currency: string;
-  availability: string;
-}
+import { seekerService } from "@/services/seeker.service";
+import type { SeekerSettingsData } from "@/services/seeker.service";
 
 export function PersonalInfoSection() {
   const queryClient = useQueryClient();
 
   const { data: settingsData, isLoading, isError } = useQuery<{ data: SeekerSettingsData }>({
     queryKey: ["seeker-settings"],
-    queryFn: async () => {
-      const res = await fetch("/api/seeker/settings");
-      if (!res.ok) throw new Error("Failed to load settings");
-      return res.json() as Promise<{ data: SeekerSettingsData }>;
-    },
+    queryFn: seekerService.getSettings,
     staleTime: 60_000,
   });
 
@@ -70,14 +54,7 @@ export function PersonalInfoSection() {
   }, [profile, form]);
 
   const saveMutation = useMutation({
-    mutationFn: async (values: SeekerSettingsInput) => {
-      const res = await fetch("/api/seeker/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-    },
+    mutationFn: seekerService.updateSettings,
     onSuccess: () => {
       toast.success("Profile updated successfully.");
       queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });

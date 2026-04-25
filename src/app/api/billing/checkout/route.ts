@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getDodoProductId, DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
-import { PlanTier, UserRole } from "@/constants/enums";
+import { PlanTier, PricingTierId, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (planId !== "pro") {
+  if (planId !== PricingTierId.PRO) {
     return NextResponse.json(
       { error: "Selected plan is not available for self-serve checkout" },
       { status: 400 },

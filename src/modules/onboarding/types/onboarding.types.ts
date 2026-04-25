@@ -16,7 +16,11 @@ export type FundingType =
   | 'SERIES_C_PLUS' 
   | 'PUBLICLY_TRADED';
 
-export type JobType = 'FULL_TIME' | 'CONTRACT' | 'PART_TIME' | 'FREELANCE';
+export type JobType =
+  | OnboardingJobType.FULL_TIME
+  | OnboardingJobType.CONTRACT
+  | OnboardingJobType.PART_TIME
+  | OnboardingJobType.FREELANCE;
 
 export type ExperienceLevel = 'ENTRY_LEVEL' | 'MID_LEVEL' | 'SENIOR' | 'LEAD_DIRECTOR';
 
@@ -61,3 +65,4 @@ export interface OnboardingData {
 }
 
 export type OnboardingStep = 1 | 2 | 3 | 4;
+import type { OnboardingJobType } from '@/constants/enums';

@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import type { UserRole } from "@/constants/enums";
+import { UserRole } from "@/constants/enums";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -44,7 +44,7 @@ async function checkOnboarding(
   userId: string,
   role: UserRole
 ): Promise<boolean> {
-  if (role === "SEEKER") {
+  if (role === UserRole.SEEKER) {
     const seekerProfile = await prisma.seekerProfile.findUnique({
       where: { userId },
       select: { situation: true, primaryRole: true },

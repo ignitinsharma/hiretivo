@@ -902,3 +902,61 @@ className="rounded-2xl border border-input focus-visible:border-brand-primary fo
 - Auth: `auth()` for all server-side checks
 - Role checks: in middleware AND in every API route handler
 - Recruiter: can ONLY access their own jobs + applications
+
+---
+
+## 17. CLIENT API SERVICE LAYER
+
+### 17.1 Axios only for client API calls
+
+- Client-side API calls must use the typed axios instance from `src/lib/axios.ts`.
+- Never call `fetch()` from pages, components, hooks, or TanStack Query functions.
+- Never import `apiClient` directly in a page or component. Always call a service function.
+- `apiClient` uses `baseURL: "/api"`, so service paths must be relative API paths like `/jobs`, not `/api/jobs`.
+- Axios error normalization happens in `src/lib/axios.ts`; do not add `res.ok` checks or manual JSON parsing in UI code.
+
+### 17.2 Service file rules
+
+- Put client API wrappers in `src/services/*.service.ts`.
+- One service per domain is preferred: `job.service.ts`, `application.service.ts`, `seeker.service.ts`, `recruiter.service.ts`, `billing.service.ts`, `auth.service.ts`, `skill.service.ts`.
+- Services are pure TypeScript modules. No React imports, no hooks, no Zustand stores, no router, no toast.
+- Every service function must have explicit parameter types and explicit `Promise<T>` return types.
+- Never return `Promise<any>`.
+- Services may transform raw API responses into existing UI/domain types when that transformation already existed at the call site.
+
+### 17.3 Query and mutation hooks
+
+```ts
+// CORRECT
+queryFn: () => jobService.getJobs(filters)
+
+// WRONG
+queryFn: async () => {
+  const res = await fetch('/api/jobs')
+  return res.json()
+}
+```
+
+- TanStack Query `queryFn` and mutation functions should delegate to a single service call.
+- Keep existing `queryKey`, `enabled`, `staleTime`, retry, and invalidation behavior unchanged unless the feature requires a behavior change.
+- UI side effects stay in hooks/components: toast, router navigation, modal close, form reset, and query invalidation.
+
+### 17.4 Server-side exceptions
+
+- Server Actions (`"use server"`) do not use axios. They call Prisma or server utilities directly.
+- API route handlers under `src/app/api/` do not use axios. They are the API server.
+- Non-fetch URL construction strings such as email verification links and OAuth callback URLs may still contain `/api/`.
+
+### 17.5 Tailwind spacing discipline
+
+- Prefer Tailwind scale utilities over arbitrary pixel values whenever the value exists in Tailwind.
+- Use `px-5`, `py-4`, `w-20`, `h-10`, `gap-6`, etc. instead of `px-[20px]`, `py-[16px]`, `w-[80px]`, `h-[40px]`, `gap-[24px]`.
+- Arbitrary values are allowed only when DESIGN.md explicitly requires a non-scale value, such as `text-[96px]`, `leading-[0.85]`, color tokens, or custom ring shadows.
+
+### 17.6 Domain enum discipline
+
+- Never hardcode domain enum values directly in application logic, services, validators, or API routes.
+- Import enum values and enum value arrays from `src/constants/enums.ts`.
+- This applies to roles, plans, job status, application status, interview status, job type, work type, apply type, skill level, billing period, currency, pricing tier IDs, and AI message roles.
+- Zod schemas must use exported enum value arrays such as `USER_ROLE_VALUES`, `JOB_STATUS_VALUES`, `JOB_TYPE_VALUES`, and `BILLING_PERIOD_VALUES`.
+- Literal strings are still allowed for user-facing copy, CSS classes, route paths, query keys, and labels.

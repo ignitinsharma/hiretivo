@@ -19,6 +19,7 @@ import { ApplicationStatus, PlanTier } from '@/constants/enums';
 import { getStageLabel } from '@/lib/application-pipeline';
 import { CandidateDrawer, type CandidateApplication } from '@/modules/recruiter/applications/components/CandidateDrawer';
 import { useUIStore } from '@/store/use-ui-store';
+import { recruiterService } from '@/services/recruiter.service';
 
 type RecruiterApplicationsResponse = {
   applications: CandidateApplication[];
@@ -39,15 +40,7 @@ type RecruiterStatsResponse = {
 };
 
 async function fetchRecruiterStats(jobId?: string): Promise<RecruiterStatsResponse> {
-  const query = new URLSearchParams();
-  if (jobId) {
-    query.set('jobId', jobId);
-  }
-  const response = await fetch(`/api/recruiter/applications/stats?${query.toString()}`);
-  if (!response.ok) {
-    throw new Error('Failed to load stats');
-  }
-  return response.json();
+  return recruiterService.getApplicationStats(jobId);
 }
 
 async function fetchRecruiterApplications(
@@ -56,26 +49,13 @@ async function fetchRecruiterApplications(
   search: string,
   jobId?: string,
 ): Promise<RecruiterApplicationsResponse> {
-  const query = new URLSearchParams();
-  if (jobId) {
-    query.set('jobId', jobId);
-  }
-  if (stage) {
-    query.set('stage', stage);
-  }
-  if (search.trim()) {
-    query.set('search', search.trim());
-  }
-  if (cursor) {
-    query.set('cursor', cursor);
-  }
-  query.set('limit', '25');
-
-  const response = await fetch(`/api/recruiter/applications?${query.toString()}`);
-  if (!response.ok) {
-    throw new Error('Failed to load applications');
-  }
-  return response.json();
+  return recruiterService.getApplications({
+    cursor,
+    stage,
+    search,
+    jobId,
+    limit: 25,
+  });
 }
 
 function getMatchLabel(score: number): string {

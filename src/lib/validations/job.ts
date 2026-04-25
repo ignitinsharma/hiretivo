@@ -1,23 +1,26 @@
 import { z } from "zod";
-
-const jobTypeValues = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"] as const;
-const applyTypeValues = ["INTERNAL", "EXTERNAL"] as const;
-const jobStatusValues = ["DRAFT", "OPEN", "PAUSED", "CLOSED"] as const;
-const workTypeValues = ["REMOTE", "HYBRID", "ONSITE"] as const;
-const skillLevelValues = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"] as const;
+import {
+  APPLY_TYPE_VALUES,
+  ApplyType,
+  JobStatus,
+  JOB_STATUS_VALUES,
+  JOB_TYPE_VALUES,
+  SKILL_LEVEL_VALUES,
+  WORK_TYPE_VALUES,
+} from "@/constants/enums";
 
 const jobSkillSchema = z.object({
   skillId: z.cuid(),
-  level: z.enum(skillLevelValues),
+  level: z.enum(SKILL_LEVEL_VALUES),
 });
 
 const baseJobSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(50_000),
-  jobType: z.enum(jobTypeValues),
-  applyType: z.enum(applyTypeValues),
-  workType: z.enum(workTypeValues).optional(),
-  status: z.enum(jobStatusValues).default("DRAFT"),
+  jobType: z.enum(JOB_TYPE_VALUES),
+  applyType: z.enum(APPLY_TYPE_VALUES),
+  workType: z.enum(WORK_TYPE_VALUES).optional(),
+  status: z.enum(JOB_STATUS_VALUES).default(JobStatus.DRAFT),
   salaryMin: z.number().int().nonnegative().optional(),
   salaryMax: z.number().int().nonnegative().optional(),
   currency: z.string().trim().length(3).optional(),
@@ -47,14 +50,14 @@ function jobRefinements(
       path: ["salaryMax"],
     });
   }
-  if (data.applyType === "EXTERNAL" && !data.externalApplyUrl) {
+  if (data.applyType === ApplyType.EXTERNAL && !data.externalApplyUrl) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "externalApplyUrl is required when applyType is EXTERNAL",
       path: ["externalApplyUrl"],
     });
   }
-  if (data.applyType === "INTERNAL" && data.externalApplyUrl) {
+  if (data.applyType === ApplyType.INTERNAL && data.externalApplyUrl) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "externalApplyUrl must be empty when applyType is INTERNAL",

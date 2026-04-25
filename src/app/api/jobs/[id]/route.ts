@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
-import { UserRole } from '@/constants/enums';
+import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
 
 // GET /api/jobs/[id] — public job detail with auth-gated match breakdown
 export async function GET(
@@ -28,14 +28,14 @@ export async function GET(
   });
   const session = await auth();
   const isOwner = session?.user?.id === job?.recruiter?.id;
-  if (!job || (job.status !== 'OPEN' && !isOwner)) {
+  if (!job || (job.status !== JobStatus.OPEN && !isOwner)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   let matchScore: number | null = null;
   let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
 
-  if (session?.user?.role === 'SEEKER') {
+  if (session?.user?.role === UserRole.SEEKER) {
     const seekerProfile = await prisma.seekerProfile.findUnique({
       where: { userId: session.user.id },
       include: {
@@ -149,7 +149,7 @@ export async function PATCH(
         data: skills.map((s) => ({
           jobId: params.id,
           skillId: s.skillId,
-          level: s.level ?? 'INTERMEDIATE',
+          level: s.level ?? SkillLevel.INTERMEDIATE,
         })),
       });
       return j;

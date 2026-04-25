@@ -4,16 +4,8 @@ import { Calendar, Clock, Video } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface UpcomingInterviewItem {
-  id: string;
-  startsAt: string;
-  meetLink: string | null;
-  application: {
-    job: { title: string };
-    seeker: { name: string | null };
-  };
-}
+import { recruiterService } from '@/services/recruiter.service';
+import type { UpcomingInterviewItem } from '@/services/recruiter.service';
 
 interface UpcomingInterviewsResponse {
   data: UpcomingInterviewItem[];
@@ -32,11 +24,7 @@ function formatInterviewTime(isoString: string): string {
 export function UpcomingInterviewsList() {
   const { data, isLoading, isError, refetch } = useQuery<UpcomingInterviewsResponse>({
     queryKey: ['recruiter-interviews-upcoming'],
-    queryFn: async () => {
-      const res = await fetch('/api/recruiter/interviews/upcoming');
-      if (!res.ok) throw new Error('Failed to fetch interviews');
-      return res.json() as Promise<UpcomingInterviewsResponse>;
-    },
+    queryFn: recruiterService.getUpcomingInterviews,
     staleTime: 30_000,
   });
 

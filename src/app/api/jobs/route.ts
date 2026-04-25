@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createJobSchema } from '@/lib/validations/job';
 import { createRateLimiter } from '@/lib/rate-limit';
-import { UserRole } from '@/constants/enums';
+import { JobStatus, PlanTier, SkillLevel, UserRole } from '@/constants/enums';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.job.count({ where }),
     prisma.job.count({ where: { recruiterId } }),
-    prisma.job.count({ where: { recruiterId, status: 'OPEN' } }),
+    prisma.job.count({ where: { recruiterId, status: JobStatus.OPEN } }),
     prisma.application.count({
       where: { job: { recruiterId } },
     }),
@@ -104,9 +104,9 @@ export async function POST(req: NextRequest) {
     select: { plan: true },
   });
 
-  if (user?.plan === 'FREE') {
+  if (user?.plan === PlanTier.FREE) {
     const activeCount = await prisma.job.count({
-      where: { recruiterId: session.user.id, status: 'OPEN' },
+      where: { recruiterId: session.user.id, status: JobStatus.OPEN },
     });
     if (activeCount >= 2) {
       return NextResponse.json(
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
       data: {
         ...jobData,
         recruiterId: session.user.id,
-        status: 'OPEN',
+        status: JobStatus.OPEN,
         publishedAt: new Date(),
       },
     });
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
       data: skills.map((s) => ({
         jobId: j.id,
         skillId: s.skillId,
-        level: s.level ?? 'INTERMEDIATE',
+        level: s.level ?? SkillLevel.INTERMEDIATE,
       })),
     });
     return j;

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
+import { JobStatus } from '@/constants/enums';
 
 export function computeMatchScore(
   seekerSkillIds: string[],
@@ -21,7 +22,7 @@ export async function computeAllMatches(
   const seekerSkillIds = seekerSkills.map((s) => s.skillId);
 
   const jobs = await prisma.job.findMany({
-    where: { status: 'OPEN' },
+    where: { status: JobStatus.OPEN },
     select: {
       id: true,
       skills: { select: { skillId: true } },

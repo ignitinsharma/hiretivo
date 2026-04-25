@@ -13,6 +13,9 @@ import {
 import type { YearsOfExperience } from '@/lib/validations/seeker-onboarding.schema';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
 import { saveStep2 } from '@/app/actions/onboarding/seeker';
+import { SkillLevel } from '@/constants/enums';
+import { skillService } from '@/services/skill.service';
+import type { SkillItem } from '@/services/skill.service';
 
 interface StepSkillsProps {
   onNext: () => void;
@@ -28,7 +31,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
-  const [apiSkills, setApiSkills] = useState<{ id: string; name: string; category: string }[]>([]);
+  const [apiSkills, setApiSkills] = useState<SkillItem[]>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [skillSearch, setSkillSearch] = useState('');
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
@@ -36,9 +39,8 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/skills')
-      .then((r) => r.json())
-      .then((data) => setApiSkills(Array.isArray(data) ? data : []))
+    skillService.getSkills()
+      .then((data) => setApiSkills(data))
       .catch(() => {})
       .finally(() => setSkillsLoading(false));
   }, []);
@@ -72,9 +74,9 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
       .map((name) => {
         const found = apiSkills.find((s) => s.name.toLowerCase() === name.toLowerCase());
         if (!found) unmatchedSkills.push(name);
-        return found ? { skillId: found.id, level: 'INTERMEDIATE' } : null;
+        return found ? { skillId: found.id, level: SkillLevel.INTERMEDIATE } : null;
       })
-      .filter((s): s is { skillId: string; level: string } => s !== null);
+      .filter((s): s is { skillId: string; level: SkillLevel } => s !== null);
 
     if (unmatchedSkills.length > 0) {
       console.warn('[StepSkills] Skills not found in DB:', unmatchedSkills);
@@ -112,25 +114,18 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     setIsCreatingSkill(true);
     try {
       const slug = trimmed.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      const res = await fetch('/api/skills', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: trimmed, slug, category: 'Other' }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        if (res.status === 409) {
-          const existing = apiSkills.find((s) => s.name.toLowerCase() === trimmed.toLowerCase());
-          if (existing) {
-            addSkill(existing.name);
-            return;
-          }
+      try {
+        const newSkill = await skillService.createSkill({ name: trimmed, slug, category: 'Other' });
+        setApiSkills((prev) => [...prev, newSkill]);
+        addSkill(newSkill.name);
+      } catch (error) {
+        const existing = apiSkills.find((s) => s.name.toLowerCase() === trimmed.toLowerCase());
+        if (existing) {
+          addSkill(existing.name);
+          return;
         }
-        throw new Error(err.error ?? 'Failed to create skill');
+        throw error;
       }
-      const newSkill = await res.json();
-      setApiSkills((prev) => [...prev, newSkill]);
-      addSkill(newSkill.name);
     } catch (err) {
       console.error('[StepSkills] Failed to create skill:', err);
     } finally {

@@ -9,14 +9,16 @@ import { CircleCheck, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { UserRole, PlanTier } from "@/constants/enums";
+import { BillingPeriod, CurrencyCode, PricingTierId, UserRole, PlanTier } from "@/constants/enums";
 import { useUIStore } from "@/store/use-ui-store";
+import { billingService } from "@/services/billing.service";
 import {
   PRICING_CONFIG,
   CURRENCY_SYMBOL,
   type PricingCurrency,
   type PricingTier,
 } from "@/constants/pricing";
+import type { CheckoutRequestInput } from "@/lib/validations/checkout.schema";
 
 // ─── Table cell class constants (CLAUDE.md §15.2) ───────────────────────────
 
@@ -172,7 +174,7 @@ function PricingCard({
   const prices = tier[currency];
   const isHighlighted = tier.highlighted === true;
   const isEnterprise = tier.isEnterprise === true;
-  const isCurrentPlan = userPlan === PlanTier.PRO && tier.id === "pro";
+  const isCurrentPlan = userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO;
 
   const displayedCtaText = isCurrentPlan ? "Manage Plan" : tier.cta;
 
@@ -252,10 +254,10 @@ function PricingCard({
                 /mo
               </span>
             </div>
-            {tier.id === "free" && (
+            {tier.id === PricingTierId.FREE && (
               <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
             )}
-            {tier.id !== "free" && currency === "INR" && (
+            {tier.id !== PricingTierId.FREE && currency === CurrencyCode.INR && (
               <p
                 className={cn(
                   "mt-1 text-[10px] font-bold",
@@ -269,7 +271,7 @@ function PricingCard({
         )}
       </div>
 
-      {!isEnterprise && tier.id !== "free" && (
+      {!isEnterprise && tier.id !== PricingTierId.FREE && (
         <div
           className={cn(
             "p-2.5 rounded-lg mb-6 text-center",
@@ -300,7 +302,7 @@ function PricingCard({
         </div>
       )}
 
-      {tier.id === "free" && <div className="h-px bg-slate-100 mb-6" />}
+      {tier.id === PricingTierId.FREE && <div className="h-px bg-slate-100 mb-6" />}
 
       {isEnterprise && <div className="h-px bg-slate-100 mb-6" />}
 
@@ -432,42 +434,12 @@ interface PricingClientProps {
   currency: PricingCurrency;
 }
 
-interface BillingSessionResponse {
-  data?: {
-    url?: string | null;
-  };
-  error?: string;
-}
-
-async function parseBillingSessionResponse(
-  response: Response,
-): Promise<string> {
-  const payload = (await response.json()) as BillingSessionResponse;
-
-  if (!response.ok || !payload.data?.url) {
-    throw new Error(payload.error ?? "Billing is unavailable right now");
-  }
-
-  return payload.data.url;
-}
-
-async function createCheckoutSession(body?: unknown): Promise<string> {
-  const response = await fetch("/api/billing/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  return parseBillingSessionResponse(response);
+async function createCheckoutSession(body?: CheckoutRequestInput): Promise<string> {
+  return billingService.createCheckoutSession(body);
 }
 
 async function createPortalSession(): Promise<string> {
-  const response = await fetch("/api/billing/portal", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-
-  return parseBillingSessionResponse(response);
+  return billingService.createPortalSession();
 }
 
 export function PricingClient({ currency }: PricingClientProps) {
@@ -480,8 +452,8 @@ export function PricingClient({ currency }: PricingClientProps) {
   const checkoutMutation = useMutation({
     mutationFn: () =>
       createCheckoutSession({
-        planId: "pro",
-        period: isAnnual ? "annual" : "monthly",
+        planId: PricingTierId.PRO,
+        period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
         currency,
       }),
     onSuccess: (url) => {
@@ -503,12 +475,12 @@ export function PricingClient({ currency }: PricingClientProps) {
   });
 
   function handleCtaClick(tierId: string) {
-    if (tierId === "free") {
+    if (tierId === PricingTierId.FREE) {
       router.push("/register");
       return;
     }
 
-    if (tierId === "pro") {
+    if (tierId === PricingTierId.PRO) {
       if (!session?.user) {
         openLoginModal();
         return;
@@ -588,14 +560,14 @@ export function PricingClient({ currency }: PricingClientProps) {
               userPlan={userPlan}
               onCtaClick={handleCtaClick}
               isPending={
-                tier.id === "pro" &&
+                tier.id === PricingTierId.PRO &&
                 (checkoutMutation.isPending || portalMutation.isPending)
               }
             />
           ))}
         </div>
 
-        {currency === "INR" && (
+        {currency === CurrencyCode.INR && (
           <p className="mt-6 text-xs text-slate-400 text-center">
             All prices include 18% GST. No extra charges at checkout.
           </p>

@@ -30,6 +30,7 @@ import {
 import { ApplicationStatus, InterviewStatus, PlanTier } from '@/constants/enums';
 import { getStageLabel } from '@/lib/application-pipeline';
 import { useUIStore } from '@/store/use-ui-store';
+import { recruiterService } from '@/services/recruiter.service';
 
 import { useFetchAiSummary } from '@/modules/recruiter/applications/queries/use-fetch-ai-summary';
 import { ScheduleInterviewModal } from './ScheduleInterviewModal';
@@ -157,18 +158,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
         throw new Error('No candidate selected');
       }
 
-      const response = await fetch(`/api/recruiter/applications/${application.id}/stage`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error((data as { error?: string }).error ?? 'Failed to update stage');
-      }
-
-      return data as { status: ApplicationStatus; updatedAt: string };
+      return recruiterService.updateApplicationStage(application.id, stage);
     },
     onMutate: async (stage) => {
       if (!application) {
@@ -211,10 +201,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
 
   const cancelInterviewMutation = useMutation({
     mutationFn: async (interviewId: string) => {
-      const res = await fetch(`/api/recruiter/interviews/${interviewId}/cancel`, { method: 'PATCH' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? 'Failed to cancel');
-      return data;
+      await recruiterService.cancelInterview(interviewId);
     },
     onSuccess: () => {
       toast.success('Interview cancelled — candidate notified.');

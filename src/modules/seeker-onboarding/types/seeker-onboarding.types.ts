@@ -17,10 +17,10 @@ export type YearsOfExperience =
   | '5_TO_10' 
   | 'MORE_THAN_10';
 
-export type JobType = 
-  | 'FULL_TIME' 
-  | 'CONTRACT' 
-  | 'BOTH';
+export type JobType =
+  | OnboardingJobType.FULL_TIME
+  | OnboardingJobType.CONTRACT
+  | OnboardingJobType.BOTH;
 
 export type JobCategory = 
   | 'ENGINEERING' 
@@ -33,7 +33,7 @@ export type JobCategory =
   | 'SUPPORT' 
   | 'OTHER';
 
-export type Currency = 'USD' | 'EUR' | 'GBP';
+export type Currency = CurrencyCode.USD | CurrencyCode.EUR | CurrencyCode.GBP;
 
 export type Availability = 
   | 'IMMEDIATELY' 
@@ -85,3 +85,4 @@ export interface SeekerOnboardingData {
 }
 
 export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5;
+import type { CurrencyCode, OnboardingJobType } from '@/constants/enums';

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CurrencyCode, OnboardingJobType, SEEKER_CURRENCY_VALUES, SEEKER_ONBOARDING_JOB_TYPE_VALUES } from '@/constants/enums';
 
 export type {
   SeekerSituation,
@@ -26,7 +27,7 @@ export const step1Schema = z.object({
 export const salaryRangeSchema = z.object({
   min: z.number().nullable(),
   max: z.number().nullable(),
-  currency: z.enum(['USD', 'EUR', 'GBP']),
+  currency: z.enum(SEEKER_CURRENCY_VALUES),
 }).refine(
   (data) => {
     if (data.min !== null && data.max !== null) {
@@ -56,7 +57,7 @@ export const step3Schema = z.object({
 });
 
 export const step4Schema = z.object({
-  jobType: z.enum(['FULL_TIME', 'CONTRACT', 'BOTH']).optional(),
+  jobType: z.enum(SEEKER_ONBOARDING_JOB_TYPE_VALUES).optional(),
   category: z.enum(['ENGINEERING', 'DESIGN', 'MARKETING', 'SALES', 'DEVOPS', 'PRODUCT', 'DATA', 'SUPPORT', 'OTHER']).optional(),
   salaryRange: salaryRangeSchema,
   availability: z.enum(['IMMEDIATELY', 'TWO_WEEKS', 'ONE_MONTH_PLUS']).optional(),
@@ -148,9 +149,9 @@ export const JOB_CATEGORIES = [
 ] as const;
 
 export const JOB_TYPES = [
-  { value: 'FULL_TIME', label: 'Full-time', icon: 'work' },
-  { value: 'CONTRACT', label: 'Contract', icon: 'sync' },
-  { value: 'BOTH', label: 'Both', icon: 'bolt' },
+  { value: OnboardingJobType.FULL_TIME, label: 'Full-time', icon: 'work' },
+  { value: OnboardingJobType.CONTRACT, label: 'Contract', icon: 'sync' },
+  { value: OnboardingJobType.BOTH, label: 'Both', icon: 'bolt' },
 ] as const;
 
 export const AVAILABILITY_OPTIONS = [
@@ -160,9 +161,9 @@ export const AVAILABILITY_OPTIONS = [
 ] as const;
 
 export const CURRENCIES = [
-  { value: 'USD', label: 'USD' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'GBP', label: 'GBP' },
+  { value: CurrencyCode.USD, label: 'USD' },
+  { value: CurrencyCode.EUR, label: 'EUR' },
+  { value: CurrencyCode.GBP, label: 'GBP' },
 ] as const;
 
 export const SITUATION_OPTIONS = [

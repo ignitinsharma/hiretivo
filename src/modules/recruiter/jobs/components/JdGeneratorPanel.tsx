@@ -21,6 +21,7 @@ import {
   JdGeneratorSchema,
   type JdGeneratorInput,
 } from "@/lib/validations/jd-generator.schema";
+import { recruiterService } from "@/services/recruiter.service";
 
 interface JdGeneratorPanelProps {
   open: boolean;
@@ -62,36 +63,7 @@ export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, prefillDesc
   const onSubmit = async (data: JdGeneratorInput) => {
     setIsGenerating(true);
     try {
-      const res = await fetch("/api/recruiter/ai/generate-jd", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        toast.error("Failed to generate JD. Try again.");
-        return;
-      }
-
-      // Consume the streaming response — build the JD text incrementally
-      const reader = res.body?.getReader();
-      if (!reader) {
-        toast.error("Failed to read response stream.");
-        return;
-      }
-
-      const decoder = new TextDecoder();
-      let jd = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        jd += decoder.decode(value, { stream: true });
-      }
-
-      // Final flush
-      jd += decoder.decode();
-
+      const jd = await recruiterService.generateJobDescription(data);
       onGenerated(jd.trim());
       onOpenChange(false);
     } catch {

@@ -1,3 +1,5 @@
+import { CurrencyCode } from "@/constants/enums";
+
 /**
  * Parse salary text input into structured numeric fields.
  * Input examples: "$120k - $150k", "$80,000 - $100,000", "100k", "", "negotiable"
@@ -9,14 +11,14 @@ export function parseSalaryText(text: string): {
   currency: string;
 } {
   if (!text || !text.trim()) {
-    return { salaryMin: null, salaryMax: null, currency: "USD" };
+    return { salaryMin: null, salaryMax: null, currency: CurrencyCode.USD };
   }
 
   const currency = text.includes("£")
-    ? "GBP"
+    ? CurrencyCode.GBP
     : text.includes("€")
-      ? "EUR"
-      : "USD";
+      ? CurrencyCode.EUR
+      : CurrencyCode.USD;
 
   // Match numbers (with optional k/K suffix and optional commas)
   const matches = Array.from(text.matchAll(/[\d,]+\s*[kK]?/g))

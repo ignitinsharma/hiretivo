@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { SkillsTagInput } from '@/components/forms/skills-tag-input';
 import { RichTextEditor } from '@/components/forms/RichTextEditor';
 import { cn } from '@/lib/utils';
+import { OnboardingJobType } from '@/constants/enums';
 import type { JobType, ExperienceLevel, JobCategory } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
 import { createJobFromOnboarding } from '@/app/actions/onboarding/recruiter';
@@ -19,10 +20,10 @@ interface StepPostJobProps {
 }
 
 const jobTypeOptions: { value: JobType; label: string }[] = [
-  { value: 'FULL_TIME', label: 'Full-time' },
-  { value: 'CONTRACT', label: 'Contract' },
-  { value: 'PART_TIME', label: 'Part-time' },
-  { value: 'FREELANCE', label: 'Freelance' },
+  { value: OnboardingJobType.FULL_TIME, label: 'Full-time' },
+  { value: OnboardingJobType.CONTRACT, label: 'Contract' },
+  { value: OnboardingJobType.PART_TIME, label: 'Part-time' },
+  { value: OnboardingJobType.FREELANCE, label: 'Freelance' },
 ];
 
 const experienceOptions: { value: ExperienceLevel; label: string }[] = [

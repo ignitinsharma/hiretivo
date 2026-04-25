@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole, PlanTier } from '@/constants/enums';
+import { AiMessageRole, UserRole, PlanTier } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
@@ -48,8 +48,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     model: getAIModel(),
     ...SKILL_SUGGEST_CONFIG,
     messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
+      { role: AiMessageRole.SYSTEM, content: system },
+      { role: AiMessageRole.USER, content: user },
     ],
   });
 

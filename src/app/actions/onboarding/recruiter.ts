@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
+import { ApplyType, CurrencyCode, JobStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { recruiterProfileSchema, createJobFromOnboardingSchema } from "@/lib/validations/onboarding.schema";
 
@@ -82,11 +83,11 @@ export async function createJobFromOnboarding(data: {
         title: parsed.data.title,
         description: parsed.data.description,
         jobType: parsed.data.jobType,
-        applyType: "INTERNAL",
-        status: "OPEN",
+        applyType: ApplyType.INTERNAL,
+        status: JobStatus.OPEN,
         salaryMin: parsed.data.salaryMin,
         salaryMax: parsed.data.salaryMax,
-        currency: "USD",
+        currency: CurrencyCode.USD,
         experienceLevel: parsed.data.experienceLevel,
         category: parsed.data.category,
       },

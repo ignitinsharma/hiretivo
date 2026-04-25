@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 import { stripHtml } from '@/lib/utils/html-sanitizer';
+import { recruiterService } from '@/services/recruiter.service';
 
 interface SkillChipProps {
   name: string;
@@ -52,18 +53,7 @@ export function SkillSuggestChips({
   const [suggestedSkillNames, setSuggestedSkillNames] = useState<string[]>([]);
 
   const suggestMutation = useMutation({
-    mutationFn: async (text: string) => {
-      const res = await fetch('/api/recruiter/ai/suggest-skills', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ descriptionText: text }),
-      });
-      if (!res.ok) {
-        throw new Error('Failed to suggest skills');
-      }
-      const json = (await res.json()) as { data: { skills: string[] } };
-      return json.data.skills;
-    },
+    mutationFn: recruiterService.suggestSkills,
     onSuccess: (skills) => {
       setSuggestedSkillNames(skills);
       // Auto-add skills that already exist in the DB and aren't selected yet

@@ -1,13 +1,5 @@
 import { z } from "zod";
-
-const applicationStatusValues = [
-  "APPLIED",
-  "REVIEWING",
-  "INTERVIEW",
-  "OFFER",
-  "HIRED",
-  "REJECTED",
-] as const;
+import { APPLICATION_STATUS_VALUES } from "@/constants/enums";
 
 export const createApplicationSchema = z.object({
   jobId: z.cuid(),
@@ -15,7 +7,7 @@ export const createApplicationSchema = z.object({
 });
 
 export const updateApplicationStageSchema = z.object({
-  stage: z.enum(applicationStatusValues),
+  stage: z.enum(APPLICATION_STATUS_VALUES),
 });
 
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;

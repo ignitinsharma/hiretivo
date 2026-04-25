@@ -16,7 +16,9 @@ import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { UserRole } from "@/constants/enums";
 import { seekerLoginSchema, type SeekerLoginInput } from "@/lib/validations/auth";
+import { authService } from "@/services/auth.service";
 
 const SeekerLoginLeft = (
   <>
@@ -65,12 +67,10 @@ export default function SeekerLoginPage() {
 
   React.useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const dest = session.user.role === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
+      const dest = session.user.role === UserRole.RECRUITER ? "/recruiter/dashboard" : "/seeker/dashboard";
       router.replace(dest);
     }
   }, [status, session, router]);
-
-  if (status === "loading" || status === "authenticated") return null;
 
   const form = useForm<SeekerLoginInput>({
     resolver: zodResolver(seekerLoginSchema),
@@ -79,6 +79,8 @@ export default function SeekerLoginPage() {
       password: "",
     },
   });
+
+  if (status === "loading" || status === "authenticated") return null;
 
   const onSubmit = async (data: SeekerLoginInput) => {
     setIsSubmitting(true);
@@ -96,10 +98,9 @@ export default function SeekerLoginPage() {
       }
 
       // Verify the authenticated user has the SEEKER role
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
+      const session = await authService.getSession();
 
-      if (session?.user?.role !== "SEEKER") {
+      if (session?.user?.role !== UserRole.SEEKER) {
         await signOut({ redirect: false });
         setRoleMismatch(true);
         return;

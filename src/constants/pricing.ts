@@ -1,4 +1,6 @@
-export type PricingCurrency = "INR" | "USD";
+import { CurrencyCode, PricingTierId } from "@/constants/enums";
+
+export type PricingCurrency = CurrencyCode.INR | CurrencyCode.USD;
 
 interface PricePoint {
   monthly: number;
@@ -13,7 +15,7 @@ interface StartingPricePoint {
 }
 
 export interface PricingTier {
-  id: "free" | "starter" | "growth" | "pro" | "enterprise";
+  id: PricingTierId | "starter" | "growth" | "enterprise";
   name: string;
   description: string;
   cta: string;
@@ -27,7 +29,7 @@ export interface PricingTier {
 
 export const PRICING_CONFIG: PricingTier[] = [
   {
-    id: "free",
+    id: PricingTierId.FREE,
     name: "Free",
     description: "Get started with essential hiring tools.",
     cta: "Get started",
@@ -60,7 +62,7 @@ export const PRICING_CONFIG: PricingTier[] = [
     INR: { monthly: 11999, annual: 7499, annualTotal: 89999, annualSavings: 26000 },
   },
   {
-    id: "pro",
+    id: PricingTierId.PRO,
     name: "Pro",
     description: "Advanced tools for high-volume hiring teams.",
     cta: "Start free trial",

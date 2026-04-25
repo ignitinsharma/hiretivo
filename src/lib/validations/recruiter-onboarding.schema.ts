@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RECRUITER_ONBOARDING_JOB_TYPE_VALUES } from '@/constants/enums';
 
 export type {
   RecruiterRole,
@@ -51,7 +52,7 @@ export const salaryRangeSchema = z.object({
 
 export const step3Schema = z.object({
   jobTitle: z.string().min(1, 'Job title is required'),
-  jobType: z.enum(['FULL_TIME', 'CONTRACT', 'PART_TIME', 'FREELANCE']).optional(),
+  jobType: z.enum(RECRUITER_ONBOARDING_JOB_TYPE_VALUES).optional(),
   experienceLevel: z.enum(['ENTRY_LEVEL', 'MID_LEVEL', 'SENIOR', 'LEAD_DIRECTOR']).optional(),
   category: z.enum(['ENGINEERING', 'DESIGN', 'MARKETING', 'PRODUCT_MANAGEMENT', 'SALES']).optional(),
   salaryRange: salaryRangeSchema,

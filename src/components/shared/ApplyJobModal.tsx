@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { applicationService } from '@/services/application.service';
 
 export function ApplyJobModal() {
   const { isApplyModalOpen, closeApplyModal, selectedJobId, selectedJobTitle, selectedCompanyName } = useUIStore();
@@ -26,23 +27,7 @@ export function ApplyJobModal() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: selectedJobId, coverLetter }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 409) {
-          throw new Error("You've already applied to this job.");
-        }
-        if (res.status === 403) {
-          throw new Error('Only job seekers can apply.');
-        }
-        throw new Error((data as { error?: string }).error ?? 'Failed to apply');
-      }
-
+      await applicationService.applyToJob({ jobId: selectedJobId, coverLetter });
       await queryClient.invalidateQueries({ queryKey: ['applications'] });
       toast.success('Application submitted!');
       setCoverLetter('');

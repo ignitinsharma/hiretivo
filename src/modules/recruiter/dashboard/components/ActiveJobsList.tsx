@@ -6,16 +6,10 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JobStatus } from '@/constants/enums';
 import { Plus, ArrowRight } from 'lucide-react';
+import { recruiterService } from '@/services/recruiter.service';
+import type { ActiveJob } from '@/services/recruiter.service';
 
 const MAX_JOBS_DISPLAY = 5;
-
-interface ActiveJob {
-  id: string;
-  title: string;
-  status: string;
-  _count: { applications: number };
-  createdAt: string;
-}
 
 const STATUS_STYLES: Record<string, string> = {
   [JobStatus.OPEN]: 'bg-brand-primary-light text-brand-primary',
@@ -32,12 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
 export function ActiveJobsList() {
   const { data: jobs = [], isLoading } = useQuery<ActiveJob[]>({
     queryKey: ['recruiter-active-jobs'],
-    queryFn: async () => {
-      const res = await fetch('/api/recruiter/jobs');
-      if (!res.ok) throw new Error('Failed to fetch jobs');
-      const json = await res.json();
-      return json.jobs ?? [];
-    },
+    queryFn: recruiterService.getActiveJobs,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });

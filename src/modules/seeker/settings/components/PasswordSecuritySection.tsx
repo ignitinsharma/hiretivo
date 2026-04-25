@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChangePasswordSchema } from "@/lib/validations/interview.schema";
+import { authService } from "@/services/auth.service";
 import type { ChangePasswordInput } from "@/lib/validations/interview.schema";
 
 export function PasswordSecuritySection() {
@@ -16,17 +17,7 @@ export function PasswordSecuritySection() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: ChangePasswordInput) => {
-      const res = await fetch("/api/auth/change-password", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? "Failed to update password");
-      }
-    },
+    mutationFn: authService.changePassword,
     onSuccess: () => {
       toast.success("Password updated successfully.");
       form.reset();

@@ -1,11 +1,9 @@
 import { z } from "zod";
-
-const workTypeValues = ["REMOTE", "HYBRID", "ONSITE"] as const;
-const skillLevelValues = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"] as const;
+import { SKILL_LEVEL_VALUES, WORK_TYPE_VALUES } from "@/constants/enums";
 
 const seekerSkillSchema = z.object({
   skillId: z.cuid(),
-  level: z.enum(skillLevelValues),
+  level: z.enum(SKILL_LEVEL_VALUES),
 });
 
 export const seekerSchema = z.object({
@@ -13,7 +11,7 @@ export const seekerSchema = z.object({
   bio: z.string().trim().max(10_000).optional(),
   location: z.string().trim().max(200).optional(),
   yearsExperience: z.number().int().min(0).max(80).optional(),
-  workPreference: z.enum(workTypeValues).optional(),
+  workPreference: z.enum(WORK_TYPE_VALUES).optional(),
   skills: z.array(seekerSkillSchema).max(50),
 });
 

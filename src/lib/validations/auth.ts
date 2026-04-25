@@ -1,7 +1,5 @@
 import { z } from "zod";
-
-const roleValues = ["SEEKER", "RECRUITER"] as const;
-const planValues = ["FREE", "PRO", "ENTERPRISE"] as const;
+import { PLAN_TIER_VALUES, USER_ROLE_VALUES } from "@/constants/enums";
 
 export const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -14,13 +12,13 @@ export const registerSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(8).max(128),
   name: z.string().trim().min(1).max(120).optional(),
-  role: z.enum(roleValues),
+  role: z.enum(USER_ROLE_VALUES),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const registerWithPlanSchema = registerSchema.extend({
-  plan: z.enum(planValues).optional(),
+  plan: z.enum(PLAN_TIER_VALUES).optional(),
 });
 
 export type RegisterWithPlanInput = z.infer<typeof registerWithPlanSchema>;

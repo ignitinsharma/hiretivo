@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Rocket, Check, Linkedin, Twitter, Instagram } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { earlyAccessSchema, type EarlyAccessInput } from '@/lib/validations/early-access.schema';
+import { earlyAccessService } from '@/services/early-access.service';
 
 const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/company/hiretivo/',
@@ -76,22 +77,10 @@ export function ComingSoonPage() {
     setApiError('');
 
     try {
-      const res = await fetch('/api/early-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        setApiError(result.error || 'Something went wrong');
-        return;
-      }
-
+      await earlyAccessService.joinWaitlist(data);
       setIsSuccess(true);
-    } catch {
-      setApiError('Something went wrong. Please try again.');
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
     }
   };
 

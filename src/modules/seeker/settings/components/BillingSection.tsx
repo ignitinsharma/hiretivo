@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlanTier } from "@/constants/enums";
+import { billingService } from "@/services/billing.service";
 
 const FREE_FEATURES = [
   "Apply to 10 jobs/month",
@@ -28,20 +29,16 @@ export function BillingSection() {
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/billing/checkout", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to start checkout");
-      const body = (await res.json()) as { data?: { url?: string } };
-      if (body.data?.url) window.location.href = body.data.url;
+      const url = await billingService.createCheckoutSession();
+      window.location.href = url;
     },
     onError: () => toast.error("Could not start checkout. Try again."),
   });
 
   const portalMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/billing/portal", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to open portal");
-      const body = (await res.json()) as { data?: { url?: string } };
-      if (body.data?.url) window.location.href = body.data.url;
+      const url = await billingService.createPortalSession();
+      window.location.href = url;
     },
     onError: () => toast.error("Could not open billing portal. Try again."),
   });

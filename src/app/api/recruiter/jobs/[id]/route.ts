@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
-import { UserRole } from '@/constants/enums';
+import { SkillLevel, UserRole } from '@/constants/enums';
 
 export async function PATCH(
   req: NextRequest,
@@ -52,7 +52,7 @@ export async function PATCH(
         data: skills.map((s) => ({
           jobId: params.id,
           skillId: s.skillId,
-          level: s.level ?? 'INTERMEDIATE',
+          level: s.level ?? SkillLevel.INTERMEDIATE,
         })),
       });
       return j;

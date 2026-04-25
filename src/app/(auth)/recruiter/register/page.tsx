@@ -17,10 +17,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { UserRole } from "@/constants/enums";
 import {
   recruiterRegisterSchema,
   type RecruiterRegisterInput,
 } from "@/lib/validations/auth";
+import { authService } from "@/services/auth.service";
 
 const RecruiterSignupLeft = (
   <>
@@ -70,12 +72,10 @@ export default function RecruiterRegisterPage() {
 
   React.useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const dest = session.user.role === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
+      const dest = session.user.role === UserRole.RECRUITER ? "/recruiter/dashboard" : "/seeker/dashboard";
       router.replace(dest);
     }
   }, [status, session, router]);
-
-  if (status === "loading" || status === "authenticated") return null;
 
   const form = useForm<RecruiterRegisterInput>({
     resolver: zodResolver(recruiterRegisterSchema),
@@ -88,30 +88,18 @@ export default function RecruiterRegisterPage() {
     },
   });
 
+  if (status === "loading" || status === "authenticated") return null;
+
   const onSubmit = async (data: RecruiterRegisterInput) => {
     setIsSubmitting(true);
     try {
       // Step 1: Create user account (per D-01)
-      const registerRes = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.email.toLowerCase(),
-          password: data.password,
-          name: data.name,
-          role: "RECRUITER",
-        }),
+      await authService.register({
+        email: data.email.toLowerCase(),
+        password: data.password,
+        name: data.name,
+        role: UserRole.RECRUITER,
       });
-
-      if (!registerRes.ok) {
-        const err = await registerRes.json();
-        if (registerRes.status === 409) {
-          toast.error("An account with this email already exists.");
-        } else {
-          toast.error(err.error ?? "Failed to create account. Please try again.");
-        }
-        return;
-      }
 
       // Step 2: Sign in immediately after creation (per D-01)
       const result = await signIn("credentials", {
@@ -128,8 +116,8 @@ export default function RecruiterRegisterPage() {
       toast.success("Account created successfully!");
       router.push("/recruiter/onboarding");
       router.refresh();
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -138,7 +126,7 @@ export default function RecruiterRegisterPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     await signIn("google", {
-      role: "RECRUITER",
+      role: UserRole.RECRUITER,
       callbackUrl: "/recruiter/onboarding",
     });
   };

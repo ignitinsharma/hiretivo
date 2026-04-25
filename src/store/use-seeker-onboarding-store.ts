@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { CurrencyCode } from '@/constants/enums';
 import type {
   SeekerOnboardingStep,
   Step1Data,
@@ -71,7 +72,7 @@ const initialStep3Data: Step3Data = {
 const initialStep4Data: Step4Data = {
   jobType: null,
   category: null,
-  salaryRange: { min: null, max: null, currency: 'USD' },
+  salaryRange: { min: null, max: null, currency: CurrencyCode.USD },
   availability: null,
 };
 

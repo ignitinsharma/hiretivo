@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole } from '@/constants/enums';
+import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { dodo } from '@/lib/dodo';
 import { BoostCheckoutSchema } from '@/lib/validations/boost-checkout.schema';
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   // T-13-13: Ownership check — prevent boosting another recruiter's job
   const job = await prisma.job.findFirst({
-    where: { id: jobId, recruiterId: session.user.id, status: { not: 'CLOSED' } },
+    where: { id: jobId, recruiterId: session.user.id, status: { not: JobStatus.CLOSED } },
     select: { id: true },
   });
   if (!job) {

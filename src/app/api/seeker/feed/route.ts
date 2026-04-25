@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole, MatchThreshold } from '@/constants/enums';
+import { CurrencyCode, JobStatus, UserRole, MatchThreshold } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { computeAllMatches, upsertJobMatches } from '@/lib/match';
@@ -19,8 +19,8 @@ const LOW_MATCH_THRESHOLD = MatchThreshold.GOOD;
 const MAX_HINT_SKILLS = 3;
 
 function formatSalaryRange(min: number | null, max: number | null, currency: string | null): string {
-  const cur = currency ?? 'USD';
-  const symbol = cur === 'USD' ? '$' : cur === 'GBP' ? '£' : cur === 'EUR' ? '€' : '';
+  const cur = currency ?? CurrencyCode.USD;
+  const symbol = cur === CurrencyCode.USD ? '$' : cur === CurrencyCode.GBP ? '£' : cur === CurrencyCode.EUR ? '€' : '';
   if (!min && !max) return 'Not specified';
   const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : '';
   const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : '';
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
   // Fetch job data for all matched jobs (needed for filtering + applied-exclusion)
   const jobIds = matches.map((m) => m.jobId);
   const jobs = await prisma.job.findMany({
-    where: { id: { in: jobIds }, status: 'OPEN' },
+    where: { id: { in: jobIds }, status: JobStatus.OPEN },
     select: {
       id: true,
       jobType: true,
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
   // Enrich with full job data including skills for missing-skills hint
   const paginatedJobIds = pageItems.map((m) => m.jobId);
   const enrichedJobs = await prisma.job.findMany({
-    where: { id: { in: paginatedJobIds }, status: 'OPEN' },
+    where: { id: { in: paginatedJobIds }, status: JobStatus.OPEN },
     include: {
       recruiter: {
         select: {

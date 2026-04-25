@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { JobStatus, UserRole } from '@/constants/enums';
 import { sendSeekerDigest } from '@/lib/email/seeker-digest';
 import { computeAllMatches } from '@/lib/match';
 
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     where: {
       digestEnabled: true,
       user: {
-        role: 'SEEKER',
+        role: UserRole.SEEKER,
         email: { not: null },
       },
     },
@@ -62,7 +63,7 @@ export async function GET(req: NextRequest) {
       const jobs = await prisma.job.findMany({
         where: {
           id: { in: jobIds },
-          status: 'OPEN',
+          status: JobStatus.OPEN,
           publishedAt: { not: null },
         },
         include: {

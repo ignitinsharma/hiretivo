@@ -16,27 +16,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlanTier } from "@/constants/enums";
 import { cn } from "@/lib/utils";
+import { billingService } from "@/services/billing.service";
+import type { SubscriptionStatusData } from "@/services/billing.service";
 
 type SubscriptionStatus = "ACTIVE" | "PAST_DUE" | "CANCELED";
-
-interface SubscriptionStatusResponse {
-  data: {
-    plan: PlanTier;
-    subscription: {
-      status: SubscriptionStatus;
-      currentPeriodEnd: string;
-      cancelAtPeriodEnd: boolean;
-    } | null;
-  };
-  error?: string;
-}
-
-interface BillingPortalResponse {
-  data?: {
-    url?: string | null;
-  };
-  error?: string;
-}
 
 const FREE_FEATURES = [
   "1 active job post",
@@ -62,31 +45,6 @@ function formatDate(value: string): string {
     month: "short",
     day: "numeric",
   });
-}
-
-async function fetchSubscriptionStatus(): Promise<SubscriptionStatusResponse["data"]> {
-  const response = await fetch("/api/billing/subscription-status");
-  const payload = (await response.json().catch(() => ({}))) as SubscriptionStatusResponse;
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? "Failed to load billing details");
-  }
-
-  return payload.data;
-}
-
-async function createPortalSession(): Promise<string> {
-  const response = await fetch("/api/billing/portal", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  const payload = (await response.json().catch(() => ({}))) as BillingPortalResponse;
-
-  if (!response.ok || !payload.data?.url) {
-    throw new Error(payload.error ?? "Billing is unavailable right now");
-  }
-
-  return payload.data.url;
 }
 
 function BillingSkeleton() {
@@ -135,10 +93,10 @@ function PaidPlanCard({
   subscription,
 }: {
   plan: PlanTier.PRO | PlanTier.ENTERPRISE;
-  subscription: SubscriptionStatusResponse["data"]["subscription"];
+  subscription: SubscriptionStatusData["subscription"];
 }) {
   const portalMutation = useMutation({
-    mutationFn: createPortalSession,
+    mutationFn: billingService.createPortalSession,
     onSuccess: (url) => {
       window.location.href = url;
     },
@@ -216,7 +174,7 @@ export function BillingTabContent() {
     refetch,
   } = useQuery({
     queryKey: ["subscription-status"],
-    queryFn: fetchSubscriptionStatus,
+    queryFn: billingService.getSubscriptionStatus,
     staleTime: 60_000,
   });
 

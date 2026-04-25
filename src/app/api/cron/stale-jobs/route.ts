@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { JobStatus } from "@/constants/enums";
 import { sendStaleJobNudge } from "@/lib/email/stale-job-nudge";
 import { timingSafeEqual } from 'crypto';
 
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   // Find jobs that have been OPEN for more than 30 days without applications
   const staleJobs = await prisma.job.findMany({
     where: {
-      status: "OPEN",
+      status: JobStatus.OPEN,
       createdAt: {
         lt: new Date(Date.now() - STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000),
       },

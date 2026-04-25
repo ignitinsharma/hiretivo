@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { UserRole } from "@/constants/enums";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
 
   // Redirect to appropriate dashboard
   const redirectTo =
-    user.role === "RECRUITER"
+    user.role === UserRole.RECRUITER
       ? `${APP_URL}/recruiter/dashboard`
       : `${APP_URL}/seeker/jobs`;
 

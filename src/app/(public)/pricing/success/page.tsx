@@ -8,34 +8,12 @@ import { useSession } from "next-auth/react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlanTier } from "@/constants/enums";
+import { billingService } from "@/services/billing.service";
 
 const MAX_ATTEMPTS = 5;
 const POLL_INTERVAL_MS = 2000;
 
 type PollState = "loading" | "success" | "timeout" | "error";
-
-interface SubscriptionStatusResponse {
-  data?: {
-    plan: PlanTier;
-    subscription: {
-      status: "ACTIVE" | "PAST_DUE" | "CANCELED";
-      currentPeriodEnd: string;
-      cancelAtPeriodEnd: boolean;
-    } | null;
-  };
-  error?: string;
-}
-
-async function fetchSubscriptionStatus(): Promise<SubscriptionStatusResponse> {
-  const response = await fetch("/api/billing/subscription-status", {
-    cache: "no-store",
-  });
-  const payload = (await response.json()) as SubscriptionStatusResponse;
-  if (!response.ok) {
-    throw new Error(payload.error ?? "Unable to verify subscription");
-  }
-  return payload;
-}
 
 function PricingSuccessContent() {
   const searchParams = useSearchParams();
@@ -51,16 +29,16 @@ function PricingSuccessContent() {
       attempts += 1;
 
       try {
-        const payload = await fetchSubscriptionStatus();
+        const payload = await billingService.getSubscriptionStatus();
         const isActive =
-          payload.data?.plan === PlanTier.PRO ||
-          payload.data?.subscription?.status === "ACTIVE";
+          payload.plan === PlanTier.PRO ||
+          payload.subscription?.status === "ACTIVE";
 
         if (isActive) {
           await update({
             user: {
               role: session?.user.role,
-              plan: payload.data?.plan ?? PlanTier.PRO,
+              plan: payload.plan ?? PlanTier.PRO,
             },
           });
           if (!cancelled) setState("success");

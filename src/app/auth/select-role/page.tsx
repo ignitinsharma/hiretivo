@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { setUserRole } from "@/app/actions/auth/set-role";
+import { UserRole } from "@/constants/enums";
 
 export default function SelectRolePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState<"SEEKER" | "RECRUITER" | null>(null);
+  const [loading, setLoading] = useState<UserRole | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSelect = async (role: "SEEKER" | "RECRUITER") => {
+  const handleSelect = async (role: UserRole) => {
     setLoading(role);
     setError(null);
     try {
@@ -42,22 +43,22 @@ export default function SelectRolePage() {
 
         <div className="grid grid-cols-2 gap-4">
           <Button
-            onClick={() => handleSelect("SEEKER")}
+            onClick={() => handleSelect(UserRole.SEEKER)}
             disabled={loading !== null}
             variant="outline"
             size="lg"
             className="h-24 flex-col gap-2 text-base"
           >
-            {loading === "SEEKER" ? "Setting up..." : "I'm looking for work"}
+            {loading === UserRole.SEEKER ? "Setting up..." : "I'm looking for work"}
           </Button>
 
           <Button
-            onClick={() => handleSelect("RECRUITER")}
+            onClick={() => handleSelect(UserRole.RECRUITER)}
             disabled={loading !== null}
             size="lg"
             className="h-24 flex-col gap-2 text-base"
           >
-            {loading === "RECRUITER" ? "Setting up..." : "I'm hiring"}
+            {loading === UserRole.RECRUITER ? "Setting up..." : "I'm hiring"}
           </Button>
         </div>
       </div>

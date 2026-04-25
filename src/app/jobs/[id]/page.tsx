@@ -6,6 +6,7 @@ import { JobDetailContent } from '@/modules/jobs/components/JobDetailContent';
 import { JobDetailSidebar } from '@/modules/jobs/components/JobDetailSidebar';
 import { ApplyJobModal } from '@/components/shared/ApplyJobModal';
 import { auth } from '@/auth';
+import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 
@@ -17,7 +18,7 @@ export default async function JobDescriptionPage({
   const session = await auth();
 
   const job = await prisma.job.findUnique({
-    where: { id: params.id, status: 'OPEN' },
+    where: { id: params.id, status: JobStatus.OPEN },
     include: {
       recruiter: {
         select: {
@@ -37,7 +38,7 @@ export default async function JobDescriptionPage({
   let matchScore: number | null = null;
   let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
 
-  if (session?.user?.role === 'SEEKER') {
+  if (session?.user?.role === UserRole.SEEKER) {
     const seekerProfile = await prisma.seekerProfile.findUnique({
       where: { userId: session.user.id },
       include: {

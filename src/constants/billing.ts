@@ -1,4 +1,4 @@
-import { PlanTier } from "@/constants/enums";
+import { BillingPeriod, CurrencyCode, PlanTier } from "@/constants/enums";
 
 export const DODO_PRODUCT_IDS = {
   PRO_MONTHLY_USD: process.env.DODO_PRO_MONTHLY_PRODUCT_ID ?? "",
@@ -15,13 +15,13 @@ export const DODO_PRODUCT_TO_PLAN: Record<string, PlanTier> = {
 };
 
 export function getDodoProductId(
-  period: "monthly" | "annual",
-  currency: "USD" | "INR" = "USD",
+  period: BillingPeriod,
+  currency: CurrencyCode.USD | CurrencyCode.INR = CurrencyCode.USD,
 ): string | null {
-  if (currency === "INR") {
-    if (period === "annual") return DODO_PRODUCT_IDS.PRO_ANNUAL_INR || null;
+  if (currency === CurrencyCode.INR) {
+    if (period === BillingPeriod.ANNUAL) return DODO_PRODUCT_IDS.PRO_ANNUAL_INR || null;
     return DODO_PRODUCT_IDS.PRO_MONTHLY_INR || null;
   }
-  if (period === "annual") return DODO_PRODUCT_IDS.PRO_ANNUAL_USD || null;
+  if (period === BillingPeriod.ANNUAL) return DODO_PRODUCT_IDS.PRO_ANNUAL_USD || null;
   return DODO_PRODUCT_IDS.PRO_MONTHLY_USD || null;
 }

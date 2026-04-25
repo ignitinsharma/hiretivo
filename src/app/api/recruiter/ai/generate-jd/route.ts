@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole, PlanTier } from '@/constants/enums';
+import { AiMessageRole, UserRole, PlanTier } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
     ...JD_GENERATOR_CONFIG,
     stream: true,
     messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
+      { role: AiMessageRole.SYSTEM, content: system },
+      { role: AiMessageRole.USER, content: user },
     ],
   });
 

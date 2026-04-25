@@ -25,6 +25,10 @@ import { X, PlusCircle, Plus, AlertTriangle, Wand2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ApplyType, CurrencyCode, JobType, SkillLevel, WorkType } from "@/constants/enums";
+import { jobService } from "@/services/job.service";
+import { skillService } from "@/services/skill.service";
+import type { SkillItem } from "@/services/skill.service";
 
 import { JdGeneratorPanel } from "./JdGeneratorPanel";
 import { SkillSuggestChips } from "./SkillSuggestChips";
@@ -48,6 +52,31 @@ interface ConfirmDeleteModalProps {
   jobTitle: string;
   hasApplications: boolean;
   isPending: boolean;
+}
+
+const JOB_TYPE_FORM_VALUES = {
+  fullTime: "full-time",
+  partTime: "part-time",
+  contract: "contract",
+  internship: "internship",
+} as const;
+
+const JOB_TYPE_BY_FORM_VALUE: Record<string, JobType> = {
+  [JOB_TYPE_FORM_VALUES.fullTime]: JobType.FULL_TIME,
+  [JOB_TYPE_FORM_VALUES.partTime]: JobType.PART_TIME,
+  [JOB_TYPE_FORM_VALUES.contract]: JobType.CONTRACT,
+  [JOB_TYPE_FORM_VALUES.internship]: JobType.INTERNSHIP,
+};
+
+const FORM_VALUE_BY_JOB_TYPE: Record<JobType, string> = {
+  [JobType.FULL_TIME]: JOB_TYPE_FORM_VALUES.fullTime,
+  [JobType.PART_TIME]: JOB_TYPE_FORM_VALUES.partTime,
+  [JobType.CONTRACT]: JOB_TYPE_FORM_VALUES.contract,
+  [JobType.INTERNSHIP]: JOB_TYPE_FORM_VALUES.internship,
+};
+
+function isWorkTypeValue(value: string | null): value is WorkType {
+  return value === WorkType.REMOTE || value === WorkType.HYBRID || value === WorkType.ONSITE;
 }
 
 function ConfirmDeleteModal({
@@ -161,9 +190,7 @@ export function PostJobModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isJdPanelOpen, setIsJdPanelOpen] = useState(false);
   const [autoSuggestTrigger, setAutoSuggestTrigger] = useState(0);
-  const [workType, setWorkType] = useState<"REMOTE" | "HYBRID" | "ONSITE">(
-    "REMOTE",
-  );
+  const [workType, setWorkType] = useState<WorkType>(WorkType.REMOTE);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -205,7 +232,7 @@ export function PostJobModal() {
       experienceLevel: "",
       salaryMin: "",
       salaryMax: "",
-      currency: "USD",
+      currency: CurrencyCode.USD,
       description: "",
       selectedSkillIds: [],
     },
@@ -215,13 +242,13 @@ export function PostJobModal() {
 
   const { data: skills = [], isLoading: skillsLoading } = useQuery({
     queryKey: ["skills"],
-    queryFn: () => fetch("/api/skills").then((r) => r.json()),
+    queryFn: skillService.getSkills,
     enabled: isPostJobModalOpen,
   });
 
   const { data: editJob, isLoading: isEditJobLoading } = useQuery({
     queryKey: ["job", editJobId],
-    queryFn: () => fetch(`/api/jobs/${editJobId}`).then((r) => r.json()),
+    queryFn: () => jobService.getJobById(editJobId ?? ""),
     enabled: isPostJobModalOpen && !!editJobId,
   });
 
@@ -231,16 +258,7 @@ export function PostJobModal() {
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
-      const res = await fetch("/api/skills", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug, category: "Other" }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Failed to create skill");
-      }
-      return res.json();
+      return skillService.createSkill({ name, slug, category: "Other" });
     },
     onSuccess: (newSkill) => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
@@ -255,22 +273,22 @@ export function PostJobModal() {
   useEffect(() => {
     if (editJob && editJobId) {
       const j = editJob.job ?? editJob;
-      setWorkType(j.workType ?? "REMOTE");
+      setWorkType(isWorkTypeValue(j.workType) ? j.workType : WorkType.REMOTE);
 
       reset({
         title: j.title || "",
         category: j.category || "",
-        jobType: j.jobType?.toLowerCase().replace("_", "-") || "",
+        jobType: j.jobType ? FORM_VALUE_BY_JOB_TYPE[j.jobType as JobType] ?? "" : "",
         experienceLevel: j.experienceLevel || "",
         salaryMin: j.salaryMin != null ? String(j.salaryMin) : "",
         salaryMax: j.salaryMax != null ? String(j.salaryMax) : "",
-        currency: j.currency ?? "USD",
+        currency: j.currency ?? CurrencyCode.USD,
         description: j.description || "",
         selectedSkillIds:
           j.skills?.map((s: { id: string; skillId?: string }) => s.skillId ?? s.id) || [],
       });
     } else if (!editJobId) {
-      setWorkType("REMOTE");
+      setWorkType(WorkType.REMOTE);
       reset({
         title: "",
         category: "",
@@ -278,7 +296,7 @@ export function PostJobModal() {
         experienceLevel: "",
         salaryMin: "",
         salaryMax: "",
-        currency: "USD",
+        currency: CurrencyCode.USD,
         description: "",
         selectedSkillIds: [],
       });
@@ -302,8 +320,8 @@ export function PostJobModal() {
     const payload = {
       title: data.title,
       description: data.description,
-      jobType: data.jobType.toUpperCase().replace("-", "_"),
-      applyType: "INTERNAL" as const,
+      jobType: JOB_TYPE_BY_FORM_VALUE[data.jobType],
+      applyType: ApplyType.INTERNAL,
       workType,
       experienceLevel: data.experienceLevel,
       category: data.category,
@@ -312,41 +330,25 @@ export function PostJobModal() {
       currency: data.currency,
       skills: data.selectedSkillIds.map((id) => ({
         skillId: id,
-        level: "INTERMEDIATE" as const,
+        level: SkillLevel.INTERMEDIATE,
       })),
     };
 
     setIsSubmitting(true);
 
     try {
-      const url = editJobId ? `/api/jobs/${editJobId}` : "/api/jobs";
-      const method = editJobId ? "PATCH" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 403) {
-          toast.error(result.error || "Upgrade your plan to post more jobs");
-        } else if (res.status === 400) {
-          toast.error(result.error || "Validation failed");
-        } else {
-          toast.error("Something went wrong");
-        }
-        return;
+      if (editJobId) {
+        await jobService.updateJob(editJobId, payload);
+      } else {
+        await jobService.createJob(payload);
       }
 
       toast.success(editJobId ? "Job updated!" : "Job posted!");
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       closePostJobModal();
       reset();
-    } catch {
-      toast.error("Failed to submit job");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to submit job");
     } finally {
       setIsSubmitting(false);
     }
@@ -358,7 +360,7 @@ export function PostJobModal() {
 
   const selectedSkillsData = selectedSkillIds
     .map((id: string) => skills.find((s: { id: string }) => s.id === id))
-    .filter(Boolean);
+    .filter((skill): skill is SkillItem => Boolean(skill));
 
   const noMatch =
     showSkillDropdown &&
@@ -458,16 +460,16 @@ export function PostJobModal() {
               <Select
                 value={workType}
                 onValueChange={(v) =>
-                  setWorkType(v as "REMOTE" | "HYBRID" | "ONSITE")
+                  setWorkType(v as WorkType)
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Work Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="REMOTE">Remote</SelectItem>
-                  <SelectItem value="HYBRID">Hybrid</SelectItem>
-                  <SelectItem value="ONSITE">Onsite</SelectItem>
+                  <SelectItem value={WorkType.REMOTE}>Remote</SelectItem>
+                  <SelectItem value={WorkType.HYBRID}>Hybrid</SelectItem>
+                  <SelectItem value={WorkType.ONSITE}>Onsite</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -489,10 +491,10 @@ export function PostJobModal() {
                         <SelectValue placeholder="Select Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="full-time">Full-time</SelectItem>
-                        <SelectItem value="part-time">Part-time</SelectItem>
-                        <SelectItem value="contract">Contract</SelectItem>
-                        <SelectItem value="internship">Internship</SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.fullTime}>Full-time</SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.partTime}>Part-time</SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.contract}>Contract</SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.internship}>Internship</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.jobType && (
@@ -590,13 +592,13 @@ export function PostJobModal() {
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="USD" />
+                      <SelectValue placeholder={CurrencyCode.USD} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="EUR">EUR (€)</SelectItem>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="INR">INR (₹)</SelectItem>
+                      <SelectItem value={CurrencyCode.USD}>USD ($)</SelectItem>
+                      <SelectItem value={CurrencyCode.EUR}>EUR (€)</SelectItem>
+                      <SelectItem value={CurrencyCode.GBP}>GBP (£)</SelectItem>
+                      <SelectItem value={CurrencyCode.INR}>INR (₹)</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -644,7 +646,7 @@ export function PostJobModal() {
               Required Skills <span className="text-red-500">*</span>
             </Label>
             <div className="flex flex-wrap gap-2 mb-3">
-              {selectedSkillsData.map((skill: { id: string; name: string }) => (
+              {selectedSkillsData.map((skill) => (
                 <span
                   key={skill.id}
                   className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 border border-primary/20"

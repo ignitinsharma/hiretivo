@@ -16,10 +16,12 @@ import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { UserRole } from "@/constants/enums";
 import {
   recruiterLoginSchema,
   type RecruiterLoginInput,
 } from "@/lib/validations/auth";
+import { authService } from "@/services/auth.service";
 
 const RecruiterLoginLeft = (
   <>
@@ -76,12 +78,10 @@ export default function RecruiterLoginPage() {
 
   React.useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const dest = session.user.role === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
+      const dest = session.user.role === UserRole.RECRUITER ? "/recruiter/dashboard" : "/seeker/dashboard";
       router.replace(dest);
     }
   }, [status, session, router]);
-
-  if (status === "loading" || status === "authenticated") return null;
 
   const form = useForm<RecruiterLoginInput>({
     resolver: zodResolver(recruiterLoginSchema),
@@ -90,6 +90,8 @@ export default function RecruiterLoginPage() {
       password: "",
     },
   });
+
+  if (status === "loading" || status === "authenticated") return null;
 
   const onSubmit = async (data: RecruiterLoginInput) => {
     setIsSubmitting(true);
@@ -107,10 +109,9 @@ export default function RecruiterLoginPage() {
       }
 
       // Verify the authenticated user has the RECRUITER role
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
+      const session = await authService.getSession();
 
-      if (session?.user?.role !== "RECRUITER") {
+      if (session?.user?.role !== UserRole.RECRUITER) {
         await signOut({ redirect: false });
         setRoleMismatch(true);
         return;

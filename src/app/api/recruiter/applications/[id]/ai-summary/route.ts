@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { UserRole, PlanTier } from "@/constants/enums";
+import { AiMessageRole, UserRole, PlanTier } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { openrouter, getAIModel } from "@/lib/openrouter";
 import { AiSummaryParamsSchema } from "@/lib/validations/ai-summary.schema";
@@ -107,8 +107,8 @@ export async function POST(
     model: getAIModel(),
     ...CANDIDATE_SUMMARY_CONFIG,
     messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
+      { role: AiMessageRole.SYSTEM, content: system },
+      { role: AiMessageRole.USER, content: user },
     ],
   });
 

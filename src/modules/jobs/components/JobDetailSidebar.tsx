@@ -7,6 +7,7 @@ import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { UserRole } from "@/constants/enums";
 
 const SIMILAR_JOBS = [
   {
@@ -120,7 +121,7 @@ export function JobDetailSidebar({
         </h3>
 
         {isAuth &&
-        userRole === "SEEKER" &&
+        userRole === UserRole.SEEKER &&
         matchBreakdown &&
         matchBreakdown.length > 0 ? (
           <>

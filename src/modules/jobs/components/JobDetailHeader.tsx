@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
+import { CurrencyCode, WorkType } from '@/constants/enums';
 
 interface JobData {
   id: string;
@@ -25,8 +26,8 @@ interface JobDetailHeaderProps {
 
 function formatSalary(min: number | null, max: number | null, currency: string | null): string {
   if (!min && !max) return 'Salary not specified';
-  const cur = currency ?? 'USD';
-  const symbol = cur === 'USD' ? '$' : cur === 'GBP' ? '£' : cur === 'EUR' ? '€' : '';
+  const cur = currency ?? CurrencyCode.USD;
+  const symbol = cur === CurrencyCode.USD ? '$' : cur === CurrencyCode.GBP ? '£' : cur === CurrencyCode.EUR ? '€' : '';
   const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : '';
   const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : '';
   if (min && max) return `${minStr} – ${maxStr}`;
@@ -76,7 +77,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
                   <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                   <span className="flex items-center gap-1">
                     <Globe2 className="w-4 h-4 text-brand-primary" />
-                    {job.workType === 'REMOTE' ? '100% Remote' : job.workType}
+                    {job.workType === WorkType.REMOTE ? '100% Remote' : job.workType}
                   </span>
                 </>
               )}

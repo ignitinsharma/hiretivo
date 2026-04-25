@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 
 import { useUIStore } from '@/store/use-ui-store';
+import { recruiterService } from '@/services/recruiter.service';
 
 // Duration options — typed data array per CLAUDE.md §15.1
 const DURATION_OPTIONS = [
@@ -122,34 +123,10 @@ export function ScheduleInterviewModal({
     };
 
     try {
-      let res: Response;
-
       if (isReschedule && existingInterview) {
-        // PATCH — reschedule existing interview (no applicationId in body)
-        res = await fetch(`/api/recruiter/interviews/${existingInterview.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        await recruiterService.rescheduleInterview(existingInterview.id, payload);
       } else {
-        // POST — create new interview
-        res = await fetch('/api/recruiter/interviews', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...payload, applicationId }),
-        });
-      }
-
-      if (res.status === 403) {
-        toast.error('Scheduling is available on Pro plan. Contact support to upgrade.');
-        return;
-      }
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const message = (body as { error?: string }).error ?? 'Failed to schedule interview. Try again.';
-        toast.error(message);
-        return;
+        await recruiterService.scheduleInterview({ ...payload, applicationId });
       }
 
       toast.success(
@@ -159,8 +136,8 @@ export function ScheduleInterviewModal({
       );
       closeScheduleModal();
       onSuccess();
-    } catch {
-      toast.error('Failed to schedule interview. Try again.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to schedule interview. Try again.');
     }
   };
 

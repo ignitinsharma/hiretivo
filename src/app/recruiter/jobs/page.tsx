@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
+import { JobStatus } from "@/constants/enums";
+import { jobService } from "@/services/job.service";
+import { recruiterService } from "@/services/recruiter.service";
 import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
 import {
   Popover,
@@ -27,6 +30,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
+import type { ApiJob, JobsApiResponse } from "@/services/job.service";
 
 const JOBS_PER_PAGE = 5;
 
@@ -44,37 +48,6 @@ interface JobStatItem {
   value: string;
   badge: string;
   badgeColor: string;
-}
-
-interface ApiJob {
-  id: string;
-  title: string;
-  category: string | null;
-  location: string | null;
-  status: "DRAFT" | "OPEN" | "PAUSED" | "CLOSED";
-  createdAt: string;
-  _count: { applications: number };
-  skills: { skill: { id: string; name: string; category: string } }[];
-}
-
-interface PaginationInfo {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-interface StatsInfo {
-  totalAll: number;
-  activeCount: number;
-  totalApplicants: number;
-}
-
-interface JobsApiResponse {
-  jobs: ApiJob[];
-  pagination: PaginationInfo;
-  stats: StatsInfo;
-  categories: string[];
 }
 
 function JobStatCard({ stat }: { stat: JobStatItem }) {
@@ -115,7 +88,7 @@ function JobRow({
 }: {
   job: ApiJob;
   onEdit: (id: string) => void;
-  onToggle: (id: string, newStatus: "OPEN" | "PAUSED") => void;
+  onToggle: (id: string, newStatus: JobStatus.OPEN | JobStatus.PAUSED) => void;
   onDeleteRequest: (job: ApiJob) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -129,12 +102,12 @@ function JobRow({
           <div>
             <div className="flex items-center gap-2">
               <p className="font-bold text-slate-900 text-sm">{job.title}</p>
-              {job.status === "OPEN" && (
+              {job.status === JobStatus.OPEN && (
                 <span className="text-[10px] bg-primary text-white px-1.5 rounded-sm font-bold uppercase tracking-tighter">
                   Active
                 </span>
               )}
-              {job.status === "PAUSED" && (
+              {job.status === JobStatus.PAUSED && (
                 <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded-sm font-bold uppercase tracking-tighter">
                   Archived
                 </span>
@@ -204,12 +177,12 @@ function JobRow({
                 <button
                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                   onClick={() => {
-                    onToggle(job.id, job.status === "OPEN" ? "PAUSED" : "OPEN");
+                    onToggle(job.id, job.status === JobStatus.OPEN ? JobStatus.PAUSED : JobStatus.OPEN);
                     setDropdownOpen(false);
                   }}
                 >
                   <Archive className="w-4 h-4" />
-                  {job.status === "OPEN" ? "Archive Job" : "Reactivate Job"}
+                  {job.status === JobStatus.OPEN ? "Archive Job" : "Reactivate Job"}
                 </button>
                 <div className="h-px bg-slate-100 my-1" />
                 <button
@@ -331,7 +304,14 @@ export default function RecruiterJobsPage() {
 
   const { data, isLoading } = useQuery<JobsApiResponse>({
     queryKey: ["jobs", queryParams],
-    queryFn: () => fetch(`/api/jobs?${queryParams}`).then((r) => r.json()),
+    queryFn: () =>
+      jobService.getJobs({
+        page: currentPage,
+        limit: JOBS_PER_PAGE,
+        search: debouncedSearch.trim() || undefined,
+        status: statusFilter || undefined,
+        category: categoryFilter && categoryFilter !== "All" ? categoryFilter : undefined,
+      }),
   });
 
   const jobs = data?.jobs ?? [];
@@ -341,10 +321,7 @@ export default function RecruiterJobsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/recruiter/jobs/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to delete");
-      return data;
+      await recruiterService.deleteJob(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -360,18 +337,9 @@ export default function RecruiterJobsPage() {
       status,
     }: {
       id: string;
-      status: "OPEN" | "PAUSED";
+      status: JobStatus.OPEN | JobStatus.PAUSED;
     }) => {
-      const res = await fetch(`/api/recruiter/jobs/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(err.error ?? "Failed to update job");
-      }
-      return res.json();
+      await recruiterService.updateJobStatus(id, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -470,8 +438,8 @@ export default function RecruiterJobsPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">Status: All</option>
-            <option value="OPEN">Active</option>
-            <option value="PAUSED">Archived</option>
+            <option value={JobStatus.OPEN}>Active</option>
+            <option value={JobStatus.PAUSED}>Archived</option>
           </select>
         </div>
       </div>

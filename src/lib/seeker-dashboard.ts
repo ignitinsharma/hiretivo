@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { InterviewStatus, JobStatus } from '@/constants/enums';
 import type {
   ProfileStrengthSummary,
   QuickStatsSummary,
@@ -111,7 +112,7 @@ export async function getSkillGapSummary(
   // Find all active jobs (not applied to) and their required skills
   const openJobs = await prisma.job.findMany({
     where: {
-      status: 'OPEN',
+      status: JobStatus.OPEN,
       id: { notIn: appliedJobIds },
     },
     select: {
@@ -158,7 +159,7 @@ export async function getQuickStatsSummary(
       where: { userId, source: 'job_detail_view' },
     }),
     prisma.interview.count({
-      where: { seekerId: userId, status: 'SCHEDULED' },
+      where: { seekerId: userId, status: InterviewStatus.SCHEDULED },
     }),
   ]);
 

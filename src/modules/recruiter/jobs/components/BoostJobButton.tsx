@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { billingService } from '@/services/billing.service';
 
 interface BoostJobButtonProps {
   jobId: string;
@@ -33,16 +34,8 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
   const handleBoost = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/billing/boost-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId }),
-      });
-      const json = (await res.json()) as { data?: { url: string }; error?: string };
-      if (!res.ok || !json.data?.url) {
-        throw new Error(json.error ?? 'Failed to start boost');
-      }
-      window.location.href = json.data.url;
+      const url = await billingService.createBoostCheckoutSession(jobId);
+      window.location.href = url;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to start boost. Try again.');
       setIsLoading(false);
