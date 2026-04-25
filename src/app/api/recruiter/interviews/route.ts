@@ -1,8 +1,12 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
+import { InterviewStatus, UserRole } from "@/constants/enums";
 import { ScheduleInterviewSchema } from "@/lib/validations/interview.schema";
-import { sendInterviewScheduledEmail } from "@/lib/email/interview";
+import {
+  canAccessRecruiterPaidFeature,
+  PAID_FEATURE_FORBIDDEN_MESSAGE,
+} from "@/lib/billing/plan-access";
+import { sendInterviewScheduledEmail } from "@/lib/email/interview-scheduled";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,11 +31,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  // Plan gate (D-07, D-08): PlanTier enum has FREE/PRO/ENTERPRISE — no STARTER value exists.
-  // D-07 mentions "FREE and STARTER" but only FREE is defined; gate blocks FREE plan only.
-  if (session.user.plan === PlanTier.FREE) {
+  const recruiter = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      email: true,
+      plan: true,
+      recruiterProfile: { select: { companyName: true } },
+    },
+  });
+
+  if (!recruiter) {
+    return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
+  }
+
+  if (!canAccessRecruiterPaidFeature(recruiter.plan)) {
     return NextResponse.json(
-      { error: "Scheduling is available on Pro plan. Contact support to upgrade." },
+      { error: PAID_FEATURE_FORBIDDEN_MESSAGE },
       { status: 403 },
     );
   }
@@ -60,15 +75,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  const recruiter = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { email: true },
-  });
-
-  if (!recruiter?.email) {
-    return NextResponse.json({ error: "Recruiter email not found" }, { status: 500 });
-  }
-
   const interview = await prisma.interview.create({
     data: {
       applicationId,
@@ -84,13 +90,14 @@ export async function POST(req: NextRequest) {
 
   // Send email (non-blocking — do not fail the request if email fails)
   sendInterviewScheduledEmail({
-    recruiterEmail: recruiter.email,
     seekerEmail: application.seeker.email ?? "",
     seekerName: application.seeker.name ?? "Candidate",
     jobTitle: application.job.title,
+    companyName: recruiter.recruiterProfile?.companyName ?? "Hiretivo recruiter",
     startsAt: interview.startsAt ?? new Date(startsAt),
     endsAt: interview.endsAt ?? new Date(endsAt),
     meetLink: interview.meetLink,
+    notes: interview.notes,
   }).catch((err: unknown) => {
     console.error("Failed to send interview scheduled email:", err);
   });

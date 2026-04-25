@@ -1,0 +1,88 @@
+import { NextResponse } from "next/server";
+
+import { auth } from "@/auth";
+import { JobStatus, UserRole } from "@/constants/enums";
+import { prisma } from "@/lib/prisma";
+
+function formatSalaryRange(
+  min: number | null,
+  max: number | null,
+  currency: string | null,
+): string {
+  const symbol = currency === "GBP" ? "£" : currency === "EUR" ? "€" : "$";
+  if (!min && !max) return "Not specified";
+  const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : "";
+  const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : "";
+  if (min && max) return `${minStr} - ${maxStr}`;
+  return minStr || maxStr;
+}
+
+function formatPostedAt(date: Date | null): string {
+  if (!date) return "Recently";
+  const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+}
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (session.user.role !== UserRole.SEEKER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const savedJobs = await prisma.savedJob.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    include: {
+      job: {
+        include: {
+          recruiter: {
+            select: {
+              recruiterProfile: {
+                select: { companyName: true, logo: true },
+              },
+            },
+          },
+          skills: {
+            include: { skill: { select: { name: true } } },
+          },
+          applications: {
+            where: { seekerId: session.user.id },
+            select: { id: true, status: true },
+            take: 1,
+          },
+        },
+      },
+    },
+  });
+
+  return NextResponse.json({
+    data: savedJobs.map((savedJob) => ({
+      id: savedJob.id,
+      savedAt: savedJob.createdAt.toISOString(),
+      application: savedJob.job.applications[0] ?? null,
+      job: {
+        id: savedJob.job.id,
+        title: savedJob.job.title,
+        companyName: savedJob.job.recruiter.recruiterProfile?.companyName ?? "Unknown",
+        companyLogoUrl: savedJob.job.recruiter.recruiterProfile?.logo ?? null,
+        location: savedJob.job.workType ?? "Remote",
+        salaryRange: formatSalaryRange(
+          savedJob.job.salaryMin,
+          savedJob.job.salaryMax,
+          savedJob.job.currency,
+        ),
+        tags: savedJob.job.skills.slice(0, 3).map((jobSkill) => jobSkill.skill.name),
+        postedAt: formatPostedAt(savedJob.job.publishedAt),
+        isClosed: savedJob.job.status !== JobStatus.OPEN,
+      },
+    })),
+  });
+}

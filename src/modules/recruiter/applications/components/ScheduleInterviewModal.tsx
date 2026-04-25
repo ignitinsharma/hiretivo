@@ -88,7 +88,7 @@ export function ScheduleInterviewModal({
   existingInterview,
   onSuccess,
 }: ScheduleInterviewModalProps) {
-  const { isScheduleModalOpen, closeScheduleModal } = useUIStore();
+  const { isScheduleModalOpen, closeScheduleModal, openPaidFeatureModal } = useUIStore();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const isReschedule = Boolean(existingInterview);
@@ -137,6 +137,15 @@ export function ScheduleInterviewModal({
       closeScheduleModal();
       onSuccess();
     } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('requires pro or enterprise')
+      ) {
+        closeScheduleModal();
+        openPaidFeatureModal({ feature: 'interview_scheduling' });
+        return;
+      }
+
       toast.error(error instanceof Error ? error.message : 'Failed to schedule interview. Try again.');
     }
   };
@@ -146,7 +155,7 @@ export function ScheduleInterviewModal({
 
   return (
     <Dialog open={isScheduleModalOpen} onOpenChange={(open) => { if (!open) closeScheduleModal(); }}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="rounded-2xl sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>{isReschedule ? 'Reschedule Interview' : 'Schedule Interview'}</DialogTitle>
           <DialogDescription>
@@ -257,7 +266,7 @@ export function ScheduleInterviewModal({
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
+              className="flex-1 transition-transform hover:scale-105 active:scale-95"
               onClick={closeScheduleModal}
               disabled={isSubmitting}
             >
@@ -265,7 +274,7 @@ export function ScheduleInterviewModal({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-brand-primary hover:bg-brand-primary/90 text-white"
+              className="flex-1 bg-brand-primary text-white transition-transform hover:scale-105 hover:bg-brand-primary/90 active:scale-95"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

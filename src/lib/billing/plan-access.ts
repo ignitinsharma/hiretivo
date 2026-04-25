@@ -1,6 +1,6 @@
 import { PlanTier, type RecruiterPaidFeature } from "@/constants/enums";
 
-export function canAccessRecruiterPaidFeature(plan: PlanTier): boolean {
+export function canAccessRecruiterPaidFeature(plan: string | null | undefined): boolean {
   return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE;
 }
 

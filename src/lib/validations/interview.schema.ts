@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const ScheduleInterviewSchema = z
   .object({
-    applicationId: z.string().uuid(),
+    applicationId: z.cuid(),
     startsAt: z.string().datetime(),
     endsAt: z.string().datetime(),
     meetLink: z.string().url().optional().or(z.literal("")),
