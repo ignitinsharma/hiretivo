@@ -114,6 +114,13 @@ export enum PlanTier {
 
 export const PLAN_TIER_VALUES = [PlanTier.FREE, PlanTier.PRO, PlanTier.ENTERPRISE] as const;
 
+export const RECRUITER_PAID_FEATURE_VALUES = [
+  "talent_pool",
+  "interview_scheduling",
+] as const;
+
+export type RecruiterPaidFeature = (typeof RECRUITER_PAID_FEATURE_VALUES)[number];
+
 export enum InterviewStatus {
   SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
