@@ -1,12 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
-import { CheckCircle2, ArrowUpRight } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { sanitizeHtml } from '@/lib/utils/html-sanitizer';
 
-const TABS = ['Overview', 'Responsibilities', 'Qualifications', 'Benefits'];
+const TABS = ['Overview', 'Responsibilities', 'Qualifications', 'Benefits'] as const;
+const HTML_TAG_RE = /<(p|h[1-6]|ul|ol|li|strong|em|br|b|i|u|a)\b[^>]*>/i;
+
+function renderDescription(raw: string): string {
+  if (HTML_TAG_RE.test(raw)) {
+    return sanitizeHtml(raw);
+  }
+  const paragraphs = raw.split('\n').filter((p) => p.trim());
+  return paragraphs.map((p) => `<p>${p.trim()}</p>`).join('');
+}
 
 interface JobData {
   id: string;
@@ -22,6 +32,7 @@ interface JobDetailContentProps {
 
 export function JobDetailContent({ job }: JobDetailContentProps) {
   const [activeTab, setActiveTab] = useState('Overview');
+  const descriptionHtml = useMemo(() => renderDescription(job.description), [job.description]);
 
   return (
     <div className="flex-1 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
@@ -48,25 +59,20 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
         {activeTab === 'Overview' && (
           <section>
             <h3 className="text-xl font-bold text-slate-900 mb-4">About the Role</h3>
-            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4">
-              {job.description.split('\n').filter((p) => p.trim()).map((paragraph, idx) => (
-                <p key={idx}>{paragraph.trim()}</p>
-              ))}
-            </div>
+            <div
+              className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4"
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
           </section>
         )}
 
         {activeTab === 'Responsibilities' && (
           <section>
             <h3 className="text-xl font-bold text-slate-900 mb-4">Key Responsibilities</h3>
-            <ul className="space-y-3">
-              {job.description.split('\n').filter((p) => p.trim()).map((item, idx) => (
-                <li key={idx} className="flex gap-3 text-slate-600">
-                  <CheckCircle2 className="text-primary mt-0.5 w-5 h-5 shrink-0" />
-                  <span>{item.trim()}</span>
-                </li>
-              ))}
-            </ul>
+            <div
+              className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-3"
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
           </section>
         )}
 

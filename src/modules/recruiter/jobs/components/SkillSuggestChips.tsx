@@ -6,6 +6,7 @@ import { Wand2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
+import { stripHtml } from '@/lib/utils/html-sanitizer';
 
 interface SkillChipProps {
   name: string;
@@ -82,18 +83,19 @@ export function SkillSuggestChips({
 
   // Auto-trigger when autoTriggerTrigger increments (e.g. after JD generation)
   useEffect(() => {
-    if (autoTriggerTrigger > 0 && descriptionText && descriptionText.length >= 10) {
-      suggestMutation.mutate(descriptionText);
+    if (autoTriggerTrigger > 0 && descriptionText && stripHtml(descriptionText).trim().length >= 10) {
+      suggestMutation.mutate(stripHtml(descriptionText));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoTriggerTrigger]);
 
   const handleSuggest = () => {
-    if (!descriptionText || descriptionText.length < 10) {
+    const plain = stripHtml(descriptionText ?? '');
+    if (plain.trim().length < 10) {
       toast.error('Add a job description first (at least 10 characters).');
       return;
     }
-    suggestMutation.mutate(descriptionText);
+    suggestMutation.mutate(plain);
   };
 
   const isSkillAdded = (name: string): boolean =>

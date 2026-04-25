@@ -5,8 +5,8 @@ import { ArrowRight, ArrowLeft, Info } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { SkillsTagInput } from '@/components/forms/skills-tag-input';
+import { RichTextEditor } from '@/components/forms/RichTextEditor';
 import { cn } from '@/lib/utils';
 import type { JobType, ExperienceLevel, JobCategory } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
@@ -249,14 +249,13 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Job Description</label>
-              <Textarea
-                placeholder="Describe the role, responsibilities, and requirements..."
+              <RichTextEditor
                 value={step3.jobDescription}
-                onChange={(e) => {
-                  setJobDescription(e.target.value);
+                onChange={(html) => {
+                  setJobDescription(html);
                   setErrors([]);
                 }}
-                className="min-h-[120px]"
+                placeholder="Describe the role, responsibilities, and requirements..."
               />
             </div>
 

@@ -12,8 +12,8 @@ import {
 import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
 import {
   Select,
   SelectContent,
@@ -378,7 +378,7 @@ export function PostJobModal() {
         if (!open) closePostJobModal();
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden p-0">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0">
         <DialogHeader className="border-b border-slate-100 px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
             {editJobId ? "Edit Job Post" : "Post a New Role"}
@@ -534,15 +534,16 @@ export function PostJobModal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Min Salary
+                Min Salary <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="number"
                 placeholder="e.g. 100000"
                 className={inputErrorClass(!!errors.salaryMin)}
                 {...register("salaryMin", {
+                  required: "Minimum salary is required",
                   validate: (val) => {
-                    if (!val) return true;
+                    if (!val) return "Minimum salary is required";
                     const maxVal = parseInt(watch("salaryMax") || "0", 10);
                     if (maxVal > 0 && parseInt(val, 10) > maxVal) {
                       return "Cannot exceed max salary";
@@ -557,15 +558,16 @@ export function PostJobModal() {
             </div>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Max Salary
+                Max Salary <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="number"
                 placeholder="e.g. 150000"
                 className={inputErrorClass(!!errors.salaryMax)}
                 {...register("salaryMax", {
+                  required: "Maximum salary is required",
                   validate: (val) => {
-                    if (!val) return true;
+                    if (!val) return "Maximum salary is required";
                     const minVal = parseInt(watch("salaryMin") || "0", 10);
                     if (minVal > 0 && parseInt(val, 10) < minVal) {
                       return "Cannot be less than min salary";
@@ -617,14 +619,24 @@ export function PostJobModal() {
                 Generate with AI
               </button>
             </div>
-            <Textarea
-              placeholder="Describe the role, responsibilities, and impact..."
-              className={`resize-none min-h-[120px] ${inputErrorClass(!!errors.description)}`}
-              {...register("description", { required: true })}
+            <Controller
+              control={control}
+              name="description"
+              rules={{ required: true }}
+              render={({ field }) => (
+                <>
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Describe the role, responsibilities, and impact..."
+                    hasError={!!errors.description}
+                  />
+                  {errors.description && (
+                    <p className="text-xs text-red-500 mt-1">Description is required</p>
+                  )}
+                </>
+              )}
             />
-            {errors.description && (
-              <p className="text-xs text-red-500 mt-1">Description is required</p>
-            )}
           </div>
 
           <div>
@@ -773,6 +785,7 @@ export function PostJobModal() {
           open={isJdPanelOpen}
           onOpenChange={setIsJdPanelOpen}
           prefillTitle={watch("title")}
+          prefillDescription={watch("description")}
           onGenerated={(jd) => {
             setValue("description", jd);
             setIsJdPanelOpen(false);
