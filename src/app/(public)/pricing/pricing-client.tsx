@@ -9,7 +9,13 @@ import { CircleCheck, CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BillingPeriod, CurrencyCode, PricingTierId, UserRole, PlanTier } from "@/constants/enums";
+import {
+  BillingPeriod,
+  CurrencyCode,
+  PricingTierId,
+  UserRole,
+  PlanTier,
+} from "@/constants/enums";
 import { useUIStore } from "@/store/use-ui-store";
 import { billingService } from "@/services/billing.service";
 import {
@@ -44,47 +50,47 @@ interface FeatureRow {
   feature: string;
   free: PlanValue;
   pro: PlanValue;
-  enterprise: PlanValue;
+  custom: PlanValue;
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Active Jobs", free: "1", pro: "10", enterprise: "Unlimited" },
+  { feature: "Active Jobs", free: "1", pro: "10", custom: "Custom" },
   {
     feature: "Applicant View Limit",
     free: "20/mo",
     pro: "Unlimited",
-    enterprise: "Unlimited",
+    custom: "Custom",
   },
   {
     feature: "AI Skill Matching",
     free: "Basic",
     pro: "Advanced",
-    enterprise: "Advanced",
+    custom: "Advanced",
   },
   {
     feature: "Candidate Contact Info",
     free: null,
     pro: true,
-    enterprise: true,
+    custom: true,
   },
   {
     feature: "Resume Database Search",
     free: null,
     pro: "Unlimited",
-    enterprise: "Unlimited",
+    custom: "Custom",
   },
-  { feature: "AI Candidate Ranking", free: null, pro: true, enterprise: true },
-  { feature: "Interview Scheduling", free: null, pro: true, enterprise: true },
-  { feature: "ATS Integration", free: null, pro: true, enterprise: true },
-  { feature: "API Access", free: null, pro: null, enterprise: true },
-  { feature: "SSO / SAML", free: null, pro: null, enterprise: true },
+  { feature: "AI Candidate Ranking", free: null, pro: true, custom: true },
+  { feature: "Interview Scheduling", free: null, pro: true, custom: true },
+  { feature: "ATS Integration", free: null, pro: true, custom: true },
+  { feature: "API Access", free: null, pro: null, custom: true },
+  { feature: "SSO / SAML", free: null, pro: null, custom: true },
   {
     feature: "Support",
     free: "Email",
     pro: "Priority",
-    enterprise: "Dedicated CSM",
+    custom: "Dedicated CSM",
   },
-  { feature: "Team Members", free: null, pro: "2", enterprise: "Unlimited" },
+  { feature: "Team Members", free: null, pro: "2", custom: "Custom" },
 ];
 
 // ─── FAQ data (CLAUDE.md §15.4) ─────────────────────────────────────────────
@@ -173,34 +179,35 @@ function PricingCard({
   const sym = CURRENCY_SYMBOL[currency];
   const prices = tier[currency];
   const isHighlighted = tier.highlighted === true;
-  const isEnterprise = tier.isEnterprise === true;
+  const isCustom = tier.isCustom === true;
   const isCurrentPlan = userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO;
 
   const displayedCtaText = isCurrentPlan ? "Manage Plan" : tier.cta;
+  const priceFormatter = new Intl.NumberFormat(
+    currency === CurrencyCode.INR ? "en-IN" : "en-US",
+    { maximumFractionDigits: 0 },
+  );
 
   const displayedPrice = (() => {
-    if (isEnterprise && tier.startingPrice) {
-      const sp = tier.startingPrice[currency];
-      return isAnnual ? sp.annual : sp.monthly;
-    }
     if (!prices) return null;
-    return isAnnual ? prices.annual : prices.monthly;
+    return isAnnual ? prices.annualTotal : prices.monthly;
   })();
 
   const annualSavings = prices && isAnnual ? prices.annualSavings : null;
   const annualTotal = prices && isAnnual ? prices.annualTotal : null;
+  const billingSuffix = isAnnual ? "/yr" : "/mo";
 
   return (
     <div
       className={cn(
         "p-6 rounded-2xl flex flex-col h-full text-left relative",
         isHighlighted
-          ? "bg-brand-primary border-2 border-brand-primary shadow-xl transform lg:scale-105 z-10 text-white"
-          : "bg-white border border-slate-200 shadow-sm",
+          ? "bg-brand-primary border-2 border-brand-primary shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px] transform lg:scale-105 z-10 text-white"
+          : "bg-white border border-[rgba(14,15,12,0.12)] shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]",
       )}
     >
       {isHighlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-brand-primary text-[10px] font-black px-4 py-1 rounded-full uppercase shadow-md whitespace-nowrap">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-brand-primary text-[10px] font-black px-4 py-1 rounded-full uppercase shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px] whitespace-nowrap">
           Most Popular
         </div>
       )}
@@ -223,15 +230,16 @@ function PricingCard({
           {tier.description}
         </p>
 
-        {isEnterprise ? (
+        {isCustom ? (
           <>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold text-slate-900">
-                Starting at {sym}
-                {displayedPrice}/mo
+            <div className="flex items-baseline gap-1 min-h-[48px]">
+              <span className="text-4xl font-black text-slate-900">
+                Custom
               </span>
             </div>
-            <p className="mt-2 text-slate-400 text-[10px]">Custom contract</p>
+            <p className="mt-2 text-slate-400 text-[10px]">
+              Pricing available after consultation
+            </p>
           </>
         ) : (
           <>
@@ -243,16 +251,18 @@ function PricingCard({
                 )}
               >
                 {sym}
-                {displayedPrice}
+                {displayedPrice === null ? "" : priceFormatter.format(displayedPrice)}
               </span>
-              <span
-                className={cn(
-                  "text-sm ml-1",
-                  isHighlighted ? "text-indigo-200" : "text-slate-500",
-                )}
-              >
-                /mo
-              </span>
+              {tier.id !== PricingTierId.FREE && (
+                <span
+                  className={cn(
+                    "text-sm ml-1",
+                    isHighlighted ? "text-indigo-200" : "text-slate-500",
+                  )}
+                >
+                  {billingSuffix}
+                </span>
+              )}
             </div>
             {tier.id === PricingTierId.FREE && (
               <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
@@ -271,14 +281,14 @@ function PricingCard({
         )}
       </div>
 
-      {!isEnterprise && tier.id !== PricingTierId.FREE && (
+      {!isCustom && tier.id !== PricingTierId.FREE && (
         <div
           className={cn(
             "p-2.5 rounded-lg mb-6 text-center",
             isHighlighted ? "bg-white/10" : "bg-indigo-50",
           )}
         >
-          {isAnnual && annualSavings && annualTotal ? (
+          {isAnnual && annualSavings !== null && annualTotal !== null ? (
             <p
               className={cn(
                 "text-[10px] font-bold",
@@ -286,8 +296,8 @@ function PricingCard({
               )}
             >
               Save {sym}
-              {annualSavings}/yr · {sym}
-              {annualTotal} billed annually
+              {priceFormatter.format(annualSavings)}/yr · {sym}
+              {priceFormatter.format(annualTotal)} billed annually
             </p>
           ) : (
             <p
@@ -304,14 +314,14 @@ function PricingCard({
 
       {tier.id === PricingTierId.FREE && <div className="h-px bg-slate-100 mb-6" />}
 
-      {isEnterprise && <div className="h-px bg-slate-100 mb-6" />}
+      {isCustom && <div className="h-px bg-slate-100 mb-6" />}
 
       <PricingCardFeatureList
         features={tier.features}
         highlighted={isHighlighted}
       />
 
-      {isEnterprise ? (
+      {isCustom ? (
         <Link href="/contact" className="w-full mt-auto">
           <Button variant="outline" size="lg" className="w-full">
             {tier.cta}
@@ -360,7 +370,7 @@ function PricingCompareTable(_props: { isAnnual: boolean }) {
                 </th>
                 <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>PRO</th>
                 <th className={cn(TD_BASE, "font-bold text-slate-900")}>
-                  Enterprise
+                  Custom
                 </th>
               </tr>
             </thead>
@@ -375,7 +385,7 @@ function PricingCompareTable(_props: { isAnnual: boolean }) {
                   <td className={CELL_LABEL}>{row.feature}</td>
                   <FeatureCell value={row.free} />
                   <FeatureCell value={row.pro} isPro />
-                  <FeatureCell value={row.enterprise} />
+                  <FeatureCell value={row.custom} />
                 </tr>
               ))}
             </tbody>
@@ -542,7 +552,7 @@ export function PricingClient({ currency }: PricingClientProps) {
               >
                 Annual
                 <span className="bg-brand-primary text-brand-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase font-black tracking-wider pointer-events-none">
-                  Save 20%
+                  Save yearly
                 </span>
               </button>
             </div>
