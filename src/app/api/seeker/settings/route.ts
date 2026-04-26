@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { SkillLevel, UserRole } from "@/constants/enums";
 import { invalidateSeekerCache } from "@/lib/match";
+import { resolveLogoUrl } from "@/lib/r2";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
@@ -51,12 +52,13 @@ export async function GET() {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const { seekerProfile, ...userFields } = user;
+  const { seekerProfile, image, ...userFields } = user;
   const { skills, ...profileFields } = seekerProfile;
 
   return NextResponse.json({
     data: {
       ...userFields,
+      image: resolveLogoUrl(image),
       ...profileFields,
       skills: skills.map((s) => s.skill),
     },

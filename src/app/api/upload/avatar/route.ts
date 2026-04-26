@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { image: url },
+    data: { image: key },
   });
 
   return NextResponse.json({ data: { key, url } }, { status: 200 });

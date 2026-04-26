@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 
 function formatSalaryRange(
   min: number | null,
@@ -72,7 +73,7 @@ export async function GET() {
         id: savedJob.job.id,
         title: savedJob.job.title,
         companyName: savedJob.job.recruiter.recruiterProfile?.companyName ?? "Unknown",
-        companyLogoUrl: savedJob.job.recruiter.recruiterProfile?.logo ?? null,
+        companyLogoUrl: resolveLogoUrl(savedJob.job.recruiter.recruiterProfile?.logo),
         location: savedJob.job.workType ?? "Remote",
         salaryRange: formatSalaryRange(
           savedJob.job.salaryMin,

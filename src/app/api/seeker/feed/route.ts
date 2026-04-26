@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { CurrencyCode, JobStatus, UserRole, MatchThreshold } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
+import { resolveLogoUrl } from '@/lib/r2';
 import { computeAllMatches, upsertJobMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
@@ -239,7 +240,7 @@ export async function GET(req: NextRequest) {
       id: job.id,
       title: job.title,
       companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-      companyLogoUrl: job.recruiter.recruiterProfile?.logo ?? null,
+      companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
       location: 'Remote',
       salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
       matchScore: score,

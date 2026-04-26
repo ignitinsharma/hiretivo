@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 import { UserRole } from "@/constants/enums";
 import {
   NotificationSettingsSchema,
@@ -54,7 +55,7 @@ export async function GET() {
     data: {
       name: user.name ?? "",
       email: user.email ?? "",
-      image: user.image,
+      image: resolveLogoUrl(user.image),
       plan: user.plan,
       billingCustomerId: user.billingCustomerId,
       companyName: user.recruiterProfile.companyName,
@@ -64,7 +65,7 @@ export async function GET() {
       fundingType: user.recruiterProfile.fundingType ?? "",
       isFullyRemote: user.recruiterProfile.isFullyRemote,
       website: user.recruiterProfile.website ?? "",
-      logo: user.recruiterProfile.logo,
+      logo: resolveLogoUrl(user.recruiterProfile.logo),
       emailNotifications: user.recruiterProfile.emailNotifications,
       applicationAlerts: user.recruiterProfile.applicationAlerts,
       interviewNotifications: user.recruiterProfile.interviewNotifications,

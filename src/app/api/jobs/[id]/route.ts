@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { resolveLogoUrl } from '@/lib/r2';
 import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
@@ -78,7 +79,7 @@ export async function GET(
       applyType: job.applyType,
       externalApplyUrl: job.externalApplyUrl,
       companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-      companyLogoUrl: job.recruiter.recruiterProfile?.logo ?? null,
+      companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
       skills: job.skills.map((s) => ({
         id: s.skill.id,
         name: s.skill.name,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ApplicationStatus, JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 import { createApplicationSchema } from "@/lib/validations/application";
 import { applyRateLimiter } from "@/lib/rate-limit";
 
@@ -137,7 +138,7 @@ export async function GET() {
       jobTitle: application.job.title,
       companyName:
         application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company",
-      companyLogoUrl: application.job.recruiter.recruiterProfile?.logo ?? null,
+      companyLogoUrl: resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
     })),

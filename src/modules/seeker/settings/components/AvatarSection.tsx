@@ -16,12 +16,14 @@ interface AvatarSectionProps {
 export function AvatarSection({ name, image }: AvatarSectionProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentImage, setCurrentImage] = useState<string | null | undefined>(image);
 
   const onUpload = async (file: File | undefined): Promise<void> => {
     if (!file) return;
     setIsUploading(true);
     try {
-      await uploadService.uploadAvatar(file);
+      const result = await uploadService.uploadAvatar(file);
+      setCurrentImage(`/api/logo?key=${encodeURIComponent(result.key)}`);
       toast.success("Avatar uploaded successfully.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to upload avatar.");
@@ -39,7 +41,7 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
         </p>
       </div>
       <div className="flex items-center justify-between gap-4 p-6">
-        <InitialsAvatar name={name} image={image} size="xl" />
+        <InitialsAvatar name={name} image={currentImage} size="xl" />
         <input
           ref={inputRef}
           type="file"
