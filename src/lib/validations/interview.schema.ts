@@ -19,6 +19,8 @@ export const RecruiterProfileSettingsSchema = z.object({
   bio: z.string().max(500).optional(),
   companySize: z.string().max(50).optional(),
   industry: z.string().max(100).optional(),
+  fundingType: z.string().max(100).optional(),
+  isFullyRemote: z.boolean().optional(),
   website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 

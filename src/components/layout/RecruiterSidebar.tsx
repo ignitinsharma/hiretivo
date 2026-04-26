@@ -46,7 +46,18 @@ export function RecruiterSidebarProvider({
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
   const toggle = () => setCollapsed((c) => !c);
+  const hideChrome =
+    pathname === '/recruiter/settings' || pathname === '/recruiter/talent';
+
+  if (hideChrome) {
+    return (
+      <SidebarContext.Provider value={{ collapsed, toggle }}>
+        <main className="min-h-screen w-full overflow-x-hidden">{children}</main>
+      </SidebarContext.Provider>
+    );
+  }
 
   return (
     <SidebarContext.Provider value={{ collapsed, toggle }}>

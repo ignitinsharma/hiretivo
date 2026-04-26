@@ -33,11 +33,20 @@ export interface UpcomingInterviewItem {
 export interface RecruiterSettingsData {
   name: string;
   email: string;
+  image: string | null;
+  plan: PlanTier;
+  billingCustomerId: string | null;
   companyName: string;
   bio: string;
   companySize: string;
   industry: string;
+  fundingType: string;
+  isFullyRemote: boolean;
   website: string;
+  logo: string | null;
+  emailNotifications: boolean;
+  applicationAlerts: boolean;
+  interviewNotifications: boolean;
 }
 
 export interface CandidateApplication {
@@ -141,6 +150,14 @@ export const recruiterService = {
   },
 
   updateSettings: async (payload: RecruiterProfileSettingsInput): Promise<void> => {
+    await apiClient.patch('/recruiter/settings', payload);
+  },
+
+  updateNotificationSettings: async (payload: {
+    emailNotifications: boolean;
+    applicationAlerts: boolean;
+    interviewNotifications: boolean;
+  }): Promise<void> => {
     await apiClient.patch('/recruiter/settings', payload);
   },
 
