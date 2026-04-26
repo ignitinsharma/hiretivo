@@ -5,7 +5,7 @@ import { sendEmail } from '@/lib/resend';
 
 const RESET_EXPIRY_MINUTES = 60;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-const FROM_EMAIL = 'Hiretivo <noreply@hiretivo.com>';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Hiretivo <noreply@hiretivo.com>';
 const IDENTIFIER_PREFIX = 'password-reset:';
 
 export async function createPasswordResetToken(email: string): Promise<string> {
@@ -41,12 +41,13 @@ export async function consumePasswordResetToken(
 }
 
 export async function sendPasswordResetEmail(email: string): Promise<void> {
-  const token = await createPasswordResetToken(email);
-  const url = `${APP_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+  const normalizedEmail = email.toLowerCase();
+  const token = await createPasswordResetToken(normalizedEmail);
+  const url = `${APP_URL}/reset-password?token=${token}&email=${encodeURIComponent(normalizedEmail)}`;
 
   await sendEmail({
     from: FROM_EMAIL,
-    to: email,
+    to: normalizedEmail,
     subject: 'Reset your Hiretivo password',
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">

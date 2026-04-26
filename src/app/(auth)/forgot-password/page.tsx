@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   RequestResetSchema,
   type RequestResetInput,
-} from '@/lib/validations/password-reset.schema';
-import { authService } from '@/services/auth.service';
+} from "@/lib/validations/password-reset.schema";
+import { authService } from "@/services/auth.service";
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const form = useForm<RequestResetInput>({
     resolver: zodResolver(RequestResetSchema),
-    defaultValues: { email: '' },
+    defaultValues: { email: "" },
   });
 
   const onSubmit = async (values: RequestResetInput) => {
@@ -28,7 +28,9 @@ export default function ForgotPasswordPage() {
       await authService.requestPasswordReset(values.email);
       setSent(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not send reset link.');
+      toast.error(
+        error instanceof Error ? error.message : "Could not send reset link.",
+      );
     }
   };
 
@@ -40,14 +42,16 @@ export default function ForgotPasswordPage() {
             Forgot your password?
           </h1>
           <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] [font-feature-settings:'calt']">
-            Enter your email and we will send a reset link if the account exists.
+            Enter your email and we will send a reset link if the account
+            exists.
           </p>
         </div>
 
         {sent ? (
           <div className="space-y-6">
             <p className="rounded-2xl bg-[rgba(89,82,229,0.1)] p-4 text-sm font-semibold leading-6 text-[#0e0f0c]">
-              If an account exists for that email, a reset link is on the way. Check your inbox.
+              If an account exists for that email, a reset link is on the way.
+              Check your inbox.
             </p>
             <Button
               asChild
@@ -67,8 +71,8 @@ export default function ForgotPasswordPage() {
                 type="email"
                 autoComplete="email"
                 placeholder="you@company.com"
-                className="rounded-2xl focus-visible:border-[#5952e5] focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
-                {...form.register('email')}
+                className="rounded-lg"
+                {...form.register("email")}
               />
               {form.formState.errors.email && (
                 <p className="text-sm font-semibold text-[#d03238]">
@@ -79,8 +83,8 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
+              variant="default"
               disabled={form.formState.isSubmitting}
-              className="w-full rounded-full bg-[#5952e5] font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
             >
               {form.formState.isSubmitting ? (
                 <>
@@ -88,7 +92,7 @@ export default function ForgotPasswordPage() {
                   Sending...
                 </>
               ) : (
-                'Send reset link'
+                "Send reset link"
               )}
             </Button>
           </form>

@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/resend";
 
 const VERIFICATION_EXPIRY_HOURS = 24;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
 
 export async function createVerificationToken(email: string): Promise<string> {
   const token = randomUUID();
