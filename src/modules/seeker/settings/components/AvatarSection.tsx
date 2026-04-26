@@ -1,11 +1,12 @@
 "use client";
 
 import { Upload } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
+import { compressImage } from "@/lib/image-compression";
 import { uploadService } from "@/services/upload.service";
 
 interface AvatarSectionProps {
@@ -16,17 +17,27 @@ interface AvatarSectionProps {
 export function AvatarSection({ name, image }: AvatarSectionProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [currentImage, setCurrentImage] = useState<string | null | undefined>(image);
+  const [currentImage, setCurrentImage] = useState<string | null | undefined>(
+    image,
+  );
+
+  // Sync local state when the image prop changes (e.g., after API loads on mount)
+  useEffect(() => {
+    setCurrentImage(image);
+  }, [image]);
 
   const onUpload = async (file: File | undefined): Promise<void> => {
     if (!file) return;
     setIsUploading(true);
     try {
-      const result = await uploadService.uploadAvatar(file);
+      const compressed = await compressImage(file);
+      const result = await uploadService.uploadAvatar(compressed);
       setCurrentImage(`/api/logo?key=${encodeURIComponent(result.key)}`);
       toast.success("Avatar uploaded successfully.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to upload avatar.");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload avatar.",
+      );
     } finally {
       setIsUploading(false);
     }
@@ -51,9 +62,9 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
         />
         <Button
           type="button"
+          variant="primary"
           onClick={() => inputRef.current?.click()}
           disabled={isUploading}
-          className="rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95"
         >
           <Upload className="mr-2 h-4 w-4" />
           {isUploading ? "Uploading..." : "Upload avatar"}

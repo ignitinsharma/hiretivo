@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { PlanTier, UserRole } from "@/constants/enums";
 import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 import { NextResponse } from "next/server";
 
 interface TalentDetailRouteContext {
@@ -93,7 +94,7 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
       id: seeker.id,
       name: seeker.name,
       email: seeker.email,
-      image: seeker.image,
+      image: resolveLogoUrl(seeker.image),
       headline: profile.headline,
       bio: profile.bio,
       location: profile.location,

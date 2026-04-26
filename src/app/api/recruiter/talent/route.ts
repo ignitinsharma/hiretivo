@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { PlanTier, UserRole } from "@/constants/enums";
 import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -168,7 +169,7 @@ export async function GET(req: NextRequest) {
           id: seeker.id,
           name: seeker.name,
           email: seeker.email,
-          image: seeker.image,
+          image: resolveLogoUrl(seeker.image),
           headline: profile?.headline ?? null,
           bioExcerpt: getBioExcerpt(profile?.bio),
           location: profile?.location ?? null,
