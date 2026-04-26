@@ -1,7 +1,30 @@
+'use client';
+
 import React from 'react';
 import { SettingsSidebar } from '@/modules/seeker/settings/components/SettingsSidebar';
-import { PersonalInfoSection } from '@/modules/seeker/settings/components/PersonalInfoSection';
+import {
+  PersonalInfoSection,
+  useSeekerSettingsData,
+} from '@/modules/seeker/settings/components/PersonalInfoSection';
 import { PasswordSecuritySection } from '@/modules/seeker/settings/components/PasswordSecuritySection';
+import { SkillsSection } from '@/modules/seeker/settings/components/SkillsSection';
+import { ResumeSection } from '@/modules/seeker/settings/components/ResumeSection';
+import { AvatarSection } from '@/modules/seeker/settings/components/AvatarSection';
+
+function SeekerSettingsPanels() {
+  const { data, isLoading } = useSeekerSettingsData();
+  const settings = data?.data;
+
+  return (
+    <main className="flex-1 space-y-8">
+      <AvatarSection name={settings?.name} image={settings?.image} />
+      <PersonalInfoSection />
+      <SkillsSection settings={settings} isLoading={isLoading} />
+      <ResumeSection resumeKey={settings?.resumeKey} />
+      <PasswordSecuritySection />
+    </main>
+  );
+}
 
 export default function SeekerSettingsPage() {
   return (
@@ -16,10 +39,7 @@ export default function SeekerSettingsPage() {
       <div className="flex flex-col md:flex-row gap-10">
         <SettingsSidebar />
         
-        <main className="flex-1 space-y-8">
-          <PersonalInfoSection />
-          <PasswordSecuritySection />
-        </main>
+        <SeekerSettingsPanels />
       </div>
     </>
   );

@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@/constants/enums";
+import { SkillLevel, UserRole } from "@/constants/enums";
+import { invalidateSeekerCache } from "@/lib/match";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
@@ -21,6 +22,7 @@ export async function GET() {
     select: {
       name: true,
       email: true,
+      image: true,
       seekerProfile: {
         select: {
           headline: true,
@@ -84,7 +86,16 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const { name, ...profileData } = parsed.data;
+  const { name, skillIds, ...profileData } = parsed.data;
+
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+
+  if (!seekerProfile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
 
   const [userUpdate, profileUpdate] = await Promise.all([
     prisma.user.update({
@@ -106,6 +117,24 @@ export async function PATCH(req: NextRequest) {
       },
     }),
   ]);
+
+  if (skillIds) {
+    await prisma.$transaction([
+      prisma.seekerSkill.deleteMany({
+        where: { seekerProfileId: seekerProfile.id },
+      }),
+      ...skillIds.map((skillId) =>
+        prisma.seekerSkill.create({
+          data: {
+            seekerProfileId: seekerProfile.id,
+            skillId,
+            level: SkillLevel.INTERMEDIATE,
+          },
+        }),
+      ),
+    ]);
+    await invalidateSeekerCache(seekerProfile.id);
+  }
 
   if (!userUpdate || !profileUpdate) {
     return NextResponse.json(

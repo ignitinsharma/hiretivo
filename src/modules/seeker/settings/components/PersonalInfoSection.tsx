@@ -186,3 +186,11 @@ export function PersonalInfoSection() {
     </section>
   );
 }
+
+export function useSeekerSettingsData() {
+  return useQuery<{ data: SeekerSettingsData }>({
+    queryKey: ["seeker-settings"],
+    queryFn: seekerService.getSettings,
+    staleTime: 60_000,
+  });
+}

@@ -15,6 +15,7 @@ export interface SeekerFeedResponse {
 export interface SeekerSettingsData {
   name: string;
   email: string;
+  image: string | null;
   headline: string;
   bio: string;
   location: string;
@@ -24,6 +25,8 @@ export interface SeekerSettingsData {
   salaryMax: number | null;
   currency: string;
   availability: string;
+  resumeKey: string | null;
+  skills: Array<{ id: string; name: string; slug: string }>;
 }
 
 export const seekerService = {

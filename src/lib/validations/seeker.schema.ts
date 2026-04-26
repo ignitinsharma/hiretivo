@@ -12,6 +12,7 @@ export const SeekerSettingsSchema = z
     salaryMax: z.number().int().min(0).nullable().optional(),
     currency: z.string().max(10).optional().or(z.literal("")),
     availability: z.string().max(100).optional().or(z.literal("")),
+    skillIds: z.array(z.string().min(1)).optional(),
   })
   .refine(
     (data) =>
