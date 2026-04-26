@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { ApplyType, JobStatus } from "@/constants/enums";
 import { appendHiretivoAttributionParams } from "@/lib/url/utm";
+import { ExternalApplyConfirmationDialog } from "@/components/shared/ExternalApplyConfirmationDialog";
 
 interface ExternalRedirectionPageProps {
   params: { id: string };
@@ -62,12 +63,20 @@ export default async function ExternalRedirectionPage({
           </p>
 
           <div className="space-y-4">
-            <Link
-              href={trackedUrl ?? `/jobs/${params.id}`}
-              className="block w-full py-3.5 px-6 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm"
-            >
-              {canRedirectExternally ? "Continue to Application" : "Back to Job"}
-            </Link>
+            {trackedUrl ? (
+              <ExternalApplyConfirmationDialog
+                jobId={params.id}
+                externalUrl={trackedUrl}
+                companyName={companyName}
+              />
+            ) : (
+              <Link
+                href={`/jobs/${params.id}`}
+                className="block w-full rounded-full bg-[#5952e5] px-6 py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              >
+                Back to Job
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="sm"
