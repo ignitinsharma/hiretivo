@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { SidebarToggle } from "@/components/layout/RecruiterSidebar";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { ActiveJobsList } from "@/modules/recruiter/dashboard/components/ActiveJobsList";
 import { RecentApplicantsList } from "@/modules/recruiter/dashboard/components/RecentApplicantsList";
 import { ApplicationTrendChart } from "@/modules/recruiter/dashboard/components/ApplicationTrendChart";
@@ -146,21 +146,16 @@ export default function RecruiterDashboardPage() {
 
   return (
     <div className="w-full p-8 space-y-8">
-      <section className="flex items-start gap-4">
-        <SidebarToggle className="mt-2" />
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-1">
-            {getGreeting()}, {firstName}.
-          </h1>
-          <p className="text-slate-500">
-            Here&apos;s what&apos;s happening with your recruitment pipeline today.
-          </p>
-        </div>
-      </section>
+      <PageHeader
+        title={`${getGreeting()}, ${firstName}.`}
+        subtitle="Here's what's happening with your recruitment pipeline today."
+      />
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <StatCardSkeleton key={i} />
+            ))
           : stats.map((stat) => <StatCard key={stat.label} stat={stat} />)}
       </section>
 
