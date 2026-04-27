@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { Plus, LogOut, PanelLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { RECRUITER_NAV_ITEMS } from '@/constants/nav';
-import { signOut } from 'next-auth/react';
+import React, { createContext, useContext, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Plus, LogOut, PanelLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
+import { signOut } from "next-auth/react";
+import { Button } from "../ui/button";
 
 interface SidebarContextValue {
   collapsed: boolean;
@@ -30,8 +31,8 @@ export function SidebarToggle({ className }: { className?: string }) {
     <button
       onClick={toggle}
       className={cn(
-        'h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors',
-        className
+        "h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors",
+        className,
       )}
       title="Toggle Sidebar"
     >
@@ -48,13 +49,14 @@ export function RecruiterSidebarProvider({
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const toggle = () => setCollapsed((c) => !c);
-  const hideChrome =
-    pathname === '/recruiter/settings' || pathname === '/recruiter/talent';
+  const hideChrome = false;
 
   if (hideChrome) {
     return (
       <SidebarContext.Provider value={{ collapsed, toggle }}>
-        <main className="min-h-screen w-full overflow-x-hidden">{children}</main>
+        <main className="min-h-screen w-full overflow-x-hidden">
+          {children}
+        </main>
       </SidebarContext.Provider>
     );
   }
@@ -79,32 +81,46 @@ function RecruiterSidebarInner({
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const userName = session?.user?.name ?? 'Recruiter';
-  const initials = userName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'R';
+  const userName = session?.user?.name ?? "Recruiter";
+  const initials =
+    userName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "R";
 
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden',
-        collapsed ? 'w-[68px]' : 'w-[260px]'
+        "sticky top-0 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden",
+        collapsed ? "w-[68px]" : "w-[260px]",
       )}
     >
-      {/* Logo */}
-      <div className={cn('px-5 py-5 flex items-center gap-3', collapsed && 'justify-center px-0')}>
-        <Link href="/recruiter/dashboard" className="flex items-center gap-3">
+      {/* Logo + Toggle */}
+      <div
+        className={cn(
+          "px-5 py-5 flex items-center gap-3",
+          collapsed && "justify-center px-0",
+        )}
+      >
+        <Link href="/recruiter/dashboard" className="flex items-center gap-3 flex-1">
           {collapsed ? (
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
+            <div className="w-9 h-9 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0">
               H
             </div>
           ) : (
-            <Image src="/images/logo.png" alt="Hiretivo" width={64} height={28} className="h-6 w-auto object-contain" priority />
+            <Image
+              src="/images/logo.png"
+              alt="Hiretivo"
+              width={64}
+              height={28}
+              className="h-6 w-auto object-contain"
+              priority
+            />
           )}
         </Link>
+        {!collapsed && <SidebarToggle />}
       </div>
 
       {/* Divider */}
@@ -113,12 +129,12 @@ function RecruiterSidebarInner({
       {/* User profile */}
       <div
         className={cn(
-          'px-5 py-4 flex items-center gap-3',
-          collapsed && 'justify-center px-0'
+          "px-5 py-4 flex items-center gap-3",
+          collapsed && "justify-center px-0",
         )}
       >
         <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm ring-2 ring-primary/10">
+          <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm ring-2 ring-brand-primary/10">
             {initials}
           </div>
           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white" />
@@ -129,7 +145,7 @@ function RecruiterSidebarInner({
               {userName}
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
               <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
                 Recruiter
               </span>
@@ -139,31 +155,32 @@ function RecruiterSidebarInner({
       </div>
 
       {/* Divider */}
-      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-50" />
+      <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
 
       {/* Post New Job CTA */}
-      <div className={cn('px-4 py-5', collapsed && 'px-2 py-3')}>
+      <div className={cn("px-4 py-5", collapsed && "px-2 py-3")}>
         {collapsed ? (
-          <button 
-            className="mx-auto w-11 h-11 bg-primary text-white rounded-lg flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20"
+          <Button
+            variant="primary"
             onClick={() => {
-              const { useUIStore } = require('@/store/use-ui-store');
+              const { useUIStore } = require("@/store/use-ui-store");
               useUIStore.getState().openPostJobModal();
             }}
           >
             <Plus className="w-5 h-5" />
-          </button>
+          </Button>
         ) : (
-          <button 
-            className="w-full py-3 px-4 bg-primary text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] shadow-md shadow-primary/20"
+          <Button
+            variant="primary"
+            className="w-full py-3 px-4"
             onClick={() => {
-              const { useUIStore } = require('@/store/use-ui-store');
+              const { useUIStore } = require("@/store/use-ui-store");
               useUIStore.getState().openPostJobModal();
             }}
           >
             <Plus className="w-5 h-5 shrink-0" />
             Post New Job
-          </button>
+          </Button>
         )}
       </div>
 
@@ -184,17 +201,17 @@ function RecruiterSidebarInner({
                 href={item.href}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  'flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all',
+                  "flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all",
                   isActive
-                    ? 'border-primary bg-primary/5 text-primary font-semibold'
-                    : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium',
-                  collapsed && 'justify-center px-0 border-l-0 rounded-md mx-1'
+                    ? "border-brand-primary bg-brand-primary/5 text-brand-primary font-semibold"
+                    : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium",
+                  collapsed && "justify-center px-0 border-l-0 rounded-md mx-1",
                 )}
               >
                 <div
                   className={cn(
-                    'flex items-center gap-3',
-                    collapsed && 'gap-0'
+                    "flex items-center gap-3",
+                    collapsed && "gap-0",
                   )}
                 >
                   <item.icon className="w-5 h-5 shrink-0" />
@@ -203,17 +220,17 @@ function RecruiterSidebarInner({
                 {!collapsed && item.badge && (
                   <span
                     className={cn(
-                      'text-[10px] font-bold rounded px-1.5 py-0.5',
-                      item.badgeVariant === 'primary'
-                        ? 'bg-primary text-white'
-                        : 'bg-slate-100 text-slate-600'
+                      "text-[10px] font-bold rounded px-1.5 py-0.5",
+                      item.badgeVariant === "primary"
+                        ? "bg-brand-primary text-white"
+                        : "bg-slate-100 text-slate-600",
                     )}
                   >
                     {item.badge}
                   </span>
                 )}
                 {collapsed && item.badge && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-primary text-[8px] font-bold flex items-center justify-center rounded-full text-white border border-white">
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-primary text-[8px] font-bold flex items-center justify-center rounded-full text-white border border-white">
                     {item.badge}
                   </span>
                 )}
@@ -226,10 +243,10 @@ function RecruiterSidebarInner({
       {/* Sign Out */}
       <div className="border-t border-slate-200">
         <button
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut({ callbackUrl: "/" })}
           className={cn(
-            'w-full flex items-center gap-3 py-4 px-6 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors',
-            collapsed && 'justify-center px-0'
+            "w-full flex items-center gap-3 py-4 px-6 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors",
+            collapsed && "justify-center px-0",
           )}
         >
           <LogOut className="w-5 h-5 shrink-0" />
