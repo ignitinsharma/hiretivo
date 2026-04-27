@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { JobListItem } from '@/modules/jobs/types/job.types';
-import type { SeekerDashboardData } from '@/modules/seeker/dashboard/types/dashboard.types';
+import type { SeekerDashboardData, SeekerInterview } from '@/modules/seeker/dashboard/types/dashboard.types';
 
 interface DataResponse<T> {
   data: T;
@@ -51,5 +51,10 @@ export const seekerService = {
 
   updateSettings: async (payload: SeekerSettingsInput): Promise<void> => {
     await apiClient.patch('/seeker/settings', payload);
+  },
+
+  getUpcomingInterviews: async (): Promise<SeekerInterview[]> => {
+    const { data } = await apiClient.get<DataResponse<SeekerInterview[]>>('/seeker/interviews');
+    return data.data;
   },
 };

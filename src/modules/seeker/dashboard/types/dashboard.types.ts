@@ -36,3 +36,15 @@ export interface SeekerDashboardData {
   skillGap: SkillGapSummary;
   digest: DigestPreferenceSummary;
 }
+
+export interface SeekerInterview {
+  id: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  meetLink: string | null;
+  notes: string | null;
+  status: string;
+  jobTitle: string;
+  companyName: string;
+  interviewerName: string;
+}
