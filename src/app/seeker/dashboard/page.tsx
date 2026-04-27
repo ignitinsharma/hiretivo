@@ -2,6 +2,7 @@ import React from 'react';
 import { auth } from '@/auth';
 import { RecommendedJobsList } from '@/modules/seeker/dashboard/components/RecommendedJobsList';
 import { SeekerDashboardSidebar } from '@/modules/seeker/dashboard/components/SeekerDashboardSidebar';
+import { UpcomingInterviewsCard } from '@/modules/seeker/dashboard/components/UpcomingInterviewsCard';
 
 export default async function SeekerDashboardPage() {
   const session = await auth();
@@ -18,7 +19,9 @@ export default async function SeekerDashboardPage() {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <UpcomingInterviewsCard />
+
+      <div className="flex flex-col lg:flex-row gap-8 mt-8">
         <RecommendedJobsList />
         <SeekerDashboardSidebar />
       </div>
