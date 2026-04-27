@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidebarToggle } from "@/components/layout/RecruiterSidebar";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/use-ui-store";
@@ -141,7 +141,7 @@ function JobRow({
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             className="px-4 py-1.5 border-indigo-200 text-indigo-700 hover:bg-primary hover:text-white text-[11px] font-bold h-auto"
           >
@@ -177,12 +177,19 @@ function JobRow({
                 <button
                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                   onClick={() => {
-                    onToggle(job.id, job.status === JobStatus.OPEN ? JobStatus.PAUSED : JobStatus.OPEN);
+                    onToggle(
+                      job.id,
+                      job.status === JobStatus.OPEN
+                        ? JobStatus.PAUSED
+                        : JobStatus.OPEN,
+                    );
                     setDropdownOpen(false);
                   }}
                 >
                   <Archive className="w-4 h-4" />
-                  {job.status === JobStatus.OPEN ? "Archive Job" : "Reactivate Job"}
+                  {job.status === JobStatus.OPEN
+                    ? "Archive Job"
+                    : "Reactivate Job"}
                 </button>
                 <div className="h-px bg-slate-100 my-1" />
                 <button
@@ -258,7 +265,7 @@ function Pagination({
                 ? "bg-primary text-white"
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
             )}
-            variant={p === currentPage ? "default" : "outline"}
+            variant={p === currentPage ? "default" : "subtle"}
             onClick={() => onPageChange(p)}
           >
             {p}
@@ -298,7 +305,8 @@ export default function RecruiterJobsPage() {
     params.set("limit", String(JOBS_PER_PAGE));
     if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
     if (statusFilter) params.set("status", statusFilter);
-    if (categoryFilter && categoryFilter !== "All") params.set("category", categoryFilter);
+    if (categoryFilter && categoryFilter !== "All")
+      params.set("category", categoryFilter);
     return params.toString();
   }, [currentPage, debouncedSearch, statusFilter, categoryFilter]);
 
@@ -310,7 +318,10 @@ export default function RecruiterJobsPage() {
         limit: JOBS_PER_PAGE,
         search: debouncedSearch.trim() || undefined,
         status: statusFilter || undefined,
-        category: categoryFilter && categoryFilter !== "All" ? categoryFilter : undefined,
+        category:
+          categoryFilter && categoryFilter !== "All"
+            ? categoryFilter
+            : undefined,
       }),
   });
 
@@ -370,29 +381,24 @@ export default function RecruiterJobsPage() {
     { label: "Talent Score Avg.", value: "-", badge: "", badgeColor: "" },
   ];
 
-  const showStart = pagination ? Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, pagination.total) : 0;
-  const showEnd = pagination ? Math.min(currentPage * JOBS_PER_PAGE, pagination.total) : 0;
-
+  const showStart = pagination
+    ? Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, pagination.total)
+    : 0;
+  const showEnd = pagination
+    ? Math.min(currentPage * JOBS_PER_PAGE, pagination.total)
+    : 0;
 
   return (
     <div className="w-full p-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6 mb-10">
-        <div className="flex items-start gap-4">
-          <SidebarToggle className="mt-2" />
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-                Active Jobs
-              </h1>
-            </div>
-            <p className="text-slate-500 text-lg">
-              Curate and manage your active job listings.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="Active Jobs"
+          subtitle="Curate and manage your active job listings."
+          className="mb-0"
+        />
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2 border-slate-200">
+          <Button variant="default" className="gap-2 border-slate-200">
             <Upload className="w-4 h-4" />
             Export
           </Button>
@@ -429,7 +435,9 @@ export default function RecruiterJobsPage() {
           >
             <option value="">Department: All</option>
             {serverCategories.map((cat) => (
-              <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+              <option key={cat} value={cat}>
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </option>
             ))}
           </select>
           <select
@@ -505,7 +513,9 @@ export default function RecruiterJobsPage() {
             Showing{" "}
             <span className="text-slate-900 font-bold">{showStart}</span>–
             <span className="text-slate-900 font-bold">{showEnd}</span> of{" "}
-            <span className="text-slate-900 font-bold">{pagination?.total ?? 0}</span>{" "}
+            <span className="text-slate-900 font-bold">
+              {pagination?.total ?? 0}
+            </span>{" "}
             listings
           </p>
           <Pagination
