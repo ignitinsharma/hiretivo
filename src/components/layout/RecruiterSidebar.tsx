@@ -104,23 +104,23 @@ function RecruiterSidebarInner({
           collapsed && "justify-center px-0",
         )}
       >
-        <Link href="/recruiter/dashboard" className="flex items-center gap-3 flex-1">
-          {collapsed ? (
-            <div className="w-9 h-9 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0">
-              H
-            </div>
-          ) : (
-            <Image
-              src="/images/logo.png"
-              alt="Hiretivo"
-              width={64}
-              height={28}
-              className="h-6 w-auto object-contain"
-              priority
-            />
-          )}
-        </Link>
-        {!collapsed && <SidebarToggle />}
+        {collapsed ? (
+          <SidebarToggle />
+        ) : (
+          <>
+            <Link href="/recruiter/dashboard" className="flex items-center gap-3 flex-1">
+              <Image
+                src="/images/logo.png"
+                alt="Hiretivo"
+                width={64}
+                height={28}
+                className="h-6 w-auto object-contain"
+                priority
+              />
+            </Link>
+            <SidebarToggle />
+          </>
+        )}
       </div>
 
       {/* Divider */}
