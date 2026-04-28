@@ -835,8 +835,8 @@ className = "text-emerald-500";
 ### 16.3 Typography rules (from DESIGN.md)
 
 ```tsx
-// Display hero — Inter 800, tight letter-spacing
-className = "font-extrabold text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight";
+// Display hero — Geist Sans 700, tight letter-spacing
+className = "font-bold text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight";
 
 // Section heading
 className = "font-bold text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight";

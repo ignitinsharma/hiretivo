@@ -50,7 +50,7 @@ export default async function Home() {
     <>
       <Header />
       <main>
-        <section className="pt-20 pb-16 px-4" data-purpose="hero-section">
+        <section className="pt-20 pb-16 px-4 grid-bg" data-purpose="hero-section">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-50 rounded-full mb-8">
               <span className="text-black text-sm font-bold tracking-wide">
@@ -124,7 +124,7 @@ export default async function Home() {
         </section>
 
         <section
-          className="py-24 bg-gray-50/50 overflow-hidden"
+          className="py-24 bg-gray-50/50 overflow-hidden grid-bg"
           data-purpose="ai-matchmaking"
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8">
