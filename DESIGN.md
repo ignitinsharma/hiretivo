@@ -54,30 +54,28 @@ Hiretivo is a skills-based remote job portal with a clean, confident monochrome 
 
 ### Font Families
 
-- **Headings**: `Geist Sans`, weight 600–700
-- **Body / UI**: `Geist Sans`, weight 400–500, fallbacks: `Helvetica, Arial`
-- **Code**: `Geist Mono`, weight 400
+- **Headings**: `DM Sans`, weight 600–700
+- **Body / UI**: `DM Sans`, weight 400–500, fallbacks: `Helvetica, Arial`
 
 ### Hierarchy
 
-| Role            | Font       | Size              | Weight | Line Height | Letter Spacing | Usage |
-| --------------- | ---------- | ----------------- | ------ | ----------- | -------------- | ----- |
-| Display         | Geist Sans | 3.5rem (56px)     | 700    | 1.1         | -0.02em        | Hero headings |
-| H1              | Geist Sans | 2.5rem (40px)     | 700    | 1.2         | -0.015em       | Page headings |
-| H2              | Geist Sans | 2rem (32px)       | 700    | 1.25        | -0.01em        | Section headings |
-| H3              | Geist Sans | 1.5rem (24px)     | 600    | 1.3         | -0.005em       | Card titles |
-| H4              | Geist Sans | 1.25rem (20px)    | 600    | 1.4         | 0              | Subsection titles |
-| Body-lg         | Geist Sans | 1.125rem (18px)   | 400    | 1.6         | 0              | Lead paragraphs |
-| Body            | Geist Sans | 1rem (16px)       | 400    | 1.6         | 0              | Default body text |
-| Body-sm         | Geist Sans | 0.875rem (14px)   | 400    | 1.5         | 0              | Small text, captions |
-| Label           | Geist Sans | 0.75rem (12px)    | 500    | 1.4         | 0.05em         | Badges, labels |
+| Role            | Font     | Size              | Weight | Line Height | Letter Spacing | Usage |
+| --------------- | -------- | ----------------- | ------ | ----------- | -------------- | ----- |
+| Display         | DM Sans  | 3.5rem (56px)     | 700    | 1.1         | -0.02em        | Hero headings |
+| H1              | DM Sans  | 2.5rem (40px)     | 700    | 1.2         | -0.015em       | Page headings |
+| H2              | DM Sans  | 2rem (32px)       | 700    | 1.25        | -0.01em        | Section headings |
+| H3              | DM Sans  | 1.5rem (24px)     | 600    | 1.3         | -0.005em       | Card titles |
+| H4              | DM Sans  | 1.25rem (20px)    | 600    | 1.4         | 0              | Subsection titles |
+| Body-lg         | DM Sans  | 1.125rem (18px)   | 400    | 1.6         | 0              | Lead paragraphs |
+| Body            | DM Sans  | 1rem (16px)       | 400    | 1.6         | 0              | Default body text |
+| Body-sm         | DM Sans  | 0.875rem (14px)   | 400    | 1.5         | 0              | Small text, captions |
+| Label           | DM Sans  | 0.75rem (12px)    | 500    | 1.4         | 0.05em         | Badges, labels |
 
 ### Principles
 
-- **Weight 600–700 for headings**: Geist Sans SemiBold/Bold for display headings — authoritative.
+- **Weight 600–700 for headings**: DM Sans SemiBold/Bold for display headings — authoritative.
 - **Tight letter-spacing**: Negative letter-spacing on headings creates dense, impactful text.
-- **Weight 400–500 for body**: Geist Sans Regular/Medium for readable, neutral body text.
-- **Geist Mono for code**: Clean monospace for code blocks and technical content.
+- **Weight 400–500 for body**: DM Sans Regular/Medium for readable, neutral body text.
 
 ## 4. Component Stylings
 
@@ -190,12 +188,12 @@ Hiretivo is a skills-based remote job portal with a clean, confident monochrome 
 
 ### Do
 
-- Use Geist Sans weight 600–700 for headings
+- Use DM Sans weight 600–700 for headings
 - Apply tight letter-spacing on headings (`-0.02em` to `-0.01em`)
 - Use Black (`#000000`) for primary CTAs with white text
 - Use subtle borders (`#e5e7eb`) for depth
 - Apply grid background pattern on hero sections
-- Use Geist Sans weight 400–500 for body text
+- Use DM Sans weight 400–500 for body text
 - Use black for input focus rings
 - Keep all UI monochrome — no accent colors
 
@@ -315,12 +313,12 @@ background-size: 64px 64px;
 2. NEVER use shadows — borders only
 3. NEVER use dark mode
 4. NEVER use `rounded-full` on inputs/cards — use `rounded-lg` or `rounded-xl`
-5. NEVER use font-extrabold (800) — max font-bold (700) for Geist Sans
+5. NEVER use font-extrabold (800) — max font-bold (700) for DM Sans
 6. ALWAYS use black (`#000000`) for primary buttons
 7. ALWAYS use outlined style for secondary buttons
 8. ALWAYS use subtle borders (`#e5e7eb`) for cards and inputs
 9. ALWAYS apply grid background on hero sections
-10. ALWAYS use Geist Sans font — no other fonts
+10. ALWAYS use DM Sans font — no other fonts
 
 ---
 
@@ -343,7 +341,7 @@ background-size: 64px 64px;
 
 ### Iteration Guide
 
-1. Geist Sans 600–700 for headings with tight letter-spacing
+1. DM Sans 600–700 for headings with tight letter-spacing
 2. Black (#000000) for primary buttons — white text
 3. Outlined secondary buttons with gray borders
 4. No shadows — borders only for depth

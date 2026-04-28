@@ -73,8 +73,7 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+        sans: ["var(--font-dm-sans)", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
