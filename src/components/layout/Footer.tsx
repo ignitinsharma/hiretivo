@@ -34,21 +34,23 @@ export function Footer({ className }: FooterProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-12 mb-16 max-w-lg mx-auto">
-          <div className="text-center">
-            <h5 className="text-white font-semibold mb-4 text-sm">Company</h5>
-            <ul className="space-y-3 text-sm">
-              <li><Link className="text-gray-500 hover:text-white transition-colors" href="/about">About</Link></li>
-              <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how">How It Works</Link></li>
-              <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
-            </ul>
-          </div>
-          <div className="text-center">
-            <h5 className="text-white font-semibold mb-4 text-sm">Legal</h5>
-            <ul className="space-y-3 text-sm">
-              <li><Link className="text-gray-500 hover:text-white transition-colors" href="/privacy">Privacy Policy</Link></li>
-              <li><Link className="text-gray-500 hover:text-white transition-colors" href="/terms">Terms of Service</Link></li>
-            </ul>
+        <div className="flex justify-end mb-16">
+          <div className="grid grid-cols-2 gap-16 max-w-md">
+            <div>
+              <h5 className="text-white font-semibold mb-4 text-sm">Company</h5>
+              <ul className="space-y-3 text-sm">
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/about">About</Link></li>
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how">How It Works</Link></li>
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="text-white font-semibold mb-4 text-sm">Legal</h5>
+              <ul className="space-y-3 text-sm">
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/privacy">Privacy Policy</Link></li>
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/terms">Terms of Service</Link></li>
+              </ul>
+            </div>
           </div>
         </div>
 
