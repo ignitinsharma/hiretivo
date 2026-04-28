@@ -1,7 +1,6 @@
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MoreVertical, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { ApplicationStatus } from "@/constants/enums";
 import { cn } from "@/lib/utils";
 import type { SeekerApplicationItem } from "../types/application.types";

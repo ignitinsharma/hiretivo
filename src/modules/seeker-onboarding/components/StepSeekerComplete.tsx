@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowRight, CheckCircle2, Rocket, Code, ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
