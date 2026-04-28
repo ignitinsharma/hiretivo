@@ -22,7 +22,7 @@ export function EnvironmentBadge() {
   const colors = {
     Staging: 'bg-amber-500/90',
     Development: 'bg-blue-500/90',
-    Preview: 'bg-purple-500/90',
+    Preview: 'bg-gray-500/90',
     Local: 'bg-gray-500/90',
     Production: 'bg-black',
   }
