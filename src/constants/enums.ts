@@ -180,6 +180,16 @@ export enum AiMessageRole {
   USER = "user",
 }
 
+export enum ContactRequestType {
+  CONTACT = "CONTACT",
+  BOOK_CALL = "BOOK_CALL",
+}
+
+export const CONTACT_REQUEST_TYPE_VALUES = [
+  ContactRequestType.CONTACT,
+  ContactRequestType.BOOK_CALL,
+] as const;
+
 export enum SubscriptionStatus {
   ACTIVE = "ACTIVE",
   PAST_DUE = "PAST_DUE",

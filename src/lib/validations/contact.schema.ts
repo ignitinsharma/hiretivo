@@ -1,14 +1,5 @@
 import { z } from "zod";
-
-export enum ContactRequestType {
-  CONTACT = "CONTACT",
-  BOOK_CALL = "BOOK_CALL",
-}
-
-export const CONTACT_REQUEST_TYPE_VALUES = [
-  ContactRequestType.CONTACT,
-  ContactRequestType.BOOK_CALL,
-] as const;
+import { CONTACT_REQUEST_TYPE_VALUES } from "@/constants/enums";
 
 export const ContactSupportSchema = z.object({
   type: z.enum(CONTACT_REQUEST_TYPE_VALUES),
