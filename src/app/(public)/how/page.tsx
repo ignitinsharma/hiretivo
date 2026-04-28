@@ -31,13 +31,13 @@ export default function HowPage() {
       <main>
         <section className="pt-20 pb-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge className="bg-brand-primary-light text-brand-primary text-sm font-bold mb-8 px-4 py-1.5">
+            <Badge className="bg-gray-100 text-black text-sm font-bold mb-8 px-4 py-1.5">
               <Sparkles className="w-4 h-4 mr-2" />
               Skills-based matching
             </Badge>
-            <h1 className="text-brand-dark text-5xl md:text-7xl font-extrabold mb-6 leading-[1.1]">
+            <h1 className="text-foreground text-5xl md:text-7xl font-extrabold mb-6 leading-[1.1]">
               How Hiretivo <br />
-              <span className="text-brand-primary">Works</span>
+              <span className="text-black">Works</span>
             </h1>
             <p className="text-slate-600 text-xl md:text-2xl mb-12 max-w-2xl mx-auto">
               We connect skilled professionals with remote opportunities using
@@ -58,7 +58,7 @@ export default function HowPage() {
                 </Link>
               </Button>
               <Button
-                variant="outline"
+                variant="default"
                 size="lg"
                 asChild
               >
@@ -72,11 +72,11 @@ export default function HowPage() {
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-5/12">
-                <Badge className="bg-indigo-50 text-brand-primary text-xs font-bold uppercase tracking-wider mb-6 px-3 py-1">
+                <Badge className="bg-gray-50 text-black text-xs font-bold uppercase tracking-wider mb-6 px-3 py-1">
                   <Zap className="w-3 h-3 mr-1" />
                   Smart Technology
                 </Badge>
-                <h2 className="text-brand-dark text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
+                <h2 className="text-foreground text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
                   AI-Powered Skill Matching
                 </h2>
                 <p className="text-slate-600 text-lg mb-8 leading-relaxed">
@@ -87,10 +87,10 @@ export default function HowPage() {
                 <div className="space-y-6 mb-10">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
-                      <Code className="w-5 h-5 text-brand-primary" />
+                      <Code className="w-5 h-5 text-black" />
                     </div>
                     <div>
-                      <h4 className="text-brand-dark font-bold">
+                      <h4 className="text-foreground font-bold">
                         Semantic Skill Mapping
                       </h4>
                       <p className="text-sm text-slate-600">
@@ -101,10 +101,10 @@ export default function HowPage() {
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
-                      <Globe className="w-5 h-5 text-brand-primary" />
+                      <Globe className="w-5 h-5 text-black" />
                     </div>
                     <div>
-                      <h4 className="text-brand-dark font-bold">
+                      <h4 className="text-foreground font-bold">
                         Timezone Compatibility
                       </h4>
                       <p className="text-sm text-slate-600">
@@ -115,10 +115,10 @@ export default function HowPage() {
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
-                      <Target className="w-5 h-5 text-brand-primary" />
+                      <Target className="w-5 h-5 text-black" />
                     </div>
                     <div>
-                      <h4 className="text-brand-dark font-bold">
+                      <h4 className="text-foreground font-bold">
                         Experience Match
                       </h4>
                       <p className="text-sm text-slate-600">
@@ -138,64 +138,64 @@ export default function HowPage() {
                 </Button>
               </div>
               <div className="lg:w-7/12">
-                <Card className="border-slate-200 shadow-lg p-6">
+                <Card className="border-slate-200 p-6">
                   <CardContent className="p-0">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-primary to-indigo-400 flex items-center justify-center text-white font-bold">
+                        <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white font-bold">
                           S
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-brand-dark font-extrabold text-sm">
+                          <h4 className="text-foreground font-extrabold text-sm">
                             Sarah Jenkins
                           </h4>
                           <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
                             Sr. Product Designer
                           </p>
                         </div>
-                        <Badge className="bg-brand-primary-light text-brand-primary text-[10px] font-bold">
+                        <Badge className="bg-gray-100 text-black text-[10px] font-bold">
                           <Check className="w-3 h-3 mr-1" />
                           Verified
                         </Badge>
                       </div>
 
                       <div className="space-y-3">
-                        <div className="p-3 rounded-lg bg-brand-primary-light/30 border border-brand-primary/10 flex items-center justify-between">
+                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Check className="w-4 h-4 text-brand-primary" />
-                            <span className="text-xs font-bold text-brand-dark">
+                            <Check className="w-4 h-4 text-black" />
+                            <span className="text-xs font-bold text-foreground">
                               Figma Expert
                             </span>
                           </div>
-                          <span className="text-[9px] font-extrabold text-brand-primary">
+                          <span className="text-[9px] font-extrabold text-black">
                             MATCH
                           </span>
                         </div>
-                        <div className="p-3 rounded-lg bg-brand-primary-light/30 border border-brand-primary/10 flex items-center justify-between">
+                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Check className="w-4 h-4 text-brand-primary" />
-                            <span className="text-xs font-bold text-brand-dark">
+                            <Check className="w-4 h-4 text-black" />
+                            <span className="text-xs font-bold text-foreground">
                               8+ Years Exp.
                             </span>
                           </div>
-                          <span className="text-[9px] font-extrabold text-brand-primary">
+                          <span className="text-[9px] font-extrabold text-black">
                             MATCH
                           </span>
                         </div>
-                        <div className="p-3 rounded-lg bg-brand-primary-light/30 border border-brand-primary/10 flex items-center justify-between">
+                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Check className="w-4 h-4 text-brand-primary" />
-                            <span className="text-xs font-bold text-brand-dark">
+                            <Check className="w-4 h-4 text-black" />
+                            <span className="text-xs font-bold text-foreground">
                               UTC-5 Preferred
                             </span>
                           </div>
-                          <span className="text-[9px] font-extrabold text-brand-primary">
+                          <span className="text-[9px] font-extrabold text-black">
                             MATCH
                           </span>
                         </div>
                       </div>
 
-                      <div className="mt-6 p-4 bg-white rounded-xl border-2 border-brand-primary-light text-center">
+                      <div className="mt-6 p-4 bg-white rounded-xl border-2 border-gray-100 text-center">
                         <div className="relative inline-block mb-4">
                           <svg className="w-24 h-24 transform -rotate-90">
                             <circle
@@ -218,17 +218,17 @@ export default function HowPage() {
                             />
                           </svg>
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-3xl font-extrabold text-brand-primary leading-none">
+                            <span className="text-3xl font-extrabold text-black leading-none">
                               99%
                             </span>
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">
+                            <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter mt-0.5">
                               Match
                             </span>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-slate-100 p-2 rounded-lg">
-                            <div className="text-[10px] font-bold text-brand-primary">
+                            <div className="text-[10px] font-bold text-black">
                               98.4%
                             </div>
                             <div className="text-[8px] font-medium text-slate-400">
@@ -236,7 +236,7 @@ export default function HowPage() {
                             </div>
                           </div>
                           <div className="bg-slate-100 p-2 rounded-lg">
-                            <div className="text-[10px] font-bold text-brand-primary">
+                            <div className="text-[10px] font-bold text-black">
                               100%
                             </div>
                             <div className="text-[8px] font-medium text-slate-400">
@@ -257,7 +257,7 @@ export default function HowPage() {
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <div>
-                <div className="text-brand-primary text-4xl font-extrabold mb-2">
+                <div className="text-black text-4xl font-extrabold mb-2">
                   2,400+
                 </div>
                 <div className="text-slate-600 font-medium uppercase tracking-wider text-sm">
@@ -265,7 +265,7 @@ export default function HowPage() {
                 </div>
               </div>
               <div>
-                <div className="text-brand-primary text-4xl font-extrabold mb-2">
+                <div className="text-black text-4xl font-extrabold mb-2">
                   840
                 </div>
                 <div className="text-slate-600 font-medium uppercase tracking-wider text-sm">
@@ -273,7 +273,7 @@ export default function HowPage() {
                 </div>
               </div>
               <div>
-                <div className="text-brand-primary text-4xl font-extrabold mb-2">
+                <div className="text-black text-4xl font-extrabold mb-2">
                   12,000+
                 </div>
                 <div className="text-slate-600 font-medium uppercase tracking-wider text-sm">
@@ -287,10 +287,10 @@ export default function HowPage() {
         <section className="py-24">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
-              <Badge className="bg-brand-primary-light text-brand-primary text-sm font-bold mb-4">
+              <Badge className="bg-gray-100 text-black text-sm font-bold mb-4">
                 Simple Process
               </Badge>
-              <h2 className="text-brand-dark text-4xl font-extrabold mb-4">
+              <h2 className="text-foreground text-4xl font-extrabold mb-4">
                 How to Get Started
               </h2>
               <p className="text-slate-600 max-w-xl mx-auto">
@@ -299,10 +299,10 @@ export default function HowPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center">
-                <div className="w-16 h-16 bg-brand-primary text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   1
                 </div>
-                <h3 className="text-brand-dark text-xl font-bold mb-3">
+                <h3 className="text-foreground text-xl font-bold mb-3">
                   Create Your Profile
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -311,10 +311,10 @@ export default function HowPage() {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-brand-primary text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   2
                 </div>
-                <h3 className="text-brand-dark text-xl font-bold mb-3">
+                <h3 className="text-foreground text-xl font-bold mb-3">
                   Get Matched
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -323,10 +323,10 @@ export default function HowPage() {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-brand-primary text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   3
                 </div>
-                <h3 className="text-brand-dark text-xl font-bold mb-3">
+                <h3 className="text-foreground text-xl font-bold mb-3">
                   Apply Confidently
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -335,10 +335,10 @@ export default function HowPage() {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-brand-primary text-white rounded-2xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   4
                 </div>
-                <h3 className="text-brand-dark text-xl font-bold mb-3">
+                <h3 className="text-foreground text-xl font-bold mb-3">
                   Land Your Role
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -349,14 +349,14 @@ export default function HowPage() {
           </div>
         </section>
 
-        <section className="py-24 bg-brand-primary-light">
+        <section className="py-24 bg-gray-100">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="bg-white rounded-3xl p-8 md:p-16 shadow-sm flex flex-col md:flex-row items-center gap-12">
+            <div className="bg-white rounded-xl p-8 md:p-16 flex flex-col md:flex-row items-center gap-12">
               <div className="md:w-1/2">
-                <Badge className="bg-indigo-100 text-brand-primary text-sm font-bold mb-4">
+                <Badge className="bg-gray-100 text-black text-sm font-bold mb-4">
                   For Recruiters
                 </Badge>
-                <h2 className="text-brand-dark text-4xl font-extrabold mb-6">
+                <h2 className="text-foreground text-4xl font-extrabold mb-6">
                   Hiring remote talent?
                 </h2>
                 <p className="text-slate-600 text-lg mb-8 leading-relaxed">
@@ -373,7 +373,7 @@ export default function HowPage() {
                     <Link href="/recruiter/post-job">Post a Job Today</Link>
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="default"
                     className="px-8 py-4"
                     asChild
                   >
@@ -383,11 +383,11 @@ export default function HowPage() {
               </div>
               <div className="md:w-1/2 space-y-6">
                 <div className="flex gap-4 items-start">
-                  <div className="w-8 h-8 bg-brand-primary-light rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-brand-primary font-bold" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-black" />
                   </div>
                   <div>
-                    <h4 className="text-brand-dark font-bold mb-1">
+                    <h4 className="text-foreground font-bold mb-1">
                       Targeted Reach
                     </h4>
                     <p className="text-slate-600 text-sm">
@@ -397,11 +397,11 @@ export default function HowPage() {
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <div className="w-8 h-8 bg-brand-primary-light rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-brand-primary font-bold" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-black" />
                   </div>
                   <div>
-                    <h4 className="text-brand-dark font-bold mb-1">
+                    <h4 className="text-foreground font-bold mb-1">
                       Quality Matches
                     </h4>
                     <p className="text-slate-600 text-sm">
@@ -411,11 +411,11 @@ export default function HowPage() {
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <div className="w-8 h-8 bg-brand-primary-light rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <Check className="w-4 h-4 text-brand-primary font-bold" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-black" />
                   </div>
                   <div>
-                    <h4 className="text-brand-dark font-bold mb-1">
+                    <h4 className="text-foreground font-bold mb-1">
                       Simple Management
                     </h4>
                     <p className="text-slate-600 text-sm">
@@ -431,7 +431,7 @@ export default function HowPage() {
 
         <section className="py-24 bg-slate-900 text-white">
           <div className="max-w-4xl mx-auto px-4 text-center">
-            <Lightbulb className="w-12 h-12 text-brand-primary mx-auto mb-6" />
+            <Lightbulb className="w-12 h-12 text-black mx-auto mb-6" />
             <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
               Ready to find your next remote role?
             </h2>
@@ -449,7 +449,7 @@ export default function HowPage() {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
+                variant="default"
                 asChild
               >
                 <Link href="/browse">Browse Jobs</Link>

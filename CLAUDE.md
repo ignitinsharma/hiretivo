@@ -713,6 +713,13 @@ if (!data?.jobs.length) return <EmptyState message="No jobs found" />;
 return <JobList jobs={data.jobs} />;
 ```
 
+### Loading Skeleton Rule
+
+- Every async page, query-backed section, and server-data component must render a skeleton that approximates the final layout.
+- Do not use plain "Loading..." text for full sections or lists.
+- Skeletons should preserve the final grid/table/card shape to avoid layout shift.
+- Keep skeleton components close to the feature when they are domain-specific; extract to `src/components/shared/` only when reused across modules.
+
 ### 15.8 Naming — components and variables must be self-documenting
 
 ```tsx

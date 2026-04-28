@@ -81,7 +81,7 @@ function getStatusPillClasses(status: ApplicationStatus): string {
     case ApplicationStatus.OFFER:
       return "bg-amber-100 text-amber-700";
     case ApplicationStatus.HIRED:
-      return "bg-brand-primary-light text-brand-primary";
+      return "bg-gray-100 text-black";
     case ApplicationStatus.REJECTED:
       return "bg-red-100 text-red-700";
   }
@@ -195,11 +195,13 @@ export default function RecruiterApplicationsPage() {
             subtitle="Deep-dive candidate analysis and management"
             className="mb-0"
           />
-          <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[11px] font-bold uppercase tracking-wider">
-            {applicationsQuery.isLoading
-              ? "..."
-              : `${statsQuery.data?.total ?? 0} Candidates`}
-          </span>
+          {/* <div className="mt-4">  
+            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[11px] font-bold uppercase tracking-wider">
+              {applicationsQuery.isLoading
+                ? "..."
+                : `${statsQuery.data?.total ?? 0} Candidates`}
+            </span>
+          </div> */}
         </div>
         {/* <div className="flex items-center space-x-3">
           <Button variant="default" className="gap-2">
@@ -223,7 +225,7 @@ export default function RecruiterApplicationsPage() {
             placeholder="Search candidate name or email"
           />
         </div>
-        <Button type="submit" variant="default">
+        <Button type="submit" variant="primary">
           Apply Search
         </Button>
       </form>
@@ -311,10 +313,10 @@ export default function RecruiterApplicationsPage() {
                             .slice(0, 2)}
                         </div>
                         <div>
-                          <p className="font-extrabold text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">
+                          <p className="font-semibold capitalize text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">
                             {application.candidateName}
                           </p>
-                          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                          <p className="text-xs user-section text-slate-400 font-bold tracking-wider">
                             {application.candidateEmail}
                           </p>
                         </div>
@@ -381,7 +383,7 @@ export default function RecruiterApplicationsPage() {
         </div>
 
         {recruiterPlan === PlanTier.FREE && applications.length > 20 ? (
-          <div className="absolute inset-x-10 bottom-8 bg-white/90 rounded-2xl border border-brand-primary/20 shadow-lg p-6 text-center">
+          <div className="absolute inset-x-10 bottom-8 bg-white/90 rounded-xl border border-gray-200 p-6 text-center">
             <h3 className="text-slate-900 font-bold">
               Upgrade to unlock all applicants
             </h3>
