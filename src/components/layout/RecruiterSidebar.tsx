@@ -223,7 +223,7 @@ function RecruiterSidebarInner({
                 {!collapsed && item.badge && (
                   <span
                     className={cn(
-                      "text-[10px] font-bold rounded px-1.5 py-0.5",
+                      "text-[10px] font-semibold rounded px-1.5 py-0.5",
                       item.badgeVariant === "primary"
                         ? "bg-black text-white"
                         : "bg-slate-100 text-slate-600",
@@ -248,7 +248,7 @@ function RecruiterSidebarInner({
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className={cn(
-            "w-full flex items-center gap-3 py-4 px-6 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors",
+            "w-full flex items-center gap-3 py-4 px-6 text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors",
             collapsed && "justify-center px-0",
           )}
         >
