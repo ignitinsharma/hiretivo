@@ -45,8 +45,8 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-primary-light mb-4">
-          <CheckCircle2 className="w-8 h-8 text-brand-primary" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+          <CheckCircle2 className="w-8 h-8 text-black" />
         </div>
 
         <div className="space-y-2">
@@ -97,7 +97,7 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
             Browse All Matched Jobs
             <ArrowRight className="w-4 h-4" />
           </Button>
-          <Button type="button" variant="outline" size="lg" className="w-full">
+          <Button type="button" variant="default" size="lg" className="w-full">
             Complete my full profile
           </Button>
         </div>

@@ -1,38 +1,39 @@
-'use client';
+"use client";
 
-import { format } from 'date-fns';
-import { Calendar, Video } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { useFetchSeekerInterviews } from '../queries/use-fetch-seeker-interviews';
-import type { SeekerInterview } from '../types/dashboard.types';
+import { format } from "date-fns";
+import { Calendar, Video } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { useFetchSeekerInterviews } from "../queries/use-fetch-seeker-interviews";
+import type { SeekerInterview } from "../types/dashboard.types";
 
-const CARD_CLASSES = 'bg-white rounded-2xl border border-[rgba(14,15,12,0.12)] p-6';
+const CARD_CLASSES =
+  "bg-white rounded-2xl border border-[rgba(14,15,12,0.12)] p-6";
 
 const SECTION_TITLE_CLASSES =
-  "text-xl font-semibold text-brand-heading [font-feature-settings:'calt']";
+  "text-xl font-semibold text-foreground";
 
 function formatDateTime(dateStr: string | null): string {
-  if (!dateStr) return 'TBD';
-  return format(new Date(dateStr), 'MMM d, yyyy · h:mm a');
+  if (!dateStr) return "TBD";
+  return format(new Date(dateStr), "MMM d, yyyy · h:mm a");
 }
 
 function InterviewRow({ interview }: { interview: SeekerInterview }) {
   return (
     <div className="flex items-start gap-4 py-4 border-b border-[rgba(14,15,12,0.08)] last:border-b-0 last:pb-0 first:pt-0">
-      <div className="w-10 h-10 rounded-full bg-brand-primary-light flex items-center justify-center shrink-0">
-        <Calendar className="w-5 h-5 text-brand-primary" />
+        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+        <Calendar className="w-5 h-5 text-black" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-brand-heading [font-feature-settings:'calt']">
+        <p className="font-semibold text-foreground capitalize">
           {interview.companyName}
         </p>
-        <p className="text-sm text-brand-muted-secondary [font-feature-settings:'calt'] mt-0.5">
+        <p className="text-sm text-muted-foreground font-medium mt-0.5">
           {interview.jobTitle}
         </p>
-        <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-body [font-feature-settings:'calt']">
+        <div className="flex font-medium flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <Calendar className="w-4 h-4 text-brand-muted" />
+            <Calendar className="w-4 h-4 text-gray-400" />
             {formatDateTime(interview.startsAt)}
           </span>
           {interview.meetLink && (
@@ -40,15 +41,15 @@ function InterviewRow({ interview }: { interview: SeekerInterview }) {
               href={interview.meetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-brand-primary hover:underline transition-colors"
+              className="flex items-center gap-1 text-black hover:underline transition-colors"
             >
               <Video className="w-4 h-4" />
-              Join Meet
+              Join Meeting
             </a>
           )}
         </div>
         {interview.notes && (
-          <p className="mt-2 text-sm text-brand-muted [font-feature-settings:'calt'] line-clamp-2">
+          <p className="mt-2 text-sm capitalize text-gray-400 line-clamp-2">
             {interview.notes}
           </p>
         )}
@@ -62,7 +63,10 @@ function LoadingSkeleton() {
     <div className={CARD_CLASSES}>
       <Skeleton className="h-6 w-48 mb-6" />
       {[0, 1].map((i) => (
-        <div key={i} className="flex items-start gap-4 py-4 border-b border-[rgba(14,15,12,0.08)] last:border-b-0 last:pb-0 first:pt-0">
+        <div
+          key={i}
+          className="flex items-start gap-4 py-4 border-b border-[rgba(14,15,12,0.08)] last:border-b-0 last:pb-0 first:pt-0"
+        >
           <Skeleton className="w-10 h-10 rounded-full shrink-0" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-5 w-32" />
@@ -77,10 +81,12 @@ function LoadingSkeleton() {
 
 function EmptyState() {
   return (
-    <div className={cn(CARD_CLASSES, 'text-center')}>
-      <Calendar className="w-12 h-12 text-brand-muted mx-auto" />
-      <h3 className={cn(SECTION_TITLE_CLASSES, 'mt-4')}>No upcoming interviews</h3>
-      <p className="mt-2 text-brand-muted [font-feature-settings:'calt']">
+    <div className={cn(CARD_CLASSES, "text-center")}>
+      <Calendar className="w-12 h-12 text-gray-400 mx-auto" />
+      <h3 className={cn(SECTION_TITLE_CLASSES, "mt-4")}>
+        No upcoming interviews
+      </h3>
+      <p className="mt-2 text-gray-400">
         When a recruiter schedules an interview, it will appear here.
       </p>
     </div>
@@ -94,8 +100,8 @@ export function UpcomingInterviewsCard() {
 
   if (isError) {
     return (
-      <div className={cn(CARD_CLASSES, 'text-center')}>
-        <p className="text-brand-muted [font-feature-settings:'calt']">
+      <div className={cn(CARD_CLASSES, "text-center")}>
+        <p className="text-gray-400">
           Could not load interviews.
         </p>
       </div>

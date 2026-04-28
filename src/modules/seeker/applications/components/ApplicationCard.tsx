@@ -28,9 +28,6 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
             <Building2 className="w-6 h-6" />
           )}
         </div>
-        <Button variant="ghost" size="icon" className="px-2">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
       </div>
 
       <div className="flex-1">
@@ -79,8 +76,8 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
       label = "Offer Received";
       break;
     case ApplicationStatus.HIRED:
-      badgeClasses = "bg-brand-primary-light text-brand-primary";
-      dotClasses = "bg-brand-primary";
+      badgeClasses = "bg-gray-100 text-black";
+      dotClasses = "bg-black";
       label = "Hired";
       break;
     case ApplicationStatus.REJECTED:
