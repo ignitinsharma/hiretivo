@@ -28,7 +28,7 @@ const FREE_FEATURES = [
 ];
 
 const STATUS_STYLES: Record<SubscriptionStatus, string> = {
-  ACTIVE: "border-brand-primary-light bg-brand-primary-light text-brand-primary",
+  ACTIVE: "border-gray-200 bg-gray-100 text-black",
   PAST_DUE: "border-amber-200 bg-amber-50 text-amber-700",
   CANCELED: "border-red-200 bg-red-50 text-red-700",
 };
@@ -72,13 +72,13 @@ function FreePlanCard() {
         <ul className="space-y-3">
           {FREE_FEATURES.map((feature) => (
             <li key={feature} className="flex items-center gap-2 text-sm text-slate-700">
-              <Check className="h-4 w-4 text-brand-primary" aria-hidden />
+              <Check className="h-4 w-4 text-black" aria-hidden />
               {feature}
             </li>
           ))}
         </ul>
         <Button
-          className="bg-brand-primary text-white hover:bg-brand-primary/90"
+          className="bg-black text-white hover:bg-[#1a1a1a]"
           onClick={() => router.push("/pricing")}
         >
           Upgrade to PRO
@@ -116,20 +116,20 @@ function PaidPlanCard({
     <Card
       className={cn(
         "max-w-2xl border-slate-200 bg-white",
-        plan === PlanTier.PRO && "border-brand-primary/30",
+        plan === PlanTier.PRO && "border-black/30",
       )}
     >
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-xl">
             {isEnterprise ? (
-              <CreditCard className="h-5 w-5 text-brand-primary" aria-hidden />
+              <CreditCard className="h-5 w-5 text-black" aria-hidden />
             ) : (
-              <Crown className="h-5 w-5 text-brand-primary" aria-hidden />
+              <Crown className="h-5 w-5 text-black" aria-hidden />
             )}
             {isEnterprise ? "Enterprise plan" : "PRO plan"}
           </CardTitle>
-          <Badge variant="outline" className={STATUS_STYLES[status]}>
+          <Badge variant="default" className={STATUS_STYLES[status]}>
             {STATUS_LABELS[status]}
           </Badge>
         </div>
@@ -155,7 +155,7 @@ function PaidPlanCard({
         )}
 
         <Button
-          className="bg-brand-primary text-white hover:bg-brand-primary/90"
+          className="bg-black text-white hover:bg-[#1a1a1a]"
           onClick={() => portalMutation.mutate()}
           disabled={portalMutation.isPending}
         >
@@ -187,7 +187,7 @@ export function BillingTabContent() {
       <div className="max-w-2xl rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-700">
         <p className="font-medium">Billing details could not be loaded.</p>
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
           className="mt-3"
           onClick={() => void refetch()}

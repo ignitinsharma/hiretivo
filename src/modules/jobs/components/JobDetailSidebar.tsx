@@ -16,7 +16,7 @@ const SIMILAR_JOBS = [
     company: "Stripe",
     salary: "$130k-170k",
     tag: "Higher Match",
-    tagClass: "bg-brand-primary-light text-brand-primary",
+    tagClass: "bg-gray-100 text-black",
   },
   {
     id: "2",
@@ -67,7 +67,7 @@ export function JobDetailSidebar({
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex justify-between items-start mb-4">
           <h3 className="font-bold text-slate-900 text-lg">Quick Apply</h3>
-          <span className="px-2 py-1 bg-brand-primary-light text-brand-primary text-[10px] font-bold uppercase rounded leading-none">
+          <span className="px-2 py-1 bg-gray-100 text-black text-[10px] font-bold uppercase rounded leading-none">
             Actively Hiring
           </span>
         </div>
@@ -101,7 +101,7 @@ export function JobDetailSidebar({
             <ArrowRight className="w-4 h-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="default"
             className="w-full py-3"
           >
             Save for later
