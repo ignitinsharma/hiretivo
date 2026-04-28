@@ -19,3 +19,11 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 - **Fix:** Reduced PRICING_CONFIG to Free, Pro, and Custom; removed stale Starter/Growth/public Enterprise pricing; changed pricing card to use Custom with no public price and Pro annual Dodo product totals.
 - **Files changed:** src/constants/pricing.ts, src/app/(public)/pricing/pricing-client.tsx
 ---
+
+## avatar-upload-issues — Avatar disappears on reload, >2MB rejected, Next.js parse error
+- **Date:** 2026-04-26
+- **Error patterns:** avatar disappears, file too large max 2 MB, Failed to parse src, next/image, avatars/ missing leading slash, stale state
+- **Root cause:** Three issues: (1) AvatarSection and CompanyAvatarSection used useState(prop) which only initializes once — when async API data arrives and prop changes, local state stays stale. (2) No client-side compression existed; server rejects >2MB with no preprocessing. (3) /api/recruiter/talent and /api/recruiter/talent/[id] returned seeker.image as raw R2 key without resolveLogoUrl(), causing next/image to receive "avatars/xxx/avatar.webp" (missing leading "/").
+- **Fix:** (1) Added useEffect to sync local state with image/logo prop changes in both avatar components. (2) Created src/lib/image-compression.ts using Canvas API — converts to WebP, resizes to max 800px, progressively reduces quality until under 2MB. Applied in both AvatarSection and CompanyAvatarSection upload flows. (3) Added resolveLogoUrl() to both talent API routes.
+- **Files changed:** src/modules/seeker/settings/components/AvatarSection.tsx, src/modules/recruiter/settings/components/CompanyAvatarSection.tsx, src/lib/image-compression.ts, src/app/api/recruiter/talent/route.ts, src/app/api/recruiter/talent/[id]/route.ts
+---

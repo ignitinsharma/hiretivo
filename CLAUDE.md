@@ -541,51 +541,83 @@ The pattern seen in the screenshot — raw `<tr>` blocks repeated for every feat
 ```tsx
 // ❌ WRONG — copy-pasted JSX, class strings repeated, impossible to maintain
 <tr>
-  <td className="py-6 px-4 text-sm font-semibold text-slate-700">Smart Interview Scheduling</td>
+  <td className="py-6 px-4 text-sm font-semibold text-slate-700">
+    Smart Interview Scheduling
+  </td>
   <td className="py-6 px-4 text-sm text-slate-400">—</td>
   <td className="py-6 px-4 text-sm text-slate-600">Basic</td>
-<td className="py-6 px-4 text-sm font-bold text-brand-primary bg-brand-primary-light/50">✓</td>
-<td className="py-6 px-4 text-sm text-slate-600">{isAnnual ? 'Full' : 'Custom Pipeline'}</td>
-</tr>
+  <td className="py-6 px-4 text-sm font-bold text-brand-primary bg-brand-primary-light/50">
+    ✓
+  </td>
+  <td className="py-6 px-4 text-sm text-slate-600">
+    {isAnnual ? "Full" : "Custom Pipeline"}
+  </td>
+</tr>;
 // ... same pattern repeated 8 more times
 
 // ✅ CORRECT — typed config, single cell renderer, one render loop
-type PlanValue = string | boolean | null
+type PlanValue = string | boolean | null;
 
 interface FeatureRow {
-  feature: string
-  starter: PlanValue
-  pro: PlanValue
-  enterprise: PlanValue
+  feature: string;
+  starter: PlanValue;
+  pro: PlanValue;
+  enterprise: PlanValue;
 }
 
 // Defined at module level — outside the component
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: 'Smart Interview Scheduling', starter: null,    pro: 'Basic', enterprise: true  },
-  { feature: 'ATS Dashboard',             starter: null,    pro: 'Basic', enterprise: true  },
-  { feature: 'API Access',                starter: null,    pro: true,    enterprise: true  },
-  { feature: 'Support',                   starter: 'Email', pro: 'Email + Chat', enterprise: true },
-  { feature: 'Team Seats',                starter: null,    pro: null,    enterprise: true  },
-]
+  {
+    feature: "Smart Interview Scheduling",
+    starter: null,
+    pro: "Basic",
+    enterprise: true,
+  },
+  { feature: "ATS Dashboard", starter: null, pro: "Basic", enterprise: true },
+  { feature: "API Access", starter: null, pro: true, enterprise: true },
+  {
+    feature: "Support",
+    starter: "Email",
+    pro: "Email + Chat",
+    enterprise: true,
+  },
+  { feature: "Team Seats", starter: null, pro: null, enterprise: true },
+];
 
-function FeatureCell({ value, isAnnual }: { value: PlanValue; isAnnual?: boolean }) {
-  if (value === null)  return <td className={cn(TD_BASE, 'text-slate-400')}>—</td>
-  if (value === true)  return <td className={cn(TD_BASE, 'text-brand-primary font-bold')}>✓</td>
-  if (value === 'pipeline') {
-    return <td className={cn(TD_BASE, 'text-slate-600')}>{isAnnual ? 'Full' : 'Custom Pipeline'}</td>
+function FeatureCell({
+  value,
+  isAnnual,
+}: {
+  value: PlanValue;
+  isAnnual?: boolean;
+}) {
+  if (value === null)
+    return <td className={cn(TD_BASE, "text-slate-400")}>—</td>;
+  if (value === true)
+    return <td className={cn(TD_BASE, "text-brand-primary font-bold")}>✓</td>;
+  if (value === "pipeline") {
+    return (
+      <td className={cn(TD_BASE, "text-slate-600")}>
+        {isAnnual ? "Full" : "Custom Pipeline"}
+      </td>
+    );
   }
-  return <td className={cn(TD_BASE, 'text-slate-600')}>{value}</td>
+  return <td className={cn(TD_BASE, "text-slate-600")}>{value}</td>;
 }
 
 // In the component
-{FEATURE_ROWS.map((row) => (
-  <tr key={row.feature}>
-    <td className={cn(TD_BASE, 'font-semibold text-slate-700')}>{row.feature}</td>
-    <FeatureCell value={row.starter} />
-    <FeatureCell value={row.pro} isAnnual={isAnnual} />
-    <FeatureCell value={row.enterprise} />
-  </tr>
-))}
+{
+  FEATURE_ROWS.map((row) => (
+    <tr key={row.feature}>
+      <td className={cn(TD_BASE, "font-semibold text-slate-700")}>
+        {row.feature}
+      </td>
+      <FeatureCell value={row.starter} />
+      <FeatureCell value={row.pro} isAnnual={isAnnual} />
+      <FeatureCell value={row.enterprise} />
+    </tr>
+  ));
+}
 ```
 
 ### 15.2 Extract repeated className strings into named constants
@@ -761,133 +793,219 @@ Run through this before every PR. Any unchecked item is a reason to block merge.
 ### 16.1 Always reference DESIGN.md before writing any UI
 
 Before writing any component, page, or layout:
+
 1. Read `DESIGN.md` for colors, typography, spacing, and component patterns
-2. Use only colors defined in `DESIGN.md` — never invent new hex values
+2. Use only brand tokens defined in DESIGN.md — never invent new hex values
 3. Use only typography scale from `DESIGN.md` — never freestyle font sizes
 
-### 16.2 Color usage rules (from DESIGN.md)
+### 16.2 Color usage rules — BRAND TOKENS FIRST
 
 ```tsx
-// Primary CTA button — always Primary Indigo + White text
-className="bg-[#5952e5] text-white rounded-full hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
+// ✅ CORRECT — use brand tokens (preferred)
+className = "bg-brand-primary text-brand-primary-foreground";
+className = "text-brand-foreground";
+className = "text-brand-foreground-muted";
+className = "text-brand-foreground-secondary";
+className = "bg-brand-surface";
+className = "border-brand-border";
 
-// Primary text
-className="text-[#0e0f0c]"
+//  WRONG if value dont exist create new from tailwind and then use it not directly like below
+className = "bg-[#000000]"; // only if bg-brand-primary is unavailable
+className = "text-[#0a0a0a]"; // only if text-brand-foreground is unavailable
 
-// Muted / secondary text
-className="text-[#868685]"
-
-// Card / container border
-className="border border-[rgba(14,15,12,0.12)] rounded-2xl"
-
-// Light primary surface / badge background
-className="bg-[rgba(89,82,229,0.1)]"
-
-// NEVER use green/lime colors for brand elements:
-// ❌ bg-[#9fe870], text-[#163300], bg-[#e2f6d5], emerald-*, green-*
-// ✅ Use bg-[#5952e5], text-white, bg-[rgba(89,82,229,0.1)] instead
+// ❌ WRONG — inventing colors not in DESIGN.md
+className = "bg-indigo-600 text-white";
+className = "bg-purple-500";
+className = "text-emerald-500";
 ```
+
+**Brand token reference (from DESIGN.md):**
+| Token | Value | Use |
+|-------|-------|-----|
+| `bg-brand-primary` / `text-brand-primary` | `#000000` | Primary CTA, buttons |
+| `text-brand-primary-foreground` | `#ffffff` | Text on primary background |
+| `text-brand-foreground` | `#0a0a0a` | Primary text, headings |
+| `text-brand-foreground-muted` | `#6b7280` | Body text, descriptions |
+| `text-brand-foreground-secondary` | `#9ca3af` | Tertiary text, placeholders |
+| `border-brand-border` | `#e5e7eb` | All borders, dividers |
+| `bg-brand-surface` | `#f9fafb` | Light surface background |
+| `bg-brand-success` / `text-brand-success` | `#16a34a` | Success states |
+| `bg-brand-danger` / `text-brand-danger` | `#ef4444` | Error, destructive |
 
 ### 16.3 Typography rules (from DESIGN.md)
 
 ```tsx
-// Display hero — Wise Sans 900, 0.85 line-height, calt
-className="font-display text-[96px] font-black leading-[0.85] [font-feature-settings:'calt']"
+// Display hero — Inter 800, tight letter-spacing
+className = "font-extrabold text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight";
 
 // Section heading
-className="font-display text-[64px] font-black leading-[0.85] [font-feature-settings:'calt']"
+className = "font-bold text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight";
 
 // Card title
-className="font-sans text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] [font-feature-settings:'calt']"
+className = "font-semibold text-xl leading-snug tracking-tight";
 
 // Body
-className="font-sans text-[18px] font-normal leading-[1.44] tracking-[0.18px] [font-feature-settings:'calt']"
+className = "font-normal text-base leading-relaxed";
 
-// Body semibold (default reading weight)
-className="font-sans text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] [font-feature-settings:'calt']"
+// Body muted
+className = "font-normal text-base text-muted-foreground leading-relaxed";
 ```
 
-### 16.4 Button rules (from DESIGN.md)
+### 16.4 Button rules — ALWAYS use Button component with variant
 
 ```tsx
-// Primary pill button — always this pattern
-<button className="bg-[#5952e5] text-white font-semibold px-[16px] py-[5px] rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30">
-  Label
-</button>
+// ✅ CORRECT — use Button component with variant
+import { Button } from "@/components/ui/button";
 
-// Secondary subtle pill
-<button className="bg-[rgba(89,82,229,0.08)] text-[#0e0f0c] font-semibold px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95">
-  Label
-</button>
+<Button variant="primary">Label</Button>
+<Button variant="secondary">Label</Button>
+<Button variant="ghost" size="icon"><Mail /></Button>
+
+// ❌ WRONG — raw button with hardcoded classes
+<button className="bg-[#000000] text-white rounded-lg">Label</button>
+
+// ❌ WRONG — adding external CSS classes for button styling
+<Button className="rounded-lg bg-black text-white">Label</Button>
+```
+
+**Button variant guide:**
+| Variant | Styling | Use case |
+|---------|---------|----------|
+| `primary` | Black bg, white text, rounded-lg | Main CTA, form submit |
+| `secondary` | White bg, gray border, gray text | Secondary actions |
+| `destructive` | Red bg, white text, rounded-lg | Delete, remove |
+| `ghost` | Transparent, hover bg | Inline actions, nav items |
+| `link` | Text link style | Text links that look like buttons |
+
+**Size variants:**
+| Size | Styling | Use case |
+|------|---------|----------|
+| `sm` | text-xs, smaller padding | Small actions |
+| `default` | text-sm, standard padding | Standard buttons |
+| `lg` | text-base, larger padding | Prominent CTAs |
+
+**RULE: Never add styling classes to Button — use variant + size only**
+
+```tsx
+// ❌ WRONG — external styling classes
+<Button className="rounded-lg bg-black text-white">Click</Button>
+
+// ✅ CORRECT — variant handles all styling
+<Button variant="primary">Click</Button>
+
+// ✅ CORRECT — only layout classes allowed (flex-1, w-full, etc.)
+<Button variant="primary" className="flex-1">Click</Button>
 ```
 
 ### 16.5 Card / container rules (from DESIGN.md)
 
 ```tsx
-// Standard card (max 16px radius)
-className="rounded-2xl border border-[rgba(14,15,12,0.12)] p-6"
+// Standard card
+className = "rounded-xl border border-gray-200 bg-white p-6";
 
-// Large card / table container (max 24px)
-className="rounded-3xl border border-[rgba(14,15,12,0.12)] p-8"
+// Large card / table container
+className = "rounded-xl border border-gray-200 bg-white p-8";
 
 // Small card
-className="rounded-2xl border border-[rgba(14,15,12,0.12)] p-4"
+className = "rounded-xl border border-gray-200 bg-white p-4";
 ```
 
-### 16.6 Input / modal rules (from DESIGN.md)
+### 16.6 Input / form field rules
 
 ```tsx
-// Input fields — max 16px border-radius, primary color focus
-className="rounded-2xl border border-input focus-visible:border-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary/30"
+// ✅ CORRECT — Input component with rounded-lg
+<Input className="rounded-lg" />
 
-// Modal / Dialog — max 16px border-radius
-className="rounded-2xl"
+// ✅ CORRECT — custom input with proper focus
+<input className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-black/20 focus:border-black" />
 
-// NEVER use rounded-[30px] or rounded-[40px] on inputs/modals
-// NEVER use rounded-full on input fields
+// Modal / Dialog — rounded-xl border-radius
+className="rounded-xl border border-gray-200"
 ```
 
-### 16.6 Animation rules (from DESIGN.md)
+### 16.7 Paid feature lock pattern
+
+For features restricted to paid plans (Pro/Enterprise), show a lock overlay for free users:
 
 ```tsx
-// All interactive elements use scale — never color-only hover
-className="transition-transform hover:scale-105 active:scale-95"
+import { Lock } from "lucide-react";
+import { useUIStore } from "@/store/use-ui-store";
+import { Button } from "@/components/ui/button";
 
-// Never do this (color-only hover, no scale)
-className="hover:bg-green-400"  // WRONG
+// Pattern for paid feature gate
+const { openPaidFeatureModal } = useUIStore();
+
+{
+  isFreeUser && (
+    <div className="relative">
+      {/* Content */}
+      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/80 backdrop-blur-sm">
+        <div className="text-center">
+          <Lock className="mx-auto h-8 w-8 text-black" />
+          <p className="mt-2 font-semibold text-black">Pro feature</p>
+          <Button
+            variant="primary"
+            className="mt-3"
+            onClick={() => openPaidFeatureModal({ feature: "feature_name" })}
+          >
+            Upgrade to Pro
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 ```
 
-### 16.7 What NOT to do
+**Pages requiring paid feature locks:**
+
+- `/recruiter/talent` — Talent pool search (Pro+)
+- `/recruiter/settings` — Billing/upgrade section visible to all, but paid features locked
+
+### 16.8 Animation rules (from DESIGN.md)
 
 ```tsx
-// WRONG — using green/lime colors (old brand)
-className="bg-[#9fe870] text-[#163300]"  // WRONG — old Wise green
-className="bg-emerald-500 text-emerald-100"  // WRONG — use primary instead
+// All interactive elements use subtle transitions
+className = "transition-colors hover:bg-gray-50";
+
+// Buttons use color transitions
+className = "transition-colors hover:bg-[#1a1a1a]";
+```
+
+### 16.9 What NOT to do
+
+```tsx
+// WRONG — using indigo/purple colors (old brand)
+className="bg-[#5952e5] text-white"  // WRONG — old indigo brand
+className="bg-indigo-600 text-indigo-100"  // WRONG — use black instead
 
 // WRONG — inventing colors not in DESIGN.md
-className="bg-indigo-600 text-white rounded-lg"
+className="bg-purple-500 text-white rounded-lg"
 
-// WRONG — light font weights on display text
-className="text-6xl font-medium"
+// WRONG — heavy font weights on display text
+className="text-6xl font-black"  // max font-extrabold (800)
 
-// WRONG — relaxed line-height on display
-className="font-black text-8xl leading-tight"  // leading-tight = 1.25, not 0.85
+// WRONG — ultra-tight line-height on display
+className="font-extrabold text-7xl leading-[0.85]"  // use leading-tight
 
 // WRONG — traditional box shadow
-className="shadow-lg"
+className="shadow-lg"  // no shadows allowed
 
 // WRONG — excessive border-radius on inputs/modals
-className="rounded-[30px]"  // WRONG — max 16px on inputs/modals
-className="rounded-[40px]"  // WRONG — max 24px on cards
+className="rounded-full"  // WRONG — use rounded-lg on inputs
+className="rounded-2xl"  // WRONG on inputs — use rounded-lg
 
-// CORRECT — primary color CTA
-className="bg-[#5952e5] text-white rounded-full"
+// WRONG — raw button instead of Button component
+<button className="bg-black text-white">Click</button>
 
-// CORRECT — ring shadow only (from DESIGN.md)
-className="shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]"
+// CORRECT — brand token CTA
+className="bg-brand-primary text-brand-primary-foreground rounded-lg"
 
-// CORRECT — input with primary focus
-className="rounded-2xl border border-input focus-visible:border-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary/30"
+// CORRECT — input with black focus
+className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-black/20 focus:border-black"
+
+// CORRECT — Button component with primary variant
+<Button variant="primary">Click</Button>
 ```
 
 ---
@@ -935,13 +1053,13 @@ className="rounded-2xl border border-input focus-visible:border-brand-primary fo
 
 ```ts
 // CORRECT
-queryFn: () => jobService.getJobs(filters)
+queryFn: () => jobService.getJobs(filters);
 
 // WRONG
 queryFn: async () => {
-  const res = await fetch('/api/jobs')
-  return res.json()
-}
+  const res = await fetch("/api/jobs");
+  return res.json();
+};
 ```
 
 - TanStack Query `queryFn` and mutation functions should delegate to a single service call.
@@ -967,3 +1085,17 @@ queryFn: async () => {
 - This applies to roles, plans, job status, application status, interview status, job type, work type, apply type, skill level, billing period, currency, pricing tier IDs, and AI message roles.
 - Zod schemas must use exported enum value arrays such as `USER_ROLE_VALUES`, `JOB_STATUS_VALUES`, `JOB_TYPE_VALUES`, and `BILLING_PERIOD_VALUES`.
 - Literal strings are still allowed for user-facing copy, CSS classes, route paths, query keys, and labels.
+
+**Key frontend rules (always enforced):**
+
+1. Every function/hook/component must have a JSDoc comment
+2. Never use hex color values — use Tailwind tokens, add new ones if missing
+3. All components must be responsive (mobile-first with `sm:`, `md:`, `lg:` prefixes)
+4. Enums and constants go in separate files (`enums.ts`, `constants.ts`), never inline
+5. Business logic in hooks, rendering in components
+6. Decompose components over ~150 lines into sub-components
+7. Check `src/components/ui/` and `src/components/shared/` before creating new components
+8. Write code first, then add imports (ESLint auto-sorts imports on each edit)
+9. NEVER use indigo/purple colors — fully monochrome design system
+10. NEVER use shadows — borders only for depth
+11. NEVER use dark mode — light mode only

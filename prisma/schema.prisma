@@ -100,8 +100,6 @@ model User {
 
   boostedJobs BoostedJob[] @relation("BoostedJobs")
   savedJobs            SavedJob[]
-  shortlistedTalent    TalentShortlist[] @relation("RecruiterShortlists")
-  shortlistedByRecruiters TalentShortlist[] @relation("SeekerShortlists")
 }
 
 model Account {
@@ -392,19 +390,4 @@ model SavedJob {
   @@unique([userId, jobId])
   @@index([userId])
   @@index([jobId])
-}
-
-model TalentShortlist {
-  id          String   @id @default(cuid())
-  recruiterId String
-  seekerId    String
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now())
-
-  recruiter User @relation("RecruiterShortlists", fields: [recruiterId], references: [id], onDelete: Cascade)
-  seeker    User @relation("SeekerShortlists", fields: [seekerId], references: [id], onDelete: Cascade)
-
-  @@unique([recruiterId, seekerId])
-  @@index([recruiterId])
-  @@index([seekerId])
 }
