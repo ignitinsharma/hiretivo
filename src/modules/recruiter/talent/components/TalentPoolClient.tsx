@@ -6,6 +6,7 @@ import { useState } from "react";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUIStore } from "@/store/use-ui-store";
 import {
   TalentForbiddenError,
@@ -75,6 +76,43 @@ function TalentCard({
             </a>
           </Button>
         )}
+      </div>
+    </article>
+  );
+}
+
+function TalentCardSkeleton() {
+  return (
+    <article className="rounded-xl border border-gray-200 bg-white p-5 shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-6 w-36" />
+            <Skeleton className="h-4 w-44" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Skeleton
+            key={index}
+            className="h-6 w-16 rounded-full"
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+
+      <div className="mb-5 grid grid-cols-2 gap-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-5 w-24" aria-hidden="true" />
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <Skeleton className="h-10 flex-1 rounded-lg" />
+        <Skeleton className="h-10 w-10 rounded-lg" />
       </div>
     </article>
   );
@@ -166,8 +204,10 @@ export function TalentPoolClient() {
       </div>
 
       {talentQuery.isLoading ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm font-semibold text-[#454745]">
-          Loading talent...
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <TalentCardSkeleton key={index} />
+          ))}
         </div>
       ) : talentQuery.isError ? (
         <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm font-semibold text-[#d03238]">
