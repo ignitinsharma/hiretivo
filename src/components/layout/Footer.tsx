@@ -54,6 +54,12 @@ export function Footer({ className }: FooterProps) {
           </div>
         </div>
 
+        <div className="text-center mb-8 overflow-hidden">
+          <span className="text-white text-[120px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter leading-none opacity-5 select-none">
+            HIRETIVO
+          </span>
+        </div>
+
         <div className="pt-8 border-t border-white/10 text-center">
           <p className="text-gray-600 text-sm">© 2026 Hiretivo Inc. All rights reserved.</p>
         </div>
