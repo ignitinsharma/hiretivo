@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { Calendar, Clock, Video } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { recruiterService } from '@/services/recruiter.service';
-import type { UpcomingInterviewItem } from '@/services/recruiter.service';
+import { Calendar, Clock, Video } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { recruiterService } from "@/services/recruiter.service";
+import type { UpcomingInterviewItem } from "@/services/recruiter.service";
 
 interface UpcomingInterviewsResponse {
   data: UpcomingInterviewItem[];
@@ -13,20 +13,31 @@ interface UpcomingInterviewsResponse {
 
 function formatInterviewDate(isoString: string): string {
   const d = new Date(isoString);
-  return d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function formatInterviewTime(isoString: string): string {
   const d = new Date(isoString);
-  return d.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: 'numeric', minute: '2-digit' }) + ' UTC';
+  return (
+    d.toLocaleTimeString("en-US", {
+      timeZone: "UTC",
+      hour: "numeric",
+      minute: "2-digit",
+    }) + " UTC"
+  );
 }
 
 export function UpcomingInterviewsList() {
-  const { data, isLoading, isError, refetch } = useQuery<UpcomingInterviewsResponse>({
-    queryKey: ['recruiter-interviews-upcoming'],
-    queryFn: recruiterService.getUpcomingInterviews,
-    staleTime: 30_000,
-  });
+  const { data, isLoading, isError, refetch } =
+    useQuery<UpcomingInterviewsResponse>({
+      queryKey: ["recruiter-interviews-upcoming"],
+      queryFn: recruiterService.getUpcomingInterviews,
+      staleTime: 30_000,
+    });
 
   const interviews = data?.data ?? [];
 
@@ -34,13 +45,15 @@ export function UpcomingInterviewsList() {
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm h-full">
       <div className="p-5 border-b border-gray-100 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Upcoming Interviews</h2>
+          <h2 className="text-lg font-bold text-gray-900">
+            Upcoming Interviews
+          </h2>
           <p className="text-sm text-gray-500">Scheduled for this week</p>
         </div>
       </div>
 
       <div className="p-3">
-        {isLoading && (
+        {isLoading &&
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="p-3 rounded-lg mb-2">
               <div className="flex items-start justify-between mb-2">
@@ -55,13 +68,14 @@ export function UpcomingInterviewsList() {
                 <Skeleton className="h-3 w-14" />
               </div>
             </div>
-          ))
-        )}
+          ))}
 
         {!isLoading && isError && (
           <div className="p-6 text-center">
-            <p className="text-sm text-gray-500 mb-3">Could not load interviews.</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <p className="text-sm text-gray-500 mb-3">
+              Could not load interviews.
+            </p>
+            <Button variant="default" size="sm" onClick={() => refetch()}>
               Retry loading
             </Button>
           </div>
@@ -69,36 +83,48 @@ export function UpcomingInterviewsList() {
 
         {!isLoading && !isError && interviews.length === 0 && (
           <div className="p-6 text-center">
-            <p className="text-sm font-medium text-gray-700 mb-1">No upcoming interviews</p>
-            <p className="text-xs text-gray-500">Schedule interviews from the candidate drawer.</p>
+            <p className="text-sm font-medium text-gray-700 mb-1">
+              No upcoming interviews
+            </p>
+            <p className="text-xs text-gray-500">
+              Schedule interviews from the candidate drawer.
+            </p>
           </div>
         )}
 
-        {!isLoading && !isError && interviews.length > 0 && (
+        {!isLoading &&
+          !isError &&
+          interviews.length > 0 &&
           interviews.map((interview, index) => (
             <div
               key={interview.id}
               className={`p-3 rounded-lg hover:bg-gray-50 transition-colors ${
-                index !== interviews.length - 1 ? 'mb-2' : ''
+                index !== interviews.length - 1 ? "mb-2" : ""
               }`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {interview.application.seeker.name ?? 'Candidate'}
+                  <p className="text-sm font-semibold text-gray-900 ">
+                    {interview.application.seeker.name ?? "Candidate"}
                   </p>
-                  <p className="text-xs text-gray-500">{interview.application.job.title}</p>
+                  <p className="text-xs text-gray-500">
+                    {interview.application.job.title}
+                  </p>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-brand-primary hover:text-brand-primary hover:bg-brand-primary/10"
+                  className="h-7 w-7 text-black hover:text-black hover:bg-gray-100"
                   disabled={!interview.meetLink}
                   asChild={!!interview.meetLink}
-                  aria-label={`Join meeting for ${interview.application.seeker.name ?? 'Candidate'}`}
+                  aria-label={`Join meeting for ${interview.application.seeker.name ?? "Candidate"}`}
                 >
                   {interview.meetLink ? (
-                    <a href={interview.meetLink} target="_blank" rel="noreferrer">
+                    <a
+                      href={interview.meetLink}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       <Video className="w-4 h-4" />
                     </a>
                   ) : (
@@ -117,12 +143,14 @@ export function UpcomingInterviewsList() {
                 </span>
               </div>
             </div>
-          ))
-        )}
+          ))}
       </div>
 
       <div className="p-3 border-t border-gray-100">
-        <Button variant="ghost" className="w-full text-brand-primary font-medium">
+        <Button
+          variant="ghost"
+          className="w-full text-black font-medium"
+        >
           View All Interviews
         </Button>
       </div>

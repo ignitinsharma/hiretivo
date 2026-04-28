@@ -1,20 +1,18 @@
 'use client';
 
-import { UserPlus, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { UserPlus, Calendar, XCircle } from 'lucide-react';
 import { RECENT_ACTIVITY } from '../data/mock-dashboard-data';
 import { cn } from '@/lib/utils';
 
 const ACTIVITY_ICONS = {
   application: UserPlus,
   interview: Calendar,
-  shortlist: CheckCircle,
   rejection: XCircle,
 };
 
 const ACTIVITY_STYLES = {
   application: 'bg-blue-100 text-blue-600',
   interview: 'bg-purple-100 text-purple-600',
-  shortlist: 'bg-primary/10 text-primary',
   rejection: 'bg-red-100 text-red-600',
 };
 
@@ -50,7 +48,7 @@ export function RecentActivityList() {
                   <p className="text-sm text-gray-900">
                     <span className="font-semibold">{activity.candidateName}</span>{' '}
                     applied for{' '}
-                    <span className="font-medium text-brand-primary">
+                    <span className="font-medium text-black">
                       {activity.jobTitle}
                     </span>
                   </p>

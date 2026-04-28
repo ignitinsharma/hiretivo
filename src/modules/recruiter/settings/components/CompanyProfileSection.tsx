@@ -37,18 +37,18 @@ export function CompanyProfileSection({
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-6"
+      className="rounded-xl border border-gray-200 bg-white p-6"
     >
       <h3 className="mb-5 text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-[#0e0f0c] [font-feature-settings:'calt']">
         Company profile
       </h3>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input className="rounded-2xl" placeholder="Company name" {...form.register("companyName")} />
-        <Input className="rounded-2xl" placeholder="Website" {...form.register("website")} />
-        <Input className="rounded-2xl" placeholder="Company size" {...form.register("companySize")} />
-        <Input className="rounded-2xl" placeholder="Industry" {...form.register("industry")} />
-        <Input className="rounded-2xl" placeholder="Funding type" {...form.register("fundingType")} />
-        <label className="flex items-center justify-between rounded-2xl border border-[rgba(14,15,12,0.12)] px-4 py-2 text-sm font-semibold text-[#0e0f0c]">
+        <Input placeholder="Company name" {...form.register("companyName")} />
+        <Input placeholder="Website" {...form.register("website")} />
+        <Input placeholder="Company size" {...form.register("companySize")} />
+        <Input placeholder="Industry" {...form.register("industry")} />
+        <Input placeholder="Funding type" {...form.register("fundingType")} />
+        <label className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-foreground">
           Fully remote
           <Switch
             checked={form.watch("isFullyRemote") ?? false}
@@ -59,8 +59,9 @@ export function CompanyProfileSection({
       </div>
       <Button
         type="submit"
+        variant="primary"
         disabled={isSaving}
-        className="mt-5 rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95"
+        className="mt-5"
       >
         {isSaving ? "Saving..." : "Save company"}
       </Button>

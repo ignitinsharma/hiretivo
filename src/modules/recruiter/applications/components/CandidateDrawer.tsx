@@ -1,39 +1,43 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 
-import { ApplicationStatus, InterviewStatus, PlanTier } from '@/constants/enums';
-import { getStageLabel } from '@/lib/application-pipeline';
-import { useUIStore } from '@/store/use-ui-store';
-import { recruiterService } from '@/services/recruiter.service';
+import {
+  ApplicationStatus,
+  InterviewStatus,
+  PlanTier,
+} from "@/constants/enums";
+import { getStageLabel } from "@/lib/application-pipeline";
+import { useUIStore } from "@/store/use-ui-store";
+import { recruiterService } from "@/services/recruiter.service";
 
-import { useFetchAiSummary } from '@/modules/recruiter/applications/queries/use-fetch-ai-summary';
-import { ScheduleInterviewModal } from './ScheduleInterviewModal';
+import { useFetchAiSummary } from "@/modules/recruiter/applications/queries/use-fetch-ai-summary";
+import { ScheduleInterviewModal } from "./ScheduleInterviewModal";
 
 interface AiSummarySectionProps {
   isPending: boolean;
@@ -43,14 +47,26 @@ interface AiSummarySectionProps {
   isPlanGated: boolean;
 }
 
-function AiSummarySection({ isPending, isError, errorMessage, summary, isPlanGated }: AiSummarySectionProps) {
+function AiSummarySection({
+  isPending,
+  isError,
+  errorMessage,
+  summary,
+  isPlanGated,
+}: AiSummarySectionProps) {
   if (isPlanGated) {
     return (
       <section className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+        <Sparkles
+          className="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
+          aria-hidden="true"
+        />
         <p>
-          AI candidate summaries are available on PRO and ENTERPRISE plans.{' '}
-          <a href="/recruiter/settings?tab=billing" className="font-semibold underline">
+          AI candidate summaries are available on PRO and ENTERPRISE plans.{" "}
+          <a
+            href="/recruiter/settings?tab=billing"
+            className="font-semibold underline"
+          >
             Upgrade
           </a>
         </p>
@@ -60,18 +76,24 @@ function AiSummarySection({ isPending, isError, errorMessage, summary, isPlanGat
   if (isPending) {
     return (
       <section className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-        <Sparkles className="h-4 w-4 shrink-0 animate-pulse text-indigo-400" aria-hidden="true" />
+        <Sparkles
+          className="h-4 w-4 shrink-0 animate-pulse text-indigo-400"
+          aria-hidden="true"
+        />
         <span>Generating AI summary...</span>
       </section>
     );
   }
-  if (isError && errorMessage !== 'PLAN_GATED') {
+  if (isError && errorMessage !== "PLAN_GATED") {
     return null; // silent fail — do not interrupt the drawer UX on AI error
   }
   if (!summary) return null;
   return (
     <section className="flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-800">
-      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" aria-hidden="true" />
+      <Sparkles
+        className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500"
+        aria-hidden="true"
+      />
       <p>{summary}</p>
     </section>
   );
@@ -88,11 +110,13 @@ const STAGE_OPTIONS: ApplicationStatus[] = [
 
 // Helper functions — at module level, outside component
 function formatInterviewDate(isoString: string): string {
-  return new Date(isoString).toUTCString().replace(' GMT', ' UTC');
+  return new Date(isoString).toUTCString().replace(" GMT", " UTC");
 }
 
 function formatInterviewDuration(startsAt: string, endsAt: string): string {
-  const mins = Math.round((new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 60_000);
+  const mins = Math.round(
+    (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 60_000,
+  );
   return `${mins} min`;
 }
 
@@ -119,7 +143,7 @@ export interface CandidateApplication {
   scheduledInterview?: {
     id: string;
     status: InterviewStatus;
-    startsAt: string | null;    // ISO string (from API)
+    startsAt: string | null; // ISO string (from API)
     endsAt: string | null;
     meetLink: string | null;
     notes: string | null;
@@ -142,7 +166,8 @@ type RecruiterApplicationsResponse = {
 
 export function CandidateDrawer({ application }: CandidateDrawerProps) {
   const queryClient = useQueryClient();
-  const { isCandidateDrawerOpen, closeCandidateDrawer, openScheduleModal } = useUIStore();
+  const { isCandidateDrawerOpen, closeCandidateDrawer, openScheduleModal } =
+    useUIStore();
   const [cancelConfirming, setCancelConfirming] = useState(false);
   const aiSummaryMutation = useFetchAiSummary();
 
@@ -155,7 +180,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
   const updateStageMutation = useMutation({
     mutationFn: async (stage: ApplicationStatus) => {
       if (!application) {
-        throw new Error('No candidate selected');
+        throw new Error("No candidate selected");
       }
 
       return recruiterService.updateApplicationStage(application.id, stage);
@@ -165,10 +190,11 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
         return;
       }
 
-      await queryClient.cancelQueries({ queryKey: ['recruiter-applications'] });
-      const snapshots = queryClient.getQueriesData<RecruiterApplicationsResponse>({
-        queryKey: ['recruiter-applications'],
-      });
+      await queryClient.cancelQueries({ queryKey: ["recruiter-applications"] });
+      const snapshots =
+        queryClient.getQueriesData<RecruiterApplicationsResponse>({
+          queryKey: ["recruiter-applications"],
+        });
 
       snapshots.forEach(([queryKey, current]) => {
         if (!current) {
@@ -188,14 +214,22 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
       context?.snapshots?.forEach(([queryKey, snapshot]) => {
         queryClient.setQueryData(queryKey, snapshot);
       });
-      toast.error(error instanceof Error ? error.message : 'Failed to update stage. Try again.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update stage. Try again.",
+      );
     },
     onSuccess: () => {
-      toast.success('Stage updated — email sent to candidate');
+      toast.success("Stage updated — email sent to candidate");
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['recruiter-applications'] });
-      await queryClient.invalidateQueries({ queryKey: ['recruiter-application-stats'] });
+      await queryClient.invalidateQueries({
+        queryKey: ["recruiter-applications"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["recruiter-application-stats"],
+      });
     },
   });
 
@@ -204,26 +238,39 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
       await recruiterService.cancelInterview(interviewId);
     },
     onSuccess: () => {
-      toast.success('Interview cancelled — candidate notified.');
+      toast.success("Interview cancelled — candidate notified.");
       setCancelConfirming(false);
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to cancel interview. Try again.');
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to cancel interview. Try again.",
+      );
       setCancelConfirming(false);
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['recruiter-applications'] });
-      await queryClient.invalidateQueries({ queryKey: ['recruiter-interviews-upcoming'] });
+      await queryClient.invalidateQueries({
+        queryKey: ["recruiter-applications"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["recruiter-interviews-upcoming"],
+      });
     },
   });
 
   return (
     <Sheet open={isCandidateDrawerOpen} onOpenChange={closeCandidateDrawer}>
-      <SheetContent side="right" className="w-full sm:w-[480px] overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="w-full sm:w-[480px] overflow-y-auto"
+      >
         {application ? (
           <div className="space-y-6 pr-2">
             <SheetHeader>
-              <SheetTitle className="text-4xl font-bold text-slate-900">{application.candidateName}</SheetTitle>
+              <SheetTitle className="text-4xl font-bold text-slate-900">
+                {application.candidateName}
+              </SheetTitle>
               <SheetDescription className="text-slate-500">
                 {application.candidateEmail} · {application.jobTitle}
               </SheetDescription>
@@ -232,16 +279,24 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
             <AiSummarySection
               isPending={aiSummaryMutation.isPending}
               isError={aiSummaryMutation.isError}
-              errorMessage={aiSummaryMutation.error instanceof Error ? aiSummaryMutation.error.message : undefined}
+              errorMessage={
+                aiSummaryMutation.error instanceof Error
+                  ? aiSummaryMutation.error.message
+                  : undefined
+              }
               summary={aiSummaryMutation.data?.summary}
               isPlanGated={application.plan === PlanTier.FREE}
             />
 
             <section className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Current Stage</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Current Stage
+              </p>
               <Select
                 value={application.status}
-                onValueChange={(value) => updateStageMutation.mutate(value as ApplicationStatus)}
+                onValueChange={(value) =>
+                  updateStageMutation.mutate(value as ApplicationStatus)
+                }
                 disabled={updateStageMutation.isPending}
               >
                 <SelectTrigger>
@@ -258,17 +313,25 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
             </section>
 
             <section className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Cover Letter</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Cover Letter
+              </p>
               <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700 whitespace-pre-wrap">
-                {application.coverLetter?.trim() || 'No cover letter provided.'}
+                {application.coverLetter?.trim() || "No cover letter provided."}
               </div>
             </section>
 
             {application.resumeUrl ? (
               <section className="space-y-2">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Resume</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Resume
+                </p>
                 <Button asChild className="w-full sm:w-auto">
-                  <a href={application.resumeUrl} target="_blank" rel="noreferrer">
+                  <a
+                    href={application.resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     View Resume
                   </a>
                 </Button>
@@ -277,12 +340,15 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
 
             {application.status === ApplicationStatus.INTERVIEW && (
               <section className="space-y-2">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Interview</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Interview
+                </p>
                 <Separator />
 
                 {(() => {
                   const interview = application.scheduledInterview;
-                  const isScheduled = interview?.status === InterviewStatus.SCHEDULED;
+                  const isScheduled =
+                    interview?.status === InterviewStatus.SCHEDULED;
                   // D-07: PlanTier.FREE is the only non-paid tier — no STARTER enum value exists
                   const isPlanGated = application.plan === PlanTier.FREE;
 
@@ -295,7 +361,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                             <TooltipTrigger asChild>
                               <span className="inline-block w-full">
                                 <Button
-                                  className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
+                                  className="w-full bg-black hover:bg-[#1a1a1a] text-white"
                                   disabled
                                   aria-disabled="true"
                                 >
@@ -312,7 +378,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                     }
                     return (
                       <Button
-                        className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white"
+                        variant={"primary"}
                         onClick={() => openScheduleModal(application.id, null)}
                       >
                         Schedule Interview
@@ -324,30 +390,51 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                   return (
                     <div className="space-y-3">
                       <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700 space-y-1.5">
-                        <p><strong>Date:</strong> {formatInterviewDate(interview.startsAt!)}</p>
+                        <p>
+                          <strong>Date:</strong>{" "}
+                          {formatInterviewDate(interview.startsAt!)}
+                        </p>
                         {interview.startsAt && interview.endsAt && (
-                          <p><strong>Duration:</strong> {formatInterviewDuration(interview.startsAt, interview.endsAt)}</p>
+                          <p>
+                            <strong>Duration:</strong>{" "}
+                            {formatInterviewDuration(
+                              interview.startsAt,
+                              interview.endsAt,
+                            )}
+                          </p>
                         )}
                         <p>
-                          <strong>Meet link:</strong>{' '}
-                          {interview.meetLink
-                            ? <a href={interview.meetLink} target="_blank" rel="noreferrer" className="text-brand-primary underline">{interview.meetLink}</a>
-                            : <span className="text-slate-400">No link provided</span>
-                          }
+                          <strong>Meet link:</strong>{" "}
+                          {interview.meetLink ? (
+                            <a
+                              href={interview.meetLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-black underline"
+                            >
+                              {interview.meetLink}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400">
+                              No link provided
+                            </span>
+                          )}
                         </p>
                       </div>
 
                       <Button
-                        variant="outline"
+                        variant="default"
                         className="w-full"
-                        onClick={() => openScheduleModal(application.id, interview.id)}
+                        onClick={() =>
+                          openScheduleModal(application.id, interview.id)
+                        }
                       >
                         Reschedule
                       </Button>
 
                       {!cancelConfirming ? (
                         <Button
-                          variant="outline"
+                          variant="default"
                           className="w-full text-destructive border-destructive hover:bg-destructive/5"
                           onClick={() => setCancelConfirming(true)}
                         >
@@ -359,7 +446,9 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                             variant="destructive"
                             className="flex-1"
                             disabled={cancelInterviewMutation.isPending}
-                            onClick={() => cancelInterviewMutation.mutate(interview.id)}
+                            onClick={() =>
+                              cancelInterviewMutation.mutate(interview.id)
+                            }
                             aria-label="Confirm interview cancellation"
                           >
                             Confirm cancellation?
@@ -380,17 +469,22 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
             )}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Select a candidate to view details.</p>
+          <p className="text-sm text-slate-500">
+            Select a candidate to view details.
+          </p>
         )}
 
         {application && (
           <ScheduleInterviewModal
             applicationId={application.id}
             existingInterview={
-              application.scheduledInterview?.status === InterviewStatus.SCHEDULED
+              application.scheduledInterview?.status ===
+              InterviewStatus.SCHEDULED
                 ? {
                     id: application.scheduledInterview.id,
-                    startsAt: new Date(application.scheduledInterview.startsAt!),
+                    startsAt: new Date(
+                      application.scheduledInterview.startsAt!,
+                    ),
                     endsAt: new Date(application.scheduledInterview.endsAt!),
                     meetLink: application.scheduledInterview.meetLink,
                     notes: application.scheduledInterview.notes,
@@ -398,8 +492,12 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                 : null
             }
             onSuccess={async () => {
-              await queryClient.invalidateQueries({ queryKey: ['recruiter-applications'] });
-              await queryClient.invalidateQueries({ queryKey: ['recruiter-interviews-upcoming'] });
+              await queryClient.invalidateQueries({
+                queryKey: ["recruiter-applications"],
+              });
+              await queryClient.invalidateQueries({
+                queryKey: ["recruiter-interviews-upcoming"],
+              });
             }}
           />
         )}
