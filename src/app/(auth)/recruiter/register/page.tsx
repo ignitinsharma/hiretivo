@@ -26,10 +26,10 @@ import { authService } from "@/services/auth.service";
 
 const RecruiterSignupLeft = (
   <>
-    <div className="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full bg-brand-primary opacity-5 blur-3xl"></div>
+    <div className="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-xl w-full">
       <div className="mb-12">
-        <span className="text-brand-primary font-bold text-2xl tracking-tighter">Digital Architect</span>
+        <span className="text-black font-bold text-2xl tracking-tighter">Digital Architect</span>
       </div>
       <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-8">
         Build your dream team.
@@ -38,10 +38,10 @@ const RecruiterSignupLeft = (
         Join leading architectural firms hiring top remote talent across the globe.
       </p>
       
-      <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm mb-12 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm mb-12 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 bg-brand-primary-light rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-12 h-12 bg-black-light rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -216,7 +216,7 @@ export default function RecruiterRegisterPage() {
           <div className="flex items-start space-x-3 pt-2">
             <Checkbox
               id="acceptTerms"
-              className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
+              className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-black data-[state=checked]:border-black"
               checked={form.watch("acceptTerms")}
               onCheckedChange={(checked) =>
                 form.setValue("acceptTerms", checked === true)
@@ -227,7 +227,7 @@ export default function RecruiterRegisterPage() {
                 htmlFor="acceptTerms"
                 className="text-sm font-medium leading-relaxed text-slate-600 cursor-pointer"
               >
-                I agree to the <Link href="/terms" className="text-brand-primary hover:underline font-bold">Terms of Service</Link> and <Link href="/privacy" className="text-brand-primary hover:underline font-bold">Privacy Policy</Link>.
+                I agree to the <Link href="/terms" className="text-black hover:underline font-bold">Terms of Service</Link> and <Link href="/privacy" className="text-black hover:underline font-bold">Privacy Policy</Link>.
               </label>
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function RecruiterRegisterPage() {
 
           <Button 
             type="submit" 
-            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5952e5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99]" 
+            className="w-full h-14 rounded-xl bg-linear-to-br from-black to-gray-800 text-white font-bold text-lg   transition-all duration-200 transform active:scale-[0.99]" 
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -254,7 +254,7 @@ export default function RecruiterRegisterPage() {
         <footer className="pt-4 text-center">
           <p className="text-slate-600 font-medium">
             Already have an account?
-            <Link href="/recruiter/login" className="text-brand-primary font-bold hover:underline underline-offset-4 ml-1">
+            <Link href="/recruiter/login" className="text-black font-bold hover:underline underline-offset-4 ml-1">
               Sign in
             </Link>
           </p>

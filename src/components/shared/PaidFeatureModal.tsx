@@ -31,30 +31,30 @@ export function PaidFeatureModal() {
         if (!open) closePaidFeatureModal();
       }}
     >
-      <DialogContent className="rounded-2xl backdrop-blur-sm sm:max-w-md">
+      <DialogContent className="rounded-xl backdrop-blur-sm sm:max-w-md">
         <DialogHeader>
-          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(89,82,229,0.1)] text-[#5952e5]">
+          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-black">
             <Lock className="h-6 w-6" />
           </div>
-          <DialogTitle className="text-center text-2xl font-semibold tracking-tight text-[#0e0f0c] [font-feature-settings:'calt']">
+          <DialogTitle className="text-center text-2xl font-semibold tracking-tight text-foreground ">
             {title}
           </DialogTitle>
-          <DialogDescription className="text-center text-[#868685] [font-feature-settings:'calt']">
+          <DialogDescription className="text-center text-[#868685] ">
             {description}
           </DialogDescription>
         </DialogHeader>
 
-        <ul className="my-4 space-y-2 text-sm text-[#0e0f0c] [font-feature-settings:'calt']">
+        <ul className="my-4 space-y-2 text-sm text-foreground ">
           <li className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#5952e5]" />
+            <Sparkles className="h-4 w-4 text-black" />
             Search verified candidates instantly
           </li>
           <li className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#5952e5]" />
+            <Sparkles className="h-4 w-4 text-black" />
             Schedule interviews and email applicants
           </li>
           <li className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#5952e5]" />
+            <Sparkles className="h-4 w-4 text-black" />
             Cancel anytime with no contract
           </li>
         </ul>
@@ -62,7 +62,7 @@ export function PaidFeatureModal() {
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
           <Button
             onClick={onUpgrade}
-            className="w-full rounded-full bg-[#5952e5] font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
+            className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-black/30"
           >
             Upgrade to Pro
             <ArrowUpRight className="ml-2 h-4 w-4" />

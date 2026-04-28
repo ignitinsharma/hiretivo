@@ -39,7 +39,7 @@ export function CompanyProfileSection({
       onSubmit={form.handleSubmit(onSubmit)}
       className="rounded-xl border border-gray-200 bg-white p-6"
     >
-      <h3 className="mb-5 text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-[#0e0f0c] [font-feature-settings:'calt']">
+      <h3 className="mb-5 text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
         Company profile
       </h3>
       <div className="grid gap-4 md:grid-cols-2">

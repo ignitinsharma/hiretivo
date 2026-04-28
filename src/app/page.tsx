@@ -52,18 +52,18 @@ export default async function Home() {
       <main>
         <section className="pt-20 pb-16 px-4" data-purpose="hero-section">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-light rounded-full mb-8">
-              <span className="text-brand-primary text-sm font-bold tracking-wide">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-50 rounded-full mb-8">
+              <span className="text-black text-sm font-bold tracking-wide">
                 ✦ {formatStat(activeJobCount)} remote jobs available
               </span>
             </div>
-            <h1 className="text-heading text-5xl md:text-7xl font-extrabold mb-6 leading-[1.1]">
+            <h1 className="text-foreground text-5xl md:text-7xl font-extrabold mb-6 leading-[1.1]">
               Find remote work <br />
-              <span className="text-brand-primary italic">
+              <span className="text-black italic">
                 that fits your life
               </span>
             </h1>
-            <p className="text-brand-body text-xl md:text-2xl mb-12 max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-xl md:text-2xl mb-12 max-w-2xl mx-auto">
               Find your first remote job that fits your lifestyle. Thousands of
               remote-first companies hiring now. No commute required.
             </p>
@@ -71,13 +71,13 @@ export default async function Home() {
               className="relative max-w-2xl mx-auto mb-8"
               data-purpose="hero-search"
             >
-              <div className="flex items-center bg-white border border-brand-border p-2 rounded-full card-shadow">
+              <div className="flex items-center bg-white border border-gray-200 p-2 rounded-full ">
                 <div className="pl-6 flex items-center grow">
                   <span className="material-symbols-outlined text-gray-400">
                     search
                   </span>
                   <input
-                    className="w-full border-none focus:ring-0 text-brand-heading font-medium placeholder-gray-400 focus:outline-none"
+                    className="w-full border-none focus:ring-0 text-foreground font-medium placeholder-gray-400 focus:outline-none"
                     placeholder="Job title, keywords, or company..."
                     type="text"
                   />
@@ -91,30 +91,30 @@ export default async function Home() {
               className="flex flex-wrap justify-center gap-3 text-sm"
               data-purpose="popular-tags"
             >
-              <span className="text-brand-body">Popular:</span>
+              <span className="text-muted-foreground">Popular:</span>
               <Link
-                className="text-brand-primary font-medium hover:underline"
+                className="text-black font-medium hover:underline"
                 href="#"
               >
                 React Developer
               </Link>
               <span className="text-gray-300">•</span>
               <Link
-                className="text-brand-primary font-medium hover:underline"
+                className="text-black font-medium hover:underline"
                 href="#"
               >
                 Product Designer
               </Link>
               <span className="text-gray-300">•</span>
               <Link
-                className="text-brand-primary font-medium hover:underline"
+                className="text-black font-medium hover:underline"
                 href="#"
               >
                 Sales Lead
               </Link>
               <span className="text-gray-300">•</span>
               <Link
-                className="text-brand-primary font-medium hover:underline"
+                className="text-black font-medium hover:underline"
                 href="#"
               >
                 Content Writer
@@ -124,38 +124,38 @@ export default async function Home() {
         </section>
 
         <section
-          className="py-24 bg-brand-gray/50 overflow-hidden"
+          className="py-24 bg-gray-50/50 overflow-hidden"
           data-purpose="ai-matchmaking"
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-5/12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-brand-primary rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-black rounded-full text-xs font-bold uppercase tracking-wider mb-6">
                   <span className="material-symbols-outlined text-sm">
                     bolt
                   </span>
                   Smart Technology
                 </div>
-                <h2 className="text-heading text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
+                <h2 className="text-foreground text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
                   Visual Match Breakdown
                 </h2>
-                <p className="text-brand-body text-lg mb-8 leading-relaxed">
+                <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                   We don&apos;t just give you a number. Our AI maps your DNA
                   directly onto role requirements, providing total transparency
                   on exactly why you&apos;re a fit.
                 </p>
                 <div className="space-y-6 mb-10">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white border border-brand-border flex items-center justify-center shrink-0 card-shadow">
-                      <span className="material-symbols-outlined text-brand-primary">
+                    <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0 ">
+                      <span className="material-symbols-outlined text-black">
                         psychology
                       </span>
                     </div>
                     <div>
-                      <h4 className="text-brand-heading font-bold">
+                      <h4 className="text-foreground font-bold">
                         Semantic Skill Mapping
                       </h4>
-                      <p className="text-sm text-brand-body">
+                      <p className="text-sm text-muted-foreground">
                         Our engine understands that &quot;React&quot; also
                         implies expertise in &quot;Hooks&quot; and &quot;Virtual
                         DOM&quot;.
@@ -163,16 +163,16 @@ export default async function Home() {
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white border border-brand-border flex items-center justify-center shrink-0 card-shadow">
-                      <span className="material-symbols-outlined text-brand-primary">
+                    <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0 ">
+                      <span className="material-symbols-outlined text-black">
                         language
                       </span>
                     </div>
                     <div>
-                      <h4 className="text-brand-heading font-bold">
+                      <h4 className="text-foreground font-bold">
                         Timezone Compatibility
                       </h4>
-                      <p className="text-sm text-brand-body">
+                      <p className="text-sm text-muted-foreground">
                         Calculated overlap based on your preference for async
                         vs. sync communication.
                       </p>
@@ -196,35 +196,35 @@ export default async function Home() {
                   viewBox="0 0 700 600"
                 >
                   <path
-                    className="glow-path"
+                    className=""
                     d="M220 185 Q350 185 450 365"
                     fill="none"
                     opacity="0.4"
-                    stroke="#5952e5"
+                    stroke="#000000"
                     strokeDasharray="4 4"
                     strokeWidth="1.5"
                   ></path>
                   <path
-                    className="glow-path"
+                    className=""
                     d="M220 225 Q350 255 450 405"
                     fill="none"
                     opacity="0.4"
-                    stroke="#5952e5"
+                    stroke="#000000"
                     strokeDasharray="4 4"
                     strokeWidth="1.5"
                   ></path>
                   <path
-                    className="glow-path"
+                    className=""
                     d="M100 280 Q250 450 450 445"
                     fill="none"
                     opacity="0.4"
-                    stroke="#5952e5"
+                    stroke="#000000"
                     strokeDasharray="4 4"
                     strokeWidth="1.5"
                   ></path>
                 </svg>
 
-                <div className="absolute top-0 left-0 w-72 bg-white rounded-2xl border border-brand-border p-5 dashboard-shadow z-20">
+                <div className="absolute top-0 left-0 w-72 bg-white rounded-xl border border-gray-200 p-5  z-20">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -233,14 +233,14 @@ export default async function Home() {
                         className="w-12 h-12 rounded-full object-cover"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUqv2uMlfz6K-UTHWuIZ4yO069aksF84VRAFPayGhBehWmwwqMj_EGUM9BTqpi6l5Zsa4AvUOE1WMoZWSydMfP7Z1GzEHVBUYrTv2gJ8wbYtS32mCJ5lzhejdzdcC8BMhsjH88KGjc0GfLoKRMtLu_1UuStcw43bnCNJ7e2uUE3mMp1VQWI2yIHQZGshiVFbLdnWkLLgvdityHoZ2a0kEuGdcG4kzuLdbERyIhx_I_KmJDfGcAsJmkxamwzU58RHMgZ_NTVWxNonLr"
                       />
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-accent rounded-full border-2 border-white flex items-center justify-center">
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-black rounded-full border-2 border-white flex items-center justify-center">
                         <span className="material-symbols-outlined text-white text-[10px] font-bold">
                           check
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-brand-heading font-extrabold text-sm">
+                      <h4 className="text-foreground font-extrabold text-sm">
                         Sarah Jenkins
                       </h4>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -249,58 +249,58 @@ export default async function Home() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-2 rounded-lg bg-brand-light/50 border border-brand-primary/10 flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-gray-50/50 border border-black/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-brand-primary text-xs">
+                        <span className="material-symbols-outlined text-black text-xs">
                           verified
                         </span>
                         <span
-                          className="text-[11px] font-bold text-brand-heading"
+                          className="text-[11px] font-bold text-foreground"
                           id="tag-skill-1"
                         >
                           Figma Expert
                         </span>
                       </div>
-                      <span className="text-[9px] font-extrabold text-brand-primary">
+                      <span className="text-[9px] font-extrabold text-black">
                         MATCH
                       </span>
                     </div>
-                    <div className="p-2 rounded-lg bg-brand-light/50 border border-brand-primary/10 flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-gray-50/50 border border-black/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-brand-primary text-xs">
+                        <span className="material-symbols-outlined text-black text-xs">
                           history
                         </span>
                         <span
-                          className="text-[11px] font-bold text-brand-heading"
+                          className="text-[11px] font-bold text-foreground"
                           id="tag-skill-2"
                         >
                           8+ Yrs Exp.
                         </span>
                       </div>
-                      <span className="text-[9px] font-extrabold text-brand-primary">
+                      <span className="text-[9px] font-extrabold text-black">
                         MATCH
                       </span>
                     </div>
-                    <div className="p-2 rounded-lg bg-brand-light/50 border border-brand-primary/10 flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-gray-50/50 border border-black/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-brand-primary text-xs">
+                        <span className="material-symbols-outlined text-black text-xs">
                           schedule
                         </span>
                         <span
-                          className="text-[11px] font-bold text-brand-heading"
+                          className="text-[11px] font-bold text-foreground"
                           id="tag-skill-3"
                         >
                           UTC-5 Pref.
                         </span>
                       </div>
-                      <span className="text-[9px] font-extrabold text-brand-primary">
+                      <span className="text-[9px] font-extrabold text-black">
                         MATCH
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 bg-white rounded-3xl border-4 border-brand-light p-6 dashboard-shadow z-30 text-center">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 bg-white rounded-xl border-4 border-gray-50 p-6  z-30 text-center">
                   <div className="mb-4 relative inline-block">
                     <svg className="w-24 h-24 transform -rotate-90">
                       <circle
@@ -316,41 +316,41 @@ export default async function Home() {
                         cy="48"
                         fill="transparent"
                         r="40"
-                        stroke="#5952e5"
+                        stroke="#000000"
                         strokeDasharray="251.2"
                         strokeDashoffset="2.5"
                         strokeWidth="8"
                       ></circle>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-extrabold text-brand-primary leading-none">
+                      <span className="text-2xl font-extrabold text-black leading-none">
                         99%
                       </span>
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter mt-0.5">
+                      <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-tighter mt-0.5">
                         Confidence
                       </span>
                     </div>
                   </div>
                   <div className="space-y-2 mb-4">
-                    <h5 className="text-xs font-bold text-brand-heading">
+                    <h5 className="text-xs font-bold text-foreground">
                       Match Insight
                     </h5>
-                    <p className="text-[10px] text-brand-body leading-tight">
+                    <p className="text-[10px] text-muted-foreground leading-tight">
                       Sarah&apos;s focus on design systems perfectly aligns with
                       the team&apos;s upcoming Q4 roadmap.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-brand-gray p-2 rounded-lg">
-                      <div className="text-[10px] font-bold text-brand-accent">
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <div className="text-[10px] font-bold text-black">
                         98.4%
                       </div>
                       <div className="text-[8px] font-medium text-gray-400">
                         Technical
                       </div>
                     </div>
-                    <div className="bg-brand-gray p-2 rounded-lg">
-                      <div className="text-[10px] font-bold text-brand-primary">
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <div className="text-[10px] font-bold text-black">
                         100%
                       </div>
                       <div className="text-[8px] font-medium text-gray-400">
@@ -358,8 +358,8 @@ export default async function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-brand-border">
-                    <div className="px-4 py-1.5 bg-brand-primary text-white rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="px-4 py-1.5 bg-black text-white rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[12px]">
                         auto_awesome
                       </span>
@@ -368,9 +368,9 @@ export default async function Home() {
                   </div>
                 </div>
 
-                <div className="absolute bottom-0 right-0 w-72 bg-white rounded-2xl border border-brand-border p-5 dashboard-shadow z-20">
+                <div className="absolute bottom-0 right-0 w-72 bg-white rounded-xl border border-gray-200 p-5  z-20">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-white border border-brand-border rounded-xl flex items-center justify-center card-shadow overflow-hidden">
+                    <div className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center  overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         alt="Company"
@@ -379,10 +379,10 @@ export default async function Home() {
                       />
                     </div>
                     <div>
-                      <h4 className="text-brand-heading font-extrabold text-sm">
+                      <h4 className="text-foreground font-extrabold text-sm">
                         Senior Product Designer
                       </h4>
-                      <p className="text-[10px] font-bold text-brand-accent uppercase tracking-widest">
+                      <p className="text-[10px] font-bold text-black uppercase tracking-widest">
                         Global Scale-up
                       </p>
                     </div>
@@ -394,31 +394,31 @@ export default async function Home() {
                       </p>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-brand-body">
+                          <span className="text-muted-foreground">
                             Design Systems
                           </span>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="bg-brand-primary h-full w-[95%]"></div>
+                            <div className="bg-black h-full w-[95%]"></div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-brand-body">
+                          <span className="text-muted-foreground">
                             Remote Workflow
                           </span>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="bg-brand-primary h-full w-full"></div>
+                            <div className="bg-black h-full w-full"></div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-brand-body">SaaS Industry</span>
+                          <span className="text-muted-foreground">SaaS Industry</span>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="bg-brand-primary h-full w-[90%]"></div>
+                            <div className="bg-black h-full w-[90%]"></div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between border-t border-brand-border pt-4">
-                      <span className="text-brand-heading font-extrabold text-xs">
+                    <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+                      <span className="text-foreground font-extrabold text-xs">
                         $145k – $190k
                       </span>
                       <span className="text-[10px] text-gray-400 font-medium">
@@ -433,32 +433,32 @@ export default async function Home() {
         </section>
 
         <section
-          className="bg-white border-y border-brand-border py-12"
+          className="bg-white border-y border-gray-200 py-12"
           data-purpose="stats-bar"
         >
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
               <div>
-                <div className="text-brand-primary text-4xl font-extrabold mb-2">
+                <div className="text-black text-4xl font-extrabold mb-2">
                   {formatStat(activeJobCount)}
                 </div>
-                <div className="text-brand-body font-medium uppercase tracking-wider text-sm">
+                <div className="text-muted-foreground font-medium uppercase tracking-wider text-sm">
                   Active Jobs
                 </div>
               </div>
               <div>
-                <div className="text-brand-primary text-4xl font-extrabold mb-2">
+                <div className="text-black text-4xl font-extrabold mb-2">
                   {formatStat(companyCount)}
                 </div>
-                <div className="text-brand-body font-medium uppercase tracking-wider text-sm">
+                <div className="text-muted-foreground font-medium uppercase tracking-wider text-sm">
                   Companies Hiring
                 </div>
               </div>
               <div>
-                <div className="text-brand-primary text-4xl font-extrabold mb-2">
+                <div className="text-black text-4xl font-extrabold mb-2">
                   {formatStat(seekerCount)}
                 </div>
-                <div className="text-brand-body font-medium uppercase tracking-wider text-sm">
+                <div className="text-muted-foreground font-medium uppercase tracking-wider text-sm">
                   Job Seekers
                 </div>
               </div>
@@ -466,19 +466,19 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="py-24 bg-brand-gray" data-purpose="featured-jobs">
+        <section className="py-24 bg-gray-50" data-purpose="featured-jobs">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex justify-between items-end mb-12">
               <div>
-                <h2 className="text-heading text-3xl font-extrabold mb-2">
+                <h2 className="text-foreground text-3xl font-extrabold mb-2">
                   Latest Remote Jobs
                 </h2>
-                <p className="text-brand-body">
+                <p className="text-muted-foreground">
                   Top hand-picked opportunities from remote-first teams.
                 </p>
               </div>
               <Link
-                className="text-brand-primary font-bold hover:underline hidden sm:block"
+                className="text-black font-bold hover:underline hidden sm:block"
                 href="/jobs"
               >
                 View all jobs →
@@ -486,14 +486,14 @@ export default async function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.length === 0 ? (
-                <div className="col-span-3 text-center py-12 text-brand-body">
+                <div className="col-span-3 text-center py-12 text-muted-foreground">
                   No jobs available yet. Check back soon!
                 </div>
               ) : (
                 featuredJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="bg-white border border-brand-border rounded-xl p-6 hover:border-brand-primary/50 transition-all card-shadow group"
+                    className="bg-white border border-gray-200 rounded-xl p-6 hover:border-black/50 transition-all  group"
                     data-purpose="job-card"
                   >
                     <div className="flex items-start justify-between mb-6">
@@ -506,16 +506,16 @@ export default async function Home() {
                             src={job.recruiter.recruiterProfile.logo}
                           />
                         ) : (
-                          <span className="text-brand-primary font-bold text-lg">
+                          <span className="text-black font-bold text-lg">
                             {job.recruiter.recruiterProfile?.companyName?.[0] ?? 'H'}
                           </span>
                         )}
                       </div>
-                      <span className="px-3 py-1 bg-brand-light text-brand-primary text-xs font-bold rounded-full">
+                      <span className="px-3 py-1 bg-gray-50 text-black text-xs font-bold rounded-full">
                         New
                       </span>
                     </div>
-                    <h3 className="text-heading text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
+                    <h3 className="text-foreground text-lg font-bold mb-2 group-hover:text-black transition-colors">
                       {job.title}
                     </h3>
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -531,13 +531,13 @@ export default async function Home() {
                       )}
                     </div>
                     <div className="flex items-center justify-between mt-6">
-                      <span className="text-brand-accent font-bold text-sm">
+                      <span className="text-black font-bold text-sm">
                         {job.salaryMin && job.salaryMax
                           ? `$${Math.round(job.salaryMin / 1000)}k – $${Math.round(job.salaryMax / 1000)}k`
                           : 'Competitive'}
                       </span>
                       <Link
-                        className="text-brand-heading font-semibold text-sm hover:translate-x-1 transition-transform"
+                        className="text-foreground font-semibold text-sm hover:translate-x-1 transition-transform"
                         href={`/jobs/${job.id}`}
                       >
                         View Job →
@@ -553,56 +553,56 @@ export default async function Home() {
         <section className="py-24 bg-white" data-purpose="categories-section">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-heading text-3xl font-extrabold mb-4">
+              <h2 className="text-foreground text-3xl font-extrabold mb-4">
                 Browse by Category
               </h2>
-              <p className="text-brand-body max-w-xl mx-auto">
+              <p className="text-muted-foreground max-w-xl mx-auto">
                 Explore high-paying remote roles across the industry&apos;s most
                 in-demand categories.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-xl border border-brand-border text-center hover:border-brand-primary transition-all cursor-pointer group card-shadow">
-                <div className="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
+              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">code</span>
                 </div>
-                <h4 className="text-heading font-bold mb-1">Engineering</h4>
+                <h4 className="text-foreground font-bold mb-1">Engineering</h4>
                 <span className="text-gray-500 text-sm">1,240 jobs</span>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-brand-border text-center hover:border-brand-primary transition-all cursor-pointer group card-shadow">
-                <div className="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
+              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">palette</span>
                 </div>
-                <h4 className="text-heading font-bold mb-1">Design</h4>
+                <h4 className="text-foreground font-bold mb-1">Design</h4>
                 <span className="text-gray-500 text-sm">450 jobs</span>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-brand-border text-center hover:border-brand-primary transition-all cursor-pointer group card-shadow">
-                <div className="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
+              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">pie_chart</span>
                 </div>
-                <h4 className="text-heading font-bold mb-1">Marketing</h4>
+                <h4 className="text-foreground font-bold mb-1">Marketing</h4>
                 <span className="text-gray-500 text-sm">320 jobs</span>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-brand-border text-center hover:border-brand-primary transition-all cursor-pointer group card-shadow">
-                <div className="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
+              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">trending_up</span>
                 </div>
-                <h4 className="text-heading font-bold mb-1">Sales</h4>
+                <h4 className="text-foreground font-bold mb-1">Sales</h4>
                 <span className="text-gray-500 text-sm">215 jobs</span>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-24 bg-brand-light" data-purpose="recruiters-cta">
+        <section className="py-24 bg-gray-50" data-purpose="recruiters-cta">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="bg-white rounded-3xl p-8 md:p-16 card-shadow flex flex-col md:flex-row items-center gap-12">
+            <div className="bg-white rounded-xl p-8 md:p-16  flex flex-col md:flex-row items-center gap-12">
               <div className="md:w-1/2">
-                <h2 className="text-heading text-4xl font-extrabold mb-6">
+                <h2 className="text-foreground text-4xl font-extrabold mb-6">
                   Are you hiring <br />
                   remote talent?
                 </h2>
-                <p className="text-brand-body text-lg mb-8 leading-relaxed">
+                <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                   Reach thousands of qualified remote professionals. Post your
                   job on Hiretivo and get applications from top-tier talent
                   worldwide.
@@ -610,13 +610,13 @@ export default async function Home() {
                 <div className="flex flex-wrap gap-4">
                   <Link
                     href="/recruiter/register"
-                    className="px-8 py-4 bg-brand-primary text-white font-bold rounded-xl hover:bg-indigo-700 transition-all btn-shadow inline-block"
+                    className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all  inline-block"
                   >
                     Post your Job Today
                   </Link>
                   <Link
                     href="/recruiter/register"
-                    className="px-8 py-4 border border-brand-border text-brand-heading font-bold rounded-xl hover:bg-gray-50 transition-all inline-block"
+                    className="px-8 py-4 border border-gray-200 text-foreground font-bold rounded-xl hover:bg-gray-50 transition-all inline-block"
                   >
                     Talent Solutions
                   </Link>
@@ -624,48 +624,48 @@ export default async function Home() {
               </div>
               <div className="md:w-1/2 grid gap-6">
                 <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-brand-accent/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-brand-accent text-sm font-bold">
+                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
+                    <span className="material-symbols-outlined text-black text-sm font-bold">
                       check
                     </span>
                   </div>
                   <div>
-                    <h4 className="text-heading font-bold mb-1">
+                    <h4 className="text-foreground font-bold mb-1">
                       Targeted Reach
                     </h4>
-                    <p className="text-brand-body text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Connect with developers, designers, and marketers who
                       prefer remote-first culture.
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-brand-accent/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-brand-accent text-sm font-bold">
+                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
+                    <span className="material-symbols-outlined text-black text-sm font-bold">
                       check
                     </span>
                   </div>
                   <div>
-                    <h4 className="text-heading font-bold mb-1">
+                    <h4 className="text-foreground font-bold mb-1">
                       Quality Applications
                     </h4>
-                    <p className="text-brand-body text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Our screening process ensures you get high-quality
                       candidates who match your needs.
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-brand-accent/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-brand-accent text-sm font-bold">
+                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
+                    <span className="material-symbols-outlined text-black text-sm font-bold">
                       check
                     </span>
                   </div>
                   <div>
-                    <h4 className="text-heading font-bold mb-1">
+                    <h4 className="text-foreground font-bold mb-1">
                       Simple Management
                     </h4>
-                    <p className="text-brand-body text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Integrated dashboard to track, filter, and communicate
                       with applicants seamlessly.
                     </p>

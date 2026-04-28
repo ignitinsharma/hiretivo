@@ -46,7 +46,7 @@ export function CompanyAvatarSection({
   };
 
   return (
-    <section className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-6">
+    <section className="rounded-xl border border-gray-200 bg-white p-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <InitialsAvatar
@@ -55,7 +55,7 @@ export function CompanyAvatarSection({
             size="xl"
           />
           <div>
-            <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-[#0e0f0c] [font-feature-settings:'calt']">
+            <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
               Company logo
             </h3>
             <p className="text-sm font-semibold text-[#454745]">

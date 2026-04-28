@@ -63,7 +63,7 @@ export function ApplicationList() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             className="flex items-center gap-2 rounded-lg font-semibold transition-all"
           >

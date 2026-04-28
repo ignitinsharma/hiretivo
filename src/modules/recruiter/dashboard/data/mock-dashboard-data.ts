@@ -30,7 +30,7 @@ export interface PostedJob {
 
 export interface ActivityItem {
   id: string;
-  type: 'application' | 'interview' | 'shortlist' | 'rejection';
+  type: 'application' | 'interview' | 'rejection';
   candidateName: string;
   jobTitle: string;
   timestamp: string;

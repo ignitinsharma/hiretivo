@@ -45,7 +45,7 @@ export default function SelectRolePage() {
           <Button
             onClick={() => handleSelect(UserRole.SEEKER)}
             disabled={loading !== null}
-            variant="outline"
+            variant="default"
             size="lg"
             className="h-24 flex-col gap-2 text-base"
           >

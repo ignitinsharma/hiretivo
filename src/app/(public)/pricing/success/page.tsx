@@ -91,12 +91,12 @@ function PricingSuccessContent() {
       <section className="mx-auto flex max-w-xl flex-col items-center text-center">
         {state === "loading" ? (
           <Loader2
-            className="mb-6 h-12 w-12 animate-spin text-brand-primary"
+            className="mb-6 h-12 w-12 animate-spin text-black"
             aria-hidden
           />
         ) : (
           <CheckCircle2
-            className="mb-6 h-12 w-12 text-brand-primary"
+            className="mb-6 h-12 w-12 text-black"
             aria-hidden
           />
         )}
@@ -116,7 +116,7 @@ function PricingSuccessContent() {
           <Button asChild size="lg">
             <Link href="/recruiter/dashboard">Go to Dashboard</Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
+          <Button asChild size="lg" variant="default">
             <Link href="/recruiter/settings">Billing Settings</Link>
           </Button>
         </div>

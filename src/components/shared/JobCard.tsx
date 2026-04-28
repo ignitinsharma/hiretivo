@@ -22,10 +22,12 @@ export function JobCard({
   variant = "default",
 }: JobCardProps) {
   const isCompact = variant === "compact";
-  const saveLabel = isSaved ? `Remove ${job.title} from saved jobs` : `Save ${job.title}`;
+  const saveLabel = isSaved
+    ? `Remove ${job.title} from saved jobs`
+    : `Save ${job.title}`;
 
   return (
-    <div className="group flex h-full flex-col rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-5 shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]">
+    <div className="group flex h-full flex-col rounded-xl border border-[rgba(14,15,12,0.12)] bg-white p-5 ">
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-lg bg-slate-50 p-2 border border-slate-100 flex items-center justify-center overflow-hidden">
           {job.companyLogoUrl ? (
@@ -44,7 +46,7 @@ export function JobCard({
         </div>
         <div className="flex items-center gap-2">
           {job.matchScore !== undefined && (
-            <span className="rounded-full bg-[rgba(89,82,229,0.1)] px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-[#5952e5]">
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-black">
               {job.matchScore}% Match
             </span>
           )}
@@ -57,7 +59,7 @@ export function JobCard({
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-full border transition-transform hover:scale-105 active:scale-95",
                 isSaved
-                  ? "border-[#5952e5] bg-[rgba(89,82,229,0.1)] text-[#5952e5]"
+                  ? "border-black bg-gray-100 text-black"
                   : "border-[rgba(14,15,12,0.12)] bg-white text-[#454745]",
               )}
             >
@@ -69,7 +71,7 @@ export function JobCard({
 
       <div className="flex-1">
         <Link href={`/jobs/${job.id}`}>
-          <h3 className="text-lg font-semibold leading-[1.25] text-[#0e0f0c] transition-colors group-hover:text-[#5952e5] [font-feature-settings:'calt']">
+          <h3 className="text-lg font-semibold leading-tight text-foreground transition-colors group-hover:text-black ">
             {job.title}
           </h3>
         </Link>
@@ -93,7 +95,12 @@ export function JobCard({
         <span className="text-slate-700 font-semibold text-sm">
           {job.salaryRange}
         </span>
-        <Button onClick={onApply} variant="subtle" size="sm" disabled={!onApply}>
+        <Button
+          onClick={onApply}
+          variant="primary"
+          size="sm"
+          disabled={!onApply}
+        >
           Apply Now
         </Button>
       </div>

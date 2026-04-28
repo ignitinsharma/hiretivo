@@ -57,25 +57,25 @@ function ResetPasswordContent() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12 [font-feature-settings:'calt']">
-      <section className="mx-auto w-full max-w-md rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12 ">
+      <section className="mx-auto w-full max-w-md rounded-xl border border-[rgba(14,15,12,0.12)] bg-white p-8">
         <div className="mb-8 space-y-3">
-          <h1 className="font-display text-4xl font-black leading-[0.85] text-[#0e0f0c] [font-feature-settings:'calt']">
+          <h1 className="font-display text-4xl font-extrabold leading-tight text-foreground ">
             Reset password
           </h1>
-          <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] [font-feature-settings:'calt']">
+          <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] ">
             Choose a new password for your Hiretivo account.
           </p>
         </div>
 
         {!token || !email ? (
           <div className="space-y-6">
-            <p className="rounded-2xl bg-[rgba(89,82,229,0.1)] p-4 text-sm font-semibold leading-6 text-[#0e0f0c]">
+            <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
               This reset link is invalid or has expired. Please request a new one.
             </p>
             <Button
               asChild
-              className="w-full rounded-full bg-[#5952e5] font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95"
             >
               <Link href="/forgot-password">Request new link</Link>
             </Button>
@@ -83,14 +83,14 @@ function ResetPasswordContent() {
         ) : (
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="newPassword" className="font-semibold text-[#0e0f0c]">
+              <Label htmlFor="newPassword" className="font-semibold text-foreground">
                 New password
               </Label>
               <Input
                 id="newPassword"
                 type="password"
                 autoComplete="new-password"
-                className="rounded-2xl focus-visible:border-[#5952e5] focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
+                className="rounded-xl focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/30"
                 {...form.register('newPassword')}
               />
               {form.formState.errors.newPassword && (
@@ -101,14 +101,14 @@ function ResetPasswordContent() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="font-semibold text-[#0e0f0c]">
+              <Label htmlFor="confirmPassword" className="font-semibold text-foreground">
                 Confirm password
               </Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                className="rounded-2xl focus-visible:border-[#5952e5] focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
+                className="rounded-xl focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/30"
                 {...form.register('confirmPassword')}
               />
               {form.formState.errors.confirmPassword && (
@@ -121,7 +121,7 @@ function ResetPasswordContent() {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="w-full rounded-full bg-[#5952e5] font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#5952e5]/30"
+              className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-black/30"
             >
               {form.formState.isSubmitting ? (
                 <>

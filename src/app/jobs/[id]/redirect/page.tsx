@@ -48,7 +48,7 @@ export default async function ExternalRedirectionPage({
           <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
         </div>
 
-        <section className="bg-white border border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl p-8 text-center">
+        <section className="bg-white border border-slate-100  rounded-xl p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
             <ExternalLink className="w-8 h-8 text-primary" />
           </div>
@@ -72,7 +72,7 @@ export default async function ExternalRedirectionPage({
             ) : (
               <Link
                 href={`/jobs/${params.id}`}
-                className="block w-full rounded-full bg-[#5952e5] px-6 py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+                className="block w-full rounded-full bg-black px-6 py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
               >
                 Back to Job
               </Link>

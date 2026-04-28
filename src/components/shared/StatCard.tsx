@@ -20,7 +20,7 @@ export function StatCard({
   variant = 'default',
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+    <div className="bg-white rounded-xl p-5 border border-gray-100">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-gray-500">{label}</p>
@@ -29,7 +29,7 @@ export function StatCard({
             <p
               className={cn(
                 'text-sm font-medium mt-2',
-                trend.isPositive ? 'text-brand-primary' : 'text-red-600'
+                trend.isPositive ? 'text-black' : 'text-red-600'
               )}
             >
               {trend.isPositive ? '+' : ''}
@@ -41,7 +41,7 @@ export function StatCard({
           className={cn(
             'w-10 h-10 rounded-lg flex items-center justify-center',
             variant === 'purple'
-              ? 'bg-brand-primary/10 text-brand-primary'
+              ? 'bg-black/10 text-black'
               : 'bg-gray-100 text-gray-600'
           )}
         >

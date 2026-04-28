@@ -60,7 +60,7 @@ export function RecruiterHeader({
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex items-center gap-2 pl-3 border-l border-gray-200 cursor-pointer">
-              <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-semibold">
                 {initials}
               </div>
               <ChevronDown className="w-4 h-4 text-gray-400" />

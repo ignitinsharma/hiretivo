@@ -25,8 +25,8 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
       className={cn(
         CARD_BASE,
         isPrimary
-          ? 'bg-primary text-white shadow-lg shadow-primary/20'
-          : 'bg-white border border-slate-200 shadow-sm'
+          ? 'bg-primary text-white shadow-primary/20'
+          : 'bg-white border border-slate-200'
       )}
     >
       <p

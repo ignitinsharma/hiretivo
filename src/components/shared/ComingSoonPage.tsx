@@ -25,21 +25,21 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description, variant }: FeatureCardProps) {
   const variantClasses = {
-    primary: 'bg-brand-primary text-white relative overflow-hidden group',
-    light: 'bg-brand-gray hover:bg-gray-200 border border-brand-border',
-    white: 'bg-white border border-brand-border shadow-lg hover:-translate-y-1',
+    primary: 'bg-black text-white relative overflow-hidden group',
+    light: 'bg-gray-50 hover:bg-gray-200 border border-gray-200',
+    white: 'bg-white border border-gray-200 hover:-translate-y-1',
   };
 
   const iconBgClasses = {
     primary: 'bg-white/20',
-    light: 'bg-brand-light',
-    white: 'bg-brand-light',
+    light: 'bg-gray-50',
+    white: 'bg-gray-50',
   };
 
   const iconColorClasses = {
     primary: 'text-white',
-    light: 'text-brand-primary',
-    white: 'text-brand-primary',
+    light: 'text-black',
+    white: 'text-black',
   };
 
   return (
@@ -85,13 +85,13 @@ export function ComingSoonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-gray font-sans antialiased">
+    <div className="min-h-screen bg-gray-50 font-sans antialiased">
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-brand-light/50 blur-[120px]" />
-        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-brand-light/80 blur-[100px]" />
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gray-50/50 blur-[120px]" />
+        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-gray-50/80 blur-[100px]" />
       </div>
 
-      <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-brand-border/80">
+      <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-gray-200/80">
         <nav className="flex justify-between items-center px-8 py-6 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3">
             <Image src="/images/logo.png" alt="Hiretivo" width={120} height={40} className="h-8 w-auto object-contain" priority />
@@ -101,32 +101,32 @@ export function ComingSoonPage() {
 
       <main className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
         <section className="flex flex-col items-center text-center mb-24">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-light text-brand-primary text-xs font-semibold tracking-widest uppercase mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-50 text-black text-xs font-semibold tracking-widest uppercase mb-8">
             <Rocket className="w-4 h-4" />
             Launching Soon
           </div>
 
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter text-brand-heading mb-4 leading-none">
-            Coming <span className="text-brand-primary italic">Soon</span>
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter text-foreground mb-4 leading-none">
+            Coming <span className="text-black italic">Soon</span>
           </h1>
 
-          <p className="text-2xl md:text-4xl text-brand-body font-medium tracking-tight mb-12">
+          <p className="text-2xl md:text-4xl text-muted-foreground font-medium tracking-tight mb-12">
             Hiring, but smarter.
           </p>
 
           <div className="w-full max-w-lg mx-auto space-y-4">
             {isSuccess ? (
-              <div className="p-8 bg-white rounded-3xl shadow-xl text-center">
+              <div className="p-8 bg-white rounded-xl text-center">
                 <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Check className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-brand-heading mb-2">Thanks!</h3>
-                <p className="text-brand-body">We&apos;ll notify you when we launch.</p>
+                <h3 className="text-xl font-bold text-foreground mb-2">Thanks!</h3>
+                <p className="text-muted-foreground">We&apos;ll notify you when we launch.</p>
               </div>
             ) : (
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="flex flex-col sm:flex-row gap-3 p-2 bg-white rounded-3xl md:rounded-full shadow-xl"
+                className="flex flex-col sm:flex-row gap-3 p-2 bg-white rounded-xl md:rounded-full"
               >
                 <div className="flex-grow relative">
                   <input
@@ -134,7 +134,7 @@ export function ComingSoonPage() {
                     placeholder="Enter your work email"
                     {...register('email')}
                     className={cn(
-                      'w-full px-8 py-4 bg-transparent border-none focus:ring-0 text-brand-heading placeholder:text-gray-400 focus:outline-none rounded-2xl md:rounded-full',
+                      'w-full px-8 py-4 bg-transparent border-none focus:ring-0 text-foreground placeholder:text-gray-400 focus:outline-none rounded-xl md:rounded-full',
                       errors.email && 'text-red-500'
                     )}
                   />
@@ -147,7 +147,7 @@ export function ComingSoonPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !isValid}
-                  className="px-10 py-4 bg-brand-primary text-white font-bold rounded-2xl md:rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
+                  className="px-10 py-4 bg-black text-white font-bold rounded-xl md:rounded-full hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
                 >
                   {isSubmitting ? 'Submitting...' : 'Get Early Access'}
                 </button>
@@ -156,7 +156,7 @@ export function ComingSoonPage() {
             {apiError && (
               <p className="text-red-500 text-sm text-center">{apiError}</p>
             )}
-            <p className="text-sm text-brand-body">Join 2,000+ companies waiting for smarter hiring.</p>
+            <p className="text-sm text-muted-foreground">Join 2,000+ companies waiting for smarter hiring.</p>
           </div>
         </section>
 
@@ -188,7 +188,7 @@ export function ComingSoonPage() {
         </section>
       </main>
 
-      <footer className="w-full py-16 bg-transparent border-t border-brand-border">
+      <footer className="w-full py-16 bg-transparent border-t border-gray-200">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-8">
           <div className="flex items-center gap-2">
             <Image src="/images/logo.png" alt="Hiretivo" width={100} height={33} className="h-6 w-auto object-contain" />
@@ -199,7 +199,7 @@ export function ComingSoonPage() {
               href={SOCIAL_LINKS.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-full bg-brand-gray flex items-center justify-center text-brand-body hover:text-brand-primary hover:bg-brand-light transition-all"
+              className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center text-muted-foreground hover:text-black hover:bg-gray-100 transition-all"
             >
               <Linkedin className="w-5 h-5" />
             </Link>
@@ -207,7 +207,7 @@ export function ComingSoonPage() {
               href={SOCIAL_LINKS.twitter}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-full bg-brand-gray flex items-center justify-center text-brand-body hover:text-brand-primary hover:bg-brand-light transition-all"
+              className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center text-muted-foreground hover:text-black hover:bg-gray-100 transition-all"
             >
               <Twitter className="w-5 h-5" />
             </Link>
@@ -215,7 +215,7 @@ export function ComingSoonPage() {
               href={SOCIAL_LINKS.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-full bg-brand-gray flex items-center justify-center text-brand-body hover:text-brand-primary hover:bg-brand-light transition-all"
+              className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center text-muted-foreground hover:text-black hover:bg-gray-100 transition-all"
             >
               <Instagram className="w-5 h-5" />
             </Link>

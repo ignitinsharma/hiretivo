@@ -1,24 +1,31 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, Settings, LogOut, User, Briefcase, Send } from 'lucide-react';
-import { signOut, useSession } from 'next-auth/react';
-import { cn } from '@/lib/utils';
-import { SEEKER_NAV_ITEMS } from '@/constants/nav';
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import {
+  ChevronDown,
+  Settings,
+  LogOut,
+  User,
+  Briefcase,
+  Send,
+} from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
+import { SEEKER_NAV_ITEMS } from "@/constants/nav";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 /** Returns the user's initials (up to 2 chars) from their display name. */
 function getInitials(name: string | null | undefined): string {
-  if (!name) return 'U';
+  if (!name) return "U";
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -26,7 +33,7 @@ function getInitials(name: string | null | undefined): string {
 
 /** Nav items to show — only Jobs and Applied Jobs per D-18. */
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
-  (item) => item.href !== '/seeker/settings',
+  (item) => item.href !== "/seeker/settings",
 );
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -54,7 +61,10 @@ export function SeekerHeader() {
           />
         </Link>
 
-        <nav className="hidden md:flex flex-1 justify-center gap-8" aria-label="Seeker navigation">
+        <nav
+          className="hidden md:flex flex-1 justify-center gap-8"
+          aria-label="Seeker navigation"
+        >
           {NAV_ITEMS.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -64,12 +74,12 @@ export function SeekerHeader() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2 font-bold text-sm transition-colors',
+                  "flex items-center gap-2 font-bold text-sm transition-colors",
                   isActive
-                    ? 'text-primary border-b-2 border-primary pb-0.5'
-                    : 'text-slate-600 hover:text-primary'
+                    ? "text-primary border-b-2 border-primary pb-0.5"
+                    : "text-slate-600 hover:text-primary pb-0.5 border-b-2 border-white",
                 )}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
                 <Icon className="w-4 h-4" />
                 {item.label}
@@ -113,7 +123,7 @@ export function SeekerHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600 focus:bg-red-50 flex items-center gap-2 cursor-pointer"
-                onClick={() => void signOut({ callbackUrl: '/' })}
+                onClick={() => void signOut({ callbackUrl: "/" })}
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out

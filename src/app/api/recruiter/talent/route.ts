@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
       : {}),
   };
 
-  const [seekers, total, shortlists] = await Promise.all([
+  const [seekers, total] = await Promise.all([
     prisma.user.findMany({
       where,
       skip: (page - 1) * limit,
@@ -152,13 +152,7 @@ export async function GET(req: NextRequest) {
       },
     }),
     prisma.user.count({ where }),
-    prisma.talentShortlist.findMany({
-      where: { recruiterId: session.user.id },
-      select: { seekerId: true },
-    }),
   ]);
-
-  const shortlistedIds = new Set(shortlists.map((item) => item.seekerId));
 
   return NextResponse.json({
     data: {
@@ -178,7 +172,6 @@ export async function GET(req: NextRequest) {
           availability: profile?.availability ?? null,
           resumeKey: Boolean(profile?.resumeKey),
           skills: profile?.skills.map((item) => item.skill.name) ?? [],
-          isShortlisted: shortlistedIds.has(seeker.id),
         };
       }),
       total,

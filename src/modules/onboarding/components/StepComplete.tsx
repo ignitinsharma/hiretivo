@@ -13,11 +13,11 @@ export function StepComplete({ onComplete, isLoading }: StepCompleteProps) {
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-primary-light mb-4">
-          <CheckCircle2 className="w-8 h-8 text-brand-primary" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+          <CheckCircle2 className="w-8 h-8 text-black" />
         </div>
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-brand-primary" />
+          <CheckCircle2 className="w-4 h-4 text-black" />
           <span className="text-sm text-muted-foreground">First job listing</span>
         </div>
       </div>

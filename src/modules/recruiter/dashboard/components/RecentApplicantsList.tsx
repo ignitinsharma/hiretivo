@@ -10,8 +10,8 @@ const STATUS_STYLES: Record<string, string> = {
   [ApplicationStatus.APPLIED]: 'bg-blue-100 text-blue-700',
   [ApplicationStatus.REVIEWING]: 'bg-amber-100 text-amber-700',
   [ApplicationStatus.INTERVIEW]: 'bg-primary/10 text-primary',
-  [ApplicationStatus.OFFER]: 'bg-brand-primary-light text-brand-primary',
-  [ApplicationStatus.HIRED]: 'bg-brand-primary-light text-brand-primary',
+  [ApplicationStatus.OFFER]: 'bg-gray-100 text-black',
+  [ApplicationStatus.HIRED]: 'bg-gray-100 text-black',
   [ApplicationStatus.REJECTED]: 'bg-slate-100 text-slate-600',
 };
 
@@ -83,7 +83,7 @@ interface RecentApplicantsListProps {
 
 export function RecentApplicantsList({ applicants, isLoading }: RecentApplicantsListProps) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full h-full">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col w-full h-full">
       <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
         <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
         <Link

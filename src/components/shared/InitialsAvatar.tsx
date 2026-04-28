@@ -51,7 +51,7 @@ export function InitialsAvatar({
   return (
     <span
       className={cn(
-        'inline-flex select-none items-center justify-center rounded-full bg-[rgba(89,82,229,0.1)] font-semibold text-[#5952e5]',
+        'inline-flex select-none items-center justify-center rounded-full bg-gray-100 font-semibold text-black',
         SIZE_CLASSES[size],
         className,
       )}

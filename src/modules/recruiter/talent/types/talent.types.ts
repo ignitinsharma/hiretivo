@@ -11,7 +11,6 @@ export interface TalentListItem {
   availability: string | null;
   resumeKey: boolean;
   skills: string[];
-  isShortlisted: boolean;
 }
 
 export interface TalentListResponse {
@@ -35,7 +34,6 @@ export interface TalentDetail {
   primaryRole: string | null;
   availability: string | null;
   resumeKey: boolean;
-  isShortlisted: boolean;
   skills: Array<{
     name: string;
     category: string;

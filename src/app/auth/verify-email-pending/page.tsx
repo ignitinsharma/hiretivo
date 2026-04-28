@@ -17,7 +17,7 @@ export default function VerifyEmailPendingPage() {
           Didn&apos;t receive the email? Check your spam folder or try signing in again.
         </p>
 
-        <Button asChild variant="outline" className="w-full">
+        <Button asChild variant="default" className="w-full">
           <Link href="/">Back to home</Link>
         </Button>
       </div>

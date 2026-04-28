@@ -35,13 +35,13 @@ const STATUS_STYLES: Record<ApplicationStatus, { label: string; className: strin
 
 export function DashboardApplicantsTable() {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-100">
       <div className="p-5 border-b border-gray-100 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Recent Applications</h2>
           <p className="text-sm text-gray-500">Latest applicants across all jobs</p>
         </div>
-        <Button variant="ghost" className="text-brand-primary font-medium">
+        <Button variant="ghost" className="text-black font-medium">
           View All
           <ArrowRight className="w-4 h-4 ml-1" />
         </Button>
@@ -81,7 +81,7 @@ export function DashboardApplicantsTable() {
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold">
+                      <div className="w-9 h-9 bg-black/10 rounded-full flex items-center justify-center text-black text-sm font-semibold">
                         {applicant.seekerName.split(' ').map((n) => n[0]).join('')}
                       </div>
                       <div>

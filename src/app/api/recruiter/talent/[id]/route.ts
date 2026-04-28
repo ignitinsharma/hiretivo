@@ -75,11 +75,6 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
           },
         },
       },
-      shortlistedByRecruiters: {
-        where: { recruiterId: session.user.id },
-        select: { id: true },
-        take: 1,
-      },
     },
   });
 
@@ -102,7 +97,6 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
       primaryRole: profile.primaryRole,
       availability: profile.availability,
       resumeKey: Boolean(profile.resumeKey),
-      isShortlisted: seeker.shortlistedByRecruiters.length > 0,
       skills: profile.skills.map((item) => ({
         name: item.skill.name,
         category: item.skill.category,

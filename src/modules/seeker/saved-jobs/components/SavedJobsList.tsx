@@ -33,15 +33,15 @@ export function SavedJobsList() {
         {SKELETON_ITEMS.map((item) => (
           <div
             key={item}
-            className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-5 shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]"
+            className="rounded-xl border border-gray-200 bg-white p-5 shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]"
           >
             <div className="mb-4 flex items-start justify-between">
-              <Skeleton className="h-12 w-12 rounded-2xl" />
+              <Skeleton className="h-12 w-12 rounded-xl" />
               <Skeleton className="h-8 w-8 rounded-full" />
             </div>
             <Skeleton className="mb-2 h-6 w-3/4" />
             <Skeleton className="mb-8 h-4 w-1/2" />
-            <div className="flex items-center justify-between border-t border-[rgba(14,15,12,0.12)] pt-4">
+            <div className="flex items-center justify-between border-t border-gray-200 pt-4">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-9 w-24 rounded-full" />
             </div>
@@ -53,8 +53,8 @@ export function SavedJobsList() {
 
   if (isError) {
     return (
-      <div className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-8 text-center">
-        <p className="text-[18px] font-semibold leading-[1.44] text-[#0e0f0c] [font-feature-settings:'calt']">
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
+        <p className="text-[18px] font-semibold leading-[1.44] text-foreground ">
           Saved jobs could not be loaded.
         </p>
       </div>
@@ -63,17 +63,17 @@ export function SavedJobsList() {
 
   if (!savedJobs || savedJobs.length === 0) {
     return (
-      <div className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(89,82,229,0.1)] text-[#5952e5]">
+      <div className="rounded-xl border border-gray-200 bg-white p-10 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-black">
           <Bookmark className="h-5 w-5" />
         </div>
-        <h2 className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-[#0e0f0c] [font-feature-settings:'calt']">
+        <h2 className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-foreground ">
           No saved jobs yet
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-[18px] font-normal leading-[1.44] tracking-[0.18px] text-[#454745] [font-feature-settings:'calt']">
+        <p className="mx-auto mt-3 max-w-xl text-[18px] font-normal leading-[1.44] tracking-[0.18px] text-[#454745] ">
           Save jobs from your recommendations so the strongest matches stay easy to revisit.
         </p>
-        <Button asChild className="mt-6 rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95">
+        <Button asChild className="mt-6 rounded-full bg-black text-white transition-transform hover:scale-105 active:scale-95">
           <a href="/seeker/dashboard">Browse recommendations</a>
         </Button>
       </div>
@@ -83,8 +83,8 @@ export function SavedJobsList() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2 text-[#454745]">
-        <BriefcaseBusiness className="h-5 w-5 text-[#5952e5]" />
-        <p className="text-[14px] font-semibold leading-[1.5] [font-feature-settings:'calt']">
+        <BriefcaseBusiness className="h-5 w-5 text-black" />
+        <p className="text-[14px] font-semibold leading-[1.5] ">
           {savedJobs.length} saved {savedJobs.length === 1 ? "job" : "jobs"}
         </p>
       </div>

@@ -63,7 +63,7 @@ export function CompanySidebar() {
           post unlimited job openings.
         </p>
         <Button
-          variant="outline"
+          variant="default"
           size="default"
           className="rounded-xl font-bold transition-all"
         >

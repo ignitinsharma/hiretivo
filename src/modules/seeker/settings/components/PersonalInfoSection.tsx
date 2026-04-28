@@ -105,7 +105,7 @@ export function PersonalInfoSection() {
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <div className="relative">
                   <Input value={profile?.email ?? ""} readOnly className="bg-slate-50 text-slate-500 pr-24" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-brand-primary bg-brand-primary-light px-2 py-0.5 rounded">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-black bg-gray-100 px-2 py-0.5 rounded">
                     Verified
                   </span>
                 </div>

@@ -14,7 +14,7 @@ export function DashboardSkeleton() {
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div key={i} className="p-6 rounded-xl border border-slate-200">
               <Skeleton className="h-4 w-24 mb-4" />
               <Skeleton className="h-8 w-16" />
             </div>
@@ -23,7 +23,7 @@ export function DashboardSkeleton() {
 
         <section className="grid grid-cols-1 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-3">
-            <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-200">
                 <Skeleton className="h-6 w-32" />
               </div>
@@ -42,7 +42,7 @@ export function DashboardSkeleton() {
             </div>
           </div>
           <div className="lg:col-span-2">
-            <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
               <div className="px-6 py-6 border-b border-slate-200">
                 <Skeleton className="h-6 w-36" />
               </div>
@@ -65,7 +65,7 @@ export function DashboardSkeleton() {
           </div>
         </section>
 
-        <div className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-slate-200 overflow-hidden">
           <div className="px-8 py-6 border-b border-slate-200">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-4 w-64 mt-1" />

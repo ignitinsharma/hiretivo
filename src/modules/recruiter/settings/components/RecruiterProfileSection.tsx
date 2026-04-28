@@ -35,20 +35,21 @@ export function RecruiterProfileSection({
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-6"
+      className="rounded-xl border border-gray-200 bg-white p-6"
     >
-      <h3 className="mb-5 text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-[#0e0f0c] [font-feature-settings:'calt']">
+      <h3 className="mb-5 text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
         Recruiter profile
       </h3>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input className="rounded-2xl" placeholder="Name" {...form.register("name")} />
-        <Input className="rounded-2xl bg-slate-50" value={settings.email} readOnly />
+        <Input placeholder="Name" {...form.register("name")} />
+        <Input className="bg-slate-50" value={settings.email} readOnly />
         <Input className="hidden" {...form.register("companyName")} />
       </div>
       <Button
         type="submit"
+        variant="primary"
         disabled={isSaving}
-        className="mt-5 rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95"
+        className="mt-5"
       >
         {isSaving ? "Saving..." : "Save recruiter"}
       </Button>

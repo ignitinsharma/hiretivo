@@ -18,7 +18,7 @@ const ACTIVITY_STYLES = {
 
 export function RecentActivityList() {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm h-full">
+    <div className="bg-white rounded-xl border border-gray-100  h-full">
       <div className="p-5 border-b border-gray-100">
         <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
         <p className="text-sm text-gray-500">Latest updates from your postings</p>

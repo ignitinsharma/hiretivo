@@ -51,7 +51,7 @@ export function ResumeSection({ resumeKey }: ResumeSectionProps) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isUploading}
-          className="rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95"
+          className="rounded-full bg-black text-white transition-transform hover:scale-105 active:scale-95"
         >
           <Upload className="mr-2 h-4 w-4" />
           {isUploading ? "Uploading..." : "Upload resume"}

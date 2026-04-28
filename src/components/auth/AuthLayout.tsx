@@ -21,7 +21,7 @@ export function AuthLayout({
   leftContent,
 }: AuthLayoutProps) {
   return (
-    <main className="min-h-screen flex flex-col md:flex-row bg-white selection:bg-brand-primary/20 antialiased overflow-x-hidden">
+    <main className="min-h-screen flex flex-col md:flex-row bg-white selection:bg-black/20 antialiased overflow-x-hidden">
       {/* Left Side: Visual Storytelling */}
       <section className="hidden md:flex md:w-1/2 bg-[#f8f8fd] relative flex-col justify-center items-center px-8 lg:px-16 overflow-hidden">
         {leftContent}

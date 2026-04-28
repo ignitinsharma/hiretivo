@@ -34,12 +34,12 @@ const CELL_MUTED = cn(TD_BASE, "text-slate-400");
 const CELL_BODY = cn(TD_BASE, "text-slate-600");
 const CELL_PRO = cn(
   TD_BASE,
-  "font-bold text-brand-primary bg-brand-primary-light/50",
+  "font-bold text-black bg-gray-100/50",
 );
-const CELL_CHECK_GREEN = cn(TD_BASE, "text-brand-primary font-bold");
+const CELL_CHECK_GREEN = cn(TD_BASE, "text-black font-bold");
 const CELL_PRO_CHECK = cn(
   TD_BASE,
-  "font-bold text-brand-primary bg-brand-primary-light/50",
+  "font-bold text-black bg-gray-100/50",
 );
 
 // ─── Feature comparison data (CLAUDE.md §15.4) ──────────────────────────────
@@ -147,8 +147,8 @@ function PricingCardFeatureList({
             className={cn(
               "mt-0.5 shrink-0",
               highlighted
-                ? "fill-white text-brand-primary"
-                : "fill-brand-primary text-white",
+                ? "fill-white text-black"
+                : "fill-black text-white",
             )}
             size={16}
             strokeWidth={2.5}
@@ -200,14 +200,14 @@ function PricingCard({
   return (
     <div
       className={cn(
-        "p-6 rounded-2xl flex flex-col h-full text-left relative",
+        "p-6 rounded-xl flex flex-col h-full text-left relative",
         isHighlighted
-          ? "bg-brand-primary border-2 border-brand-primary shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px] transform lg:scale-105 z-10 text-white"
-          : "bg-white border border-[rgba(14,15,12,0.12)] shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]",
+          ? "bg-black border-2 border-black  transform lg:scale-105 z-10 text-white"
+          : "bg-white border border-[rgba(14,15,12,0.12)] ",
       )}
     >
       {isHighlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-brand-primary text-[10px] font-black px-4 py-1 rounded-full uppercase shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px] whitespace-nowrap">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-extrabold px-4 py-1 rounded-full uppercase  whitespace-nowrap">
           Most Popular
         </div>
       )}
@@ -233,7 +233,7 @@ function PricingCard({
         {isCustom ? (
           <>
             <div className="flex items-baseline gap-1 min-h-[48px]">
-              <span className="text-4xl font-black text-slate-900">
+              <span className="text-4xl font-extrabold text-slate-900">
                 Custom
               </span>
             </div>
@@ -274,7 +274,7 @@ function PricingCard({
                   isHighlighted ? "text-white" : "text-slate-400",
                 )}
               >
-                + GST included
+                GST included
               </p>
             )}
           </>
@@ -292,7 +292,7 @@ function PricingCard({
             <p
               className={cn(
                 "text-[10px] font-bold",
-                isHighlighted ? "text-white" : "text-brand-primary",
+                isHighlighted ? "text-white" : "text-black",
               )}
             >
               Save {sym}
@@ -407,14 +407,14 @@ function PricingFaqSection() {
           {FAQ_ITEMS.map((item) => (
             <div
               key={item.question}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden group"
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden group"
             >
               <div className="p-6 flex items-center justify-between cursor-pointer">
                 <h4 className="font-bold text-lg text-slate-900">
                   {item.question}
                 </h4>
                 <CirclePlus
-                  className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-brand-primary-light group-hover:text-brand-primary"
+                  className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-black-light group-hover:text-black"
                   strokeWidth={2}
                   aria-hidden
                 />
@@ -426,7 +426,7 @@ function PricingFaqSection() {
           <p className="text-slate-500">
             Still have questions?{" "}
             <Link
-              className="text-brand-primary font-bold hover:underline decoration-2"
+              className="text-black font-bold hover:underline decoration-2"
               href="/contact"
             >
               Chat with our support team
@@ -525,7 +525,7 @@ export function PricingClient({ currency }: PricingClientProps) {
 
           {/* Monthly / Annual toggle */}
           <div className="flex items-center justify-center mb-16 relative z-30">
-            <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center shadow-inner border border-slate-200">
+            <div className="bg-slate-100 p-1.5 rounded-xl flex items-center shadow-inner border border-slate-200">
               <button
                 type="button"
                 onClick={() => setIsAnnual(false)}
@@ -533,7 +533,7 @@ export function PricingClient({ currency }: PricingClientProps) {
                 className={cn(
                   "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
                   !isAnnual
-                    ? "bg-white text-slate-900 shadow-sm"
+                    ? "bg-white text-slate-900 "
                     : "text-slate-500 hover:text-slate-800",
                 )}
               >
@@ -546,12 +546,12 @@ export function PricingClient({ currency }: PricingClientProps) {
                 className={cn(
                   "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
                   isAnnual
-                    ? "bg-white text-slate-900 shadow-sm"
+                    ? "bg-white text-slate-900 "
                     : "text-slate-500 hover:text-slate-800",
                 )}
               >
                 Annual
-                <span className="bg-brand-primary text-brand-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase font-black tracking-wider pointer-events-none">
+                <span className="bg-black text-black-foreground text-[10px] px-2 py-0.5 rounded-full uppercase font-extrabold tracking-wider pointer-events-none">
                   Save yearly
                 </span>
               </button>

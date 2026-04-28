@@ -22,10 +22,10 @@ import { authService } from "@/services/auth.service";
 
 const SeekerLoginLeft = (
   <>
-    <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 rounded-full bg-brand-primary opacity-5 blur-3xl"></div>
+    <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-lg w-full">
       <div className="mb-12">
-        <span className="text-brand-primary font-bold text-2xl tracking-tighter">Digital Architect</span>
+        <span className="text-black font-bold text-2xl tracking-tighter">Digital Architect</span>
       </div>
       <h1 className="text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900 mb-8">
         Your next chapter starts here.
@@ -34,11 +34,11 @@ const SeekerLoginLeft = (
         Access thousands of remote opportunities from companies that value work-life balance.
       </p>
       
-      <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-md transform rotate-2 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-md transform rotate-2 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-primary-light rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 bg-black-light rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -132,7 +132,7 @@ export default function SeekerLoginPage() {
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
               This account is registered as a Recruiter.{" "}
-              <Link href="/recruiter/login" className="font-bold text-brand-primary underline underline-offset-4">
+              <Link href="/recruiter/login" className="font-bold text-black underline underline-offset-4">
                 Please use the Recruiter login
               </Link>
             </p>
@@ -170,7 +170,7 @@ export default function SeekerLoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-sm font-bold text-slate-900">Password</Label>
-              <Link href="/forgot-password" className="text-xs font-bold text-brand-primary hover:text-brand-primary/80 transition-colors">
+              <Link href="/forgot-password" className="text-xs font-bold text-black hover:text-black/80 transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -189,7 +189,7 @@ export default function SeekerLoginPage() {
 
           <Button 
             type="submit" 
-            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5952e5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99] mt-2" 
+            className="w-full h-14 rounded-xl bg-linear-to-br from-black to-gray-800 text-white font-bold text-lg   transition-all duration-200 transform active:scale-[0.99] mt-2" 
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -204,7 +204,7 @@ export default function SeekerLoginPage() {
         <footer className="pt-4 text-center">
           <p className="text-slate-600 font-medium">
             New to Hiretivo?
-            <Link href="/seeker/register" className="text-brand-primary font-bold hover:underline underline-offset-4 ml-1">
+            <Link href="/seeker/register" className="text-black font-bold hover:underline underline-offset-4 ml-1">
               Sign up
             </Link>
           </p>

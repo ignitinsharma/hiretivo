@@ -51,7 +51,7 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
             Boosted — active until {formatBoostExpiry(boostExpiresAt)}
           </p>
         </div>
-        <Button disabled className="w-full" variant="outline">
+        <Button disabled className="w-full" variant="default">
           Extend Boost
         </Button>
       </div>

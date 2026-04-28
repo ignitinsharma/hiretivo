@@ -35,13 +35,13 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12 [font-feature-settings:'calt']">
-      <section className="mx-auto w-full max-w-md rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12 ">
+      <section className="mx-auto w-full max-w-md rounded-xl border border-[rgba(14,15,12,0.12)] bg-white p-8">
         <div className="mb-8 space-y-3">
-          <h1 className="font-display text-4xl font-black leading-[0.85] text-[#0e0f0c] [font-feature-settings:'calt']">
+          <h1 className="font-display text-4xl font-extrabold leading-tight text-foreground ">
             Forgot your password?
           </h1>
-          <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] [font-feature-settings:'calt']">
+          <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] ">
             Enter your email and we will send a reset link if the account
             exists.
           </p>
@@ -49,13 +49,13 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div className="space-y-6">
-            <p className="rounded-2xl bg-[rgba(89,82,229,0.1)] p-4 text-sm font-semibold leading-6 text-[#0e0f0c]">
+            <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
               If an account exists for that email, a reset link is on the way.
               Check your inbox.
             </p>
             <Button
               asChild
-              className="w-full rounded-full bg-[#5952e5] font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95"
             >
               <Link href="/seeker/login">Back to sign in</Link>
             </Button>
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="font-semibold text-[#0e0f0c]">
+              <Label htmlFor="email" className="font-semibold text-foreground">
                 Email
               </Label>
               <Input

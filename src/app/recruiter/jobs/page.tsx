@@ -52,7 +52,7 @@ interface JobStatItem {
 
 function JobStatCard({ stat }: { stat: JobStatItem }) {
   return (
-    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-xl border border-slate-200  flex flex-col justify-between">
       <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">
         {stat.label}
       </p>
@@ -253,7 +253,7 @@ function Pagination({
             key={p}
             size="icon"
             className={cn(
-              "h-7 w-7 text-[11px] font-bold shadow-sm shadow-indigo-100",
+              "h-7 w-7 text-[11px] font-bold  ",
               p === currentPage
                 ? "bg-primary text-white"
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
@@ -446,7 +446,7 @@ export default function RecruiterJobsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-x border-b border-slate-200 rounded-b-xl shadow-sm">
+      <div className="bg-white border-x border-b border-slate-200 rounded-b-xl ">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>

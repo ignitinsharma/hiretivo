@@ -69,7 +69,7 @@ export default function PrivacyPage() {
           </h2>
           <p className="text-slate-600">
             For questions about this Privacy Policy, contact us at{" "}
-            <a href="mailto:privacy@hiretivo.com" className="text-brand-primary hover:underline">
+            <a href="mailto:privacy@hiretivo.com" className="text-black hover:underline">
               privacy@hiretivo.com
             </a>
             .

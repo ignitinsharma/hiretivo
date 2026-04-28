@@ -74,19 +74,19 @@ export async function Header({ className }: HeaderProps) {
             <>
               <Link
                 href="/recruiter/register"
-                className="hidden sm:block px-5 py-2.5 border border-brand-primary/20 text-brand-primary bg-brand-light rounded-lg text-sm font-bold hover:bg-brand-primary hover:text-white transition-all btn-shadow"
+                className="hidden sm:block px-5 py-2.5 border border-black/20 text-black bg-gray-50 rounded-lg text-sm font-bold hover:bg-black hover:text-white transition-all"
               >
                 Hire Talent
               </Link>
               <Link
                 href="/recruiter/register"
-                className="hidden sm:block px-5 py-2.5 border border-brand-border rounded-lg text-sm font-semibold text-brand-heading hover:bg-gray-50 transition-all btn-shadow"
+                className="hidden sm:block px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-foreground hover:bg-gray-50 transition-all"
               >
                 Post a Job
               </Link>
               <Link
                 href="/seeker/login"
-                className="px-6 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all btn-shadow"
+                className="px-6 py-2.5 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-all"
               >
                 Sign In
               </Link>
@@ -99,7 +99,7 @@ export async function Header({ className }: HeaderProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="relative cursor-pointer flex items-center gap-2 group outline-none">
-                    <div className="w-9 h-9 rounded-full bg-brand-primary/10 border-2 border-brand-primary/20 flex items-center justify-center text-brand-primary font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-brand-primary">
+                    <div className="w-9 h-9 rounded-full bg-black/10 border-2 border-black/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
                       {session.user?.name?.[0]?.toUpperCase() ?? 'U'}
                     </div>
                     <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />

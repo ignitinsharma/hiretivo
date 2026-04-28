@@ -25,10 +25,10 @@ import { authService } from "@/services/auth.service";
 
 const RecruiterLoginLeft = (
   <>
-    <div className="absolute top-[-10%] right-[-10%] w-96 h-96 rounded-full bg-brand-primary opacity-5 blur-3xl"></div>
+    <div className="absolute top-[-10%] right-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-xl w-full">
       <div className="mb-12">
-        <span className="text-brand-primary font-bold text-2xl tracking-tighter">Digital Architect</span>
+        <span className="text-black font-bold text-2xl tracking-tighter">Digital Architect</span>
       </div>
       <h1 className="text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-8">
         Your dream remote job is just a click away.
@@ -50,7 +50,7 @@ const RecruiterLoginLeft = (
           </div>
         </div>
       </div>
-      <div className="mt-20 p-8 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm">
+      <div className="mt-20 p-8 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm">
         <div className="flex items-center gap-4 mb-5">
           <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
             <div className="w-full h-full bg-slate-200"></div>
@@ -143,7 +143,7 @@ export default function RecruiterLoginPage() {
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
               This account is registered as a Job Seeker.{" "}
-              <Link href="/seeker/login" className="font-bold text-brand-primary underline underline-offset-4">
+              <Link href="/seeker/login" className="font-bold text-black underline underline-offset-4">
                 Please use the Seeker login
               </Link>
             </p>
@@ -181,7 +181,7 @@ export default function RecruiterLoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-sm font-bold text-slate-900">Password</Label>
-              <Link href="/forgot-password" className="text-xs font-bold text-brand-primary hover:text-brand-primary/80 transition-colors">
+              <Link href="/forgot-password" className="text-xs font-bold text-black hover:text-black/80 transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -200,7 +200,7 @@ export default function RecruiterLoginPage() {
 
           <Button 
             type="submit" 
-            className="w-full h-14 rounded-xl bg-linear-to-br from-[#5952e5] to-[#4034cc] text-white font-bold text-lg shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all duration-200 transform active:scale-[0.99] mt-2" 
+            className="w-full h-14 rounded-xl bg-linear-to-br from-black to-gray-800 text-white font-bold text-lg   transition-all duration-200 transform active:scale-[0.99] mt-2" 
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -215,7 +215,7 @@ export default function RecruiterLoginPage() {
         <footer className="pt-4 text-center">
           <p className="text-slate-600 font-medium">
             New to Hiretivo?
-            <Link href="/recruiter/register" className="text-brand-primary font-bold hover:underline underline-offset-4 ml-1">
+            <Link href="/recruiter/register" className="text-black font-bold hover:underline underline-offset-4 ml-1">
               Sign up
             </Link>
           </p>

@@ -24,14 +24,14 @@ export function EnvironmentBadge() {
     Development: 'bg-blue-500/90',
     Preview: 'bg-purple-500/90',
     Local: 'bg-gray-500/90',
-    Production: 'bg-brand-primary',
+    Production: 'bg-black',
   }
 
   const bgColor = colors[envName as keyof typeof colors] ?? colors.Local
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <div className={`${bgColor} text-white px-3 py-1.5 rounded-md shadow-lg text-xs font-mono flex items-center gap-2`}>
+      <div className={`${bgColor} text-white px-3 py-1.5 rounded-md text-xs font-mono flex items-center gap-2`}>
         <span className="font-semibold">{envName}</span>
         <span className="opacity-75">·</span>
         <span className="opacity-90">{CURRENT_BRANCH}</span>

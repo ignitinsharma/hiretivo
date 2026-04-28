@@ -31,13 +31,13 @@ export function RecruiterBillingSection({
   });
 
   return (
-    <section className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-6">
+    <section className="rounded-xl border border-gray-200 bg-white p-6">
       <p className="text-sm font-semibold uppercase tracking-wide text-[#868685]">
         Current plan
       </p>
       <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-[#0e0f0c] [font-feature-settings:'calt']">
+          <h3 className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-foreground ">
             {plan}
           </h3>
           <p className="mt-1 text-sm font-semibold text-[#454745]">
@@ -46,9 +46,9 @@ export function RecruiterBillingSection({
         </div>
         <Button
           type="button"
+          variant="primary"
           onClick={() => checkoutMutation.mutate()}
           disabled={checkoutMutation.isPending}
-          className="rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95"
         >
           {checkoutMutation.isPending ? "Loading..." : "Upgrade plan"}
           <ArrowUpRight className="ml-2 h-4 w-4" />

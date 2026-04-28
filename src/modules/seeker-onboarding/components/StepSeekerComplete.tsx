@@ -87,7 +87,7 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
 
         <div className="bg-muted/50 rounded-lg py-3 px-4">
           <p className="text-sm text-muted-foreground">
-            + 45 more jobs waiting for you
+            45 more jobs waiting for you
           </p>
         </div>
 

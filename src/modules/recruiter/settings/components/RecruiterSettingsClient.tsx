@@ -32,12 +32,12 @@ export function RecruiterSettingsClient() {
   });
 
   if (isLoading) {
-    return <Skeleton className="h-96 w-full rounded-2xl" />;
+    return <Skeleton className="h-96 w-full rounded-xl" />;
   }
 
   if (isError || !settings) {
     return (
-      <div className="rounded-2xl border border-[rgba(14,15,12,0.12)] bg-white p-8 text-center font-semibold text-[#d03238]">
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center font-semibold text-[#d03238]">
         Recruiter settings could not be loaded.
       </div>
     );

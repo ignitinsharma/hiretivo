@@ -64,7 +64,7 @@ export function JobDetailSidebar({
 
   return (
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
         <div className="flex justify-between items-start mb-4">
           <h3 className="font-bold text-slate-900 text-lg">Quick Apply</h3>
           <span className="px-2 py-1 bg-gray-100 text-black text-[10px] font-bold uppercase rounded leading-none">
@@ -115,7 +115,7 @@ export function JobDetailSidebar({
       </div>
 
       {/* Match Score Section */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
           Match Score
         </h3>
@@ -126,7 +126,7 @@ export function JobDetailSidebar({
         matchBreakdown.length > 0 ? (
           <>
             {matchScore !== null && (
-              <div className="text-4xl font-black text-primary mb-4">
+              <div className="text-4xl font-extrabold text-primary mb-4">
                 {matchScore}%
               </div>
             )}
@@ -156,7 +156,7 @@ export function JobDetailSidebar({
         ) : (
           <div className="relative">
             <div className="blur-sm select-none">
-              <div className="text-4xl font-black text-primary mb-4">85%</div>
+              <div className="text-4xl font-extrabold text-primary mb-4">85%</div>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm">React</span>
@@ -187,7 +187,7 @@ export function JobDetailSidebar({
         )}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="p-5 border-b border-slate-200 flex justify-between items-center">
           <h3 className="font-bold text-slate-900">Compare Similar</h3>
           <span className="text-xs font-medium text-primary">6 Available</span>

@@ -50,7 +50,7 @@ export function ExternalApplyConfirmationDialog({
     <>
       <Button
         asChild
-        className="w-full rounded-full bg-[#5952e5] py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+        className="w-full rounded-full bg-black py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
       >
         <a href={externalUrl} target="_blank" rel="noreferrer">
           Continue to Application
@@ -61,19 +61,19 @@ export function ExternalApplyConfirmationDialog({
       <Button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full rounded-full bg-[rgba(89,82,229,0.08)] font-semibold text-[#0e0f0c] transition-transform hover:scale-105 active:scale-95"
+        className="w-full rounded-full bg-gray-100 font-semibold text-foreground transition-transform hover:scale-105 active:scale-95"
       >
         <CheckCircle2 className="mr-2 h-4 w-4" />
         I applied on {companyName}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-[#0e0f0c] [font-feature-settings:'calt']">
+            <DialogTitle className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-foreground ">
               Did you apply on the company site?
             </DialogTitle>
-            <DialogDescription className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] [font-feature-settings:'calt']">
+            <DialogDescription className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] ">
               Confirming creates your Hiretivo application record and lets the recruiter track your application.
             </DialogDescription>
           </DialogHeader>
@@ -90,7 +90,7 @@ export function ExternalApplyConfirmationDialog({
               type="button"
               onClick={confirmApplied}
               disabled={isConfirming}
-              className="rounded-full bg-[#5952e5] text-white transition-transform hover:scale-105 active:scale-95"
+              className="rounded-full bg-black text-white transition-transform hover:scale-105 active:scale-95"
             >
               {isConfirming ? 'Confirming...' : 'Yes, I applied'}
             </Button>

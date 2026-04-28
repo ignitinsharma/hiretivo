@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import type {
   TalentDetail,
@@ -69,22 +69,6 @@ export function useFetchTalentDetail(seekerId: string | null) {
         `/api/recruiter/talent/${seekerId}`,
       );
       return response.data;
-    },
-  });
-}
-
-export function useToggleTalentShortlist() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (input: { seekerId: string; isShortlisted: boolean }) => {
-      await fetchJson<{ data: { isShortlisted: boolean } }>(
-        `/api/recruiter/talent/${input.seekerId}/shortlist`,
-        { method: input.isShortlisted ? 'DELETE' : 'POST' },
-      );
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [TALENT_QUERY_KEY] });
     },
   });
 }

@@ -124,7 +124,7 @@ function ConfirmDeleteModal({
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
-              variant="outline"
+              variant="default"
               onClick={() => onOpenChange(false)}
               className="font-bold text-slate-600"
             >
@@ -162,7 +162,7 @@ function ConfirmDeleteModal({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
-            variant="outline"
+            variant="default"
             onClick={() => onOpenChange(false)}
             className="font-bold text-slate-600"
           >

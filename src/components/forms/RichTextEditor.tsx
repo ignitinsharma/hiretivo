@@ -27,7 +27,7 @@ interface RichTextEditorProps {
 const TOOLBAR_BUTTON =
   'p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed';
 const TOOLBAR_BUTTON_ACTIVE =
-  'p-1.5 rounded-md text-[#5952e5] bg-[rgba(89,82,229,0.1)] hover:bg-[rgba(89,82,229,0.15)] transition-colors';
+  'p-1.5 rounded-md text-black bg-gray-100 hover:bg-gray-200 transition-colors';
 
 export function RichTextEditor({
   value,
@@ -53,7 +53,7 @@ export function RichTextEditor({
       attributes: {
         class: cn(
           'prose prose-slate max-w-none min-h-[200px] px-4 py-3 outline-none',
-          'text-[18px] font-normal leading-[1.44] tracking-[0.18px] [font-feature-settings:"calt"] text-[#0e0f0c]',
+          'text-[18px] font-normal leading-[1.44] tracking-[0.18px]  text-foreground',
           'focus:outline-none',
         ),
       },
@@ -73,7 +73,7 @@ export function RichTextEditor({
     return (
       <div
         className={cn(
-          'rounded-2xl border border-input min-h-50 bg-muted/20 animate-pulse',
+          'rounded-xl border border-input min-h-50 bg-muted/20 animate-pulse',
           hasError && 'border-red-500',
           className,
         )}
@@ -84,8 +84,8 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-input bg-background overflow-hidden transition-colors',
-        'focus-within:border-[#5952e5] focus-within:ring-2 focus-within:ring-[#5952e5]/30',
+        'rounded-xl border border-input bg-background overflow-hidden transition-colors',
+        'focus-within:border-black focus-within:ring-2 focus-within:ring-black/30',
         hasError && 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500/30',
         disabled && 'opacity-50 cursor-not-allowed',
         className,

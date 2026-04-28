@@ -1,6 +1,6 @@
 export function ApplicationTrendChart() {
   return (
-    <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-200">
         <h2 className="text-xl font-bold text-slate-900">
           Application Trend

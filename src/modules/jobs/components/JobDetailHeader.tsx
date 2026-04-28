@@ -76,7 +76,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
                 <>
                   <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                   <span className="flex items-center gap-1">
-                    <Globe2 className="w-4 h-4 text-brand-primary" />
+                    <Globe2 className="w-4 h-4 text-black" />
                     {job.workType === WorkType.REMOTE ? '100% Remote' : job.workType}
                   </span>
                 </>
@@ -85,7 +85,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
           </div>
         </div>
         <div className="hidden lg:flex items-center gap-3">
-          <Button variant="outline" className="px-6 py-3">
+          <Button variant="default" className="px-6 py-3">
             <Bookmark className="w-5 h-5" />
             Save
           </Button>

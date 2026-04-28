@@ -12,7 +12,7 @@ import type { ActiveJob } from '@/services/recruiter.service';
 const MAX_JOBS_DISPLAY = 5;
 
 const STATUS_STYLES: Record<string, string> = {
-  [JobStatus.OPEN]: 'bg-brand-primary-light text-brand-primary',
+  [JobStatus.OPEN]: 'bg-gray-100 text-black',
   [JobStatus.UNPUBLISHED]: 'bg-amber-100 text-amber-800',
   [JobStatus.DELETED]: 'bg-red-100 text-red-800',
 };
@@ -32,7 +32,7 @@ export function ActiveJobsList() {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full h-full">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col w-full h-full">
       <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
         <h2 className="text-lg font-bold text-slate-900">My Active Jobs</h2>
         <Link

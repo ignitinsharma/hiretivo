@@ -69,7 +69,7 @@ export default function TermsPage() {
           </h2>
           <p className="text-slate-600">
             For questions about these Terms, contact us at{" "}
-            <a href="mailto:legal@hiretivo.com" className="text-brand-primary hover:underline">
+            <a href="mailto:legal@hiretivo.com" className="text-black hover:underline">
               legal@hiretivo.com
             </a>
             .

@@ -40,8 +40,8 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
       className={cn(
         "p-6 rounded-xl flex flex-col justify-between",
         isPrimary
-          ? "bg-linear-to-br from-primary to-primary/80 text-white shadow-lg shadow-primary/25"
-          : "bg-white border border-slate-200 shadow-sm",
+          ? "bg-linear-to-br from-primary to-primary/80 text-white "
+          : "bg-white border border-slate-200 ",
       )}
     >
       <div className="flex items-center gap-3 mb-4">
@@ -98,7 +98,7 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm space-y-4">
+    <div className="p-6 rounded-xl bg-white border border-slate-200  space-y-4">
       <Skeleton className="h-10 w-10 rounded-lg" />
       <Skeleton className="h-8 w-20" />
       <Skeleton className="h-4 w-28" />
