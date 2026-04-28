@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { CONTACT_REQUEST_TYPE_VALUES } from "@/constants/enums";
 
+export { ContactRequestType } from "@/constants/enums";
+
 export const ContactSupportSchema = z.object({
   type: z.enum(CONTACT_REQUEST_TYPE_VALUES),
   name: z.string().trim().min(1, "Name is required").max(100),
