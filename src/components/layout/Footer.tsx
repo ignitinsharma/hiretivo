@@ -34,7 +34,7 @@ export function Footer({ className }: FooterProps) {
           </div>
         </div>
 
-        <div className="flex justify-end mb-16">
+        <div className="flex justify-center md:justify-end mb-16">
           <div className="grid grid-cols-2 gap-16 max-w-md">
             <div>
               <h5 className="text-white font-semibold mb-4 text-sm">Company</h5>
