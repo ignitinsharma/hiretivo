@@ -49,7 +49,7 @@ export function ProfileStrengthCard({
       )}
 
       <Button
-        variant="subtle"
+        variant="secondary"
         size="default"
         className="w-full font-bold text-sm rounded-lg transition-colors"
         asChild

@@ -95,8 +95,8 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
                 key={skill.id}
                 type="button"
                 onClick={() => toggleSkill(skill.id)}
-                variant={active ? "default" : "outline"}
-                className="rounded-full transition-transform hover:scale-105 active:scale-95"
+                variant={active ? "default" : "secondary"}
+                className="rounded-full"
                 disabled={mutation.isPending}
               >
                 {skill.name}

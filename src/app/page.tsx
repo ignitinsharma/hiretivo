@@ -179,7 +179,7 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-                <Button variant="primary" size="xl" className="group">
+                <Button variant="primary" size="lg" className="group">
                   Get Matched Now
                   <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                     arrow_forward

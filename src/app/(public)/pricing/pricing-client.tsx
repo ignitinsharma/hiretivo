@@ -323,13 +323,13 @@ function PricingCard({
 
       {isCustom ? (
         <Link href="/contact" className="w-full mt-auto">
-          <Button variant="outline" size="lg" className="w-full">
+          <Button variant="default" size="lg" className="w-full">
             {tier.cta}
           </Button>
         </Link>
       ) : (
         <Button
-          variant={isHighlighted ? "primary" : "outline"}
+          variant={isHighlighted ? "primary" : "secondary"}
           size="lg"
           className="w-full mt-auto"
           loading={isPending}

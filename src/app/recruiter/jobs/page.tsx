@@ -140,13 +140,6 @@ function JobRow({
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            className="px-4 py-1.5 border-indigo-200 text-indigo-700 hover:bg-primary hover:text-white text-[11px] font-bold h-auto"
-          >
-            View Talent
-          </Button>
           <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -265,7 +258,7 @@ function Pagination({
                 ? "bg-primary text-white"
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
             )}
-            variant={p === currentPage ? "default" : "subtle"}
+            variant={p === currentPage ? "default" : "secondary"}
             onClick={() => onPageChange(p)}
           >
             {p}
@@ -402,7 +395,7 @@ export default function RecruiterJobsPage() {
             <Upload className="w-4 h-4" />
             Export
           </Button>
-          <Button variant="subtle" onClick={openPostJobModal}>
+          <Button variant="secondary" onClick={openPostJobModal}>
             <Plus className="w-4 h-4" />
             Post New Job
           </Button>

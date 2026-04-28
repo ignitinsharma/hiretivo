@@ -230,7 +230,7 @@ export default function SeekerRegisterPage() {
           <Button
             type="submit"
             variant="primary"
-            size="xl"
+            size="lg"
             className="w-full"
             loading={isSubmitting}
             loadingText="Creating account..."
