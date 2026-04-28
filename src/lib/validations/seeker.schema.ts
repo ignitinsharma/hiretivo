@@ -7,7 +7,7 @@ const SkillNameSchema = z
   .max(80, "Skill must be 80 characters or fewer");
 
 const MAX_POSTGRES_INT = 2_147_483_647;
-const SALARY_ERROR_MESSAGE = "Salary must be a non-negative integer below 2147483648";
+const SALARY_ERROR_MESSAGE = "Salary must be a non-negative integer at most 2147483647";
 
 const SalarySchema = z
   .union([z.number(), z.string(), z.null(), z.undefined()])
