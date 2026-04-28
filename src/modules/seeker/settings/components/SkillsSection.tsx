@@ -1,62 +1,50 @@
 "use client";
 
-import { useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { SkillsTagInput } from "@/components/forms/skills-tag-input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiClient } from "@/lib/axios";
 import { seekerService, type SeekerSettingsData } from "@/services/seeker.service";
-
-interface SkillOption {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-}
 
 interface SkillsSectionProps {
   settings: SeekerSettingsData | undefined;
   isLoading: boolean;
 }
 
-async function fetchSkills(): Promise<SkillOption[]> {
-  const { data } = await apiClient.get<SkillOption[]>("/skills");
-  return data;
-}
-
 export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
   const queryClient = useQueryClient();
-  const { data: skills = [], isLoading: isSkillsLoading } = useQuery({
-    queryKey: ["skills"],
-    queryFn: fetchSkills,
-    staleTime: 5 * 60_000,
-  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
 
-  const selectedIds = new Set(settings?.skills.map((skill) => skill.id) ?? []);
   const mutation = useMutation({
     mutationFn: seekerService.updateSettings,
     onSuccess: async () => {
       toast.success("Skills updated successfully.");
       await queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
       await queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });
+      setIsEditing(false);
     },
     onError: () => toast.error("Failed to update skills. Try again."),
   });
 
   useEffect(() => {
-    void queryClient.invalidateQueries({ queryKey: ["skills"] });
-  }, [queryClient]);
+    setSkills(settings?.skills.map((skill) => skill.name) ?? []);
+  }, [settings?.skills]);
 
-  const toggleSkill = (skillId: string): void => {
-    if (!settings) return;
-    const next = new Set(selectedIds);
-    if (next.has(skillId)) {
-      next.delete(skillId);
-    } else {
-      next.add(skillId);
+  const handleCancel = (): void => {
+    setSkills(settings?.skills.map((skill) => skill.name) ?? []);
+    setIsEditing(false);
+  };
+
+  const handleSave = (): void => {
+    if (!settings) {
+      toast.error("Failed to update skills. Try again.");
+      return;
     }
+
     mutation.mutate({
       name: settings.name,
       headline: settings.headline ?? "",
@@ -68,41 +56,64 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
       salaryMax: settings.salaryMax,
       currency: settings.currency ?? "",
       availability: settings.availability ?? "",
-      skillIds: Array.from(next),
+      skillNames: skills,
     });
   };
 
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-6">
-        <h3 className="text-lg font-bold text-slate-900">Skills</h3>
-        <p className="text-sm text-slate-500">
-          Keep skills current so matching and recruiter discovery stay accurate.
-        </p>
+      <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">Skills</h3>
+          <p className="text-sm text-slate-500">
+            Keep skills current so matching and recruiter discovery stay accurate.
+          </p>
+        </div>
+        {isEditing ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleCancel}
+              disabled={mutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleSave}
+              disabled={mutation.isPending || isLoading || !settings}
+            >
+              {mutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            disabled={isLoading || !settings}
+          >
+            Edit
+          </Button>
+        )}
       </div>
       <div className="flex flex-wrap gap-2 p-6">
-        {isLoading || isSkillsLoading ? (
+        {isLoading ? (
           <>
             <Skeleton className="h-9 w-24 rounded-full" />
             <Skeleton className="h-9 w-28 rounded-full" />
             <Skeleton className="h-9 w-20 rounded-full" />
           </>
         ) : (
-          skills.map((skill) => {
-            const active = selectedIds.has(skill.id);
-            return (
-              <Button
-                key={skill.id}
-                type="button"
-                onClick={() => toggleSkill(skill.id)}
-                variant={active ? "default" : "secondary"}
-                className="rounded-full"
-                disabled={mutation.isPending}
-              >
-                {skill.name}
-              </Button>
-            );
-          })
+          <SkillsTagInput
+            value={skills}
+            onChange={setSkills}
+            disabled={!isEditing || mutation.isPending}
+          />
         )}
       </div>
     </section>

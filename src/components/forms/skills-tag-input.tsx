@@ -15,6 +15,10 @@ interface SkillsTagInputProps {
   className?: string;
 }
 
+function hasSkill(skills: string[], nextSkill: string): boolean {
+  return skills.some((skill) => skill.trim().toLowerCase() === nextSkill.trim().toLowerCase());
+}
+
 export function SkillsTagInput({
   value,
   onChange,
@@ -38,7 +42,7 @@ export function SkillsTagInput({
     const trimmedSkill = inputValue.trim();
     if (
       trimmedSkill &&
-      !value.includes(trimmedSkill) &&
+      !hasSkill(value, trimmedSkill) &&
       value.length < maxTags
     ) {
       onChange([...value, trimmedSkill]);
