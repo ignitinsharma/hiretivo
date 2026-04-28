@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -14,7 +14,7 @@ import type { RecruiterSettingsData } from "@/services/recruiter.service";
 
 interface RecruiterProfileSectionProps {
   settings: RecruiterSettingsData;
-  onSubmit: (input: RecruiterProfileSettingsInput) => void;
+  onSubmit: (input: RecruiterProfileSettingsInput) => Promise<void>;
   isSaving: boolean;
 }
 
@@ -23,6 +23,7 @@ export function RecruiterProfileSection({
   onSubmit,
   isSaving,
 }: RecruiterProfileSectionProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const form = useForm<RecruiterProfileSettingsInput>({
     resolver: zodResolver(RecruiterProfileSettingsSchema),
     defaultValues: settings,
@@ -32,27 +33,64 @@ export function RecruiterProfileSection({
     form.reset(settings);
   }, [form, settings]);
 
+  const handleCancel = (): void => {
+    form.reset(settings);
+    setIsEditing(false);
+  };
+
+  const handleSubmit = async (
+    input: RecruiterProfileSettingsInput,
+  ): Promise<void> => {
+    await onSubmit(input);
+    setIsEditing(false);
+  };
+
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(handleSubmit)}
       className="rounded-xl border border-gray-200 bg-white p-6"
     >
-      <h3 className="mb-5 text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
-        Recruiter profile
-      </h3>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
+          Recruiter profile
+        </h3>
+        {isEditing ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              loading={isSaving}
+              loadingText="Saving..."
+            >
+              Save
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+          >
+            Edit
+          </Button>
+        )}
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input placeholder="Name" {...form.register("name")} />
+        <Input placeholder="Name" {...form.register("name")} disabled={!isEditing || isSaving} />
         <Input className="bg-slate-50" value={settings.email} readOnly />
         <Input className="hidden" {...form.register("companyName")} />
       </div>
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={isSaving}
-        className="mt-5"
-      >
-        {isSaving ? "Saving..." : "Save recruiter"}
-      </Button>
     </form>
   );
 }

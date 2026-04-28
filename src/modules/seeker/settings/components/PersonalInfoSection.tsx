@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,8 +16,26 @@ import {
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerSettingsData } from "@/services/seeker.service";
 
+function getProfileFormValues(
+  profile: SeekerSettingsData | undefined,
+): SeekerSettingsInput {
+  return {
+    name: profile?.name ?? "",
+    headline: profile?.headline ?? "",
+    bio: profile?.bio ?? "",
+    location: profile?.location ?? "",
+    situation: profile?.situation ?? "",
+    primaryRole: profile?.primaryRole ?? "",
+    salaryMin: profile?.salaryMin ?? null,
+    salaryMax: profile?.salaryMax ?? null,
+    currency: profile?.currency ?? "",
+    availability: profile?.availability ?? "",
+  };
+}
+
 export function PersonalInfoSection() {
   const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
 
   const { data: settingsData, isLoading, isError } = useQuery<{ data: SeekerSettingsData }>({
     queryKey: ["seeker-settings"],
@@ -29,28 +47,11 @@ export function PersonalInfoSection() {
 
   const form = useForm<SeekerSettingsInput>({
     resolver: zodResolver(SeekerSettingsSchema),
-    defaultValues: {
-      name: "", headline: "", bio: "", location: "",
-      situation: "", primaryRole: "", salaryMin: null, salaryMax: null,
-      currency: "", availability: "",
-    },
+    defaultValues: getProfileFormValues(undefined),
   });
 
   useEffect(() => {
-    if (profile) {
-      form.reset({
-        name: profile.name ?? "",
-        headline: profile.headline ?? "",
-        bio: profile.bio ?? "",
-        location: profile.location ?? "",
-        situation: profile.situation ?? "",
-        primaryRole: profile.primaryRole ?? "",
-        salaryMin: profile.salaryMin ?? null,
-        salaryMax: profile.salaryMax ?? null,
-        currency: profile.currency ?? "",
-        availability: profile.availability ?? "",
-      });
-    }
+    form.reset(getProfileFormValues(profile));
   }, [profile, form]);
 
   const saveMutation = useMutation({
@@ -62,13 +63,61 @@ export function PersonalInfoSection() {
     onError: () => toast.error("Failed to save profile. Try again."),
   });
 
+  const isFormDisabled = !isEditing || saveMutation.isPending;
+
+  const handleCancel = (): void => {
+    form.reset(getProfileFormValues(profile));
+    setIsEditing(false);
+  };
+
+  const handleSubmit = async (data: SeekerSettingsInput): Promise<void> => {
+    await saveMutation.mutateAsync(data);
+    setIsEditing(false);
+  };
+
   return (
     <section id="account" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-      <div className="p-6 border-b border-slate-100">
-        <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
-        <p className="text-sm text-slate-500">
-          Update your profile information that recruiters will see.
-        </p>
+      <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-100">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
+          <p className="text-sm text-slate-500">
+            Update your profile information that recruiters will see.
+          </p>
+        </div>
+        {isEditing ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleCancel}
+              disabled={saveMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="personal-info-form"
+              variant="primary"
+              size="sm"
+              loading={saveMutation.isPending}
+              loadingText="Saving..."
+              disabled={isLoading || !profile}
+            >
+              Save
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            disabled={isLoading || !profile}
+          >
+            Edit
+          </Button>
+        )}
       </div>
 
       {isError && (
@@ -77,7 +126,7 @@ export function PersonalInfoSection() {
         </div>
       )}
 
-      <form onSubmit={form.handleSubmit((data) => saveMutation.mutate(data))}>
+      <form id="personal-info-form" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="p-6 space-y-6">
           <div className="flex items-center gap-4">
             <div className="h-[72px] w-[72px] rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center font-bold text-slate-400 text-xl">
@@ -92,7 +141,7 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-slate-700">Full Name</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <>
-                  <Input {...form.register("name")} aria-invalid={!!form.formState.errors.name} />
+                  <Input {...form.register("name")} aria-invalid={!!form.formState.errors.name} disabled={isFormDisabled} />
                   {form.formState.errors.name && (
                     <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
                   )}
@@ -115,72 +164,66 @@ export function PersonalInfoSection() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Professional Headline</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("headline")} placeholder="e.g. Senior Frontend Developer" />
+                <Input {...form.register("headline")} placeholder="e.g. Senior Frontend Developer" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Primary Role</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("primaryRole")} placeholder="e.g. Frontend Developer" />
+                <Input {...form.register("primaryRole")} placeholder="e.g. Frontend Developer" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Job Search Status</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("situation")} placeholder="e.g. Actively looking" />
+                <Input {...form.register("situation")} placeholder="e.g. Actively looking" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Availability</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("availability")} placeholder="e.g. Immediately" />
+                <Input {...form.register("availability")} placeholder="e.g. Immediately" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Location</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("location")} placeholder="e.g. San Francisco, CA" />
+                <Input {...form.register("location")} placeholder="e.g. San Francisco, CA" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Preferred Currency</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("currency")} placeholder="e.g. USD, INR" />
+                <Input {...form.register("currency")} placeholder="e.g. USD, INR" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Minimum Salary</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input type="number" {...form.register("salaryMin")} placeholder="e.g. 80000" />
+                <Input type="number" {...form.register("salaryMin")} placeholder="e.g. 80000" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Maximum Salary</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input type="number" {...form.register("salaryMax")} placeholder="e.g. 120000" />
+                <Input type="number" {...form.register("salaryMax")} placeholder="e.g. 120000" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-semibold text-slate-700">Bio</label>
               {isLoading ? <Skeleton className="h-24 w-full" /> : (
-                <Textarea rows={3} {...form.register("bio")} placeholder="Tell recruiters about yourself..." />
+                <Textarea rows={3} {...form.register("bio")} placeholder="Tell recruiters about yourself..." disabled={isFormDisabled} />
               )}
             </div>
           </div>
-        </div>
-
-        <div className="px-6 py-4 bg-slate-50 flex items-center justify-end gap-4">
-          <Button type="submit" variant="default" size="sm" className="px-5" disabled={saveMutation.isPending || isLoading}>
-            {saveMutation.isPending ? "Saving..." : "Save Changes"}
-          </Button>
         </div>
       </form>
     </section>

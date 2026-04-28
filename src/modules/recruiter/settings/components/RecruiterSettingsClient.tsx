@@ -52,14 +52,16 @@ export function RecruiterSettingsClient() {
       />
       <RecruiterProfileSection
         settings={settings}
-        onSubmit={(input) =>
-          saveMutation.mutate({ ...settings, ...input })
-        }
+        onSubmit={async (input) => {
+          await saveMutation.mutateAsync({ ...settings, ...input });
+        }}
         isSaving={saveMutation.isPending}
       />
       <CompanyProfileSection
         settings={settings}
-        onSubmit={(input) => saveMutation.mutate(input)}
+        onSubmit={async (input) => {
+          await saveMutation.mutateAsync(input);
+        }}
         isSaving={saveMutation.isPending}
       />
     </div>
