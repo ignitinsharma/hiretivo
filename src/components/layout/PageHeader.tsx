@@ -9,11 +9,11 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, className }: PageHeaderProps) {
   return (
     <div className={cn("mb-8", className)}>
-      <h1 className="font-black text-[40px] leading-[0.85] text-brand-heading [font-feature-settings:'calt']">
+      <h1 className="font-extrabold text-3xl leading-tight tracking-tight text-foreground">
         {title}
       </h1>
       {subtitle && (
-        <p className="mt-3 font-semibold text-[18px] leading-[1.44] tracking-[-0.108px] text-brand-muted-secondary [font-feature-settings:'calt']">
+        <p className="mt-3 font-medium text-base text-muted-foreground">
           {subtitle}
         </p>
       )}

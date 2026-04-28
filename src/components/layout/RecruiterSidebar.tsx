@@ -94,7 +94,7 @@ function RecruiterSidebarInner({
     <aside
       className={cn(
         "sticky top-0 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden",
-        collapsed ? "w-[68px]" : "w-[260px]",
+        collapsed ? "w-17" : "w-65",
       )}
     >
       {/* Logo + Toggle */}
@@ -108,7 +108,10 @@ function RecruiterSidebarInner({
           <SidebarToggle />
         ) : (
           <>
-            <Link href="/recruiter/dashboard" className="flex items-center gap-3 flex-1">
+            <Link
+              href="/recruiter/dashboard"
+              className="flex items-center gap-3 flex-1"
+            >
               <Image
                 src="/images/logo.png"
                 alt="Hiretivo"
@@ -134,22 +137,22 @@ function RecruiterSidebarInner({
         )}
       >
         <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-sm ring-2 ring-brand-primary/10">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-black font-semibold text-sm ring-2 ring-gray-100">
             {initials}
           </div>
           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white" />
         </div>
         {!collapsed && (
           <div className="flex flex-col overflow-hidden">
-            <span className="font-bold text-sm text-slate-900 truncate">
+            <span className="font-semibold text-base text-slate-900 truncate">
               {userName}
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
+            {/* <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
               <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
                 Recruiter
               </span>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
@@ -195,7 +198,7 @@ function RecruiterSidebarInner({
           return (
             <React.Fragment key={item.href}>
               {showSeparator && (
-                <div className="mx-3 my-2 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-30" />
+                <div className="mx-3 my-2 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-30" />
               )}
               <Link
                 href={item.href}
@@ -203,7 +206,7 @@ function RecruiterSidebarInner({
                 className={cn(
                   "flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all",
                   isActive
-                    ? "border-brand-primary bg-brand-primary/5 text-brand-primary font-semibold"
+                    ? "border-black bg-gray-50 text-black font-semibold"
                     : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium",
                   collapsed && "justify-center px-0 border-l-0 rounded-md mx-1",
                 )}
@@ -222,7 +225,7 @@ function RecruiterSidebarInner({
                     className={cn(
                       "text-[10px] font-bold rounded px-1.5 py-0.5",
                       item.badgeVariant === "primary"
-                        ? "bg-brand-primary text-white"
+                        ? "bg-black text-white"
                         : "bg-slate-100 text-slate-600",
                     )}
                   >
@@ -230,7 +233,7 @@ function RecruiterSidebarInner({
                   </span>
                 )}
                 {collapsed && item.badge && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-primary text-[8px] font-bold flex items-center justify-center rounded-full text-white border border-white">
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-black text-[8px] font-semibold flex items-center justify-center rounded-full text-white border border-white">
                     {item.badge}
                   </span>
                 )}
