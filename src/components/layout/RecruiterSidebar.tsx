@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Plus, LogOut, PanelLeft } from "lucide-react";
+import { LifeBuoy, Plus, LogOut, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { signOut } from "next-auth/react";
@@ -238,6 +238,17 @@ function RecruiterSidebarInner({
 
       {/* Sign Out */}
       <div className="border-t border-slate-200">
+        <Link
+          href="/contact"
+          title={collapsed ? "Contact & Support" : undefined}
+          className={cn(
+            "flex items-center gap-3 py-4 px-6 text-slate-600 font-semibold text-sm hover:bg-slate-50 hover:text-slate-900 transition-colors",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          <LifeBuoy className="w-5 h-5 shrink-0" />
+          {!collapsed && <span>Contact & Support</span>}
+        </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className={cn(

@@ -11,6 +11,7 @@ import {
   User,
   Briefcase,
   Send,
+  LifeBuoy,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   briefcase: Briefcase,
   send: Send,
+  "life-buoy": LifeBuoy,
 };
 
 export function SeekerHeader() {
