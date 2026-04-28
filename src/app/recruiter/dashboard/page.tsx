@@ -171,7 +171,10 @@ export default function RecruiterDashboardPage() {
         </div>
       </section>
 
-      <ApplicationTrendChart />
+      <ApplicationTrendChart
+        data={data?.trendData ?? []}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
