@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
@@ -51,14 +51,7 @@ export function SeekerHeader() {
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/seeker/dashboard" className="flex items-center">
-          <Image
-            src="/images/logo.png"
-            alt="Hiretivo"
-            width={120}
-            height={24}
-            className="h-6 w-auto object-contain"
-            priority
-          />
+          <Logo />
         </Link>
 
         <nav

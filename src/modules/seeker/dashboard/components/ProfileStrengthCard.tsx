@@ -43,7 +43,7 @@ export function ProfileStrengthCard({
       </div>
 
       {ctaLabel !== 'Profile complete' && (
-        <p className="text-slate-500 text-xs leading-relaxed mb-4">
+        <p className="text-slate-500 text-xs leading-loose mb-4">
           {ctaLabel} to improve your visibility to recruiters.
         </p>
       )}

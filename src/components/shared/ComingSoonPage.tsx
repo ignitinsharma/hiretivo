@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import { Logo } from '@/components/shared/Logo';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Rocket, Check, Linkedin, Twitter, Instagram } from 'lucide-react';
@@ -94,7 +94,7 @@ export function ComingSoonPage() {
       <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-gray-200/80">
         <nav className="flex justify-between items-center px-8 py-6 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/images/logo.png" alt="Hiretivo" width={120} height={40} className="h-8 w-auto object-contain" priority />
+            <Logo size="md" />
           </Link>
         </nav>
       </header>
@@ -191,7 +191,7 @@ export function ComingSoonPage() {
       <footer className="w-full py-16 bg-transparent border-t border-gray-200">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-8">
           <div className="flex items-center gap-2">
-            <Image src="/images/logo.png" alt="Hiretivo" width={100} height={33} className="h-6 w-auto object-contain" />
+            <Logo />
             <span className="text-gray-400 text-xs tracking-widest uppercase">© 2024 Hiretivo Inc.</span>
           </div>
           <div className="flex gap-4">

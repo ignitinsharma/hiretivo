@@ -75,6 +75,13 @@ const config = {
       fontFamily: {
         sans: ["var(--font-dm-sans)", "sans-serif"],
       },
+      lineHeight: {
+        tight: "1.35",
+        snug: "1.5",
+        normal: "1.6",
+        relaxed: "1.7",
+        loose: "2",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

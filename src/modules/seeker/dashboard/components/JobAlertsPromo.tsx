@@ -27,7 +27,7 @@ export function JobAlertsPromo({
           <Mail className="w-4 h-4 text-primary" />
           <h4 className="font-bold text-slate-900 text-sm">Weekly Digest</h4>
         </div>
-        <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+        <p className="text-xs text-slate-500 mb-3 leading-loose">
           Get your top matched jobs delivered every Monday morning.
         </p>
         <div className="flex items-center gap-3">
@@ -54,7 +54,7 @@ export function JobAlertsPromo({
             <TrendingUp className="w-4 h-4 text-amber-500" />
             <h4 className="font-bold text-slate-900 text-sm">Skill Gap</h4>
           </div>
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+          <p className="text-xs text-slate-500 mb-3 leading-loose">
             Top skills missing from jobs in your feed:
           </p>
           <ul className="space-y-1">

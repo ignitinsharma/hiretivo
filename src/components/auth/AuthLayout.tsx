@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/shared/Logo";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -36,7 +36,7 @@ export function AuthLayout({
           {/* Mobile-only header info / branding */}
           <div className="md:hidden mb-12">
             <Link href="/" className="inline-flex items-center">
-              <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
+              <Logo size="md" />
             </Link>
           </div>
 

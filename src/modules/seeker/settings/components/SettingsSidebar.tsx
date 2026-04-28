@@ -10,24 +10,24 @@ export function SettingsSidebar() {
           Settings
         </p>
         
-        <a href="#account" className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors bg-primary/5 text-primary font-semibold">
+        <a href="#account" className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors bg-primary/5 text-primary font-semibold leading-loose">
           <User className="w-5 h-5" />
           <span className="text-sm">Account</span>
         </a>
         
-        <a href="#security" className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+        <a href="#security" className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors leading-loose">
           <Shield className="w-5 h-5" />
           <span className="text-sm">Password & Security</span>
         </a>
         
-        <a href="#billing" className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+        <a href="#billing" className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors leading-loose">
           <CreditCard className="w-5 h-5" />
           <span className="text-sm">Billing</span>
         </a>
         
         <div className="my-4 border-t border-slate-200"></div>
         
-        <a href="#danger" className="flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+        <a href="#danger" className="flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors leading-loose">
           <Trash2 className="w-5 h-5" />
           <span className="text-sm font-medium">Danger Zone</span>
         </a>

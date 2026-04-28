@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Plus, LogOut, PanelLeft } from "lucide-react";
@@ -112,14 +112,7 @@ function RecruiterSidebarInner({
               href="/recruiter/dashboard"
               className="flex items-center gap-3 flex-1"
             >
-              <Image
-                src="/images/logo.png"
-                alt="Hiretivo"
-                width={64}
-                height={28}
-                className="h-6 w-auto object-contain"
-                priority
-              />
+              <Logo />
             </Link>
             <SidebarToggle />
           </>

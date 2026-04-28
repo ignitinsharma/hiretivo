@@ -1,8 +1,8 @@
 import React from "react";
 import { ExternalLink, Lock } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/shared/Logo";
 import { prisma } from "@/lib/prisma";
 import { ApplyType, JobStatus } from "@/constants/enums";
 import { appendHiretivoAttributionParams } from "@/lib/url/utm";
@@ -45,7 +45,7 @@ export default async function ExternalRedirectionPage({
     <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-center p-4">
       <main className="w-full max-w-md">
         <div className="flex justify-center mb-10">
-          <Image src="/images/logo.png" alt="Hiretivo" width={130} height={36} className="h-9 w-auto object-contain" priority />
+          <Logo size="md" />
         </div>
 
         <section className="bg-white border border-slate-100  rounded-xl p-8 text-center">

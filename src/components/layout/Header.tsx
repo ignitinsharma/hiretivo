@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { UserRole } from '@/constants/enums';
@@ -15,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SignOutButton } from '@/components/layout/SignOutButton';
+import { Logo } from '@/components/shared/Logo';
 
 interface HeaderProps {
   className?: string;
@@ -46,7 +46,7 @@ export async function Header({ className }: HeaderProps) {
           className="flex items-center"
           data-purpose="logo"
         >
-          <Image src="/images/logo.png" alt="Hiretivo" width={120} height={24} className="h-6 w-auto object-contain" priority />
+          <Logo />
         </Link>
 
         {/* Seeker nav links */}

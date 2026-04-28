@@ -61,15 +61,15 @@ Hiretivo is a skills-based remote job portal with a clean, confident monochrome 
 
 | Role            | Font     | Size              | Weight | Line Height | Letter Spacing | Usage |
 | --------------- | -------- | ----------------- | ------ | ----------- | -------------- | ----- |
-| Display         | DM Sans  | 3.5rem (56px)     | 700    | 1.1         | -0.02em        | Hero headings |
-| H1              | DM Sans  | 2.5rem (40px)     | 700    | 1.2         | -0.015em       | Page headings |
-| H2              | DM Sans  | 2rem (32px)       | 700    | 1.25        | -0.01em        | Section headings |
-| H3              | DM Sans  | 1.5rem (24px)     | 600    | 1.3         | -0.005em       | Card titles |
-| H4              | DM Sans  | 1.25rem (20px)    | 600    | 1.4         | 0              | Subsection titles |
-| Body-lg         | DM Sans  | 1.125rem (18px)   | 400    | 1.6         | 0              | Lead paragraphs |
-| Body            | DM Sans  | 1rem (16px)       | 400    | 1.6         | 0              | Default body text |
-| Body-sm         | DM Sans  | 0.875rem (14px)   | 400    | 1.5         | 0              | Small text, captions |
-| Label           | DM Sans  | 0.75rem (12px)    | 500    | 1.4         | 0.05em         | Badges, labels |
+| Display         | DM Sans  | 3.5rem (56px)     | 700    | 1.2         | -0.02em        | Hero headings |
+| H1              | DM Sans  | 2.5rem (40px)     | 700    | 1.35        | -0.015em       | Page headings |
+| H2              | DM Sans  | 2rem (32px)       | 700    | 1.35        | -0.01em        | Section headings |
+| H3              | DM Sans  | 1.5rem (24px)     | 600    | 1.4         | -0.005em       | Card titles |
+| H4              | DM Sans  | 1.25rem (20px)    | 600    | 1.5         | 0              | Subsection titles |
+| Body-lg         | DM Sans  | 1.125rem (18px)   | 400    | 1.7         | 0              | Lead paragraphs |
+| Body            | DM Sans  | 1rem (16px)       | 400    | 1.7         | 0              | Default body text |
+| Body-sm         | DM Sans  | 0.875rem (14px)   | 400    | 1.6         | 0              | Small text, captions |
+| Label           | DM Sans  | 0.75rem (12px)    | 500    | 1.5         | 0.05em         | Badges, labels |
 
 ### Principles
 
