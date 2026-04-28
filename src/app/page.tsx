@@ -550,7 +550,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="py-24 bg-white" data-purpose="categories-section">
+        <section className="py-24 bg-white grid-bg" data-purpose="categories-section">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
               <h2 className="text-foreground text-3xl font-extrabold mb-4">
