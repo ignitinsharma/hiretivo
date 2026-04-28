@@ -263,7 +263,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
     <Sheet open={isCandidateDrawerOpen} onOpenChange={closeCandidateDrawer}>
       <SheetContent
         side="right"
-        className="w-full sm:w-[480px] overflow-y-auto"
+        className="w-full overflow-y-auto sm:w-[720px] sm:max-w-[720px] lg:w-[840px] lg:max-w-[840px]"
       >
         {application ? (
           <div className="space-y-6 pr-2">
@@ -276,6 +276,38 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
               </SheetDescription>
             </SheetHeader>
 
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="grid gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Match Score
+                  </p>
+                  <p className="mt-1 text-5xl font-bold leading-none text-slate-900">
+                    {application.matchScore}%
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Role
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      {application.candidateProfile?.primaryRole ??
+                        application.jobTitle}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Location
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      {application.candidateProfile?.location ?? "Remote"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <AiSummarySection
               isPending={aiSummaryMutation.isPending}
               isError={aiSummaryMutation.isError}
@@ -287,6 +319,28 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
               summary={aiSummaryMutation.data?.summary}
               isPlanGated={application.plan === PlanTier.FREE}
             />
+
+            <section className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Skills
+              </p>
+              {application.candidateProfile?.skills.length ? (
+                <div className="flex flex-wrap gap-2 rounded-xl border border-slate-200 p-4">
+                  {application.candidateProfile.skills.map((skill) => (
+                    <span
+                      key={`${application.id}-${skill}`}
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase text-slate-600"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-500">
+                  No skills provided.
+                </div>
+              )}
+            </section>
 
             <section className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">

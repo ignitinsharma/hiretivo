@@ -42,6 +42,8 @@ type RecruiterStatsResponse = {
   hired: number;
 };
 
+const MAX_TABLE_SKILLS = 8;
+
 async function fetchRecruiterStats(
   jobId?: string,
 ): Promise<RecruiterStatsResponse> {
@@ -68,6 +70,16 @@ function getMatchLabel(score: number): string {
   if (score >= 80) return "Strong Match";
   if (score >= 60) return "Good Match";
   return "Partial Match";
+}
+
+function getVisibleSkills(skills: string[]): {
+  visible: string[];
+  hiddenCount: number;
+} {
+  return {
+    visible: skills.slice(0, MAX_TABLE_SKILLS),
+    hiddenCount: Math.max(skills.length - MAX_TABLE_SKILLS, 0),
+  };
 }
 
 function getStatusPillClasses(status: ApplicationStatus): string {
@@ -289,6 +301,10 @@ export default function RecruiterApplicationsPage() {
             <tbody className="divide-y divide-slate-50">
               {applications.map((application, index) => {
                 const isLocked = recruiterPlan === PlanTier.FREE && index >= 20;
+                const { visible, hiddenCount } = getVisibleSkills(
+                  application.candidateProfile?.skills ?? [],
+                );
+
                 return (
                   <tr
                     key={application.id}
@@ -332,16 +348,19 @@ export default function RecruiterApplicationsPage() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex flex-wrap gap-1.5">
-                        {(application.candidateProfile?.skills ?? [])
-                          .slice(0, 3)
-                          .map((skill) => (
-                            <span
-                              key={`${application.id}-${skill}`}
-                              className="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase"
-                            >
-                              {skill}
-                            </span>
-                          ))}
+                        {visible.map((skill) => (
+                          <span
+                            key={`${application.id}-${skill}`}
+                            className="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {hiddenCount > 0 ? (
+                          <span className="px-2.5 py-1 bg-gray-50 text-slate-500 text-[10px] font-bold rounded uppercase border border-slate-100">
+                            +{hiddenCount} more
+                          </span>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-8 py-6">
