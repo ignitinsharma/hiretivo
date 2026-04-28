@@ -84,6 +84,8 @@ function getStatusPillClasses(status: ApplicationStatus): string {
       return "bg-gray-100 text-black";
     case ApplicationStatus.REJECTED:
       return "bg-red-100 text-red-700";
+    default:
+      return "";
   }
 }
 
@@ -239,16 +241,16 @@ export default function RecruiterApplicationsPage() {
               type="button"
               onClick={() => handleStageFilter(card.stage)}
               className={cn(
-                "text-left bg-white p-5 rounded-2xl shadow-sm transition-all",
+                "text-left bg-white p-5 rounded-xl transition-all",
                 isActive
-                  ? "border-2 border-indigo-100 bg-indigo-50/10"
+                  ? "border-2 border-gray-100 bg-gray-50/10"
                   : "border border-slate-200 hover:border-slate-300",
               )}
             >
               <span
                 className={cn(
                   "text-[10px] font-bold uppercase tracking-widest",
-                  isActive ? "text-indigo-500" : "text-slate-400",
+                  isActive ? "text-gray-500" : "text-slate-400",
                 )}
               >
                 {card.label}
@@ -259,7 +261,7 @@ export default function RecruiterApplicationsPage() {
         })}
       </div>
 
-      <div className="relative bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
+      <div className="relative bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -291,7 +293,7 @@ export default function RecruiterApplicationsPage() {
                   <tr
                     key={application.id}
                     className={cn(
-                      "group hover:bg-indigo-50/20 cursor-pointer transition-all",
+                      "group hover:bg-gray-50/20 cursor-pointer transition-all",
                       isLocked ? "blur pointer-events-none select-none" : "",
                     )}
                     onClick={() => openCandidateDrawer(application.id)}
@@ -305,7 +307,7 @@ export default function RecruiterApplicationsPage() {
                   >
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-indigo-50 text-indigo-700 flex items-center justify-center rounded-xl font-bold text-lg ring-4 ring-slate-50 group-hover:ring-indigo-100 transition-all">
+                        <div className="w-12 h-12 bg-gray-50 text-gray-700 flex items-center justify-center rounded-xl font-bold text-lg ring-4 ring-slate-50 group-hover:ring-gray-100 transition-all">
                           {application.candidateName
                             .split(" ")
                             .map((part) => part[0])
@@ -313,7 +315,7 @@ export default function RecruiterApplicationsPage() {
                             .slice(0, 2)}
                         </div>
                         <div>
-                          <p className="font-semibold capitalize text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">
+                          <p className="font-semibold capitalize text-slate-900 text-lg group-hover:text-gray-600 transition-colors">
                             {application.candidateName}
                           </p>
                           <p className="text-xs user-section text-slate-400 font-bold tracking-wider">
@@ -364,7 +366,7 @@ export default function RecruiterApplicationsPage() {
                           className={cn(
                             "font-extrabold text-lg leading-none",
                             application.matchScore >= 80
-                              ? "text-indigo-600"
+                              ? "text-gray-600"
                               : "text-slate-900",
                           )}
                         >

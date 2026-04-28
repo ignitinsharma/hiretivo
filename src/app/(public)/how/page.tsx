@@ -11,7 +11,6 @@ import {
   Lightbulb,
   Sparkles,
   Target,
-  Users,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
@@ -203,7 +202,7 @@ export default function HowPage() {
                               cy="48"
                               fill="transparent"
                               r="40"
-                              stroke="#ede9ff"
+                              stroke="#f3f4f6"
                               strokeWidth="8"
                             />
                             <circle
@@ -211,7 +210,7 @@ export default function HowPage() {
                               cy="48"
                               fill="transparent"
                               r="40"
-                              stroke="#5c54e6"
+                              stroke="#000000"
                               strokeDasharray="251.2"
                               strokeDashoffset="2.5"
                               strokeWidth="8"
