@@ -7,7 +7,10 @@ import { toast } from "sonner";
 import { SkillsTagInput } from "@/components/forms/skills-tag-input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { seekerService, type SeekerSettingsData } from "@/services/seeker.service";
+import {
+  seekerService,
+  type SeekerSettingsData,
+} from "@/services/seeker.service";
 
 interface SkillsSectionProps {
   settings: SeekerSettingsData | undefined;
@@ -73,7 +76,7 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              variant="secondary"
+              variant="default"
               size="sm"
               onClick={handleCancel}
               disabled={mutation.isPending}
@@ -82,6 +85,7 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
             </Button>
             <Button
               type="button"
+              variant="primary"
               size="sm"
               onClick={handleSave}
               disabled={mutation.isPending || isLoading || !settings}
@@ -92,7 +96,7 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
         ) : (
           <Button
             type="button"
-            variant="secondary"
+            variant="ghost"
             size="sm"
             onClick={() => setIsEditing(true)}
             disabled={isLoading || !settings}

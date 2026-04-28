@@ -16,7 +16,9 @@ interface SkillsTagInputProps {
 }
 
 function hasSkill(skills: string[], nextSkill: string): boolean {
-  return skills.some((skill) => skill.trim().toLowerCase() === nextSkill.trim().toLowerCase());
+  return skills.some(
+    (skill) => skill.trim().toLowerCase() === nextSkill.trim().toLowerCase(),
+  );
 }
 
 export function SkillsTagInput({
