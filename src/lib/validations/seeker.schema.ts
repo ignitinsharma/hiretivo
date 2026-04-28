@@ -6,6 +6,8 @@ const SkillNameSchema = z
   .min(1, "Skill is required")
   .max(80, "Skill must be 80 characters or fewer");
 
+const SkillIdSchema = z.string().trim().min(1, "Skill id is required");
+
 const MAX_POSTGRES_INT = 2_147_483_647;
 const SALARY_ERROR_MESSAGE = "Salary must be a non-negative integer at most 2147483647";
 
@@ -67,7 +69,13 @@ export const SeekerSettingsSchema = z
     salaryMax: SalarySchema,
     currency: z.string().max(10).optional().or(z.literal("")),
     availability: z.string().max(100).optional().or(z.literal("")),
-    skillIds: z.array(z.string().min(1)).max(30).optional(),
+    skillIds: z
+      .array(SkillIdSchema)
+      .max(30)
+      .refine((skillIds) => new Set(skillIds).size === skillIds.length, {
+        message: "Skill ids must be unique",
+      })
+      .optional(),
     skillNames: z.array(SkillNameSchema).max(30).optional(),
   })
   .refine(
