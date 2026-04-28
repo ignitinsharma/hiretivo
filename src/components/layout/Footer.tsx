@@ -55,7 +55,7 @@ export function Footer({ className }: FooterProps) {
         </div>
 
         <div className="text-center mb-8 overflow-hidden">
-          <span className="text-white text-[120px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter leading-none opacity-5 select-none">
+          <span className="text-white text-[120px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter leading-none opacity-5 select-none" aria-hidden="true">
             HIRETIVO
           </span>
         </div>
