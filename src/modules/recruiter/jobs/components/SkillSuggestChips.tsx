@@ -102,7 +102,7 @@ export function SkillSuggestChips({
           type="button"
           onClick={handleSuggest}
           disabled={suggestMutation.isPending}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
           aria-label="Suggest skills from job description using AI"
         >
           <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />

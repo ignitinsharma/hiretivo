@@ -198,7 +198,7 @@ export default function RecruiterApplicationsPage() {
             className="mb-0"
           />
           {/* <div className="mt-4">  
-            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[11px] font-bold uppercase tracking-wider">
+            <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-full text-[11px] font-bold uppercase tracking-wider">
               {applicationsQuery.isLoading
                 ? "..."
                 : `${statsQuery.data?.total ?? 0} Candidates`}

@@ -27,7 +27,7 @@ export function JobCard({
     : `Save ${job.title}`;
 
   return (
-    <div className="group flex h-full flex-col rounded-xl border border-[rgba(14,15,12,0.12)] bg-white p-5 ">
+    <div className="group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 ">
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-lg bg-slate-50 p-2 border border-slate-100 flex items-center justify-center overflow-hidden">
           {job.companyLogoUrl ? (
@@ -60,7 +60,7 @@ export function JobCard({
                 "flex h-9 w-9 items-center justify-center rounded-full border transition-transform hover:scale-105 active:scale-95",
                 isSaved
                   ? "border-black bg-gray-100 text-black"
-                  : "border-[rgba(14,15,12,0.12)] bg-white text-[#454745]",
+                   : "border-gray-200 bg-white text-muted-foreground",
               )}
             >
               <Bookmark className={cn("h-4 w-4", isSaved && "fill-current")} />

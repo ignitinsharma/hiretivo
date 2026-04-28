@@ -37,7 +37,7 @@ const RecruiterLoginLeft = (
         <p className="text-slate-500 font-medium text-xs tracking-widest uppercase">Trusted by the world&apos;s best teams</p>
         <div className="flex flex-wrap gap-10 items-center">
           <div className="flex items-center gap-2 grayscale opacity-60 hover:opacity-100 hover:grayscale-0 transition-all duration-300">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-white">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.64-2.25 1.64-1.74 0-2.33-.89-2.46-1.92H7.73c.11 1.65 1.42 2.86 3.17 3.28V19h2.32v-1.63c1.66-.35 2.88-1.5 2.88-3.03 0-2.43-2.16-2.98-3.79-3.48z"/></svg>
             </div>
             <span className="font-bold text-lg text-slate-800">Stripe</span>

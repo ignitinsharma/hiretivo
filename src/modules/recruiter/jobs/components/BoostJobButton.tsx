@@ -62,7 +62,7 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
       <div>
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <Zap className="h-4 w-4 text-indigo-500" aria-hidden="true" />
+          <Zap className="h-4 w-4 text-gray-500" aria-hidden="true" />
           Boost this Job
         </h3>
         <p className="text-xs text-slate-500 mt-1">
@@ -79,7 +79,7 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
       <Button
         onClick={handleBoost}
         disabled={isLoading}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+        className="w-full bg-black hover:bg-[#1a1a1a] text-white font-semibold"
         aria-label="Boost this job listing"
       >
         {isLoading ? 'Redirecting...' : 'Boost for $9'}

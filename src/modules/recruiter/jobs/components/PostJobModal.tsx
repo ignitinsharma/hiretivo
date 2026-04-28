@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -614,7 +614,7 @@ export function PostJobModal() {
               <button
                 type="button"
                 onClick={() => setIsJdPanelOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors"
                 aria-label="Open AI job description generator"
               >
                 <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />

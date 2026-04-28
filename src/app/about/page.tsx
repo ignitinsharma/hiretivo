@@ -40,7 +40,7 @@ const TEAM = [
   {
     name: "Marcus Thorne",
     role: "Engineering",
-    bgColor: "bg-indigo-100",
+    bgColor: "bg-gray-100",
     iconColor: "text-black",
     initial: "MT",
     rotation: "rotate-2 group-hover:rotate-6",
@@ -60,11 +60,11 @@ const VALUES = [
     title: "Remote-first, always",
     description:
       "We don't just post jobs; we live the lifestyle. Every process we build is crafted for asynchronous freedom.",
-    containerClass: "bg-indigo-50/50 hover:bg-black",
+    containerClass: "bg-gray-50/50 hover:bg-black",
     iconContainerClass: "text-black",
     icon: Globe,
     titleClass: "group-hover:text-white",
-    descClass: "group-hover:text-indigo-50",
+    descClass: "group-hover:text-gray-50",
   },
   {
     title: "Radical Transparency",

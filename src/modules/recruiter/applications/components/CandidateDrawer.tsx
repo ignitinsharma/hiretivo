@@ -77,7 +77,7 @@ function AiSummarySection({
     return (
       <section className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500">
         <Sparkles
-          className="h-4 w-4 shrink-0 animate-pulse text-indigo-400"
+          className="h-4 w-4 shrink-0 animate-pulse text-gray-400"
           aria-hidden="true"
         />
         <span>Generating AI summary...</span>
@@ -89,9 +89,9 @@ function AiSummarySection({
   }
   if (!summary) return null;
   return (
-    <section className="flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-800">
+    <section className="flex items-start gap-2 rounded-xl border border-gray-100 bg-gray-50/60 px-4 py-3 text-sm text-gray-800">
       <Sparkles
-        className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500"
+        className="mt-0.5 h-4 w-4 shrink-0 text-gray-500"
         aria-hidden="true"
       />
       <p>{summary}</p>

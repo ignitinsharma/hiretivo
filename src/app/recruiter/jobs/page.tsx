@@ -93,7 +93,7 @@ function JobRow({
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   return (
-    <tr className="hover:bg-indigo-50/30 transition-colors">
+    <tr className="hover:bg-gray-50/30 transition-colors">
       <td className="px-6 py-4">
         <div className="flex items-center gap-4">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-slate-100">

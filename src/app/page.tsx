@@ -130,7 +130,7 @@ export default async function Home() {
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-5/12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-black rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 text-black rounded-full text-xs font-bold uppercase tracking-wider mb-6">
                   <span className="material-symbols-outlined text-sm">
                     bolt
                   </span>

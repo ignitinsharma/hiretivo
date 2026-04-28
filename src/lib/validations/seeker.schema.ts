@@ -6,7 +6,8 @@ const SkillNameSchema = z
   .min(1, "Skill is required")
   .max(80, "Skill must be 80 characters or fewer");
 
-const SALARY_ERROR_MESSAGE = "Salary must be a non-negative integer";
+const MAX_POSTGRES_INT = 2_147_483_647;
+const SALARY_ERROR_MESSAGE = "Salary must be a non-negative integer below 2147483648";
 
 const SalarySchema = z
   .union([z.number(), z.string(), z.null(), z.undefined()])
@@ -30,10 +31,20 @@ const SalarySchema = z
         return z.NEVER;
       }
 
-      return Number(trimmedValue);
+      const numericValue = Number(trimmedValue);
+
+      if (numericValue > MAX_POSTGRES_INT) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: SALARY_ERROR_MESSAGE,
+        });
+        return z.NEVER;
+      }
+
+      return numericValue;
     }
 
-    if (!Number.isInteger(value) || value < 0) {
+    if (!Number.isInteger(value) || value < 0 || value > MAX_POSTGRES_INT) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: SALARY_ERROR_MESSAGE,

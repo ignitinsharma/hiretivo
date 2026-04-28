@@ -157,7 +157,7 @@ function PricingCardFeatureList({
           <span
             className={cn(
               "text-xs",
-              highlighted ? "text-indigo-50" : "text-slate-700",
+              highlighted ? "text-gray-50" : "text-slate-700",
             )}
           >
             {feature}
@@ -203,7 +203,7 @@ function PricingCard({
         "p-6 rounded-xl flex flex-col h-full text-left relative",
         isHighlighted
           ? "bg-black border-2 border-black  transform lg:scale-105 z-10 text-white"
-          : "bg-white border border-[rgba(14,15,12,0.12)] ",
+          : "bg-white border border-gray-200 ",
       )}
     >
       {isHighlighted && (
@@ -215,8 +215,8 @@ function PricingCard({
       <div className="mb-6">
         <h3
           className={cn(
-            "font-bold uppercase tracking-wider text-xs mb-2",
-            isHighlighted ? "text-indigo-100" : "text-slate-900",
+            "text-[10px] font-bold uppercase tracking-wider mb-2",
+            isHighlighted ? "text-gray-100" : "text-slate-900",
           )}
         >
           {tier.name}
@@ -224,7 +224,7 @@ function PricingCard({
         <p
           className={cn(
             "text-xs mb-4 min-h-[32px]",
-            isHighlighted ? "text-indigo-100" : "text-slate-500",
+            isHighlighted ? "text-gray-100" : "text-slate-500",
           )}
         >
           {tier.description}
@@ -257,7 +257,7 @@ function PricingCard({
                 <span
                   className={cn(
                     "text-sm ml-1",
-                    isHighlighted ? "text-indigo-200" : "text-slate-500",
+                    isHighlighted ? "text-gray-200" : "text-slate-500",
                   )}
                 >
                   {billingSuffix}
@@ -285,7 +285,7 @@ function PricingCard({
         <div
           className={cn(
             "p-2.5 rounded-lg mb-6 text-center",
-            isHighlighted ? "bg-white/10" : "bg-indigo-50",
+            isHighlighted ? "bg-white/10" : "bg-gray-50",
           )}
         >
           {isAnnual && annualSavings !== null && annualTotal !== null ? (
@@ -515,7 +515,7 @@ export function PricingClient({ currency }: PricingClientProps) {
       {/* Hero + Toggle + Cards */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#0A0A0F] tracking-tight mb-6">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight mb-6">
             Pricing that scales with your hiring
           </h1>
           <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
