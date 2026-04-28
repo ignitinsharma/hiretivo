@@ -12,6 +12,29 @@ import { CompanyProfileSection } from "./CompanyProfileSection";
 import { RecruiterBillingSection } from "./RecruiterBillingSection";
 import { RecruiterProfileSection } from "./RecruiterProfileSection";
 
+interface SettingsSectionSkeletonProps {
+  fieldCount: number;
+}
+
+function SettingsSectionSkeleton({ fieldCount }: SettingsSectionSkeletonProps) {
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="mb-6 space-y-2">
+        <Skeleton className="h-6 w-48 rounded-lg" />
+        <Skeleton className="h-4 w-72 max-w-full rounded-lg" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: fieldCount }, (_, index) => (
+          <div key={index} className="space-y-2">
+            <Skeleton className="h-4 w-24 rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function RecruiterSettingsClient() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
@@ -32,7 +55,14 @@ export function RecruiterSettingsClient() {
   });
 
   if (isLoading) {
-    return <Skeleton className="h-96 w-full rounded-xl" />;
+    return (
+      <div className="space-y-6">
+        <SettingsSectionSkeleton fieldCount={2} />
+        <SettingsSectionSkeleton fieldCount={2} />
+        <SettingsSectionSkeleton fieldCount={4} />
+        <SettingsSectionSkeleton fieldCount={4} />
+      </div>
+    );
   }
 
   if (isError || !settings) {
@@ -45,7 +75,10 @@ export function RecruiterSettingsClient() {
 
   return (
     <div className="space-y-6">
-      <CompanyAvatarSection companyName={settings.companyName} logo={settings.logo} />
+      <CompanyAvatarSection
+        companyName={settings.companyName}
+        logo={settings.logo}
+      />
       <RecruiterBillingSection
         plan={settings.plan}
         billingCustomerId={settings.billingCustomerId}

@@ -1,11 +1,13 @@
 "use client";
 
-import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { compressImage } from "@/lib/image-compression";
 import { uploadService } from "@/services/upload.service";
 
@@ -15,6 +17,7 @@ interface AvatarSectionProps {
 }
 
 export function AvatarSection({ name, image }: AvatarSectionProps) {
+  const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [currentImage, setCurrentImage] = useState<string | null | undefined>(
@@ -32,7 +35,10 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
     try {
       const compressed = await compressImage(file);
       const result = await uploadService.uploadAvatar(compressed);
-      setCurrentImage(`/api/logo?key=${encodeURIComponent(result.key)}`);
+      setCurrentImage(
+        `/api/logo?key=${encodeURIComponent(result.key)}&v=${Date.now()}`,
+      );
+      await queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
       toast.success("Avatar uploaded successfully.");
     } catch (error) {
       toast.error(
@@ -52,7 +58,12 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
         </p>
       </div>
       <div className="flex items-center justify-between gap-4 p-6">
-        <InitialsAvatar name={name} image={currentImage} size="xl" />
+        <div className="relative h-24 w-24">
+          <InitialsAvatar name={name} image={currentImage} size="xl" />
+          {isUploading ? (
+            <Skeleton className="absolute inset-0 rounded-full bg-muted/80" />
+          ) : null}
+        </div>
         <input
           ref={inputRef}
           type="file"
