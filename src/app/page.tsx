@@ -550,126 +550,104 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="py-24 bg-white" data-purpose="categories-section">
+        <section className="py-24 bg-black grid-bg" data-purpose="categories-section">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-foreground text-3xl font-extrabold mb-4">
+              <h2 className="text-white text-3xl md:text-4xl font-bold mb-4">
                 Browse by Category
               </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
+              <p className="text-gray-400 max-w-xl mx-auto">
                 Explore high-paying remote roles across the industry&apos;s most
                 in-demand categories.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center hover:border-white/30 transition-all cursor-pointer group">
+                <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white group-hover:text-black transition-colors">
                   <span className="material-symbols-outlined">code</span>
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Engineering</h4>
+                <h4 className="text-white font-semibold mb-1">Engineering</h4>
                 <span className="text-gray-500 text-sm">1,240 jobs</span>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center hover:border-white/30 transition-all cursor-pointer group">
+                <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white group-hover:text-black transition-colors">
                   <span className="material-symbols-outlined">palette</span>
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Design</h4>
+                <h4 className="text-white font-semibold mb-1">Design</h4>
                 <span className="text-gray-500 text-sm">450 jobs</span>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center hover:border-white/30 transition-all cursor-pointer group">
+                <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white group-hover:text-black transition-colors">
                   <span className="material-symbols-outlined">pie_chart</span>
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Marketing</h4>
+                <h4 className="text-white font-semibold mb-1">Marketing</h4>
                 <span className="text-gray-500 text-sm">320 jobs</span>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center hover:border-white/30 transition-all cursor-pointer group">
+                <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-white group-hover:text-black transition-colors">
                   <span className="material-symbols-outlined">trending_up</span>
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Sales</h4>
+                <h4 className="text-white font-semibold mb-1">Sales</h4>
                 <span className="text-gray-500 text-sm">215 jobs</span>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-24 bg-gray-50" data-purpose="recruiters-cta">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="bg-white rounded-xl p-8 md:p-16  flex flex-col md:flex-row items-center gap-12">
-              <div className="md:w-1/2">
-                <h2 className="text-foreground text-4xl font-extrabold mb-6">
-                  Are you hiring <br />
-                  remote talent?
-                </h2>
-                <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                  Reach thousands of qualified remote professionals. Post your
-                  job on Hiretivo and get applications from top-tier talent
-                  worldwide.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Link
-                    href="/recruiter/register"
-                    className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all  inline-block"
-                  >
-                    Post your Job Today
-                  </Link>
-                  <Link
-                    href="/recruiter/register"
-                    className="px-8 py-4 border border-gray-200 text-foreground font-bold rounded-xl hover:bg-gray-50 transition-all inline-block"
-                  >
-                    Talent Solutions
-                  </Link>
+        <section className="py-24 bg-black grid-bg" data-purpose="recruiters-cta">
+          <div className="max-w-4xl mx-auto px-4 md:px-8 text-center">
+            <h2 className="text-white text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              Supercharge your <br />
+              hiring efforts
+            </h2>
+            <p className="text-gray-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
+              See why Hiretivo is the skills-based hiring platform of choice for
+              modern remote-first teams.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              <Link
+                href="/recruiter/register"
+                className="px-8 py-3.5 bg-white text-black font-semibold rounded-lg hover:bg-gray-100 transition-colors inline-block"
+              >
+                Start for free
+              </Link>
+              <Link
+                href="/recruiter/register"
+                className="px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg border border-white/20 hover:bg-white/20 transition-colors inline-block"
+              >
+                Get a demo
+              </Link>
+            </div>
+            <div className="flex justify-center items-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white">G</span>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-white text-xs">★</span>
+                  ))}
                 </div>
               </div>
-              <div className="md:w-1/2 grid gap-6">
-                <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-black text-sm font-bold">
-                      check
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-foreground font-bold mb-1">
-                      Targeted Reach
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      Connect with developers, designers, and marketers who
-                      prefer remote-first culture.
-                    </p>
-                  </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white">P</span>
                 </div>
-                <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-black text-sm font-bold">
-                      check
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-foreground font-bold mb-1">
-                      Quality Applications
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      Our screening process ensures you get high-quality
-                      candidates who match your needs.
-                    </p>
-                  </div>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-white text-xs">★</span>
+                  ))}
                 </div>
-                <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-black text-sm font-bold">
-                      check
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-foreground font-bold mb-1">
-                      Simple Management
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      Integrated dashboard to track, filter, and communicate
-                      with applicants seamlessly.
-                    </p>
-                  </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white">★</span>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(4)].map((_, i) => (
+                    <span key={i} className="text-white text-xs">★</span>
+                  ))}
+                  <span className="text-white/50 text-xs">★</span>
                 </div>
               </div>
             </div>
