@@ -6,6 +6,7 @@ import { resolveLogoUrl } from "@/lib/r2";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter } from "@/lib/rate-limit";
+import type { Prisma } from "@prisma/client";
 
 const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
 
@@ -20,10 +21,18 @@ function normalizeSkillName(name: string): string {
 }
 
 function slugifySkillName(name: string): string {
-  return normalizeSkillName(name)
+  const normalizedName = normalizeSkillName(name);
+  const slug = normalizedName
     .toLowerCase()
+    .replace(/\+/g, " plus ")
+    .replace(/#/g, " sharp ")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+
+  return slug || `skill-${Array.from(normalizedName)
+    .map((character) => character.codePointAt(0)?.toString(36) ?? "")
+    .filter(Boolean)
+    .join("-")}`;
 }
 
 function uniqueSkillNames(names: string[]): string[] {
@@ -35,6 +44,17 @@ function uniqueSkillNames(names: string[]): string[] {
     if (!normalized || seen.has(key)) return;
     seen.add(key);
     result.push(normalized);
+  });
+  return result;
+}
+
+function uniqueSkillIds(ids: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  ids.forEach((id) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    result.push(id);
   });
   return result;
 }
@@ -76,7 +96,7 @@ async function resolveSkillIdsFromNames(skillNames: string[]): Promise<string[]>
     }
   }
 
-  return skillIds;
+  return uniqueSkillIds(skillIds);
 }
 
 function isPrismaUniqueConstraintError(error: unknown): boolean {
@@ -237,7 +257,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const [userUpdate, profileUpdate] = await Promise.all([
+  const nextSkillIds = skillNames
+    ? await resolveSkillIdsFromNames(skillNames)
+    : skillIds;
+
+  const transactionOperations: Prisma.PrismaPromise<unknown>[] = [
     prisma.user.update({
       where: { id: session.user.id },
       data: { name },
@@ -256,14 +280,10 @@ export async function PATCH(req: NextRequest) {
         availability: profileData.availability || null,
       },
     }),
-  ]);
-
-  const nextSkillIds = skillNames
-    ? await resolveSkillIdsFromNames(skillNames)
-    : skillIds;
+  ];
 
   if (nextSkillIds) {
-    await prisma.$transaction([
+    transactionOperations.push(
       prisma.seekerSkill.deleteMany({
         where: { seekerProfileId: seekerProfile.id },
       }),
@@ -276,7 +296,14 @@ export async function PATCH(req: NextRequest) {
           },
         }),
       ),
-    ]);
+    );
+  }
+
+  const [userUpdate, profileUpdate] = await prisma.$transaction(
+    transactionOperations,
+  );
+
+  if (nextSkillIds) {
     await invalidateSeekerCache(seekerProfile.id);
   }
 
