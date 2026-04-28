@@ -12,6 +12,13 @@ interface DataResponse<T> {
   data: T;
 }
 
+interface UpdateApplicationStageResponse {
+  id: string;
+  status: ApplicationStatus;
+  updatedAt: string;
+  notificationSent: boolean;
+}
+
 export interface ActiveJob {
   id: string;
   title: string;
@@ -211,11 +218,11 @@ export const recruiterService = {
     applicationId: string,
     stage: ApplicationStatus,
   ): Promise<{ status: ApplicationStatus; updatedAt: string }> => {
-    const { data } = await apiClient.patch<{ status: ApplicationStatus; updatedAt: string }>(
+    const { data } = await apiClient.patch<DataResponse<UpdateApplicationStageResponse>>(
       `/recruiter/applications/${applicationId}/stage`,
       { stage },
     );
-    return data;
+    return data.data;
   },
 
   generateApplicationAiSummary: async (applicationId: string): Promise<AiSummaryResult> => {

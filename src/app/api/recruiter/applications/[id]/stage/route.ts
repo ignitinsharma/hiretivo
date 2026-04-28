@@ -82,22 +82,33 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       id: true,
       status: true,
       updatedAt: true,
-      createdAt: true,
-      jobId: true,
-      seekerId: true,
-      coverLetter: true,
-      matchScore: true,
     },
   });
 
+  let notificationSent = false;
   if (application.seeker.email) {
-    await sendApplicationStatusEmail({
-      toEmail: application.seeker.email,
-      candidateName: application.seeker.name ?? "there",
-      jobTitle: application.job.title,
-      stage: updated.status as ApplicationStatus,
-    });
+    try {
+      await sendApplicationStatusEmail({
+        toEmail: application.seeker.email,
+        candidateName: application.seeker.name ?? "there",
+        jobTitle: application.job.title,
+        stage: updated.status as ApplicationStatus,
+      });
+      notificationSent = true;
+    } catch (error) {
+      console.error("Failed to send application status email", {
+        applicationId: updated.id,
+        error,
+      });
+    }
   }
 
-  return NextResponse.json(updated);
+  return NextResponse.json({
+    data: {
+      id: updated.id,
+      status: updated.status,
+      updatedAt: updated.updatedAt.toISOString(),
+      notificationSent,
+    },
+  });
 }

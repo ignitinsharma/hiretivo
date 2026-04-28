@@ -9,32 +9,8 @@ export const APPLICATION_STAGE_ORDER: ApplicationStatus[] = [
   ApplicationStatus.REJECTED,
 ];
 
-const TERMINAL_STAGES = new Set<ApplicationStatus>([
-  ApplicationStatus.HIRED,
-  ApplicationStatus.REJECTED,
-]);
-
 export function isValidStageTransition(from: ApplicationStatus, to: ApplicationStatus): boolean {
-  if (from === to) {
-    return true;
-  }
-
-  if (TERMINAL_STAGES.has(from)) {
-    return false;
-  }
-
-  if (to === ApplicationStatus.REJECTED) {
-    return true;
-  }
-
-  const fromIndex = APPLICATION_STAGE_ORDER.indexOf(from);
-  const toIndex = APPLICATION_STAGE_ORDER.indexOf(to);
-
-  if (fromIndex === -1 || toIndex === -1) {
-    return false;
-  }
-
-  return toIndex === fromIndex + 1;
+  return APPLICATION_STAGE_ORDER.includes(from) && APPLICATION_STAGE_ORDER.includes(to);
 }
 
 export function getStageLabel(status: ApplicationStatus): string {
