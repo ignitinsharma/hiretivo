@@ -62,7 +62,7 @@ export function PaidFeatureModal() {
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
           <Button
             onClick={onUpgrade}
-            className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-black/30"
+            className="w-full rounded-full bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-black/30"
           >
             Upgrade to Pro
             <ArrowUpRight className="ml-2 h-4 w-4" />

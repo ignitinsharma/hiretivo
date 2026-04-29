@@ -78,7 +78,7 @@ function FreePlanCard() {
           ))}
         </ul>
         <Button
-          className="bg-black text-white hover:bg-[#1a1a1a]"
+          className="bg-brand-primary text-white hover:bg-brand-primary-dark"
           onClick={() => router.push("/pricing")}
         >
           Upgrade to PRO
@@ -116,7 +116,7 @@ function PaidPlanCard({
     <Card
       className={cn(
         "max-w-2xl border-slate-200 bg-white",
-        plan === PlanTier.PRO && "border-black/30",
+        plan === PlanTier.PRO && "border-brand-primary/30",
       )}
     >
       <CardHeader>
@@ -155,7 +155,7 @@ function PaidPlanCard({
         )}
 
         <Button
-          className="bg-black text-white hover:bg-[#1a1a1a]"
+          className="bg-brand-primary text-white hover:bg-brand-primary-dark"
           onClick={() => portalMutation.mutate()}
           disabled={portalMutation.isPending}
         >

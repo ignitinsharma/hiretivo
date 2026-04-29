@@ -103,7 +103,13 @@ export async function GET(req: NextRequest) {
   });
   const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
 
-  // Fetch job data for all matched jobs (needed for filtering + applied-exclusion)
+  const dismissedRows = await prisma.dismissedJob.findMany({
+    where: { userId: session.user.id },
+    select: { jobId: true },
+  });
+  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
+
+  // Fetch job data for all matched jobs (needed for filtering + exclusions)
   const jobIds = matches.map((m) => m.jobId);
   const jobs = await prisma.job.findMany({
     where: { id: { in: jobIds }, status: JobStatus.OPEN },
@@ -123,9 +129,10 @@ export async function GET(req: NextRequest) {
 
   const jobMap = new Map(jobs.map((j) => [j.id, j]));
 
-  // Apply filters and exclude already-applied jobs before cursor slicing.
+  // Apply filters and exclude already-applied/dismissed jobs before cursor slicing.
   let filteredMatches = matches.filter((m) => {
     if (appliedJobIds.has(m.jobId)) return false;
+    if (dismissedJobIds.has(m.jobId)) return false;
     const job = jobMap.get(m.jobId);
     if (!job) return false;
     if (jobType && job.jobType !== jobType) return false;
@@ -182,12 +189,19 @@ export async function GET(req: NextRequest) {
       recruiter: {
         select: {
           recruiterProfile: {
-            select: { companyName: true, logo: true },
+            select: {
+              companyName: true,
+              logo: true,
+              companySize: true,
+              fundingType: true,
+              industry: true,
+            },
           },
         },
       },
       skills: {
-        include: {
+        select: {
+          skillId: true,
           skill: { select: { name: true } },
         },
       },
@@ -211,6 +225,15 @@ export async function GET(req: NextRequest) {
     matchScore: number;
     tags: string[];
     postedAt: string;
+    jobType: string;
+    workType: string | null;
+    experienceLevel: string | null;
+    companyIndustry: string | null;
+    companySize: string | null;
+    companyFundingType: string | null;
+    matchedSkillNames: string[];
+    applyType: string;
+    externalApplyUrl: string | null;
     missingSkills: string[];
     missingSkillsHint: string | null;
   }> = [];
@@ -221,15 +244,14 @@ export async function GET(req: NextRequest) {
 
     const score = scoreMap.get(m.jobId) ?? 0;
 
-    // Compute missing skills and inline hint only for low-match cards (ENG-01, D-08..D-10).
-    let missingSkills: string[] = [];
+    const jobSkillsForHint = job.skills;
+    const matchedSkillNames = jobSkillsForHint
+      .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))
+      .map((jobSkill) => jobSkill.skill.name);
+    const missingSkills = getMissingSkillNames(seekerSkillIds, jobSkillsForHint);
     let missingSkillsHint: string | null = null;
 
     if (score < LOW_MATCH_THRESHOLD) {
-      // job.skills from the enrichedJobs include only { skill: { name: string } },
-      // but getMissingSkillNames needs skillId too — re-use the enriched job which has it.
-      const jobSkillsForHint = job.skills as Array<{ skillId: string; skill: { name: string } }>;
-      missingSkills = getMissingSkillNames(seekerSkillIds, jobSkillsForHint);
       if (missingSkills.length > 0) {
         const hintSkills = missingSkills.slice(0, MAX_HINT_SKILLS);
         missingSkillsHint = `Missing: ${hintSkills.join(', ')}`;
@@ -241,11 +263,20 @@ export async function GET(req: NextRequest) {
       title: job.title,
       companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
       companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
-      location: 'Remote',
+      location: job.workType ?? 'Remote',
       salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
       matchScore: score,
       tags: job.skills.slice(0, 3).map((s) => s.skill.name),
       postedAt: formatPostedAt(job.publishedAt),
+      jobType: job.jobType,
+      workType: job.workType,
+      experienceLevel: job.experienceLevel,
+      companyIndustry: job.recruiter.recruiterProfile?.industry ?? null,
+      companySize: job.recruiter.recruiterProfile?.companySize ?? null,
+      companyFundingType: job.recruiter.recruiterProfile?.fundingType ?? null,
+      matchedSkillNames,
+      applyType: job.applyType,
+      externalApplyUrl: job.externalApplyUrl,
       missingSkills,
       missingSkillsHint,
     });

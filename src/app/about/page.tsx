@@ -60,7 +60,7 @@ const VALUES = [
     title: "Remote-first, always",
     description:
       "We don't just post jobs; we live the lifestyle. Every process we build is crafted for asynchronous freedom.",
-    containerClass: "bg-gray-50/50 hover:bg-black",
+    containerClass: "bg-gray-50/50 hover:bg-brand-primary",
     iconContainerClass: "text-black",
     icon: Globe,
     titleClass: "group-hover:text-white",
@@ -80,7 +80,7 @@ const VALUES = [
     title: "Builder mindset",
     description:
       "We're constantly iterating. If something's broken, we fix it together. Progress is our only metric.",
-    containerClass: "bg-gray-50/50 hover:bg-black",
+    containerClass: "bg-gray-50/50 hover:bg-brand-primary",
     iconContainerClass: "text-black",
     icon: Zap,
     titleClass: "group-hover:text-white",

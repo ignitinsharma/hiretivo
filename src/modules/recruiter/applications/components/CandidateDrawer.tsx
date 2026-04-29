@@ -415,7 +415,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                             <TooltipTrigger asChild>
                               <span className="inline-block w-full">
                                 <Button
-                                  className="w-full bg-black hover:bg-[#1a1a1a] text-white"
+                                  className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white"
                                   disabled
                                   aria-disabled="true"
                                 >

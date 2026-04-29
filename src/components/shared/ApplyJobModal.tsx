@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
@@ -14,12 +15,41 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { applicationService } from '@/services/application.service';
+import { ExternalLink, CheckCircle2, Briefcase } from 'lucide-react';
 
 export function ApplyJobModal() {
-  const { isApplyModalOpen, closeApplyModal, selectedJobId, selectedJobTitle, selectedCompanyName } = useUIStore();
+  const {
+    isApplyModalOpen,
+    closeApplyModal,
+    selectedJobId,
+    selectedJobTitle,
+    selectedCompanyName,
+    selectedExternalApplyUrl,
+    showExternalConfirm,
+  } = useUIStore();
   const queryClient = useQueryClient();
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleExternalRedirect = () => {
+    if (selectedExternalApplyUrl) {
+      window.open(selectedExternalApplyUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleConfirmApplied = async () => {
+    if (!selectedJobId) return;
+    
+    closeApplyModal();
+    
+    try {
+      await applicationService.applyToJob({ jobId: selectedJobId, coverLetter: '' });
+      await queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Application confirmed!');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to confirm application');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +68,46 @@ export function ApplyJobModal() {
       setIsSubmitting(false);
     }
   };
+
+  if (showExternalConfirm) {
+    return (
+      <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
+        <DialogContent className="sm:max-w-md p-8">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10">
+              <Briefcase className="h-8 w-8 text-brand-primary" />
+            </div>
+
+            <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
+              Did you apply?
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-sm text-slate-500">
+              Let us know so we can help you track your application and refine future recommendations for you!
+            </DialogDescription>
+
+            <div className="mt-8 w-full space-y-3">
+              <Button
+                type="button"
+                className="w-full font-bold bg-brand-primary text-white hover:bg-brand-primary/90"
+                onClick={handleConfirmApplied}
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Yes, I applied!
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full font-bold"
+                onClick={closeApplyModal}
+              >
+                No, I didn&apos;t apply
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>

@@ -255,7 +255,7 @@ function Pagination({
             className={cn(
               "h-7 w-7 text-[11px] font-bold  ",
               p === currentPage
-                ? "bg-primary text-white"
+                ? "bg-primary text-white hover:bg-primary/90"
                 : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
             )}
             variant={p === currentPage ? "default" : "secondary"}

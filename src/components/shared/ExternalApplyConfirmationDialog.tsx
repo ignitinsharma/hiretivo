@@ -50,7 +50,7 @@ export function ExternalApplyConfirmationDialog({
     <>
       <Button
         asChild
-        className="w-full rounded-full bg-black py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+        className="w-full rounded-full bg-brand-primary py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
       >
         <a href={externalUrl} target="_blank" rel="noreferrer">
           Continue to Application
@@ -90,7 +90,7 @@ export function ExternalApplyConfirmationDialog({
               type="button"
               onClick={confirmApplied}
               disabled={isConfirming}
-              className="rounded-full bg-black text-white transition-transform hover:scale-105 active:scale-95"
+              className="rounded-full bg-brand-primary text-white transition-transform hover:scale-105 active:scale-95"
             >
               {isConfirming ? 'Confirming...' : 'Yes, I applied'}
             </Button>

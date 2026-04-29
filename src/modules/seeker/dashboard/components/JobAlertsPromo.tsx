@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Mail, TrendingUp } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import type { SkillGapSummary } from '../types/dashboard.types';
+import React from "react";
+import { Mail, TrendingUp } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import type { SkillGapSummary } from "../types/dashboard.types";
 
 interface JobAlertsPromoProps {
   digestEnabled: boolean;
@@ -20,7 +20,7 @@ export function JobAlertsPromo({
   isTogglingDigest,
 }: JobAlertsPromoProps) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+    <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-5">
       {/* Weekly digest toggle */}
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -42,7 +42,7 @@ export function JobAlertsPromo({
             htmlFor="digest-toggle"
             className="text-sm font-medium text-slate-700 cursor-pointer"
           >
-            {digestEnabled ? 'Enabled' : 'Disabled'}
+            {digestEnabled ? "Enabled" : "Disabled"}
           </Label>
         </div>
       </div>
@@ -67,7 +67,7 @@ export function JobAlertsPromo({
                   {item.skillName}
                 </span>
                 <span className="text-xs text-slate-400">
-                  {item.frequency} {item.frequency === 1 ? 'job' : 'jobs'}
+                  {item.frequency} {item.frequency === 1 ? "job" : "jobs"}
                 </span>
               </li>
             ))}

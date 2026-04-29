@@ -79,7 +79,7 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
       <Button
         onClick={handleBoost}
         disabled={isLoading}
-        className="w-full bg-black hover:bg-[#1a1a1a] text-white font-semibold"
+        className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white font-semibold"
         aria-label="Boost this job listing"
       >
         {isLoading ? 'Redirecting...' : 'Boost for $9'}

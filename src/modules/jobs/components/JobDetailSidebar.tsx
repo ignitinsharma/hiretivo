@@ -42,6 +42,8 @@ interface JobDetailSidebarProps {
     title: string;
     companyName: string;
     publishedAt: string | null;
+    applyType: string;
+    externalApplyUrl: string | null;
   };
   matchScore: number | null;
   matchBreakdown: Array<{
@@ -93,7 +95,7 @@ export function JobDetailSidebar({
 
         <div className="space-y-3">
           <Button
-            onClick={() => openApplyModal(job.id)}
+            onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
             variant="primary"
             className="w-full py-3"
           >

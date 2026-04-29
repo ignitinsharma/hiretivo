@@ -53,8 +53,9 @@ const config = {
         },
         /** Hiretivo Design System palette */
         brand: {
-          /* Primary - black */
-          primary: '#000000',
+          /* Primary - purple */
+          primary: '#7560ff',
+          "primary-dark": '#5a47d9',
           "primary-foreground": '#ffffff',
           /* Text colors */
           foreground: '#0a0a0a',
@@ -73,7 +74,7 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-dm-sans)", "sans-serif"],
+        sans: ["var(--font-inter)", "sans-serif"],
       },
       lineHeight: {
         tight: "1.35",

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/Logo";
+import { ArrowLeft } from "lucide-react";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,8 @@ interface AuthLayoutProps {
   toggleLinkText?: string;
   toggleLinkHref?: string;
   leftContent?: React.ReactNode;
+  role?: "seeker" | "recruiter";
+  backHref?: string;
 }
 
 export function AuthLayout({
@@ -19,9 +22,17 @@ export function AuthLayout({
   title,
   description,
   leftContent,
+  role,
+  backHref,
 }: AuthLayoutProps) {
+  const roleBadge = role === "seeker"
+    ? { label: "Seeker", color: "bg-brand-primary/10 text-brand-primary border-brand-primary/20" }
+    : role === "recruiter"
+    ? { label: "Recruiter", color: "bg-gray-100 text-gray-700 border-gray-200" }
+    : null;
+
   return (
-    <main className="min-h-screen flex flex-col md:flex-row bg-white selection:bg-black/20 antialiased overflow-x-hidden">
+    <main className="min-h-screen flex flex-col md:flex-row bg-white selection:bg-brand-primary/20 antialiased overflow-x-hidden">
       {/* Left Side: Visual Storytelling */}
       <section className="hidden md:flex md:w-1/2 bg-[#f8f8fd] relative flex-col justify-center items-center px-8 lg:px-16 overflow-hidden">
         {leftContent}
@@ -41,6 +52,29 @@ export function AuthLayout({
           </div>
 
           <header className="mb-10 text-center md:text-left">
+            {/* Back button and role badge row */}
+            <div className="flex items-center justify-between mb-6">
+              {backHref ? (
+                <Link
+                  href={backHref}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </Link>
+              ) : (
+                <div />
+              )}
+              {roleBadge && (
+                <span className={cn(
+                  "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
+                  roleBadge.color
+                )}>
+                  {roleBadge.label}
+                </span>
+              )}
+            </div>
+
             <h2 className="font-extrabold text-3xl text-slate-900 tracking-tight mb-3">
               {title}
             </h2>

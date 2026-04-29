@@ -141,7 +141,7 @@ export default function HowPage() {
                   <CardContent className="p-0">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white font-bold">
+                        <div className="w-12 h-12 rounded-full bg-brand-primary flex items-center justify-center text-white font-bold">
                           S
                         </div>
                         <div className="flex-1">
@@ -298,7 +298,7 @@ export default function HowPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center">
-                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-brand-primary text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   1
                 </div>
                 <h3 className="text-foreground text-xl font-bold mb-3">
@@ -310,7 +310,7 @@ export default function HowPage() {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-brand-primary text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   2
                 </div>
                 <h3 className="text-foreground text-xl font-bold mb-3">
@@ -322,7 +322,7 @@ export default function HowPage() {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-brand-primary text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   3
                 </div>
                 <h3 className="text-foreground text-xl font-bold mb-3">
@@ -334,7 +334,7 @@ export default function HowPage() {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-black text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
+                <div className="w-16 h-16 bg-brand-primary text-white rounded-xl flex items-center justify-center text-2xl font-extrabold mx-auto mb-6">
                   4
                 </div>
                 <h3 className="text-foreground text-xl font-bold mb-3">

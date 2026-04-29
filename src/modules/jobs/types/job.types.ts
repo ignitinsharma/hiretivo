@@ -8,6 +8,15 @@ export interface JobListItem {
   matchScore?: number;
   tags?: string[];
   postedAt?: string;
+  jobType?: string;
+  workType?: string | null;
+  experienceLevel?: string | null;
+  companyIndustry?: string | null;
+  companySize?: string | null;
+  companyFundingType?: string | null;
+  matchedSkillNames?: string[];
+  applyType?: string;
+  externalApplyUrl?: string | null;
   /** Exact skill names the seeker is missing for this job (seeker feed only). */
   missingSkills?: string[];
   /** Compact inline explainer for low-match cards, e.g. "Missing: Docker, AWS". Null when not applicable. */

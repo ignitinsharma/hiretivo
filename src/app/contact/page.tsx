@@ -5,8 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
-import { ContactRequestType } from "@/constants/enums";
+import { ContactRequestType, PlanTier } from "@/constants/enums";
 import {
   ContactSupportSchema,
   type ContactSupportInput,
@@ -21,27 +23,37 @@ interface ModeOption {
   type: ContactRequestType;
   label: string;
   description: string;
+  locked?: boolean;
 }
 
-const MODE_OPTIONS: ModeOption[] = [
-  {
-    type: ContactRequestType.CONTACT,
-    label: "Contact",
-    description: "Send us a product, account, or support question.",
-  },
-  {
-    type: ContactRequestType.BOOK_CALL,
-    label: "Book a call",
-    description: "Share your context and a preferred time to connect.",
-  },
-];
-
-const FIELD_ERROR_CLASS = "mt-1 text-sm text-red-600";
-
 export default function ContactPage() {
+  const { data: session, status } = useSession();
+  const isPaidUser =
+    status === "authenticated" &&
+    (session?.user?.plan === PlanTier.PRO ||
+      session?.user?.plan === PlanTier.ENTERPRISE);
+
   const [mode, setMode] = useState<ContactRequestType>(
     ContactRequestType.CONTACT,
   );
+
+  const MODE_OPTIONS: ModeOption[] = [
+    {
+      type: ContactRequestType.CONTACT,
+      label: "Contact",
+      description: "Send us a product, account, or support question.",
+    },
+    {
+      type: ContactRequestType.BOOK_CALL,
+      label: "Book a call",
+      description: isPaidUser
+        ? "Share your context and a preferred time to connect."
+        : status === "unauthenticated"
+        ? "Sign in to book a call with our team."
+        : "Upgrade to PRO to book a call with our team.",
+      locked: !isPaidUser,
+    },
+  ];
 
   const {
     register,
@@ -82,6 +94,15 @@ export default function ContactPage() {
   });
 
   const handleModeChange = (nextMode: ContactRequestType): void => {
+    const option = MODE_OPTIONS.find((o) => o.type === nextMode);
+    if (option?.locked) {
+      toast.error(
+        status === "unauthenticated"
+          ? "Please sign in to book a call."
+          : "Book a call is available for PRO and Enterprise plans only.",
+      );
+      return;
+    }
     setMode(nextMode);
     setValue("type", nextMode, { shouldValidate: true });
   };
@@ -125,30 +146,61 @@ export default function ContactPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             {MODE_OPTIONS.map((option) => {
               const isActive = option.type === mode;
+              const isLocked = option.locked;
 
               return (
                 <button
                   key={option.type}
                   type="button"
                   onClick={() => handleModeChange(option.type)}
+                  disabled={isLocked}
                   className={cn(
                     "rounded-lg border p-4 text-left transition-colors",
-                    isActive
-                      ? "border-black bg-black text-white"
+                    isLocked
+                      ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+                      : isActive
+                      ? "border-brand-primary bg-brand-primary text-white"
                       : "border-gray-200 bg-white text-[#0a0a0a] hover:bg-gray-50",
                   )}
                 >
                   <span className="block text-sm font-semibold">
                     {option.label}
+                    {isLocked && (
+                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wider opacity-60">
+                        Locked
+                      </span>
+                    )}
                   </span>
                   <span
                     className={cn(
                       "mt-1 block text-sm leading-relaxed",
-                      isActive ? "text-white/80" : "text-[#6b7280]",
+                      isActive
+                        ? "text-white/80"
+                        : isLocked
+                        ? "text-gray-400"
+                        : "text-[#6b7280]",
                     )}
                   >
                     {option.description}
                   </span>
+                  {isLocked && status === "unauthenticated" && (
+                    <Link
+                      href="/seeker/login"
+                      className="mt-2 inline-block text-xs font-bold text-brand-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Sign in →
+                    </Link>
+                  )}
+                  {isLocked && status === "authenticated" && (
+                    <Link
+                      href="/pricing"
+                      className="mt-2 inline-block text-xs font-bold text-brand-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View plans →
+                    </Link>
+                  )}
                 </button>
               );
             })}
@@ -295,3 +347,5 @@ export default function ContactPage() {
     </main>
   );
 }
+
+const FIELD_ERROR_CLASS = "mt-1 text-sm text-red-600";

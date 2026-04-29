@@ -98,7 +98,7 @@ export function ActiveJobsList() {
                 className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition-colors"
               >
                 <div>
-                  <h3 className="font-bold text-slate-900">{job.title}</h3>
+                  <h3 className="font-bold capitalize text-slate-900">{job.title}</h3>
                   <p className="text-sm text-slate-500">
                     {new Date(job.createdAt).toLocaleDateString()}
                   </p>

@@ -25,7 +25,13 @@ import { X, PlusCircle, Plus, AlertTriangle, Wand2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ApplyType, CurrencyCode, JobType, SkillLevel, WorkType } from "@/constants/enums";
+import {
+  ApplyType,
+  CurrencyCode,
+  JobType,
+  SkillLevel,
+  WorkType,
+} from "@/constants/enums";
 import { jobService } from "@/services/job.service";
 import { skillService } from "@/services/skill.service";
 import type { SkillItem } from "@/services/skill.service";
@@ -43,6 +49,8 @@ interface JobFormValues {
   currency: string;
   description: string;
   selectedSkillIds: string[];
+  applyType: ApplyType;
+  externalApplyUrl: string;
 }
 
 interface ConfirmDeleteModalProps {
@@ -76,7 +84,11 @@ const FORM_VALUE_BY_JOB_TYPE: Record<JobType, string> = {
 };
 
 function isWorkTypeValue(value: string | null): value is WorkType {
-  return value === WorkType.REMOTE || value === WorkType.HYBRID || value === WorkType.ONSITE;
+  return (
+    value === WorkType.REMOTE ||
+    value === WorkType.HYBRID ||
+    value === WorkType.ONSITE
+  );
 }
 
 function ConfirmDeleteModal({
@@ -105,8 +117,8 @@ function ConfirmDeleteModal({
               Delete active listing?
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-500">
-              This listing has {hasApplications} application(s). Deleting it will
-              permanently remove all applicant data.
+              This listing has {hasApplications} application(s). Deleting it
+              will permanently remove all applicant data.
             </DialogDescription>
           </DialogHeader>
 
@@ -235,6 +247,8 @@ export function PostJobModal() {
       currency: CurrencyCode.USD,
       description: "",
       selectedSkillIds: [],
+      applyType: ApplyType.INTERNAL,
+      externalApplyUrl: "",
     },
   });
 
@@ -278,14 +292,20 @@ export function PostJobModal() {
       reset({
         title: j.title || "",
         category: j.category || "",
-        jobType: j.jobType ? FORM_VALUE_BY_JOB_TYPE[j.jobType as JobType] ?? "" : "",
+        jobType: j.jobType
+          ? (FORM_VALUE_BY_JOB_TYPE[j.jobType as JobType] ?? "")
+          : "",
         experienceLevel: j.experienceLevel || "",
         salaryMin: j.salaryMin != null ? String(j.salaryMin) : "",
         salaryMax: j.salaryMax != null ? String(j.salaryMax) : "",
         currency: j.currency ?? CurrencyCode.USD,
         description: j.description || "",
         selectedSkillIds:
-          j.skills?.map((s: { id: string; skillId?: string }) => s.skillId ?? s.id) || [],
+          j.skills?.map(
+            (s: { id: string; skillId?: string }) => s.skillId ?? s.id,
+          ) || [],
+        applyType: (j.applyType as ApplyType) ?? ApplyType.INTERNAL,
+        externalApplyUrl: j.externalApplyUrl ?? "",
       });
     } else if (!editJobId) {
       setWorkType(WorkType.REMOTE);
@@ -299,6 +319,8 @@ export function PostJobModal() {
         currency: CurrencyCode.USD,
         description: "",
         selectedSkillIds: [],
+        applyType: ApplyType.INTERNAL,
+        externalApplyUrl: "",
       });
     }
   }, [editJob, editJobId, reset]);
@@ -321,7 +343,11 @@ export function PostJobModal() {
       title: data.title,
       description: data.description,
       jobType: JOB_TYPE_BY_FORM_VALUE[data.jobType],
-      applyType: ApplyType.INTERNAL,
+      applyType: data.applyType,
+      externalApplyUrl:
+        data.applyType === ApplyType.EXTERNAL
+          ? data.externalApplyUrl
+          : undefined,
       workType,
       experienceLevel: data.experienceLevel,
       category: data.category,
@@ -348,7 +374,9 @@ export function PostJobModal() {
       closePostJobModal();
       reset();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to submit job");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit job",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -390,12 +418,19 @@ export function PostJobModal() {
         {isEditJobLoading && editJobId ? (
           <div className="px-6 py-8 space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />
+              <div
+                key={i}
+                className="h-10 bg-slate-100 rounded-lg animate-pulse"
+              />
             ))}
           </div>
         ) : null}
 
-        <form className={`space-y-6 overflow-y-auto px-6 pb-6 ${isEditJobLoading && editJobId ? "hidden" : ""}`} onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form
+          className={`space-y-6 overflow-y-auto px-6 pb-6 ${isEditJobLoading && editJobId ? "hidden" : ""}`}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div>
             <Label className="block text-sm font-semibold text-slate-700 mb-2">
               Job Title <span className="text-red-500">*</span>
@@ -421,8 +456,15 @@ export function PostJobModal() {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <>
-                    <Select value={field.value} onValueChange={(v) => { field.onChange(v); }}>
-                      <SelectTrigger className={inputErrorClass(!!errors.category)}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                      }}
+                    >
+                      <SelectTrigger
+                        className={inputErrorClass(!!errors.category)}
+                      >
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -447,7 +489,9 @@ export function PostJobModal() {
                       </SelectContent>
                     </Select>
                     {errors.category && (
-                      <p className="text-xs text-red-500 mt-1">Category is required</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        Category is required
+                      </p>
                     )}
                   </>
                 )}
@@ -459,9 +503,7 @@ export function PostJobModal() {
               </Label>
               <Select
                 value={workType}
-                onValueChange={(v) =>
-                  setWorkType(v as WorkType)
-                }
+                onValueChange={(v) => setWorkType(v as WorkType)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Work Type" />
@@ -486,19 +528,36 @@ export function PostJobModal() {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <>
-                    <Select value={field.value} onValueChange={(v) => { field.onChange(v); }}>
-                      <SelectTrigger className={inputErrorClass(!!errors.jobType)}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                      }}
+                    >
+                      <SelectTrigger
+                        className={inputErrorClass(!!errors.jobType)}
+                      >
                         <SelectValue placeholder="Select Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={JOB_TYPE_FORM_VALUES.fullTime}>Full-time</SelectItem>
-                        <SelectItem value={JOB_TYPE_FORM_VALUES.partTime}>Part-time</SelectItem>
-                        <SelectItem value={JOB_TYPE_FORM_VALUES.contract}>Contract</SelectItem>
-                        <SelectItem value={JOB_TYPE_FORM_VALUES.internship}>Internship</SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.fullTime}>
+                          Full-time
+                        </SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.partTime}>
+                          Part-time
+                        </SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.contract}>
+                          Contract
+                        </SelectItem>
+                        <SelectItem value={JOB_TYPE_FORM_VALUES.internship}>
+                          Internship
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.jobType && (
-                      <p className="text-xs text-red-500 mt-1">Job type is required</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        Job type is required
+                      </p>
                     )}
                   </>
                 )}
@@ -514,8 +573,15 @@ export function PostJobModal() {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <>
-                    <Select value={field.value} onValueChange={(v) => { field.onChange(v); }}>
-                      <SelectTrigger className={inputErrorClass(!!errors.experienceLevel)}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                      }}
+                    >
+                      <SelectTrigger
+                        className={inputErrorClass(!!errors.experienceLevel)}
+                      >
                         <SelectValue placeholder="Select Level" />
                       </SelectTrigger>
                       <SelectContent>
@@ -525,7 +591,9 @@ export function PostJobModal() {
                       </SelectContent>
                     </Select>
                     {errors.experienceLevel && (
-                      <p className="text-xs text-red-500 mt-1">Experience level is required</p>
+                      <p className="text-xs text-red-500 mt-1">
+                        Experience level is required
+                      </p>
                     )}
                   </>
                 )}
@@ -555,7 +623,9 @@ export function PostJobModal() {
                 })}
               />
               {errors.salaryMin && (
-                <p className="text-xs text-red-500 mt-1">{errors.salaryMin.message}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.salaryMin.message}
+                </p>
               )}
             </div>
             <div>
@@ -579,7 +649,9 @@ export function PostJobModal() {
                 })}
               />
               {errors.salaryMax && (
-                <p className="text-xs text-red-500 mt-1">{errors.salaryMax.message}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.salaryMax.message}
+                </p>
               )}
             </div>
             <div>
@@ -606,6 +678,65 @@ export function PostJobModal() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Controller
+                control={control}
+                name="applyType"
+                render={({ field }) => (
+                  <>
+                    <Label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Apply Type
+                    </Label>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => field.onChange(v as ApplyType)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Apply Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ApplyType.INTERNAL}>
+                          Apply via Hiretivo
+                        </SelectItem>
+                        <SelectItem value={ApplyType.EXTERNAL}>
+                          Apply on Company Website
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
+              />
+            </div>
+            {watch("applyType") === ApplyType.EXTERNAL && (
+              <div>
+                <Label className="block text-sm font-semibold text-slate-700 mb-2">
+                  External Apply URL <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="https://company.com/careers/job"
+                  className={inputErrorClass(!!errors.externalApplyUrl)}
+                  {...register("externalApplyUrl", {
+                    required:
+                      watch("applyType") === ApplyType.EXTERNAL
+                        ? "External URL is required"
+                        : false,
+                    pattern: {
+                      value: /^https?:\/\/.+/,
+                      message:
+                        "Must be a valid URL starting with http:// or https://",
+                    },
+                  })}
+                />
+                {errors.externalApplyUrl && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.externalApplyUrl.message}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-sm font-semibold text-slate-700">
@@ -614,7 +745,7 @@ export function PostJobModal() {
               <button
                 type="button"
                 onClick={() => setIsJdPanelOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary cursor-pointer hover:text-primary/80 transition-colors"
                 aria-label="Open AI job description generator"
               >
                 <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -634,7 +765,9 @@ export function PostJobModal() {
                     hasError={!!errors.description}
                   />
                   {errors.description && (
-                    <p className="text-xs text-red-500 mt-1">Description is required</p>
+                    <p className="text-xs text-red-500 mt-1">
+                      Description is required
+                    </p>
                   )}
                 </>
               )}
@@ -682,7 +815,7 @@ export function PostJobModal() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary flex items-center"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary  flex items-center"
               >
                 <PlusCircle className="w-5 h-5" />
               </button>
@@ -728,7 +861,9 @@ export function PostJobModal() {
                   <button
                     type="button"
                     className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-primary/5 text-sm text-primary font-medium transition-colors"
-                    onClick={() => createSkillMutation.mutate(skillSearch.trim())}
+                    onClick={() =>
+                      createSkillMutation.mutate(skillSearch.trim())
+                    }
                     disabled={createSkillMutation.isPending}
                   >
                     <Plus className="w-4 h-4" />
@@ -740,7 +875,9 @@ export function PostJobModal() {
               )}
             </div>
             {errors.selectedSkillIds && (
-              <p className="text-xs text-red-500 mt-1">At least one skill is required</p>
+              <p className="text-xs text-red-500 mt-1">
+                At least one skill is required
+              </p>
             )}
             <SkillSuggestChips
               descriptionText={watch("description")}
@@ -748,13 +885,19 @@ export function PostJobModal() {
               allSkills={skills as Array<{ id: string; name: string }>}
               autoTriggerTrigger={autoSuggestTrigger}
               onAddSkill={(skillName) => {
-                const allSkillsArr = skills as Array<{ id: string; name: string }>;
+                const allSkillsArr = skills as Array<{
+                  id: string;
+                  name: string;
+                }>;
                 const match = allSkillsArr.find(
                   (s) => s.name.toLowerCase() === skillName.toLowerCase(),
                 );
                 if (match) {
                   if (!selectedSkillIds.includes(match.id)) {
-                    setValue("selectedSkillIds", [...selectedSkillIds, match.id]);
+                    setValue("selectedSkillIds", [
+                      ...selectedSkillIds,
+                      match.id,
+                    ]);
                   }
                 } else {
                   // Skill doesn't exist in DB yet — create it automatically
@@ -775,10 +918,14 @@ export function PostJobModal() {
             </Button>
             <Button
               type="submit"
-              className="font-bold bg-slate-900 text-white hover:bg-slate-800"
+              className="font-bold bg-brand-primary text-white hover:bg-brand-primary-dark"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Publishing..." : "Publish Job Post"}
+              {editJobId
+                ? "Update Job"
+                : isSubmitting
+                  ? "Publishing..."
+                  : "Publish Post"}
             </Button>
           </div>
         </form>

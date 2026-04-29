@@ -76,7 +76,7 @@ export function PersonalInfoSection() {
   };
 
   return (
-    <section id="account" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <section id="account" className="bg-white border border-slate-200 rounded-xl overflow-hidden">
       <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-100">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>

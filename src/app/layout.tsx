@@ -1,16 +1,16 @@
 /* eslint-disable @next/next/no-page-custom-font */
-import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
 import { ApplyJobModal } from "@/components/shared/ApplyJobModal";
+import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryProvider } from "@/providers/query-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${dmSans.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ReactQueryProvider>
           <AuthSessionProvider>
             {children}

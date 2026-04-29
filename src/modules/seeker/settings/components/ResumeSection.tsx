@@ -29,7 +29,7 @@ export function ResumeSection({ resumeKey }: ResumeSectionProps) {
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="border-b border-slate-100 p-6">
         <h3 className="text-lg font-bold text-slate-900">Resume</h3>
         <p className="text-sm text-slate-500">
@@ -51,7 +51,7 @@ export function ResumeSection({ resumeKey }: ResumeSectionProps) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isUploading}
-          className="rounded-full bg-black text-white transition-transform hover:scale-105 active:scale-95"
+          className="rounded-full bg-brand-primary text-white transition-transform hover:scale-105 active:scale-95"
         >
           <Upload className="mr-2 h-4 w-4" />
           {isUploading ? "Uploading..." : "Upload resume"}

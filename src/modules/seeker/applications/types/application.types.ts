@@ -6,6 +6,14 @@ export interface SeekerApplicationItem {
   jobTitle: string;
   companyName: string;
   companyLogoUrl?: string;
+  salaryRange?: string;
+  jobType?: string;
+  workType?: string | null;
+  experienceLevel?: string | null;
+  companyIndustry?: string | null;
+  companySize?: string | null;
+  companyFundingType?: string | null;
+  skills?: string[];
   status: ApplicationStatus;
   appliedAt: string;
 }

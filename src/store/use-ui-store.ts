@@ -14,8 +14,13 @@ interface UIState {
   selectedJobId: string | null;
   selectedJobTitle: string;
   selectedCompanyName: string;
-  openApplyModal: (jobId: string, title?: string, companyName?: string) => void;
+  selectedApplyType: string | null;
+  selectedExternalApplyUrl: string | null;
+  showExternalConfirm: boolean;
+  openApplyModal: (jobId: string, title?: string, companyName?: string, applyType?: string, externalApplyUrl?: string | null) => void;
   closeApplyModal: () => void;
+  openExternalConfirm: () => void;
+  closeExternalConfirm: () => void;
 
   isPostJobModalOpen: boolean;
   editJobId: string | null;
@@ -58,20 +63,49 @@ export const useUIStore = create<UIState>((set) => ({
   selectedJobId: null,
   selectedJobTitle: '',
   selectedCompanyName: '',
-  openApplyModal: (jobId, title, companyName) => set({
-    isApplyModalOpen: true,
-    applyJobId: jobId,
-    selectedJobId: jobId,
-    selectedJobTitle: title ?? '',
-    selectedCompanyName: companyName ?? '',
-  }),
+  selectedApplyType: null,
+  selectedExternalApplyUrl: null,
+  showExternalConfirm: false,
+  openApplyModal: (jobId, title, companyName, applyType, externalApplyUrl) => {
+    const isExternal = applyType === 'EXTERNAL' && externalApplyUrl;
+    
+    if (isExternal) {
+      window.open(externalApplyUrl!, '_blank', 'noopener,noreferrer');
+      set({
+        isApplyModalOpen: true,
+        applyJobId: jobId,
+        selectedJobId: jobId,
+        selectedJobTitle: title ?? '',
+        selectedCompanyName: companyName ?? '',
+        selectedApplyType: applyType ?? null,
+        selectedExternalApplyUrl: externalApplyUrl ?? null,
+        showExternalConfirm: true,
+      });
+    } else {
+      set({
+        isApplyModalOpen: true,
+        applyJobId: jobId,
+        selectedJobId: jobId,
+        selectedJobTitle: title ?? '',
+        selectedCompanyName: companyName ?? '',
+        selectedApplyType: applyType ?? null,
+        selectedExternalApplyUrl: externalApplyUrl ?? null,
+        showExternalConfirm: false,
+      });
+    }
+  },
   closeApplyModal: () => set({
     isApplyModalOpen: false,
     applyJobId: null,
     selectedJobId: null,
     selectedJobTitle: '',
     selectedCompanyName: '',
+    selectedApplyType: null,
+    selectedExternalApplyUrl: null,
+    showExternalConfirm: false,
   }),
+  openExternalConfirm: () => set({ showExternalConfirm: true }),
+  closeExternalConfirm: () => set({ showExternalConfirm: false }),
 
   isPostJobModalOpen: false,
   editJobId: null,

@@ -4,6 +4,7 @@ import { ExternalLink, Mail, MapPin } from "lucide-react";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,45 @@ interface TalentProfileDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function TalentProfileSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start gap-4">
+        <Skeleton className="h-16 w-16 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-20 rounded-full" />
+        ))}
+      </div>
+
+      <div className="grid gap-3 rounded-xl border border-gray-200 p-4 sm:grid-cols-2">
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-full" />
+      </div>
+
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-4/6" />
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Skeleton className="h-10 w-full sm:w-32" />
+        <Skeleton className="h-10 w-full sm:w-40" />
+      </div>
+    </div>
+  );
+}
+
 export function TalentProfileDialog({
   seekerId,
   open,
@@ -31,13 +71,11 @@ export function TalentProfileDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] overflow-y-auto rounded-xl sm:max-w-2xl">
-        {isLoading || !talent ? (
-          <div className="py-12 text-center text-sm font-semibold text-[#454745]">
-            Loading profile...
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
+        <DialogHeader>
+          {isLoading ? (
+            <TalentProfileSkeleton />
+          ) : talent ? (
+            <>
               <div className="flex items-start gap-4">
                 <InitialsAvatar
                   name={talent.name}
@@ -61,76 +99,80 @@ export function TalentProfileDialog({
                   )}
                 </div>
               </div>
-            </DialogHeader>
 
-            <div className="space-y-6">
-              <div className="flex flex-wrap gap-2">
-                {talent.skills.map((skill) => (
-                  <span
-                    key={`${skill.name}-${skill.level}`}
-                    className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-black"
-                  >
-                    {skill.name}
-                  </span>
-                ))}
-              </div>
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-2">
+                  {talent.skills.map((skill) => (
+                    <span
+                      key={`${skill.name}-${skill.level}`}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-black"
+                    >
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
 
-              <div className="grid gap-3 rounded-xl border border-gray-200 p-4 sm:grid-cols-2">
-                <p className="text-sm font-semibold text-[#454745]">
-                  Email:{" "}
-                  <span className="text-foreground">
-                    {talent.email ?? "Unavailable"}
-                  </span>
-                </p>
-                <p className="text-sm font-semibold text-[#454745]">
-                  Resume:{" "}
-                  <span className="text-foreground">
-                    {talent.resumeKey ? "Available" : "Not uploaded"}
-                  </span>
-                </p>
-                <p className="text-sm font-semibold text-[#454745]">
-                  Experience:{" "}
-                  <span className="text-foreground">
-                    {talent.yearsExperience ?? 0} years
-                  </span>
-                </p>
-                <p className="text-sm font-semibold text-[#454745]">
-                  Availability:{" "}
-                  <span className="text-foreground">
-                    {talent.availability ?? "Not specified"}
-                  </span>
-                </p>
-              </div>
+                <div className="grid gap-3 rounded-xl border border-gray-200 p-4 sm:grid-cols-2">
+                  <p className="text-sm font-semibold text-[#454745]">
+                    Email:{" "}
+                    <span className="text-foreground">
+                      {talent.email ?? "Unavailable"}
+                    </span>
+                  </p>
+                  <p className="text-sm font-semibold text-[#454745]">
+                    Resume:{" "}
+                    <span className="text-foreground">
+                      {talent.resumeKey ? "Available" : "Not uploaded"}
+                    </span>
+                  </p>
+                  <p className="text-sm font-semibold text-[#454745]">
+                    Experience:{" "}
+                    <span className="text-foreground">
+                      {talent.yearsExperience ?? 0} years
+                    </span>
+                  </p>
+                  <p className="text-sm font-semibold text-[#454745]">
+                    Availability:{" "}
+                    <span className="text-foreground">
+                      {talent.availability ?? "Not specified"}
+                    </span>
+                  </p>
+                </div>
 
-              {talent.bio && (
-                <p className="text-[18px] font-normal leading-[1.44] tracking-[0.18px] text-[#454745] ">
-                  {talent.bio}
-                </p>
-              )}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                {talent.email && (
-                  <Button asChild variant="primary">
-                    <a href={`mailto:${talent.email}`}>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Mail talent
-                    </a>
-                  </Button>
+                {talent.bio && (
+                  <p className="text-[18px] font-normal leading-[1.44] tracking-[0.18px] text-[#454745] ">
+                    {talent.bio}
+                  </p>
                 )}
-                {talent.resumeKey && (
-                  <Button
-                    type="button"
-                    variant="default"
-                    className="rounded-full transition-transform hover:scale-105 active:scale-95"
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Resume available
-                  </Button>
-                )}
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  {talent.email && (
+                    <Button asChild variant="primary">
+                      <a href={`mailto:${talent.email}`}>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Mail talent
+                      </a>
+                    </Button>
+                  )}
+                  {talent.resumeKey && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      className="rounded-full transition-transform hover:scale-105 active:scale-95"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Resume available
+                    </Button>
+                  )}
+                </div>
               </div>
+            </>
+          ) : (
+            <div className="py-12 text-center text-sm font-semibold text-[#454745]">
+              Profile not found
             </div>
-          </>
-        )}
+          )}
+        </DialogHeader>
       </DialogContent>
     </Dialog>
   );

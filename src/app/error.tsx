@@ -86,7 +86,7 @@ export default function Error({
             <Link href="/">
               <Button
                 size="lg"
-                className="bg-black hover:bg-black/90 text-white gap-2 w-full sm:w-auto"
+                className="bg-brand-primary hover:bg-brand-primary-dark/90 text-white gap-2 w-full sm:w-auto"
               >
                 <Home className="w-4 h-4" />
                 Go back home

@@ -13,7 +13,7 @@ const buttonVariants = cva(
         default:
           "border border-input bg-white text-gray-700 hover:bg-gray-50 rounded-lg h-10 px-4 py-2",
         primary:
-          "bg-black text-white rounded-lg h-10 px-5 py-2.5 hover:bg-[#1a1a1a] active:bg-[#333333]",
+          "bg-brand-primary text-white rounded-lg h-10 px-5 py-2.5 hover:bg-brand-primary-dark active:bg-[#4a37c9]",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg h-10 px-4 py-2",
         secondary:

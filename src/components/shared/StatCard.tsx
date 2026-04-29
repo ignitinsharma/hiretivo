@@ -29,7 +29,7 @@ export function StatCard({
             <p
               className={cn(
                 'text-sm font-medium mt-2',
-                trend.isPositive ? 'text-black' : 'text-red-600'
+                trend.isPositive ? 'text-brand-primary' : 'text-red-600'
               )}
             >
               {trend.isPositive ? '+' : ''}

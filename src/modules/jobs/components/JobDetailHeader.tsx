@@ -18,6 +18,8 @@ interface JobData {
   salaryMin: number | null;
   salaryMax: number | null;
   currency: string | null;
+  applyType: string;
+  externalApplyUrl: string | null;
 }
 
 interface JobDetailHeaderProps {
@@ -90,7 +92,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
             Save
           </Button>
           <Button
-            onClick={() => openApplyModal(job.id)}
+            onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
             variant="primary"
             className="px-8 py-3"
           >

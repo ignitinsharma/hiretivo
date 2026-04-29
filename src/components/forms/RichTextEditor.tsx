@@ -53,7 +53,7 @@ export function RichTextEditor({
       attributes: {
         class: cn(
           'prose prose-slate max-w-none min-h-[200px] px-4 py-3 outline-none',
-          'text-[18px] font-normal leading-[1.44] tracking-[0.18px]  text-foreground',
+          'text-base font-normal leading-relaxed text-foreground',
           'focus:outline-none',
         ),
       },
@@ -84,8 +84,8 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'rounded-xl border border-input bg-background overflow-hidden transition-colors',
-        'focus-within:border-black focus-within:ring-2 focus-within:ring-black/30',
+        'rounded-xl border border-gray-200 bg-white overflow-hidden transition-colors',
+        'focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20',
         hasError && 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500/30',
         disabled && 'opacity-50 cursor-not-allowed',
         className,

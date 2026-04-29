@@ -1,48 +1,59 @@
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { auth } from '@/auth';
-import { UserRole } from '@/constants/enums';
-import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from '@/constants/nav';
-import { NavLink } from '@/components/layout/NavLink';
-import { SeekerNavLink } from '@/components/layout/SeekerNavLink';
-import { ChevronDown, Settings } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { auth } from "@/auth";
+import { UserRole } from "@/constants/enums";
+import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
+import { NavLink } from "@/components/layout/NavLink";
+import { SeekerNavLink } from "@/components/layout/SeekerNavLink";
+import { ChevronDown, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { SignOutButton } from '@/components/layout/SignOutButton';
-import { Logo } from '@/components/shared/Logo';
+} from "@/components/ui/dropdown-menu";
+import { SignOutButton } from "@/components/layout/SignOutButton";
+import { Logo } from "@/components/shared/Logo";
 
 interface HeaderProps {
   className?: string;
+  publicAudience?: "seeker" | "recruiter";
 }
 
 /** Nav items to show — only Jobs and Applied Jobs, no Settings. */
 const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
-  (item) => item.href !== '/seeker/settings',
+  (item) => item.href !== "/seeker/settings",
 );
 
-export async function Header({ className }: HeaderProps) {
+export async function Header({
+  className,
+  publicAudience = "seeker",
+}: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isSeeker = !!session && role === UserRole.SEEKER;
   const isRecruiter = !!session && role === UserRole.RECRUITER;
+  const isRecruiterAudience = publicAudience === "recruiter";
 
   return (
     <nav
       className={cn(
-        'sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3',
-        className
+        "sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3",
+        className,
       )}
       data-purpose="main-navigation"
     >
       <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
         {/* Logo */}
         <Link
-          href={session ? (isRecruiter ? '/recruiter/dashboard' : '/seeker/dashboard') : '/'}
+          href={
+            session
+              ? isRecruiter
+                ? "/recruiter/dashboard"
+                : "/seeker/dashboard"
+              : "/"
+          }
           className="flex items-center"
           data-purpose="logo"
         >
@@ -51,9 +62,17 @@ export async function Header({ className }: HeaderProps) {
 
         {/* Seeker nav links */}
         {isSeeker && (
-          <nav className="hidden md:flex flex-1 justify-center gap-8" aria-label="Seeker navigation">
+          <nav
+            className="hidden md:flex flex-1 justify-center gap-8"
+            aria-label="Seeker navigation"
+          >
             {SEEKER_HEADER_ITEMS.map((item) => (
-              <SeekerNavLink key={item.href} href={item.href} iconName={item.iconName} label={item.label} />
+              <SeekerNavLink
+                key={item.href}
+                href={item.href}
+                iconName={item.iconName}
+                label={item.label}
+              />
             ))}
           </nav>
         )}
@@ -73,20 +92,26 @@ export async function Header({ className }: HeaderProps) {
           {!session && (
             <>
               <Link
-                href="/recruiter/register"
-                className="hidden sm:block px-5 py-2.5 border border-black/20 text-black bg-gray-50 rounded-lg text-sm font-bold hover:bg-black hover:text-white transition-all"
+                href="/hire-talent"
+                className="hidden sm:block px-5 py-2.5 border border-brand-primary/20 text-black bg-gray-50 rounded-lg text-sm font-bold hover:bg-brand-primary hover:text-white transition-all"
               >
                 Hire Talent
               </Link>
               <Link
-                href="/recruiter/register"
+                href={
+                  isRecruiterAudience
+                    ? "/recruiter/register"
+                    : "/seeker/register"
+                }
                 className="hidden sm:block px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-foreground hover:bg-gray-50 transition-all"
               >
-                Post a Job
+                Sign Up
               </Link>
               <Link
-                href="/seeker/login"
-                className="px-6 py-2.5 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-all"
+                href={
+                  isRecruiterAudience ? "/recruiter/login" : "/seeker/login"
+                }
+                className="px-6 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-semibold hover:bg-brand-primary-dark transition-all"
               >
                 Sign In
               </Link>
@@ -99,8 +124,8 @@ export async function Header({ className }: HeaderProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="relative cursor-pointer flex items-center gap-2 group outline-none">
-                    <div className="w-9 h-9 rounded-full bg-black/10 border-2 border-black/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
-                      {session.user?.name?.[0]?.toUpperCase() ?? 'U'}
+                    <div className="w-9 h-9 rounded-full bg-black/10 border-2 border-brand-primary/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
+                      {session.user?.name?.[0]?.toUpperCase() ?? "U"}
                     </div>
                     <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </div>
@@ -108,7 +133,9 @@ export async function Header({ className }: HeaderProps) {
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem asChild>
                     <Link
-                      href={isSeeker ? '/seeker/settings' : '/recruiter/settings'}
+                      href={
+                        isSeeker ? "/seeker/settings" : "/recruiter/settings"
+                      }
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <Settings className="w-4 h-4" />

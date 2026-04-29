@@ -8,11 +8,12 @@ import { UserRole, JobStatus } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 
-const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === 'true';
+const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 
 export const metadata = generatePageMetadata({
   title: "Skills-Based Remote Job Portal",
-  description: "Find remote jobs matched to your skills. No resume black holes — just skill-based matching for developers, designers, and more.",
+  description:
+    "Find remote jobs matched to your skills. No resume black holes — just skill-based matching for developers, designers, and more.",
 });
 
 function formatStat(n: number): string {
@@ -26,31 +27,37 @@ export default async function Home() {
     return <ComingSoonPage />;
   }
 
-  const [activeJobCount, seekerCount, companyCount, featuredJobs] = await Promise.all([
-    prisma.job.count({ where: { status: JobStatus.OPEN } }).catch(() => 0),
-    prisma.user.count({ where: { role: UserRole.SEEKER } }).catch(() => 0),
-    prisma.recruiterProfile.count().catch(() => 0),
-    prisma.job.findMany({
-      where: { status: JobStatus.OPEN },
-      orderBy: { createdAt: 'desc' },
-      take: 6,
-      include: {
-        skills: { include: { skill: true } },
-        recruiter: {
-          select: {
-            recruiterProfile: {
-              select: { companyName: true, logo: true },
+  const [activeJobCount, seekerCount, companyCount, featuredJobs] =
+    await Promise.all([
+      prisma.job.count({ where: { status: JobStatus.OPEN } }).catch(() => 0),
+      prisma.user.count({ where: { role: UserRole.SEEKER } }).catch(() => 0),
+      prisma.recruiterProfile.count().catch(() => 0),
+      prisma.job
+        .findMany({
+          where: { status: JobStatus.OPEN },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          include: {
+            skills: { include: { skill: true } },
+            recruiter: {
+              select: {
+                recruiterProfile: {
+                  select: { companyName: true, logo: true },
+                },
+              },
             },
           },
-        },
-      },
-    }).catch(() => []),
-  ]);
+        })
+        .catch(() => []),
+    ]);
   return (
     <>
       <Header />
       <main>
-        <section className="pt-20 pb-16 px-4 grid-bg" data-purpose="hero-section">
+        <section
+          className="pt-20 pb-16 px-4 grid-bg"
+          data-purpose="hero-section"
+        >
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-50 rounded-full mb-8">
               <span className="text-black text-sm font-bold tracking-wide">
@@ -58,10 +65,9 @@ export default async function Home() {
               </span>
             </div>
             <h1 className="text-foreground text-5xl md:text-7xl font-extrabold mb-6 leading-[1.1]">
-              Find remote work <br />
-              <span className="text-black italic">
-                that fits your life
-              </span>
+              <span className="text-brand-primary">Find remote work</span>{" "}
+              <br />
+              <span className="text-black italic">that fits your life</span>
             </h1>
             <p className="text-muted-foreground text-xl md:text-2xl mb-12 max-w-2xl mx-auto">
               Find your first remote job that fits your lifestyle. Thousands of
@@ -92,31 +98,19 @@ export default async function Home() {
               data-purpose="popular-tags"
             >
               <span className="text-muted-foreground">Popular:</span>
-              <Link
-                className="text-black font-medium hover:underline"
-                href="#"
-              >
+              <Link className="text-black font-medium hover:underline" href="#">
                 React Developer
               </Link>
               <span className="text-gray-300">•</span>
-              <Link
-                className="text-black font-medium hover:underline"
-                href="#"
-              >
+              <Link className="text-black font-medium hover:underline" href="#">
                 Product Designer
               </Link>
               <span className="text-gray-300">•</span>
-              <Link
-                className="text-black font-medium hover:underline"
-                href="#"
-              >
+              <Link className="text-black font-medium hover:underline" href="#">
                 Sales Lead
               </Link>
               <span className="text-gray-300">•</span>
-              <Link
-                className="text-black font-medium hover:underline"
-                href="#"
-              >
+              <Link className="text-black font-medium hover:underline" href="#">
                 Content Writer
               </Link>
             </div>
@@ -233,7 +227,7 @@ export default async function Home() {
                         className="w-12 h-12 rounded-full object-cover"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUqv2uMlfz6K-UTHWuIZ4yO069aksF84VRAFPayGhBehWmwwqMj_EGUM9BTqpi6l5Zsa4AvUOE1WMoZWSydMfP7Z1GzEHVBUYrTv2gJ8wbYtS32mCJ5lzhejdzdcC8BMhsjH88KGjc0GfLoKRMtLu_1UuStcw43bnCNJ7e2uUE3mMp1VQWI2yIHQZGshiVFbLdnWkLLgvdityHoZ2a0kEuGdcG4kzuLdbERyIhx_I_KmJDfGcAsJmkxamwzU58RHMgZ_NTVWxNonLr"
                       />
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-black rounded-full border-2 border-white flex items-center justify-center">
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-primary rounded-full border-2 border-white flex items-center justify-center">
                         <span className="material-symbols-outlined text-white text-[10px] font-bold">
                           check
                         </span>
@@ -249,7 +243,7 @@ export default async function Home() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-2 rounded-lg bg-gray-50/50 border border-black/10 flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-gray-50/50 border border-brand-primary/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-black text-xs">
                           verified
@@ -265,7 +259,7 @@ export default async function Home() {
                         MATCH
                       </span>
                     </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 border border-black/10 flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-gray-50/50 border border-brand-primary/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-black text-xs">
                           history
@@ -281,7 +275,7 @@ export default async function Home() {
                         MATCH
                       </span>
                     </div>
-                    <div className="p-2 rounded-lg bg-gray-50/50 border border-black/10 flex items-center justify-between">
+                    <div className="p-2 rounded-lg bg-gray-50/50 border border-brand-primary/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-black text-xs">
                           schedule
@@ -316,14 +310,14 @@ export default async function Home() {
                         cy="48"
                         fill="transparent"
                         r="40"
-                        stroke="#000000"
+                        stroke="#7560ff"
                         strokeDasharray="251.2"
                         strokeDashoffset="2.5"
                         strokeWidth="8"
                       ></circle>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-extrabold text-black leading-none">
+                      <span className="text-2xl font-extrabold text-brand-primary leading-none">
                         99%
                       </span>
                       <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-tighter mt-0.5">
@@ -359,7 +353,7 @@ export default async function Home() {
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="px-4 py-1.5 bg-black text-white rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
+                    <div className="px-4 py-1.5 bg-brand-primary text-white rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[12px]">
                         auto_awesome
                       </span>
@@ -398,7 +392,7 @@ export default async function Home() {
                             Design Systems
                           </span>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="bg-black h-full w-[95%]"></div>
+                            <div className="bg-brand-primary h-full w-[95%]"></div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-[11px]">
@@ -406,13 +400,15 @@ export default async function Home() {
                             Remote Workflow
                           </span>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="bg-black h-full w-full"></div>
+                            <div className="bg-brand-primary h-full w-full"></div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-muted-foreground">SaaS Industry</span>
+                          <span className="text-muted-foreground">
+                            SaaS Industry
+                          </span>
                           <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="bg-black h-full w-[90%]"></div>
+                            <div className="bg-brand-primary h-full w-[90%]"></div>
                           </div>
                         </div>
                       </div>
@@ -478,7 +474,7 @@ export default async function Home() {
                 </p>
               </div>
               <Link
-                className="text-black font-bold hover:underline hidden sm:block"
+                className="text-primary font-bold hover:underline hidden sm:block"
                 href="/jobs"
               >
                 View all jobs →
@@ -493,7 +489,7 @@ export default async function Home() {
                 featuredJobs.map((job) => (
                   <div
                     key={job.id}
-                    className="bg-white border border-gray-200 rounded-xl p-6 hover:border-black/50 transition-all  group"
+                    className="bg-white border border-gray-200 rounded-xl p-6 hover:border-brand-primary/50 transition-all  group"
                     data-purpose="job-card"
                   >
                     <div className="flex items-start justify-between mb-6">
@@ -507,7 +503,8 @@ export default async function Home() {
                           />
                         ) : (
                           <span className="text-black font-bold text-lg">
-                            {job.recruiter.recruiterProfile?.companyName?.[0] ?? 'H'}
+                            {job.recruiter.recruiterProfile?.companyName?.[0] ??
+                              "H"}
                           </span>
                         )}
                       </div>
@@ -515,13 +512,13 @@ export default async function Home() {
                         New
                       </span>
                     </div>
-                    <h3 className="text-foreground text-lg font-bold mb-2 group-hover:text-black transition-colors">
+                    <h3 className="text-foreground text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
                       {job.title}
                     </h3>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {job.jobType && (
                         <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                          {job.jobType.replace('_', '-')}
+                          {job.jobType.replace("_", "-")}
                         </span>
                       )}
                       {job.category && (
@@ -534,7 +531,7 @@ export default async function Home() {
                       <span className="text-black font-bold text-sm">
                         {job.salaryMin && job.salaryMax
                           ? `$${Math.round(job.salaryMin / 1000)}k – $${Math.round(job.salaryMax / 1000)}k`
-                          : 'Competitive'}
+                          : "Competitive"}
                       </span>
                       <Link
                         className="text-foreground font-semibold text-sm hover:translate-x-1 transition-transform"
@@ -550,7 +547,10 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="py-24 bg-white grid-bg" data-purpose="categories-section">
+        <section
+          className="py-24 bg-white grid-bg"
+          data-purpose="categories-section"
+        >
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
               <h2 className="text-foreground text-3xl font-extrabold mb-4">
@@ -563,28 +563,28 @@ export default async function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">code</span>
                 </div>
                 <h4 className="text-foreground font-bold mb-1">Engineering</h4>
                 <span className="text-gray-500 text-sm">1,240 jobs</span>
               </div>
               <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">palette</span>
                 </div>
                 <h4 className="text-foreground font-bold mb-1">Design</h4>
                 <span className="text-gray-500 text-sm">450 jobs</span>
               </div>
               <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">pie_chart</span>
                 </div>
                 <h4 className="text-foreground font-bold mb-1">Marketing</h4>
                 <span className="text-gray-500 text-sm">320 jobs</span>
               </div>
               <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
                   <span className="material-symbols-outlined">trending_up</span>
                 </div>
                 <h4 className="text-foreground font-bold mb-1">Sales</h4>
@@ -610,7 +610,7 @@ export default async function Home() {
                 <div className="flex flex-wrap gap-4">
                   <Link
                     href="/recruiter/register"
-                    className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all  inline-block"
+                    className="px-8 py-4 bg-brand-primary text-white font-bold rounded-xl hover:bg-brand-primary-dark transition-all  inline-block"
                   >
                     Post your Job Today
                   </Link>

@@ -1,12 +1,12 @@
-import React from 'react';
-import { auth } from '@/auth';
-import { RecommendedJobsList } from '@/modules/seeker/dashboard/components/RecommendedJobsList';
-import { SeekerDashboardSidebar } from '@/modules/seeker/dashboard/components/SeekerDashboardSidebar';
-import { UpcomingInterviewsCard } from '@/modules/seeker/dashboard/components/UpcomingInterviewsCard';
+import React from "react";
+import { auth } from "@/auth";
+import { RecommendedJobsList } from "@/modules/seeker/dashboard/components/RecommendedJobsList";
+import { SeekerDashboardSidebar } from "@/modules/seeker/dashboard/components/SeekerDashboardSidebar";
+import { UpcomingInterviewsCard } from "@/modules/seeker/dashboard/components/UpcomingInterviewsCard";
 
 export default async function SeekerDashboardPage() {
   const session = await auth();
-  const greetingName = session?.user?.name?.split(' ')[0] ?? 'there';
+  const greetingName = session?.user?.name?.split(" ")[0] ?? "there";
 
   return (
     <>

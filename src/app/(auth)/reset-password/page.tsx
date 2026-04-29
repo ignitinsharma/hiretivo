@@ -75,7 +75,7 @@ function ResetPasswordContent() {
             </p>
             <Button
               asChild
-              className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              className="w-full rounded-full bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95"
             >
               <Link href="/forgot-password">Request new link</Link>
             </Button>
@@ -90,7 +90,7 @@ function ResetPasswordContent() {
                 id="newPassword"
                 type="password"
                 autoComplete="new-password"
-                className="rounded-xl focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/30"
+                className="rounded-xl focus-visible:border-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary/20"
                 {...form.register('newPassword')}
               />
               {form.formState.errors.newPassword && (
@@ -108,7 +108,7 @@ function ResetPasswordContent() {
                 id="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                className="rounded-xl focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/30"
+                className="rounded-xl focus-visible:border-brand-primary focus-visible:ring-2 focus-visible:ring-brand-primary/20"
                 {...form.register('confirmPassword')}
               />
               {form.formState.errors.confirmPassword && (
@@ -121,7 +121,7 @@ function ResetPasswordContent() {
             <Button
               type="submit"
               disabled={form.formState.isSubmitting}
-              className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-black/30"
+              className="w-full rounded-full bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:ring-2 focus-visible:ring-black/30"
             >
               {form.formState.isSubmitting ? (
                 <>

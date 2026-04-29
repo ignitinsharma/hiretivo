@@ -50,7 +50,7 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="border-b border-slate-100 p-6">
         <h3 className="text-lg font-bold text-slate-900">Avatar</h3>
         <p className="text-sm text-slate-500">

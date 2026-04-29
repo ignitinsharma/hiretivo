@@ -32,15 +32,9 @@ const TD_BASE = "py-6 px-4 text-sm";
 const CELL_LABEL = cn(TD_BASE, "font-semibold text-slate-700");
 const CELL_MUTED = cn(TD_BASE, "text-slate-400");
 const CELL_BODY = cn(TD_BASE, "text-slate-600");
-const CELL_PRO = cn(
-  TD_BASE,
-  "font-bold text-black bg-gray-100/50",
-);
+const CELL_PRO = cn(TD_BASE, "font-bold text-black bg-gray-100/50");
 const CELL_CHECK_GREEN = cn(TD_BASE, "text-black font-bold");
-const CELL_PRO_CHECK = cn(
-  TD_BASE,
-  "font-bold text-black bg-gray-100/50",
-);
+const CELL_PRO_CHECK = cn(TD_BASE, "font-bold text-black bg-gray-100/50");
 
 // ─── Feature comparison data (CLAUDE.md §15.4) ──────────────────────────────
 
@@ -146,9 +140,7 @@ function PricingCardFeatureList({
           <CircleCheck
             className={cn(
               "mt-0.5 shrink-0",
-              highlighted
-                ? "fill-white text-black"
-                : "fill-black text-white",
+              highlighted ? "fill-primary" : "fill-primary text-white",
             )}
             size={16}
             strokeWidth={2.5}
@@ -180,7 +172,8 @@ function PricingCard({
   const prices = tier[currency];
   const isHighlighted = tier.highlighted === true;
   const isCustom = tier.isCustom === true;
-  const isCurrentPlan = userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO;
+  const isCurrentPlan =
+    userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO;
 
   const displayedCtaText = isCurrentPlan ? "Manage Plan" : tier.cta;
   const priceFormatter = new Intl.NumberFormat(
@@ -202,7 +195,7 @@ function PricingCard({
       className={cn(
         "p-6 rounded-xl flex flex-col h-full text-left relative",
         isHighlighted
-          ? "bg-black border-2 border-black  transform lg:scale-105 z-10 text-white"
+          ? "bg-brand-primary border-2 border-brand-primary  transform lg:scale-105 z-10 text-white"
           : "bg-white border border-gray-200 ",
       )}
     >
@@ -223,7 +216,7 @@ function PricingCard({
         </h3>
         <p
           className={cn(
-            "text-xs mb-4 min-h-[32px]",
+            "text-xs mb-4 min-h-8",
             isHighlighted ? "text-gray-100" : "text-slate-500",
           )}
         >
@@ -232,7 +225,7 @@ function PricingCard({
 
         {isCustom ? (
           <>
-            <div className="flex items-baseline gap-1 min-h-[48px]">
+            <div className="flex items-baseline gap-1 min-h-12">
               <span className="text-4xl font-extrabold text-slate-900">
                 Custom
               </span>
@@ -251,7 +244,9 @@ function PricingCard({
                 )}
               >
                 {sym}
-                {displayedPrice === null ? "" : priceFormatter.format(displayedPrice)}
+                {displayedPrice === null
+                  ? ""
+                  : priceFormatter.format(displayedPrice)}
               </span>
               {tier.id !== PricingTierId.FREE && (
                 <span
@@ -267,16 +262,17 @@ function PricingCard({
             {tier.id === PricingTierId.FREE && (
               <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
             )}
-            {tier.id !== PricingTierId.FREE && currency === CurrencyCode.INR && (
-              <p
-                className={cn(
-                  "mt-1 text-[10px] font-bold",
-                  isHighlighted ? "text-white" : "text-slate-400",
-                )}
-              >
-                GST included
-              </p>
-            )}
+            {tier.id !== PricingTierId.FREE &&
+              currency === CurrencyCode.INR && (
+                <p
+                  className={cn(
+                    "mt-1 text-[10px] font-bold",
+                    isHighlighted ? "text-white" : "text-slate-400",
+                  )}
+                >
+                  GST included
+                </p>
+              )}
           </>
         )}
       </div>
@@ -312,7 +308,9 @@ function PricingCard({
         </div>
       )}
 
-      {tier.id === PricingTierId.FREE && <div className="h-px bg-slate-100 mb-6" />}
+      {tier.id === PricingTierId.FREE && (
+        <div className="h-px bg-slate-100 mb-6" />
+      )}
 
       {isCustom && <div className="h-px bg-slate-100 mb-6" />}
 
@@ -414,7 +412,7 @@ function PricingFaqSection() {
                   {item.question}
                 </h4>
                 <CirclePlus
-                  className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-black-light group-hover:text-black"
+                  className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-black-light group-hover:text-brand-primary"
                   strokeWidth={2}
                   aria-hidden
                 />
@@ -444,7 +442,9 @@ interface PricingClientProps {
   currency: PricingCurrency;
 }
 
-async function createCheckoutSession(body?: CheckoutRequestInput): Promise<string> {
+async function createCheckoutSession(
+  body?: CheckoutRequestInput,
+): Promise<string> {
   return billingService.createCheckoutSession(body);
 }
 
@@ -551,8 +551,8 @@ export function PricingClient({ currency }: PricingClientProps) {
                 )}
               >
                 Annual
-                <span className="bg-black text-black-foreground text-[10px] px-2 py-0.5 rounded-full uppercase font-extrabold tracking-wider pointer-events-none">
-                  Save yearly
+                <span className="bg-primary text-white text-[10px] px-2 py-1 rounded-full uppercase font-extrabold tracking-wider pointer-events-none">
+                  Save 20% yearly
                 </span>
               </button>
             </div>

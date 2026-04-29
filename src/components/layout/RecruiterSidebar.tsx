@@ -199,7 +199,7 @@ function RecruiterSidebarInner({
                 className={cn(
                   "flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all",
                   isActive
-                    ? "border-black bg-gray-50 text-black font-semibold"
+                    ? "border-brand-primary bg-brand-primary/10 text-brand-primary font-semibold"
                     : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium",
                   collapsed && "justify-center px-0 border-l-0 rounded-md mx-1",
                 )}
@@ -218,7 +218,7 @@ function RecruiterSidebarInner({
                     className={cn(
                       "text-[10px] font-semibold rounded px-1.5 py-0.5",
                       item.badgeVariant === "primary"
-                        ? "bg-black text-white"
+                        ? "bg-brand-primary text-white"
                         : "bg-slate-100 text-slate-600",
                     )}
                   >
@@ -226,7 +226,7 @@ function RecruiterSidebarInner({
                   </span>
                 )}
                 {collapsed && item.badge && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-black text-[8px] font-semibold flex items-center justify-center rounded-full text-white border border-white">
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-primary text-[8px] font-semibold flex items-center justify-center rounded-full text-white border border-white">
                     {item.badge}
                   </span>
                 )}

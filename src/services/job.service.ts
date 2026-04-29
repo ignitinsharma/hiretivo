@@ -42,6 +42,7 @@ export interface JobMutationPayload {
   description: string;
   jobType: JobType;
   applyType: ApplyType;
+  externalApplyUrl?: string;
   workType?: WorkType;
   experienceLevel?: string;
   category?: string;

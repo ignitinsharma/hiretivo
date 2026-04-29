@@ -34,7 +34,7 @@ export function PasswordSecuritySection() {
   return (
     <section
       id="security"
-      className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+      className="bg-white border border-slate-200 rounded-xl overflow-hidden"
     >
       <div className="p-6 border-b border-slate-100">
         <h3 className="text-lg font-bold text-slate-900">Password & Security</h3>

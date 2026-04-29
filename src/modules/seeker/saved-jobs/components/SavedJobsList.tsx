@@ -73,7 +73,7 @@ export function SavedJobsList() {
         <p className="mx-auto mt-3 max-w-xl text-[18px] font-normal leading-[1.44] tracking-[0.18px] text-[#454745] ">
           Save jobs from your recommendations so the strongest matches stay easy to revisit.
         </p>
-        <Button asChild className="mt-6 rounded-full bg-black text-white transition-transform hover:scale-105 active:scale-95">
+        <Button asChild className="mt-6 rounded-full bg-brand-primary text-white transition-transform hover:scale-105 active:scale-95">
           <a href="/seeker/dashboard">Browse recommendations</a>
         </Button>
       </div>
@@ -97,7 +97,7 @@ export function SavedJobsList() {
             onApply={
               savedJob.application || savedJob.job.isClosed
                 ? undefined
-                : () => openApplyModal(savedJob.job.id, savedJob.job.title, savedJob.job.companyName)
+                : () => openApplyModal(savedJob.job.id, savedJob.job.title, savedJob.job.companyName, savedJob.job.applyType, savedJob.job.externalApplyUrl)
             }
             onToggleSave={() => handleRemove(savedJob.job.id)}
           />

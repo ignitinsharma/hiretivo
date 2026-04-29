@@ -34,7 +34,7 @@ function getInitials(name: string | null | undefined): string {
 
 /** Nav items to show — only Jobs and Applied Jobs per D-18. */
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
-  (item) => item.href !== "/seeker/settings",
+  (item) => item.href !== "/seeker/settings" && item.href !== "/contact",
 );
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -106,6 +106,16 @@ export function SeekerHeader() {
                   <DropdownMenuSeparator />
                 </>
               )}
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/contact"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <LifeBuoy className="w-4 h-4" />
+                  Contact & Support
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link
                   href="/seeker/settings"

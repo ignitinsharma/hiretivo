@@ -72,7 +72,7 @@ export default async function ExternalRedirectionPage({
             ) : (
               <Link
                 href={`/jobs/${params.id}`}
-                className="block w-full rounded-full bg-black px-6 py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+                className="block w-full rounded-full bg-brand-primary px-6 py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
               >
                 Back to Job
               </Link>

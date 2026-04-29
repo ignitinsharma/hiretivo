@@ -25,7 +25,7 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description, variant }: FeatureCardProps) {
   const variantClasses = {
-    primary: 'bg-black text-white relative overflow-hidden group',
+    primary: 'bg-brand-primary text-white relative overflow-hidden group',
     light: 'bg-gray-50 hover:bg-gray-200 border border-gray-200',
     white: 'bg-white border border-gray-200 hover:-translate-y-1',
   };
@@ -38,8 +38,8 @@ function FeatureCard({ icon, title, description, variant }: FeatureCardProps) {
 
   const iconColorClasses = {
     primary: 'text-white',
-    light: 'text-black',
-    white: 'text-black',
+    light: 'text-brand-primary',
+    white: 'text-brand-primary',
   };
 
   return (
@@ -147,7 +147,7 @@ export function ComingSoonPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !isValid}
-                  className="px-10 py-4 bg-black text-white font-bold rounded-xl md:rounded-full hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
+                  className="px-10 py-4 bg-brand-primary text-white font-bold rounded-xl md:rounded-full hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
                 >
                   {isSubmitting ? 'Submitting...' : 'Get Early Access'}
                 </button>

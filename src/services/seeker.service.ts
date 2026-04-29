@@ -44,6 +44,10 @@ export const seekerService = {
     await apiClient.patch('/seeker/digest', { enabled });
   },
 
+  dismissJob: async (jobId: string): Promise<void> => {
+    await apiClient.post(`/seeker/dismissed-jobs/${jobId}`);
+  },
+
   getSettings: async (): Promise<DataResponse<SeekerSettingsData>> => {
     const { data } = await apiClient.get<DataResponse<SeekerSettingsData>>('/seeker/settings');
     return data;

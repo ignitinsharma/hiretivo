@@ -1,10 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { ApplicationStatus, JobStatus, UserRole } from "@/constants/enums";
+import {
+  ApplicationStatus,
+  CurrencyCode,
+  JobStatus,
+  UserRole,
+} from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { createApplicationSchema } from "@/lib/validations/application";
 import { applyRateLimiter } from "@/lib/rate-limit";
+
+function formatSalaryRange(
+  min: number | null,
+  max: number | null,
+  currency: string | null,
+): string {
+  const cur = currency ?? CurrencyCode.USD;
+  const symbol =
+    cur === CurrencyCode.USD
+      ? "$"
+      : cur === CurrencyCode.GBP
+        ? "£"
+        : cur === CurrencyCode.EUR
+          ? "€"
+          : "";
+  if (!min && !max) return "Not specified";
+  const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : "";
+  const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : "";
+  if (min && max) return `${minStr} – ${maxStr}`;
+  return minStr || maxStr;
+}
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
@@ -115,12 +141,26 @@ export async function GET() {
       job: {
         select: {
           title: true,
+          salaryMin: true,
+          salaryMax: true,
+          currency: true,
+          jobType: true,
+          workType: true,
+          experienceLevel: true,
+          skills: {
+            select: {
+              skill: { select: { name: true } },
+            },
+          },
           recruiter: {
             select: {
               recruiterProfile: {
                 select: {
                   companyName: true,
                   logo: true,
+                  companySize: true,
+                  fundingType: true,
+                  industry: true,
                 },
               },
             },
@@ -139,6 +179,19 @@ export async function GET() {
       companyName:
         application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company",
       companyLogoUrl: resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),
+      salaryRange: formatSalaryRange(
+        application.job.salaryMin,
+        application.job.salaryMax,
+        application.job.currency,
+      ),
+      jobType: application.job.jobType,
+      workType: application.job.workType,
+      experienceLevel: application.job.experienceLevel,
+      companyIndustry: application.job.recruiter.recruiterProfile?.industry ?? null,
+      companySize: application.job.recruiter.recruiterProfile?.companySize ?? null,
+      companyFundingType:
+        application.job.recruiter.recruiterProfile?.fundingType ?? null,
+      skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
     })),

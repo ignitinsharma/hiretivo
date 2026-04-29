@@ -15,6 +15,8 @@ export interface SavedJobItem {
   } | null;
   job: JobListItem & {
     isClosed: boolean;
+    applyType?: string;
+    externalApplyUrl?: string | null;
   };
 }
 

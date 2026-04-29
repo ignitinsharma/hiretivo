@@ -2,26 +2,26 @@
 
 ## 1. Visual Theme & Atmosphere
 
-Hiretivo is a skills-based remote job portal with a clean, confident monochrome aesthetic. The design operates on a pure white canvas with near-black text (`#0a0a0a`) and black primary buttons — a minimalist, professional look inspired by modern SaaS design. Inter serves as the body font with tight letter-spacing on headings, creating a crisp, authoritative voice.
+Hiretivo is a skills-based remote job portal with a clean, professional aesthetic anchored by a vibrant purple primary color (`#7560ff`) on a pure white canvas. Inter serves as the body font with tight letter-spacing on headings, creating a crisp, modern voice.
 
 **Key Characteristics:**
 
 - Inter at weight 700–800 for headings — bold, tight letter-spacing
-- Black (`#000000`) primary buttons with white text — clean, confident
+- Purple (`#7560ff`) primary buttons with white text — vibrant, confident
+- Darker purple (`#5a47d9`) for hover states
 - Inter body at weight 400–500 — readable, neutral
 - Near-black (`#0a0a0a`) primary text, gray (`#6b7280`) body text
 - Subtle grid background pattern on hero sections
 - No shadows — depth from borders only
-- No accent colors — fully monochrome
 - Light mode only — no dark mode
 
 ## 2. Color Palette & Roles
 
-### Primary (Monochrome)
+### Primary (Purple)
 
-- **Near Black** (`#0a0a0a`): Primary text, headings
-- **Black** (`#000000`): Primary CTA buttons, strong emphasis
-- **White** (`#ffffff`): Background, button text on black
+- **Primary Purple** (`#7560ff`): Primary CTA buttons, focus rings, active states
+- **Primary Dark** (`#5a47d9`): Hover state for primary buttons
+- **White** (`#ffffff`): Background, button text on purple
 - **Light Gray** (`#f9fafb`): Subtle background sections, surfaces
 - **Border Gray** (`#e5e7eb`): All borders, dividers, secondary buttons
 
@@ -46,51 +46,51 @@ Hiretivo is a skills-based remote job portal with a clean, confident monochrome 
 
 ### Removed Colors
 
-- All indigo/purple accent colors removed
+- All monochrome/black primary colors replaced with purple (`#7560ff`)
 - All dark mode colors removed
-- No brand accent scale — fully monochrome
+- Primary accent is now purple — consistent across all components
 
 ## 3. Typography Rules
 
 ### Font Families
 
-- **Headings**: `DM Sans`, weight 600–700
-- **Body / UI**: `DM Sans`, weight 400–500, fallbacks: `Helvetica, Arial`
+- **Headings**: `Inter`, weight 600–700
+- **Body / UI**: `Inter`, weight 400–500, fallbacks: `sans-serif`
 
 ### Hierarchy
 
 | Role            | Font     | Size              | Weight | Line Height | Letter Spacing | Usage |
 | --------------- | -------- | ----------------- | ------ | ----------- | -------------- | ----- |
-| Display         | DM Sans  | 3.5rem (56px)     | 700    | 1.2         | -0.02em        | Hero headings |
-| H1              | DM Sans  | 2.5rem (40px)     | 700    | 1.35        | -0.015em       | Page headings |
-| H2              | DM Sans  | 2rem (32px)       | 700    | 1.35        | -0.01em        | Section headings |
-| H3              | DM Sans  | 1.5rem (24px)     | 600    | 1.4         | -0.005em       | Card titles |
-| H4              | DM Sans  | 1.25rem (20px)    | 600    | 1.5         | 0              | Subsection titles |
-| Body-lg         | DM Sans  | 1.125rem (18px)   | 400    | 1.7         | 0              | Lead paragraphs |
-| Body            | DM Sans  | 1rem (16px)       | 400    | 1.7         | 0              | Default body text |
-| Body-sm         | DM Sans  | 0.875rem (14px)   | 400    | 1.6         | 0              | Small text, captions |
-| Label           | DM Sans  | 0.75rem (12px)    | 500    | 1.5         | 0.05em         | Badges, labels |
+| Display         | Inter    | 3.5rem (56px)     | 700    | 1.2         | -0.02em        | Hero headings |
+| H1              | Inter    | 2.5rem (40px)     | 700    | 1.35        | -0.015em       | Page headings |
+| H2              | Inter    | 2rem (32px)       | 700    | 1.35        | -0.01em        | Section headings |
+| H3              | Inter    | 1.5rem (24px)     | 600    | 1.4         | -0.005em       | Card titles |
+| H4              | Inter    | 1.25rem (20px)    | 600    | 1.5         | 0              | Subsection titles |
+| Body-lg         | Inter    | 1.125rem (18px)   | 400    | 1.7         | 0              | Lead paragraphs |
+| Body            | Inter    | 1rem (16px)       | 400    | 1.7         | 0              | Default body text |
+| Body-sm         | Inter    | 0.875rem (14px)   | 400    | 1.6         | 0              | Small text, captions |
+| Label           | Inter    | 0.75rem (12px)    | 500    | 1.5         | 0.05em         | Badges, labels |
 
 ### Principles
 
-- **Weight 600–700 for headings**: DM Sans SemiBold/Bold for display headings — authoritative.
+- **Weight 600–700 for headings**: Inter SemiBold/Bold for display headings — authoritative.
 - **Tight letter-spacing**: Negative letter-spacing on headings creates dense, impactful text.
-- **Weight 400–500 for body**: DM Sans Regular/Medium for readable, neutral body text.
+- **Weight 400–500 for body**: Inter Regular/Medium for readable, neutral body text.
 
 ## 4. Component Stylings
 
 ### Buttons
 
-**Primary Black**
+**Primary Purple**
 
-- Background: `#000000` (Black)
+- Background: `#7560ff` (Primary Purple)
 - Text: `#ffffff` (White), weight 500, size 0.875rem
 - Padding: 0.625rem 1.25rem (10px 20px)
 - Radius: 0.5rem (8px)
 - Border: None
-- Hover: Background `#1a1a1a`
-- Active: Background `#333333`
-- Focus: Ring with black color
+- Hover: Background `#5a47d9`
+- Active: Background `#4a37c9`
+- Focus: Ring with purple color
 - No shadow, no gradient
 
 **Secondary Outlined**
@@ -188,23 +188,23 @@ Hiretivo is a skills-based remote job portal with a clean, confident monochrome 
 
 ### Do
 
-- Use DM Sans weight 600–700 for headings
+- Use Inter weight 600–700 for headings
 - Apply tight letter-spacing on headings (`-0.02em` to `-0.01em`)
-- Use Black (`#000000`) for primary CTAs with white text
+- Use Primary Purple (`#7560ff`) for primary CTAs with white text
 - Use subtle borders (`#e5e7eb`) for depth
 - Apply grid background pattern on hero sections
-- Use DM Sans weight 400–500 for body text
-- Use black for input focus rings
-- Keep all UI monochrome — no accent colors
+- Use Inter weight 400–500 for body text
+- Use purple for input focus rings
+- Keep all UI consistent with the purple primary accent
 
 ### Don't
 
-- Don't use indigo/purple colors anywhere
+- Don't use black for primary buttons/accents
 - Don't use shadows — borders only
 - Don't use dark mode
-- Don't use accent colors for brand elements
+- Don't use arbitrary purple shades — use the defined `#7560ff` / `#5a47d9`
 - Don't use `rounded-full` on inputs/cards — use `rounded-lg` or `rounded-xl`
-- Don't use heavy font weights (800+) — 700 is max for Geist Sans
+- Don't use heavy font weights (800+) — 700 is max for Inter
 - Don't use ultra-tight line-height (0.85) — use 1.1+
 
 ## 8. Responsive Behavior
@@ -226,14 +226,14 @@ Hiretivo is a skills-based remote job portal with a clean, confident monochrome 
 
 ```
 Near Black text:           text-[#0a0a0a]
-Black bg:                  bg-[#000000]
-White bg:                  bg-white
-Muted text:                text-[#6b7280]
-Secondary text:            text-[#9ca3af]
-Border:                    border-[#e5e7eb]
-Surface bg:                bg-[#f9fafb]
-Surface hover:             bg-[#f3f4f6]
-Grid line:                 rgba(0,0,0,0.04)
+Purple primary:             bg-[#7560ff]
+Purple dark:                bg-[#5a47d9]
+White bg:                   bg-white
+Muted text:                 text-[#6b7280]
+Secondary text:             text-[#9ca3af]
+Border:                     border-[#e5e7eb]
+Surface bg:                 bg-[#f9fafb]
+Surface hover:              bg-[#f3f4f6]
 ```
 
 ### OR use brand tokens (preferred)
@@ -278,7 +278,7 @@ font-medium text-xs uppercase tracking-wider
 
 ```tsx
 // Primary CTA button
-<button className="bg-black text-white font-medium text-sm px-5 py-2.5 rounded-lg hover:bg-[#1a1a1a] transition-colors">
+<button className="bg-[#7560ff] text-white font-medium text-sm px-5 py-2.5 rounded-lg hover:bg-[#5a47d9] transition-colors">
 
 // Secondary button
 <button className="bg-white text-gray-700 font-medium text-sm px-5 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
@@ -290,7 +290,7 @@ font-medium text-xs uppercase tracking-wider
 <span className="bg-gray-50 border border-gray-200 rounded-full px-3.5 py-1.5 text-sm font-medium">
 
 // Input field
-<input className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-black/20 focus:border-black">
+<input className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#7560ff]/20 focus:border-[#7560ff]">
 
 // Badge / tag
 <span className="bg-gray-100 text-gray-700 font-medium text-sm px-3 py-1 rounded-full">
@@ -309,16 +309,16 @@ background-size: 64px 64px;
 
 ### Rules for AI agents
 
-1. NEVER use indigo/purple colors — fully monochrome
+1. NEVER use indigo/purple arbitrary colors — use the defined primary purple (`#7560ff`) consistently
 2. NEVER use shadows — borders only
 3. NEVER use dark mode
 4. NEVER use `rounded-full` on inputs/cards — use `rounded-lg` or `rounded-xl`
-5. NEVER use font-extrabold (800) — max font-bold (700) for DM Sans
-6. ALWAYS use black (`#000000`) for primary buttons
+5. NEVER use font-extrabold (800) — max font-bold (700) for Inter
+6. ALWAYS use purple (`#7560ff`) for primary buttons
 7. ALWAYS use outlined style for secondary buttons
 8. ALWAYS use subtle borders (`#e5e7eb`) for cards and inputs
 9. ALWAYS apply grid background on hero sections
-10. ALWAYS use DM Sans font — no other fonts
+10. ALWAYS use Inter font — no other fonts
 
 ---
 
@@ -326,9 +326,10 @@ background-size: 64px 64px;
 
 ### Quick Color Reference
 
+- Primary button: Purple (`#7560ff`) with white text
+- Primary hover: Dark purple (`#5a47d9`)
 - Text: Near Black (`#0a0a0a`)
 - Background: White (`#ffffff`)
-- Primary button: Black (`#000000`) with white text
 - Secondary button: White with gray border
 - Body text: Gray (`#6b7280`)
 - Borders: Light gray (`#e5e7eb`)
@@ -336,15 +337,15 @@ background-size: 64px 64px;
 
 ### Example Component Prompts
 
-- "Create hero: white background with subtle grid pattern. Headline at 56px Inter weight 800, tight letter-spacing, #0a0a0a text. Black pill CTA (#000000, rounded-lg, white text). Secondary outlined button with gray border."
+- "Create hero: white background with subtle grid pattern. Headline at 56px Inter weight 700, tight letter-spacing, #0a0a0a text. Purple pill CTA (#7560ff, rounded-lg, white text). Secondary outlined button with gray border."
 - "Build a card: rounded-xl, 1px solid #e5e7eb, white background. Title at 24px Inter weight 600, body at 16px weight 400, gray text."
 
 ### Iteration Guide
 
-1. DM Sans 600–700 for headings with tight letter-spacing
-2. Black (#000000) for primary buttons — white text
+1. Inter 600–700 for headings with tight letter-spacing
+2. Purple (#7560ff) for primary buttons — white text
 3. Outlined secondary buttons with gray borders
 4. No shadows — borders only for depth
 5. Grid background pattern on hero sections
-6. Fully monochrome — no accent colors anywhere
+6. Purple primary accent — consistent across all components
 7. Light mode only — no dark mode

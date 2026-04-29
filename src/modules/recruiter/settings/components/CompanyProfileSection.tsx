@@ -6,6 +6,14 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,6 +27,27 @@ interface CompanyProfileSectionProps {
   onSubmit: (input: RecruiterProfileSettingsInput) => Promise<void>;
   isSaving: boolean;
 }
+
+const COMPANY_TYPE_OPTIONS = [
+  "SaaS",
+  "Fintech",
+  "EdTech",
+  "Marketplace",
+  "Agency",
+  "Healthcare",
+  "E-commerce",
+  "Other",
+];
+
+const FUNDING_STAGE_OPTIONS = [
+  "Bootstrapped",
+  "Pre-seed",
+  "Seed funded",
+  "Series A",
+  "Series B+",
+  "Public company",
+  "Other",
+];
 
 export function CompanyProfileSection({
   settings,
@@ -91,20 +120,113 @@ export function CompanyProfileSection({
         )}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input placeholder="Company name" {...form.register("companyName")} disabled={isFormDisabled} />
-        <Input placeholder="Website" {...form.register("website")} disabled={isFormDisabled} />
-        <Input placeholder="Company size" {...form.register("companySize")} disabled={isFormDisabled} />
-        <Input placeholder="Industry" {...form.register("industry")} disabled={isFormDisabled} />
-        <Input placeholder="Funding type" {...form.register("fundingType")} disabled={isFormDisabled} />
-        <label className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-foreground">
+        <Input className="hidden" {...form.register("name")} />
+        <div className="space-y-2">
+          <Label htmlFor="companyName">Company name</Label>
+          <Input
+            id="companyName"
+            placeholder="ablespace 121"
+            {...form.register("companyName")}
+            disabled={isFormDisabled}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="website">Company website</Label>
+          <Input
+            id="website"
+            placeholder="https://hiretivo.com"
+            {...form.register("website")}
+            disabled={isFormDisabled}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="companySize">Company size</Label>
+          <Input
+            id="companySize"
+            placeholder="11-50"
+            {...form.register("companySize")}
+            disabled={isFormDisabled}
+          />
+          <p className="text-xs text-brand-foreground-muted">
+            Approximate employee count, for example 1-10 or 51-200.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="industry">Company type</Label>
+          <Select
+            value={form.watch("industry") ?? ""}
+            onValueChange={(value) =>
+              form.setValue("industry", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            disabled={isFormDisabled}
+          >
+            <SelectTrigger id="industry">
+              <SelectValue placeholder="Select company type" />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPANY_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-brand-foreground-muted">
+            Helps seekers understand what kind of business they are joining.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="fundingType">Funding stage</Label>
+          <Select
+            value={form.watch("fundingType") ?? ""}
+            onValueChange={(value) =>
+              form.setValue("fundingType", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+            disabled={isFormDisabled}
+          >
+            <SelectTrigger id="fundingType">
+              <SelectValue placeholder="Select funding stage" />
+            </SelectTrigger>
+            <SelectContent>
+              {FUNDING_STAGE_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-brand-foreground-muted">
+            Funding context is optional; pick the closest match.
+          </p>
+        </div>
+        <label className="flex min-h-10 items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-foreground">
           Fully remote
           <Switch
             checked={form.watch("isFullyRemote") ?? false}
-            onCheckedChange={(checked) => form.setValue("isFullyRemote", checked)}
+            onCheckedChange={(checked) =>
+              form.setValue("isFullyRemote", checked, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
             disabled={isFormDisabled}
           />
         </label>
-        <Textarea className="md:col-span-2" placeholder="Company bio" {...form.register("bio")} disabled={isFormDisabled} />
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="bio">Company bio</Label>
+          <Textarea
+            id="bio"
+            placeholder="What does your company do, who do you serve, and why should candidates care?"
+            {...form.register("bio")}
+            disabled={isFormDisabled}
+          />
+        </div>
       </div>
     </form>
   );

@@ -2,16 +2,12 @@
 
 import { format } from "date-fns";
 import { Calendar, Video } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { useFetchSeekerInterviews } from "../queries/use-fetch-seeker-interviews";
 import type { SeekerInterview } from "../types/dashboard.types";
 
-const CARD_CLASSES =
-  "bg-white rounded-2xl border border-gray-200 p-6";
+const CARD_CLASSES = "bg-white rounded-2xl border border-gray-200 p-6";
 
-const SECTION_TITLE_CLASSES =
-  "text-xl font-semibold text-foreground";
+const SECTION_TITLE_CLASSES = "text-xl font-semibold text-foreground";
 
 function formatDateTime(dateStr: string | null): string {
   if (!dateStr) return "TBD";
@@ -21,7 +17,7 @@ function formatDateTime(dateStr: string | null): string {
 function InterviewRow({ interview }: { interview: SeekerInterview }) {
   return (
     <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 last:pb-0 first:pt-0">
-        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
         <Calendar className="w-5 h-5 text-black" />
       </div>
       <div className="flex-1 min-w-0">
@@ -58,57 +54,12 @@ function InterviewRow({ interview }: { interview: SeekerInterview }) {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className={CARD_CLASSES}>
-      <Skeleton className="h-6 w-48 mb-6" />
-      {[0, 1].map((i) => (
-        <div
-          key={i}
-          className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 last:pb-0 first:pt-0"
-        >
-          <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className={cn(CARD_CLASSES, "text-center")}>
-      <Calendar className="w-12 h-12 text-gray-400 mx-auto" />
-      <h3 className={cn(SECTION_TITLE_CLASSES, "mt-4")}>
-        No upcoming interviews
-      </h3>
-      <p className="mt-2 text-gray-400">
-        When a recruiter schedules an interview, it will appear here.
-      </p>
-    </div>
-  );
-}
-
 export function UpcomingInterviewsCard() {
   const { data: interviews, isLoading, isError } = useFetchSeekerInterviews();
 
-  if (isLoading) return <LoadingSkeleton />;
-
-  if (isError) {
-    return (
-      <div className={cn(CARD_CLASSES, "text-center")}>
-        <p className="text-gray-400">
-          Could not load interviews.
-        </p>
-      </div>
-    );
+  if (isLoading || isError || !interviews || interviews.length === 0) {
+    return null;
   }
-
-  if (!interviews || interviews.length === 0) return <EmptyState />;
 
   return (
     <div className={CARD_CLASSES}>

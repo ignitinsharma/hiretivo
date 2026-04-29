@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
             </p>
             <Button
               asChild
-              className="w-full rounded-full bg-black font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              className="w-full rounded-full bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95"
             >
               <Link href="/seeker/login">Back to sign in</Link>
             </Button>

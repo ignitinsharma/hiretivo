@@ -61,7 +61,7 @@ export default function NotFound() {
           <Link href="/">
             <Button
               size="lg"
-              className="bg-black hover:bg-black/90 text-white gap-2"
+              className="bg-brand-primary hover:bg-brand-primary-dark/90 text-white gap-2"
             >
               <Home className="w-4 h-4" />
               Go back home

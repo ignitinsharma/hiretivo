@@ -100,6 +100,7 @@ model User {
 
   boostedJobs BoostedJob[] @relation("BoostedJobs")
   savedJobs            SavedJob[]
+  dismissedJobs        DismissedJob[]
 }
 
 model Account {
@@ -246,6 +247,7 @@ model Job {
   clickEvents   ClickEvent[]
   boostedJob    BoostedJob?
   savedBy       SavedJob[]
+  dismissedBy   DismissedJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -379,6 +381,20 @@ model BoostedJob {
 }
 
 model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([jobId])
+}
+
+model DismissedJob {
   id        String   @id @default(cuid())
   userId    String
   jobId     String

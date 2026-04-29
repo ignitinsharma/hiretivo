@@ -83,6 +83,8 @@ export async function GET() {
         tags: savedJob.job.skills.slice(0, 3).map((jobSkill) => jobSkill.skill.name),
         postedAt: formatPostedAt(savedJob.job.publishedAt),
         isClosed: savedJob.job.status !== JobStatus.OPEN,
+        applyType: savedJob.job.applyType,
+        externalApplyUrl: savedJob.job.externalApplyUrl,
       },
     })),
   });
