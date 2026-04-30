@@ -422,12 +422,12 @@ model WorkExperience {
 
   company      String
   title        String
-  startDate    String
-  endDate      String?
+  startDate    String       // "MM/YYYY" — freeform display date, not a DateTime
+  endDate      String?      // "MM/YYYY" — null means currently working here
   isCurrent    Boolean  @default(false)
   description  String?  @db.Text
-  positionType String?
-  skills       String[]
+  positionType String?      // "technical" | "non-technical" — validated at Zod layer, not a Prisma enum
+  skills       String[]     // denormalized skill name tags; not FK to Skill table
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -441,7 +441,7 @@ model Education {
   seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
 
   institution    String
-  graduationDate String?
+  graduationDate String?      // "MM/YYYY" — freeform display date, not a DateTime
   degree         String?
   major          String?
 
