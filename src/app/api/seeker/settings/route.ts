@@ -194,6 +194,17 @@ export async function GET() {
           currency: true,
           availability: true,
           resumeKey: true,
+          websiteUrl: true,
+          linkedinUrl: true,
+          githubUrl: true,
+          twitterUrl: true,
+          yearsExperience: true,
+          workExperiences: {
+            orderBy: { createdAt: 'asc' as const },
+          },
+          educations: {
+            orderBy: { createdAt: 'asc' as const },
+          },
           skills: {
             include: {
               skill: {
@@ -211,7 +222,7 @@ export async function GET() {
   }
 
   const { seekerProfile, image, ...userFields } = user;
-  const { skills, ...profileFields } = seekerProfile;
+  const { skills, workExperiences, educations, ...profileFields } = seekerProfile;
 
   return NextResponse.json({
     data: {
@@ -219,6 +230,8 @@ export async function GET() {
       image: resolveLogoUrl(image),
       ...profileFields,
       skills: skills.map((s) => s.skill),
+      workExperiences,
+      educations,
     },
   });
 }
@@ -246,7 +259,7 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const { name, skillIds, skillNames, ...profileData } = parsed.data;
+  const { name, skillIds, skillNames, workExperiences: _we, educations: _edu, ...profileData } = parsed.data;
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
@@ -278,6 +291,11 @@ export async function PATCH(req: NextRequest) {
         salaryMax: profileData.salaryMax ?? null,
         currency: profileData.currency || null,
         availability: profileData.availability || null,
+        websiteUrl: profileData.websiteUrl !== undefined ? (profileData.websiteUrl || null) : undefined,
+        linkedinUrl: profileData.linkedinUrl !== undefined ? (profileData.linkedinUrl || null) : undefined,
+        githubUrl: profileData.githubUrl !== undefined ? (profileData.githubUrl || null) : undefined,
+        twitterUrl: profileData.twitterUrl !== undefined ? (profileData.twitterUrl || null) : undefined,
+        yearsExperience: profileData.yearsExperience !== undefined ? profileData.yearsExperience : undefined,
       },
     }),
   ];
@@ -312,6 +330,44 @@ export async function PATCH(req: NextRequest) {
       { error: "Failed to update profile" },
       { status: 500 },
     );
+  }
+
+  if (parsed.data.workExperiences !== undefined) {
+    await prisma.workExperience.deleteMany({
+      where: { seekerProfileId: seekerProfile.id },
+    });
+    if (parsed.data.workExperiences.length > 0) {
+      await prisma.workExperience.createMany({
+        data: parsed.data.workExperiences.map((exp) => ({
+          seekerProfileId: seekerProfile.id,
+          company: exp.company,
+          title: exp.title,
+          startDate: exp.startDate,
+          endDate: exp.endDate ?? null,
+          isCurrent: exp.isCurrent,
+          description: exp.description ?? null,
+          positionType: exp.positionType ?? null,
+          skills: exp.skills,
+        })),
+      });
+    }
+  }
+
+  if (parsed.data.educations !== undefined) {
+    await prisma.education.deleteMany({
+      where: { seekerProfileId: seekerProfile.id },
+    });
+    if (parsed.data.educations.length > 0) {
+      await prisma.education.createMany({
+        data: parsed.data.educations.map((edu) => ({
+          seekerProfileId: seekerProfile.id,
+          institution: edu.institution,
+          graduationDate: edu.graduationDate ?? null,
+          degree: edu.degree ?? null,
+          major: edu.major ?? null,
+        })),
+      });
+    }
   }
 
   return NextResponse.json({ data: { success: true } }, { status: 200 });
