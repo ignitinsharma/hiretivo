@@ -21,9 +21,9 @@ interface HeaderProps {
   publicAudience?: "seeker" | "recruiter";
 }
 
-/** Nav items to show — only Jobs and Applied Jobs, no Settings. */
+/** Nav items to show — only Jobs and Applied Jobs, no Settings or Contact. */
 const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
-  (item) => item.href !== "/seeker/settings",
+  (item) => item.href !== "/seeker/settings" && item.href !== "/contact",
 );
 
 export async function Header({

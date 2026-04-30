@@ -15,6 +15,7 @@ import {
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { FindYourPeopleSection } from "@/components/shared/FindYourPeopleSection";
 import { Button } from "@/components/ui/button";
 import { JobStatus, UserRole } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
@@ -122,6 +123,24 @@ const WORKFLOW: WorkflowStep[] = [
     title: "Hire with context",
     description:
       "Keep role performance, applicant quality, and hiring activity visible as your team scales.",
+  },
+];
+
+const RESULT_STATS: StatItem[] = [
+  {
+    label: "Profile setup",
+    value: "5 minutes",
+    description: "to create a role-ready employer profile",
+  },
+  {
+    label: "Candidate response",
+    value: "2x",
+    description: "stronger replies from matched remote talent",
+  },
+  {
+    label: "Review time saved",
+    value: "6 hours",
+    description: "saved per role with skills-first review",
   },
 ];
 
@@ -356,26 +375,180 @@ export default async function HireTalentPage() {
           </div>
         </section>
 
-        <section className="border-b border-brand-border bg-white px-4 py-10 md:px-8">
-          <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-xl border border-brand-border bg-white p-6"
-              >
-                <p className="text-3xl font-bold tracking-tight text-brand-foreground">
-                  {stat.value}
-                </p>
-                <h2 className="mt-2 text-sm font-semibold uppercase tracking-[0.05em] text-brand-foreground">
-                  {stat.label}
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
-                  {stat.description}
-                </p>
-              </div>
-            ))}
+        <section className="border-b border-brand-border bg-white px-4 py-16 md:px-8">
+          <div className="mx-auto max-w-7xl rounded-xl border border-brand-border bg-brand-primary/5 p-6 md:p-10">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.05em] text-brand-primary">
+                Hiring impact
+              </p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-4xl">
+                Real results, from day one
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-brand-foreground-muted">
+                Faster role setup, stronger candidate signals, and less time
+                spent sorting through applications that were never a fit.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {RESULT_STATS.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-xl border border-brand-border bg-white p-6 text-center"
+                >
+                  <p className="text-4xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
+                    {stat.value}
+                  </p>
+                  <h3 className="mt-4 text-sm font-semibold uppercase tracking-[0.05em] text-brand-foreground">
+                    {stat.label}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
+                    {stat.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-xl border border-brand-primary/20 bg-white/80 px-4 py-3"
+                >
+                  <p className="text-xl font-bold tracking-tight text-brand-primary">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.05em] text-brand-foreground-muted">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
+
+        <section className="grid-bg bg-white px-4 py-20 md:px-8">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 rounded-xl border border-brand-border bg-white p-6 md:p-10 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.05em] text-brand-primary">
+                Recruiter workspace
+              </p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
+                Ready to find your people?
+              </h2>
+              <p className="mt-5 max-w-xl text-lg leading-relaxed text-brand-foreground-muted">
+                Connect with remote talent that fits your role, understands the
+                work, and can move through your pipeline with clear skills
+                context from the first review.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button asChild variant="primary" size="lg">
+                  <Link href="/recruiter/register">
+                    Start hiring
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <Link href="/pricing">View pricing</Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative min-h-[430px] overflow-visible rounded-xl border border-brand-border bg-brand-primary/5 p-4 md:min-h-[520px] md:p-8">
+              <div className="absolute left-1/2 -top-14 w-[82%] -translate-x-1/2 overflow-hidden rounded-xl border border-brand-border bg-white md:top-[-90px]">
+                <div className="flex h-8 items-center justify-between border-b border-brand-border bg-white px-3">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full border border-brand-primary/20 bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
+                    H
+                  </span>
+                  <span className="text-lg font-bold leading-none tracking-widest text-brand-foreground-muted">
+                    ...
+                  </span>
+                  <span className="text-lg leading-none text-brand-primary">
+                    ×
+                  </span>
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt="Two teammates collaborating around a laptop"
+                  className="h-64 w-full object-cover md:h-96"
+                  src="https://images.pexels.com/photos/7652189/pexels-photo-7652189.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                />
+              </div>
+
+              <div className="absolute bottom-8 right-6 w-[58%] overflow-hidden rounded-xl border border-brand-border bg-white md:bottom-12 md:right-10">
+                <div className="flex h-8 items-center justify-between border-b border-brand-border bg-white px-3">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full border border-brand-primary/20 bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
+                    H
+                  </span>
+                  <span className="text-lg font-bold leading-none tracking-widest text-brand-foreground-muted">
+                    ...
+                  </span>
+                  <span className="text-lg leading-none text-brand-primary">
+                    ×
+                  </span>
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt="Hiring teammates reviewing candidates"
+                  className="h-44 w-full object-cover md:h-64"
+                  src="https://cdn.pixabay.com/photo/2024/04/18/10/09/woman-8703991_1280.jpg"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white px-4 py-20 md:px-8">
+          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.05em] text-brand-primary">
+                Hiring workflow
+              </p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-4xl">
+                From job post to shortlist in one organized flow.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-brand-foreground-muted">
+                Recruiters can move from role setup to candidate review with the
+                same skills-first context visible throughout the process.
+              </p>
+            </div>
+            <div className="group/workflow grid gap-4 sm:grid-cols-2">
+              {WORKFLOW.map((step, index) => {
+                const rotationClass = [
+                  "sm:-rotate-2",
+                  "sm:rotate-1",
+                  "sm:rotate-2",
+                  "sm:-rotate-1",
+                ][index];
+
+                return (
+                  <div
+                    key={step.label}
+                    className={`${rotationClass} group relative min-h-52 overflow-hidden rounded-xl border border-brand-border bg-white/80 p-6 backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:rotate-0 hover:border-brand-primary/40 hover:bg-brand-primary/5 group-hover/workflow:sm:mx-2`}
+                  >
+                    <span className="text-sm font-bold text-brand-primary">
+                      {step.label}
+                    </span>
+                    <h3 className="mt-3 text-lg font-semibold text-brand-foreground">
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
+                      {step.description}
+                    </p>
+                    <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-center border-t border-brand-primary/20 bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-transform duration-500 group-hover:translate-y-0">
+                      {step.title}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <FindYourPeopleSection
+          clientCount={stats[2]?.value ?? "0"}
+          candidateCount={stats[1]?.value ?? "0"}
+        />
 
         <section className="bg-brand-surface px-4 py-20 md:px-8">
           <div className="mx-auto max-w-7xl">
@@ -401,41 +574,6 @@ export default async function HireTalentPage() {
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-brand-foreground-muted">
                     {description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-white px-4 py-20 md:px-8">
-          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.05em] text-brand-primary">
-                Hiring workflow
-              </p>
-              <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-4xl">
-                From job post to shortlist in one organized flow.
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-brand-foreground-muted">
-                Recruiters can move from role setup to candidate review with the
-                same skills-first context visible throughout the process.
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {WORKFLOW.map((step) => (
-                <div
-                  key={step.label}
-                  className="rounded-xl border border-brand-border bg-white p-6"
-                >
-                  <span className="text-sm font-bold text-brand-primary">
-                    {step.label}
-                  </span>
-                  <h3 className="mt-3 text-lg font-semibold text-brand-foreground">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
-                    {step.description}
                   </p>
                 </div>
               ))}

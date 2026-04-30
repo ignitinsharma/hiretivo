@@ -1,14 +1,91 @@
+import type { ComponentType } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Building2,
+  Clock3,
+  Code2,
+  DollarSign,
+  Globe2,
+  Headphones,
+  Megaphone,
+  Palette,
+  PackageCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 import { UserRole, JobStatus } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
+import { FindYourPeopleSection } from "@/components/shared/FindYourPeopleSection";
 
 const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
+
+interface CategoryShowcaseItem {
+  title: string;
+  count: string;
+  roles: string;
+  salary: string;
+  skills: string[];
+  icon: ComponentType<{ className?: string }>;
+}
+
+const CATEGORY_SHOWCASE: CategoryShowcaseItem[] = [
+  {
+    title: "Engineering",
+    count: "1,240 roles",
+    roles: "Frontend, Backend, Full-stack",
+    salary: "$120k - $210k",
+    skills: ["React", "Node.js", "AI"],
+    icon: Code2,
+  },
+  {
+    title: "Design",
+    count: "450 roles",
+    roles: "Product, Brand, UX systems",
+    salary: "$90k - $165k",
+    skills: ["Figma", "UX", "SaaS"],
+    icon: Palette,
+  },
+  {
+    title: "Product",
+    count: "380 roles",
+    roles: "Growth, Platform, AI products",
+    salary: "$130k - $220k",
+    skills: ["Roadmaps", "Data", "Remote"],
+    icon: PackageCheck,
+  },
+  {
+    title: "Marketing",
+    count: "320 roles",
+    roles: "Lifecycle, SEO, Demand gen",
+    salary: "$85k - $150k",
+    skills: ["SEO", "CRM", "B2B"],
+    icon: Megaphone,
+  },
+  {
+    title: "Sales",
+    count: "215 roles",
+    roles: "AE, SDR, Partnerships",
+    salary: "$100k - $180k",
+    skills: ["Pipeline", "SaaS", "Outbound"],
+    icon: TrendingUp,
+  },
+  {
+    title: "Customer Support",
+    count: "190 roles",
+    roles: "Success, Support, Operations",
+    salary: "$70k - $130k",
+    skills: ["CS", "Ops", "Async"],
+    icon: Headphones,
+  },
+];
 
 export const metadata = generatePageMetadata({
   title: "Skills-Based Remote Job Portal",
@@ -20,6 +97,32 @@ function formatStat(n: number): string {
   if (n >= 1000) return `${Math.round(n / 1000)}k+`;
   if (n > 100) return `${n}+`;
   return String(n);
+}
+
+function formatEnumLabel(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("-");
+}
+
+function formatSalaryRange(
+  min: number | null,
+  max: number | null,
+  currency: string | null,
+): string {
+  if (!min && !max) return "Competitive";
+
+  const symbol =
+    currency === "GBP" ? "£" : currency === "EUR" ? "€" : currency === "INR" ? "₹" : "$";
+  const formatAmount = (amount: number): string =>
+    `${symbol}${Math.round(amount / 1000)}k`;
+
+  if (min && max) return `${formatAmount(min)} – ${formatAmount(max)}`;
+  if (min) return `From ${formatAmount(min)}`;
+  return max ? `Up to ${formatAmount(max)}` : "Competitive";
 }
 
 export default async function Home() {
@@ -462,88 +565,137 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="py-24 bg-gray-50" data-purpose="featured-jobs">
+        <section className="bg-brand-surface py-20 md:py-24" data-purpose="featured-jobs">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="flex justify-between items-end mb-12">
+            <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between md:mb-12">
               <div>
-                <h2 className="text-foreground text-3xl font-extrabold mb-2">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-border bg-white px-3.5 py-1.5 text-xs font-semibold text-brand-foreground">
+                  <Sparkles className="h-3.5 w-3.5 text-brand-primary" />
+                  Fresh roles, checked daily
+                </div>
+                <h2 className="text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-4xl">
                   Latest Remote Jobs
                 </h2>
-                <p className="text-muted-foreground">
-                  Top hand-picked opportunities from remote-first teams.
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-brand-foreground-muted md:text-lg">
+                  Hand-picked remote roles from teams hiring for real skills,
+                  not keyword-stuffed resumes.
                 </p>
               </div>
               <Link
-                className="text-primary font-bold hover:underline hidden sm:block"
+                className="hidden items-center gap-2 rounded-lg border border-brand-border bg-white px-4 py-2 text-sm font-semibold text-brand-foreground transition-colors hover:border-brand-primary hover:text-brand-primary sm:inline-flex"
                 href="/jobs"
               >
-                View all jobs →
+                View all jobs
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.length === 0 ? (
-                <div className="col-span-3 text-center py-12 text-muted-foreground">
+                <div className="rounded-xl border border-brand-border bg-white py-12 text-center text-brand-foreground-muted md:col-span-2 lg:col-span-3">
                   No jobs available yet. Check back soon!
                 </div>
               ) : (
-                featuredJobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white border border-gray-200 rounded-xl p-6 hover:border-brand-primary/50 transition-all  group"
-                    data-purpose="job-card"
-                  >
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">
-                        {job.recruiter.recruiterProfile?.logo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            alt={job.recruiter.recruiterProfile.companyName}
-                            className="w-full h-full object-cover"
-                            src={job.recruiter.recruiterProfile.logo}
-                          />
-                        ) : (
-                          <span className="text-black font-bold text-lg">
-                            {job.recruiter.recruiterProfile?.companyName?.[0] ??
-                              "H"}
+                featuredJobs.map((job) => {
+                  const profile = job.recruiter.recruiterProfile;
+                  const companyName = profile?.companyName ?? "Hiretivo";
+                  const logoUrl = resolveLogoUrl(profile?.logo);
+                  const jobType = formatEnumLabel(job.jobType);
+                  const workType = formatEnumLabel(job.workType);
+                  const salary = formatSalaryRange(
+                    job.salaryMin,
+                    job.salaryMax,
+                    job.currency,
+                  );
+
+                  return (
+                    <article
+                      key={job.id}
+                      className="group flex h-full min-h-[270px] flex-col rounded-xl border border-brand-border bg-white p-5 transition-colors hover:border-brand-primary"
+                      data-purpose="job-card"
+                    >
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
+                            {logoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                alt={`${companyName} logo`}
+                                className="h-full w-full object-cover"
+                                src={logoUrl}
+                              />
+                            ) : (
+                              <span className="text-lg font-bold text-brand-primary">
+                                {companyName.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-brand-foreground">
+                              {companyName}
+                            </p>
+                            <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-brand-foreground-muted">
+                              <Globe2 className="h-3.5 w-3.5 text-brand-primary" />
+                              <span>{workType ?? "Remote friendly"}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="shrink-0 rounded-full border border-brand-border bg-white px-2.5 py-1 text-xs font-semibold text-brand-foreground">
+                          New
+                        </span>
+                      </div>
+
+                      <Link href={`/jobs/${job.id}`} className="block">
+                        <h3 className="text-xl font-semibold leading-snug tracking-tight text-brand-foreground transition-colors group-hover:text-brand-primary">
+                          {job.title}
+                        </h3>
+                      </Link>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {jobType && (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-surface px-2.5 py-1 text-xs font-semibold text-brand-foreground-muted">
+                            <Clock3 className="h-3.5 w-3.5" />
+                            {jobType}
+                          </span>
+                        )}
+                        {job.category && (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-surface px-2.5 py-1 text-xs font-semibold text-brand-foreground-muted">
+                            <BriefcaseBusiness className="h-3.5 w-3.5" />
+                            {job.category}
                           </span>
                         )}
                       </div>
-                      <span className="px-3 py-1 bg-gray-50 text-black text-xs font-bold rounded-full">
-                        New
-                      </span>
-                    </div>
-                    <h3 className="text-foreground text-lg font-bold mb-2 group-hover:text-brand-primary transition-colors">
-                      {job.title}
-                    </h3>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {job.jobType && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                          {job.jobType.replace("_", "-")}
-                        </span>
-                      )}
-                      {job.category && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-bold uppercase rounded">
-                          {job.category}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-6">
-                      <span className="text-black font-bold text-sm">
-                        {job.salaryMin && job.salaryMax
-                          ? `$${Math.round(job.salaryMin / 1000)}k – $${Math.round(job.salaryMax / 1000)}k`
-                          : "Competitive"}
-                      </span>
-                      <Link
-                        className="text-foreground font-semibold text-sm hover:translate-x-1 transition-transform"
-                        href={`/jobs/${job.id}`}
-                      >
-                        View Job →
-                      </Link>
-                    </div>
-                  </div>
-                ))
+
+                      <div className="mt-auto flex items-center justify-between gap-4 border-t border-brand-border pt-5">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 text-sm font-bold text-brand-foreground">
+                            <DollarSign className="h-4 w-4 shrink-0 text-brand-primary" />
+                            <span className="truncate">{salary}</span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-brand-foreground-muted">
+                            <Building2 className="h-3.5 w-3.5 shrink-0" />
+                            <span>Direct company role</span>
+                          </div>
+                        </div>
+                        <Link
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#5a47d9]"
+                          href={`/jobs/${job.id}`}
+                        >
+                          View
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })
               )}
             </div>
+            <Link
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-brand-border bg-white px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:border-brand-primary hover:text-brand-primary sm:hidden"
+              href="/jobs"
+            >
+              View all jobs
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
 
@@ -552,129 +704,100 @@ export default async function Home() {
           data-purpose="categories-section"
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-foreground text-3xl font-extrabold mb-4">
-                Browse by Category
-              </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Explore high-paying remote roles across the industry&apos;s most
-                in-demand categories.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">code</span>
+            <div className="grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border bg-white px-4 py-1.5 text-sm font-semibold text-brand-foreground">
+                  <Sparkles className="h-4 w-4 text-brand-primary" />
+                  Skills-first discovery
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Engineering</h4>
-                <span className="text-gray-500 text-sm">1,240 jobs</span>
+                <h2 className="text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
+                  Explore Jobs based on your skills
+                </h2>
+                <p className="mt-5 max-w-xl text-lg leading-relaxed text-brand-foreground-muted">
+                  Explore high-paying remote roles across the industry&apos;s
+                  most in-demand categories.
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Button asChild variant="primary" size="lg">
+                    <Link href="/jobs">
+                      Find that job
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary" size="lg">
+                    <Link href="/seeker/register">Create profile</Link>
+                  </Button>
+                </div>
               </div>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">palette</span>
+
+              <div className="rounded-xl border border-brand-border bg-brand-primary/10 p-4 md:p-8">
+                <div className="mb-6 rounded-xl border border-brand-border bg-white px-5 py-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.05em] text-brand-foreground-secondary">
+                        Matched categories
+                      </p>
+                      <h3 className="mt-1 text-xl font-semibold tracking-tight text-brand-foreground">
+                        Remote roles that fit your skills
+                      </h3>
+                    </div>
+                    <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-brand-primary/20 bg-white px-3 py-2 text-sm font-semibold text-brand-primary">
+                      <BriefcaseBusiness className="h-4 w-4" />
+                      {formatStat(activeJobCount)} open jobs
+                    </span>
+                  </div>
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Design</h4>
-                <span className="text-gray-500 text-sm">450 jobs</span>
-              </div>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">pie_chart</span>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {CATEGORY_SHOWCASE.map(
+                    ({ title, count, roles, salary, skills, icon: Icon }) => (
+                      <Link
+                        key={title}
+                        href="/jobs"
+                        className="group rounded-xl border border-brand-border bg-white p-5 transition-colors hover:border-brand-primary/50"
+                      >
+                        <div className="mb-5 flex items-start justify-between gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-border bg-brand-surface text-brand-primary transition-colors group-hover:bg-brand-primary group-hover:text-white">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <span className="rounded-lg border border-brand-border bg-white px-2.5 py-1 text-xs font-semibold text-brand-foreground-muted">
+                            {count}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-semibold tracking-tight text-brand-foreground">
+                          {title}
+                        </h4>
+                        <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
+                          {roles}
+                        </p>
+                        <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-brand-foreground">
+                          <DollarSign className="h-4 w-4 text-brand-primary" />
+                          {salary}
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {skills.map((skill) => (
+                            <span
+                              key={`${title}-${skill}`}
+                              className="rounded-full border border-brand-border bg-brand-surface px-3 py-1 text-xs font-medium text-brand-foreground-muted"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </Link>
+                    ),
+                  )}
                 </div>
-                <h4 className="text-foreground font-bold mb-1">Marketing</h4>
-                <span className="text-gray-500 text-sm">320 jobs</span>
-              </div>
-              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center hover:border-black transition-all cursor-pointer group ">
-                <div className="w-12 h-12 bg-gray-50 text-black rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-primary group-hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">trending_up</span>
-                </div>
-                <h4 className="text-foreground font-bold mb-1">Sales</h4>
-                <span className="text-gray-500 text-sm">215 jobs</span>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-24 bg-gray-50" data-purpose="recruiters-cta">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
-            <div className="bg-white rounded-xl p-8 md:p-16  flex flex-col md:flex-row items-center gap-12">
-              <div className="md:w-1/2">
-                <h2 className="text-foreground text-4xl font-extrabold mb-6">
-                  Are you hiring <br />
-                  remote talent?
-                </h2>
-                <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                  Reach thousands of qualified remote professionals. Post your
-                  job on Hiretivo and get applications from top-tier talent
-                  worldwide.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Link
-                    href="/recruiter/register"
-                    className="px-8 py-4 bg-brand-primary text-white font-bold rounded-xl hover:bg-brand-primary-dark transition-all  inline-block"
-                  >
-                    Post your Job Today
-                  </Link>
-                  <Link
-                    href="/recruiter/register"
-                    className="px-8 py-4 border border-gray-200 text-foreground font-bold rounded-xl hover:bg-gray-50 transition-all inline-block"
-                  >
-                    Talent Solutions
-                  </Link>
-                </div>
-              </div>
-              <div className="md:w-1/2 grid gap-6">
-                <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-black text-sm font-bold">
-                      check
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-foreground font-bold mb-1">
-                      Targeted Reach
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      Connect with developers, designers, and marketers who
-                      prefer remote-first culture.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-black text-sm font-bold">
-                      check
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-foreground font-bold mb-1">
-                      Quality Applications
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      Our screening process ensures you get high-quality
-                      candidates who match your needs.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4 items-start">
-                  <div className="w-6 h-6 bg-black/10 rounded-full flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-black text-sm font-bold">
-                      check
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-foreground font-bold mb-1">
-                      Simple Management
-                    </h4>
-                    <p className="text-muted-foreground text-sm">
-                      Integrated dashboard to track, filter, and communicate
-                      with applicants seamlessly.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <FindYourPeopleSection
+          clientCount={formatStat(companyCount)}
+          candidateCount={formatStat(seekerCount)}
+          className="bg-gray-50 px-4 py-20 md:px-8"
+        />
       </main>
       <Footer />
     </>

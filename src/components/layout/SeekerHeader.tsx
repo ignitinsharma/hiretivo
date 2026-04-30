@@ -12,7 +12,6 @@ import {
   User,
   Briefcase,
   Send,
-  LifeBuoy,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -41,7 +40,6 @@ const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   briefcase: Briefcase,
   send: Send,
-  "life-buoy": LifeBuoy,
 };
 
 function getAvatarUrl(image: string | null | undefined): string | null {
@@ -120,16 +118,6 @@ export function SeekerHeader() {
               )}
               <DropdownMenuItem asChild>
                 <Link
-                  href="/contact"
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <LifeBuoy className="w-4 h-4" />
-                  Contact & Support
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
                   href="/seeker/settings"
                   className="flex items-center gap-2 cursor-pointer"
                 >
@@ -137,7 +125,6 @@ export function SeekerHeader() {
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600 focus:bg-red-50 flex items-center gap-2 cursor-pointer"
                 onClick={() => void signOut({ callbackUrl: "/" })}
