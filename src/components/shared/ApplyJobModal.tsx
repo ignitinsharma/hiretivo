@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -37,14 +37,21 @@ export function ApplyJobModal() {
     }
   };
 
+  useEffect(() => {
+    if (isApplyModalOpen) {
+      setCoverLetter('');
+    }
+  }, [selectedJobId, isApplyModalOpen]);
+
   const handleConfirmApplied = async () => {
     if (!selectedJobId) return;
-    
+
     closeApplyModal();
-    
+
     try {
       await applicationService.applyToJob({ jobId: selectedJobId, coverLetter: '' });
       await queryClient.invalidateQueries({ queryKey: ['applications'] });
+      await queryClient.invalidateQueries({ queryKey: ['seeker-dashboard'] });
       toast.success('Application confirmed!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to confirm application');
@@ -59,6 +66,7 @@ export function ApplyJobModal() {
     try {
       await applicationService.applyToJob({ jobId: selectedJobId, coverLetter });
       await queryClient.invalidateQueries({ queryKey: ['applications'] });
+      await queryClient.invalidateQueries({ queryKey: ['seeker-dashboard'] });
       toast.success('Application submitted!');
       setCoverLetter('');
       closeApplyModal();

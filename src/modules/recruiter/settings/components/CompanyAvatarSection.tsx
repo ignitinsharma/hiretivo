@@ -26,9 +26,10 @@ export function CompanyAvatarSection({
   const [currentLogo, setCurrentLogo] = useState<string | null>(logo);
   const target = "companyLogo";
 
-  // Sync local state when the logo prop changes (e.g., after API loads on mount)
+  // Sync local state when logo prop changes; add cache-buster so browser refetches after upload
   useEffect(() => {
-    setCurrentLogo(logo);
+    if (!logo) { setCurrentLogo(null); return; }
+    setCurrentLogo(logo.includes('?') ? `${logo}&v=${Date.now()}` : `${logo}?v=${Date.now()}`);
   }, [logo]);
 
   const onUpload = async (file: File | undefined): Promise<void> => {

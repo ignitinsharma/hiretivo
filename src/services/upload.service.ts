@@ -24,8 +24,14 @@ async function postFile(path: string, file: File): Promise<UploadResponse> {
   return data.data;
 }
 
+async function getResumeViewUrl(): Promise<string> {
+  const { data } = await apiClient.get<{ data: { url: string } }>('/upload/resume/view');
+  return data.data.url;
+}
+
 export const uploadService = {
   uploadAvatar: (file: File) => postFile('/upload/avatar', file),
   uploadResume: (file: File) => postFile('/upload/resume', file),
   uploadCompanyLogo: (file: File) => postFile('/upload/company-logo', file),
+  getResumeViewUrl,
 };

@@ -128,14 +128,6 @@ export function PersonalInfoSection() {
 
       <form id="personal-info-form" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="h-[72px] w-[72px] rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center font-bold text-slate-400 text-xl">
-              {profile?.name
-                ? profile.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
-                : "??"}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Full Name</label>

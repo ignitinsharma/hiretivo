@@ -371,6 +371,8 @@ export function PostJobModal() {
 
       toast.success(editJobId ? "Job updated!" : "Job posted!");
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-active-jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-dashboard"] });
       closePostJobModal();
       reset();
     } catch (error) {

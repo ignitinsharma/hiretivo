@@ -141,6 +141,7 @@ export async function GET() {
       job: {
         select: {
           title: true,
+          status: true,
           salaryMin: true,
           salaryMax: true,
           currency: true,
@@ -176,6 +177,7 @@ export async function GET() {
       id: application.id,
       jobId: application.jobId,
       jobTitle: application.job.title,
+      jobStatus: application.job.status,
       companyName:
         application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company",
       companyLogoUrl: resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),

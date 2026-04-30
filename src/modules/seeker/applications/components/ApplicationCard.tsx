@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { ApplicationStatus } from "@/constants/enums";
+import { ApplicationStatus, JobStatus } from "@/constants/enums";
 import { cn } from "@/lib/utils";
 import type { SeekerApplicationItem } from "../types/application.types";
 
@@ -133,9 +133,22 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         ) : (
           <span />
         )}
-        <StatusBadge status={application.status} />
+        {application.jobStatus === JobStatus.DELETED ? (
+          <JobClosedBadge />
+        ) : (
+          <StatusBadge status={application.status} />
+        )}
       </div>
     </div>
+  );
+}
+
+function JobClosedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-gray-100 text-gray-500">
+      <span className="h-2 w-2 rounded-full bg-gray-400" />
+      Job Closed
+    </span>
   );
 }
 

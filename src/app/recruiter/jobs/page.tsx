@@ -329,6 +329,8 @@ export default function RecruiterJobsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-active-jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-dashboard"] });
       toast.success("Job deleted");
       setDeleteTarget(null);
     },

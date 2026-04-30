@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
@@ -89,6 +90,11 @@ function RecruiterSidebarInner({
       .join("")
       .toUpperCase()
       .slice(0, 2) || "R";
+  const avatarUrl = session?.user?.image
+    ? session.user.image.startsWith('http')
+      ? session.user.image
+      : `/api/logo?key=${encodeURIComponent(session.user.image)}`
+    : null;
 
   return (
     <aside
@@ -130,8 +136,12 @@ function RecruiterSidebarInner({
         )}
       >
         <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-black font-semibold text-sm ring-2 ring-gray-100">
-            {initials}
+          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-black font-semibold text-sm ring-2 ring-gray-100">
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt={initials} width={40} height={40} className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white" />
         </div>

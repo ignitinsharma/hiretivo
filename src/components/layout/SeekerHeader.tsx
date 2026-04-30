@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
@@ -43,11 +44,18 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   "life-buoy": LifeBuoy,
 };
 
+function getAvatarUrl(image: string | null | undefined): string | null {
+  if (!image) return null;
+  if (image.startsWith('http://') || image.startsWith('https://')) return image;
+  return `/api/logo?key=${encodeURIComponent(image)}`;
+}
+
 export function SeekerHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
 
   const initials = getInitials(session?.user?.name);
+  const avatarUrl = getAvatarUrl(session?.user?.image);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
@@ -90,8 +98,12 @@ export function SeekerHeader() {
                 className="flex items-center gap-2 group outline-none"
                 aria-label="Account menu"
               >
-                <div className="w-9 h-9 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-primary">
-                  {initials}
+                <div className="w-9 h-9 rounded-full bg-primary/10 border-2 border-primary/20 overflow-hidden flex items-center justify-center text-primary font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-primary">
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt={initials} width={36} height={36} className="h-full w-full object-cover" />
+                  ) : (
+                    initials
+                  )}
                 </div>
                 <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
               </button>

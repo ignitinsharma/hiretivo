@@ -1,9 +1,10 @@
-import { ApplicationStatus } from '@/constants/enums';
+import { ApplicationStatus, JobStatus } from '@/constants/enums';
 
 export interface SeekerApplicationItem {
   id: string;
   jobId: string;
   jobTitle: string;
+  jobStatus?: JobStatus;
   companyName: string;
   companyLogoUrl?: string;
   salaryRange?: string;
