@@ -160,10 +160,17 @@ model SeekerProfile {
   availability    String?
   resumeKey       String?
 
+  websiteUrl      String?
+  linkedinUrl     String?
+  githubUrl       String?
+  twitterUrl      String?
+
   digestEnabled Boolean @default(false)
 
-  skills     SeekerSkill[]
-  jobMatches JobMatch[]
+  skills          SeekerSkill[]
+  jobMatches      JobMatch[]
+  workExperiences WorkExperience[]
+  educations      Education[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -406,4 +413,40 @@ model DismissedJob {
   @@unique([userId, jobId])
   @@index([userId])
   @@index([jobId])
+}
+
+model WorkExperience {
+  id              String        @id @default(cuid())
+  seekerProfileId String
+  seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  company      String
+  title        String
+  startDate    String
+  endDate      String?
+  isCurrent    Boolean  @default(false)
+  description  String?  @db.Text
+  positionType String?
+  skills       String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([seekerProfileId])
+}
+
+model Education {
+  id              String        @id @default(cuid())
+  seekerProfileId String
+  seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  institution    String
+  graduationDate String?
+  degree         String?
+  major          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([seekerProfileId])
 }
