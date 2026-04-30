@@ -7,6 +7,26 @@ interface DataResponse<T> {
   data: T;
 }
 
+export interface WorkExperienceItem {
+  id: string;
+  company: string;
+  title: string;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string | null;
+  positionType: string | null;
+  skills: string[];
+}
+
+export interface EducationItem {
+  id: string;
+  institution: string;
+  graduationDate: string | null;
+  degree: string | null;
+  major: string | null;
+}
+
 export interface SeekerFeedResponse {
   jobs: JobListItem[];
   nextCursor: string | null;
@@ -27,6 +47,13 @@ export interface SeekerSettingsData {
   availability: string;
   resumeKey: string | null;
   skills: Array<{ id: string; name: string; slug: string }>;
+  websiteUrl: string | null;
+  linkedinUrl: string | null;
+  githubUrl: string | null;
+  twitterUrl: string | null;
+  yearsExperience: number | null;
+  workExperiences: WorkExperienceItem[];
+  educations: EducationItem[];
 }
 
 export const seekerService = {
