@@ -317,6 +317,48 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
+  if (parsed.data.workExperiences !== undefined) {
+    transactionOperations.push(
+      prisma.workExperience.deleteMany({
+        where: { seekerProfileId: seekerProfile.id },
+      }),
+      ...parsed.data.workExperiences.map((exp) =>
+        prisma.workExperience.create({
+          data: {
+            seekerProfileId: seekerProfile.id,
+            company: exp.company,
+            title: exp.title,
+            startDate: exp.startDate,
+            endDate: exp.endDate ?? null,
+            isCurrent: exp.isCurrent,
+            description: exp.description ?? null,
+            positionType: exp.positionType ?? null,
+            skills: exp.skills,
+          },
+        }),
+      ),
+    );
+  }
+
+  if (parsed.data.educations !== undefined) {
+    transactionOperations.push(
+      prisma.education.deleteMany({
+        where: { seekerProfileId: seekerProfile.id },
+      }),
+      ...parsed.data.educations.map((edu) =>
+        prisma.education.create({
+          data: {
+            seekerProfileId: seekerProfile.id,
+            institution: edu.institution,
+            graduationDate: edu.graduationDate ?? null,
+            degree: edu.degree ?? null,
+            major: edu.major ?? null,
+          },
+        }),
+      ),
+    );
+  }
+
   const [userUpdate, profileUpdate] = await prisma.$transaction(
     transactionOperations,
   );
@@ -330,44 +372,6 @@ export async function PATCH(req: NextRequest) {
       { error: "Failed to update profile" },
       { status: 500 },
     );
-  }
-
-  if (parsed.data.workExperiences !== undefined) {
-    await prisma.workExperience.deleteMany({
-      where: { seekerProfileId: seekerProfile.id },
-    });
-    if (parsed.data.workExperiences.length > 0) {
-      await prisma.workExperience.createMany({
-        data: parsed.data.workExperiences.map((exp) => ({
-          seekerProfileId: seekerProfile.id,
-          company: exp.company,
-          title: exp.title,
-          startDate: exp.startDate,
-          endDate: exp.endDate ?? null,
-          isCurrent: exp.isCurrent,
-          description: exp.description ?? null,
-          positionType: exp.positionType ?? null,
-          skills: exp.skills,
-        })),
-      });
-    }
-  }
-
-  if (parsed.data.educations !== undefined) {
-    await prisma.education.deleteMany({
-      where: { seekerProfileId: seekerProfile.id },
-    });
-    if (parsed.data.educations.length > 0) {
-      await prisma.education.createMany({
-        data: parsed.data.educations.map((edu) => ({
-          seekerProfileId: seekerProfile.id,
-          institution: edu.institution,
-          graduationDate: edu.graduationDate ?? null,
-          degree: edu.degree ?? null,
-          major: edu.major ?? null,
-        })),
-      });
-    }
   }
 
   return NextResponse.json({ data: { success: true } }, { status: 200 });
