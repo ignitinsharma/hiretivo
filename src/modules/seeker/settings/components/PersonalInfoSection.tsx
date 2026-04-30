@@ -10,11 +10,32 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   SeekerSettingsSchema,
   type SeekerSettingsInput,
 } from "@/lib/validations/seeker.schema";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerSettingsData } from "@/services/seeker.service";
+
+const YEARS_OPTIONS = [
+  { value: '0', label: '< 1 Year' },
+  { value: '1', label: '1 Year' },
+  { value: '2', label: '2 Years' },
+  { value: '3', label: '3 Years' },
+  { value: '4', label: '4 Years' },
+  { value: '5', label: '5 Years' },
+  { value: '6', label: '6 Years' },
+  { value: '7', label: '7 Years' },
+  { value: '8', label: '8 Years' },
+  { value: '9', label: '9 Years' },
+  { value: '10', label: '10+ Years' },
+] as const;
 
 function getProfileFormValues(
   profile: SeekerSettingsData | undefined,
@@ -30,6 +51,7 @@ function getProfileFormValues(
     salaryMax: profile?.salaryMax ?? null,
     currency: profile?.currency ?? "",
     availability: profile?.availability ?? "",
+    yearsExperience: profile?.yearsExperience ?? null,
   };
 }
 
@@ -185,6 +207,26 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-slate-700">Location</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input {...form.register("location")} placeholder="e.g. San Francisco, CA" disabled={isFormDisabled} />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Years of Experience</label>
+              {isLoading ? <Skeleton className="h-10 w-full" /> : (
+                <Select
+                  value={form.watch('yearsExperience')?.toString() ?? ''}
+                  onValueChange={(val) => form.setValue('yearsExperience', val === '' ? null : Number(val))}
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger className="rounded-lg" aria-label="Years of experience">
+                    <SelectValue placeholder="Select years" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
 
