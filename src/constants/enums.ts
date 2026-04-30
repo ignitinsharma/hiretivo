@@ -195,3 +195,13 @@ export enum SubscriptionStatus {
   PAST_DUE = "PAST_DUE",
   CANCELED = "CANCELED",
 }
+
+export enum PositionType {
+  TECHNICAL = "technical",
+  NON_TECHNICAL = "non-technical",
+}
+
+export const POSITION_TYPE_VALUES = [
+  PositionType.TECHNICAL,
+  PositionType.NON_TECHNICAL,
+] as const;

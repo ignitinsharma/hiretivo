@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { POSITION_TYPE_VALUES } from "@/constants/enums";
 
 const SkillNameSchema = z
   .string()
@@ -57,16 +58,32 @@ const SalarySchema = z
     return value;
   });
 
-export const WorkExperienceInputSchema = z.object({
-  company: z.string().min(1, "Company is required"),
-  title: z.string().min(1, "Title is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().optional().nullable(),
-  isCurrent: z.boolean().default(false),
-  description: z.string().max(2000).optional().nullable(),
-  positionType: z.string().optional().nullable(),
-  skills: z.array(z.string()).default([]),
-});
+export const WorkExperienceInputSchema = z
+  .object({
+    company: z.string().trim().min(1, "Company is required"),
+    title: z.string().trim().min(1, "Title is required"),
+    startDate: z
+      .string()
+      .regex(/^(0[1-9]|1[0-2])\/\d{4}$/, "Start date must be in MM/YYYY format"),
+    endDate: z
+      .string()
+      .regex(/^(0[1-9]|1[0-2])\/\d{4}$/, "End date must be in MM/YYYY format")
+      .optional()
+      .nullable(),
+    isCurrent: z.boolean().default(false),
+    description: z.string().max(2000).optional().nullable(),
+    positionType: z.enum(POSITION_TYPE_VALUES).optional().nullable(),
+    skills: z.array(z.string()).default([]),
+  })
+  .superRefine((data, ctx) => {
+    if (data.isCurrent && data.endDate != null && data.endDate.trim() !== "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End date must be empty when currently working here",
+        path: ["endDate"],
+      });
+    }
+  });
 
 export const EducationInputSchema = z.object({
   institution: z.string().min(1, "Institution is required"),
@@ -103,8 +120,8 @@ export const SeekerSettingsSchema = z
     githubUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
     twitterUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
     yearsExperience: z.number().int().min(0).max(10).optional().nullable(),
-    workExperiences: z.array(WorkExperienceInputSchema).optional(),
-    educations: z.array(EducationInputSchema).optional(),
+    workExperiences: z.array(WorkExperienceInputSchema).max(20).optional(),
+    educations: z.array(EducationInputSchema).max(10).optional(),
   })
   .refine(
     (data) =>
