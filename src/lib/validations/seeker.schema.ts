@@ -57,6 +57,27 @@ const SalarySchema = z
     return value;
   });
 
+export const WorkExperienceInputSchema = z.object({
+  company: z.string().min(1, "Company is required"),
+  title: z.string().min(1, "Title is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().optional().nullable(),
+  isCurrent: z.boolean().default(false),
+  description: z.string().max(2000).optional().nullable(),
+  positionType: z.string().optional().nullable(),
+  skills: z.array(z.string()).default([]),
+});
+
+export const EducationInputSchema = z.object({
+  institution: z.string().min(1, "Institution is required"),
+  graduationDate: z.string().optional().nullable(),
+  degree: z.string().optional().nullable(),
+  major: z.string().optional().nullable(),
+});
+
+export type WorkExperienceInput = z.infer<typeof WorkExperienceInputSchema>;
+export type EducationInput = z.infer<typeof EducationInputSchema>;
+
 export const SeekerSettingsSchema = z
   .object({
     name: z.string().min(1, "Name is required").max(100),
@@ -77,6 +98,13 @@ export const SeekerSettingsSchema = z
       })
       .optional(),
     skillNames: z.array(SkillNameSchema).max(30).optional(),
+    websiteUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
+    linkedinUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
+    githubUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
+    twitterUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
+    yearsExperience: z.number().int().min(0).max(10).optional().nullable(),
+    workExperiences: z.array(WorkExperienceInputSchema).optional(),
+    educations: z.array(EducationInputSchema).optional(),
   })
   .refine(
     (data) =>
