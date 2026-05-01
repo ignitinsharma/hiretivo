@@ -56,6 +56,26 @@ export interface RecruiterSettingsData {
   interviewNotifications: boolean;
 }
 
+export interface CandidateWorkExperience {
+  id: string;
+  company: string;
+  title: string;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string | null;
+  positionType: string | null;
+  skills: string[];
+}
+
+export interface CandidateEducation {
+  id: string;
+  institution: string;
+  graduationDate: string | null;
+  degree: string | null;
+  major: string | null;
+}
+
 export interface CandidateApplication {
   id: string;
   jobId: string;
@@ -72,6 +92,13 @@ export interface CandidateApplication {
     headline: string | null;
     location: string | null;
     skills: string[];
+    yearsExperience: number | null;
+    websiteUrl: string | null;
+    linkedinUrl: string | null;
+    githubUrl: string | null;
+    twitterUrl: string | null;
+    workExperiences: CandidateWorkExperience[];
+    educations: CandidateEducation[];
   };
   matchScore: number;
   status: ApplicationStatus;

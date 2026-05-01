@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Globe, Github, Linkedin, Twitter, Briefcase, GraduationCap } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -120,6 +120,26 @@ function formatInterviewDuration(startsAt: string, endsAt: string): string {
   return `${mins} min`;
 }
 
+interface CandidateWorkExperience {
+  id: string;
+  company: string;
+  title: string;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string | null;
+  positionType: string | null;
+  skills: string[];
+}
+
+interface CandidateEducation {
+  id: string;
+  institution: string;
+  graduationDate: string | null;
+  degree: string | null;
+  major: string | null;
+}
+
 export interface CandidateApplication {
   id: string;
   jobId?: string;
@@ -136,6 +156,13 @@ export interface CandidateApplication {
     headline: string | null;
     location: string | null;
     skills: string[];
+    yearsExperience?: number | null;
+    websiteUrl?: string | null;
+    linkedinUrl?: string | null;
+    githubUrl?: string | null;
+    twitterUrl?: string | null;
+    workExperiences?: CandidateWorkExperience[];
+    educations?: CandidateEducation[];
   };
   appliedAt?: string;
   updatedAt?: string;
@@ -143,7 +170,7 @@ export interface CandidateApplication {
   scheduledInterview?: {
     id: string;
     status: InterviewStatus;
-    startsAt: string | null; // ISO string (from API)
+    startsAt: string | null;
     endsAt: string | null;
     meetLink: string | null;
     notes: string | null;
@@ -286,7 +313,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                     {application.matchScore}%
                   </p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       Role
@@ -304,6 +331,20 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                       {application.candidateProfile?.location ?? "Remote"}
                     </p>
                   </div>
+                  {application.candidateProfile?.yearsExperience != null && (
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        Experience
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">
+                        {application.candidateProfile.yearsExperience === 0
+                          ? "< 1 Year"
+                          : application.candidateProfile.yearsExperience === 10
+                            ? "10+ Years"
+                            : `${application.candidateProfile.yearsExperience} ${application.candidateProfile.yearsExperience === 1 ? "Year" : "Years"}`}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
@@ -341,6 +382,104 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                 </div>
               )}
             </section>
+
+            {(() => {
+              const profile = application.candidateProfile;
+              const links = [
+                { href: profile?.websiteUrl, Icon: Globe, label: "Website" },
+                { href: profile?.linkedinUrl, Icon: Linkedin, label: "LinkedIn" },
+                { href: profile?.githubUrl, Icon: Github, label: "GitHub" },
+                { href: profile?.twitterUrl, Icon: Twitter, label: "Twitter" },
+              ].filter((l) => l.href);
+              if (!links.length) return null;
+              return (
+                <section className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Social Profiles
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {links.map(({ href, Icon, label }) => (
+                      <a
+                        key={label}
+                        href={href!}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={label}
+                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      >
+                        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        {label}
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
+            {(application.candidateProfile?.workExperiences?.length ?? 0) > 0 && (
+              <section className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
+                  Work Experience
+                </p>
+                <div className="space-y-3">
+                  {application.candidateProfile!.workExperiences!.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className="rounded-xl border border-slate-200 p-4 space-y-1"
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{exp.title}</p>
+                      <p className="text-sm text-slate-600">{exp.company}</p>
+                      <p className="text-xs text-slate-400">
+                        {exp.startDate} — {exp.isCurrent ? "Present" : (exp.endDate ?? "Present")}
+                      </p>
+                      {exp.description && (
+                        <p className="text-sm text-slate-700 mt-1 line-clamp-3">{exp.description}</p>
+                      )}
+                      {exp.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {exp.skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {(application.candidateProfile?.educations?.length ?? 0) > 0 && (
+              <section className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+                  Education
+                </p>
+                <div className="space-y-3">
+                  {application.candidateProfile!.educations!.map((edu) => (
+                    <div
+                      key={edu.id}
+                      className="rounded-xl border border-slate-200 p-4 space-y-1"
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{edu.institution}</p>
+                      {(edu.degree || edu.major) && (
+                        <p className="text-sm text-slate-600">
+                          {[edu.degree, edu.major].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      {edu.graduationDate && (
+                        <p className="text-xs text-slate-400">Graduated {edu.graduationDate}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
