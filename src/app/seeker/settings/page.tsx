@@ -10,6 +10,9 @@ import { PasswordSecuritySection } from '@/modules/seeker/settings/components/Pa
 import { SkillsSection } from '@/modules/seeker/settings/components/SkillsSection';
 import { ResumeSection } from '@/modules/seeker/settings/components/ResumeSection';
 import { AvatarSection } from '@/modules/seeker/settings/components/AvatarSection';
+import { SocialProfilesSection } from '@/modules/seeker/settings/components/SocialProfilesSection';
+import { WorkExperienceSection } from '@/modules/seeker/settings/components/WorkExperienceSection';
+import { EducationSection } from '@/modules/seeker/settings/components/EducationSection';
 
 function SeekerSettingsPanels() {
   const { data, isLoading } = useSeekerSettingsData();
@@ -19,7 +22,10 @@ function SeekerSettingsPanels() {
     <main className="flex-1 space-y-8">
       <AvatarSection name={settings?.name} image={settings?.image} />
       <PersonalInfoSection />
+      <SocialProfilesSection />
       <SkillsSection settings={settings} isLoading={isLoading} />
+      <WorkExperienceSection />
+      <EducationSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
     </main>
@@ -38,7 +44,6 @@ export default function SeekerSettingsPage() {
 
       <div className="flex flex-col md:flex-row gap-10">
         <SettingsSidebar />
-        
         <SeekerSettingsPanels />
       </div>
     </>
