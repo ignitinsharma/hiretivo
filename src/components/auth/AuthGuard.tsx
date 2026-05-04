@@ -30,8 +30,8 @@ export async function AuthGuard({
     redirect(`${fallbackDashboard}?authError=forbidden`);
   }
 
-  // Check onboarding completeness
-  const isOnboarded = await checkOnboarding(session.user.id, requiredRole);
+  // Check explicit onboarding completion flag.
+  const isOnboarded = await checkOnboarding(session.user.id);
 
   if (!isOnboarded) {
     redirect(onboardingPath);
@@ -40,22 +40,11 @@ export async function AuthGuard({
   return <>{children}</>;
 }
 
-async function checkOnboarding(
-  userId: string,
-  role: UserRole
-): Promise<boolean> {
-  if (role === UserRole.SEEKER) {
-    const seekerProfile = await prisma.seekerProfile.findUnique({
-      where: { userId },
-      select: { situation: true, primaryRole: true },
-    });
-    return seekerProfile?.situation != null && seekerProfile?.primaryRole != null;
-  }
-
-  // RECRUITER
-  const recruiterProfile = await prisma.recruiterProfile.findUnique({
-    where: { userId },
-    select: { id: true },
+async function checkOnboarding(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { onboardingCompleted: true },
   });
-  return recruiterProfile != null;
+
+  return user?.onboardingCompleted === true;
 }

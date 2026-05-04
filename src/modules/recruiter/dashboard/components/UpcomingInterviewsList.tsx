@@ -6,29 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { recruiterService } from "@/services/recruiter.service";
 import type { UpcomingInterviewItem } from "@/services/recruiter.service";
+import { formatDateInTimezone, formatTimeInTimezone } from "@/lib/timezone";
 
 interface UpcomingInterviewsResponse {
   data: UpcomingInterviewItem[];
 }
 
-function formatInterviewDate(isoString: string): string {
-  const d = new Date(isoString);
-  return d.toLocaleDateString("en-US", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-  });
+function formatInterviewDate(isoString: string, tz?: string | null): string {
+  return formatDateInTimezone(new Date(isoString), tz ?? "UTC");
 }
 
-function formatInterviewTime(isoString: string): string {
-  const d = new Date(isoString);
-  return (
-    d.toLocaleTimeString("en-US", {
-      timeZone: "UTC",
-      hour: "numeric",
-      minute: "2-digit",
-    }) + " UTC"
-  );
+function formatInterviewTime(isoString: string, tz?: string | null): string {
+  return formatTimeInTimezone(new Date(isoString), tz ?? "UTC");
 }
 
 export function UpcomingInterviewsList() {
@@ -135,11 +124,11 @@ export function UpcomingInterviewsList() {
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
-                  {formatInterviewDate(interview.startsAt)}
+                  {formatInterviewDate(interview.startsAt, interview.scheduledTimeZone)}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
-                  {formatInterviewTime(interview.startsAt)}
+                  {formatInterviewTime(interview.startsAt, interview.scheduledTimeZone)}
                 </span>
               </div>
             </div>

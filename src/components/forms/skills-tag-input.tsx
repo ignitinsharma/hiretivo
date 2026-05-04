@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, KeyboardEvent, useRef } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ function hasSkill(skills: string[], nextSkill: string): boolean {
 export function SkillsTagInput({
   value,
   onChange,
-  placeholder = "Type a skill and press Enter",
+  placeholder = "Search skills...",
   maxTags = 20,
   disabled = false,
   className,
@@ -71,8 +71,6 @@ export function SkillsTagInput({
       }
     } else if (e.key === "Escape") {
       setShowDropdown(false);
-    } else if (e.key === "Backspace" && inputValue === "" && value.length > 0) {
-      removeSkill(value[value.length - 1]);
     }
   };
 
@@ -81,33 +79,35 @@ export function SkillsTagInput({
   };
 
   return (
-    <div className={cn("relative space-y-2", className)}>
-      <div
-        className={cn(
-          "flex flex-wrap gap-2 p-3 min-h-[48px] w-full rounded-md border border-input bg-background text-base ring-offset-background",
-          "focus-within:ring-1 focus-within:ring-ring focus-within:ring-offset-1",
-          disabled && "opacity-50 cursor-not-allowed",
-        )}
-      >
-        {value.map((skill) => (
-          <span
-            key={skill}
-            className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-sm font-medium text-primary"
-          >
-            {skill}
-            {!disabled && (
-              <button
-                type="button"
-                onClick={() => removeSkill(skill)}
-                className="ml-1 rounded-sm outline-none hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <X className="h-3 w-3" />
-                <span className="sr-only">Remove {skill}</span>
-              </button>
-            )}
-          </span>
-        ))}
-        {!disabled && (
+    <div className={cn("relative space-y-3", className)}>
+      {/* Selected tags above the input */}
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map((skill) => (
+            <span
+              key={skill}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#f3f4f6] px-3 py-1.5 text-sm font-medium text-[#0a0a0a]"
+            >
+              {skill}
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  className="rounded-sm outline-none hover:bg-[#e5e7eb] focus-visible:ring-2 focus-visible:ring-ring p-0.5"
+                >
+                  <X className="h-3.5 w-3.5 text-[#6b7280]" />
+                  <span className="sr-only">Remove {skill}</span>
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Search input below the tags */}
+      {!disabled && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af] pointer-events-none" />
           <Input
             type="text"
             value={inputValue}
@@ -118,13 +118,14 @@ export function SkillsTagInput({
             onKeyDown={handleKeyDown}
             onFocus={() => setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
-            placeholder={value.length === 0 ? placeholder : ""}
-            className="flex-1 min-w-[120px] border-0 p-0 h-auto bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            placeholder={placeholder}
+            className="pl-9 w-full"
             disabled={disabled}
           />
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Suggestions dropdown */}
       {showDropdown && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
@@ -150,10 +151,11 @@ export function SkillsTagInput({
         </div>
       )}
 
-      {value.length === 0 && (
+      {/* Empty state hint */}
+      {value.length === 0 && !inputValue && disabled && (
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          {placeholder}
+          No skills selected
         </p>
       )}
     </div>

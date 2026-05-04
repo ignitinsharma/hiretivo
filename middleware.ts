@@ -60,7 +60,15 @@ export default auth((req) => {
     return NextResponse.redirect(new URL(dest, req.url));
   }
 
-  if (isOnboardingRoute) return NextResponse.next();
+  if (isOnboardingRoute) {
+    if (!session) {
+      if (pathname.startsWith("/seeker/"))
+        return NextResponse.redirect(new URL("/seeker/login", req.url));
+      if (pathname.startsWith("/recruiter/"))
+        return NextResponse.redirect(new URL("/recruiter/login", req.url));
+    }
+    return NextResponse.next();
+  }
 
   if (pathname.startsWith("/seeker/") && userRole !== "SEEKER") {
     return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));

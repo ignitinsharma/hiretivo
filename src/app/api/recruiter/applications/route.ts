@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { ApplicationStatus, InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { getSignedFileUrl } from "@/lib/r2";
+import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 20;
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
         jobTitle: app.job.title,
         candidateName: seeker.name ?? "Anonymous",
         candidateEmail: seeker.email ?? "",
-        candidateAvatar: seeker.image,
+        candidateAvatar: resolveLogoUrl(seeker.image),
         primaryRole: profile?.primaryRole ?? null,
         headline: profile?.headline ?? null,
         location: profile?.location ?? null,

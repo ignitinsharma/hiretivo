@@ -173,9 +173,11 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const totalCount = filteredMatches.length;
   const paginated = filteredMatches.slice(0, limit + 1);
   const hasNext = paginated.length > limit;
   const pageItems = hasNext ? paginated.slice(0, limit) : paginated;
+  const remainingCount = Math.max(totalCount - pageItems.length, 0);
 
   const nextCursor = hasNext
     ? Buffer.from(JSON.stringify({ score: pageItems[pageItems.length - 1].score, jobId: pageItems[pageItems.length - 1].jobId })).toString('base64')
@@ -282,5 +284,5 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ jobs: jobsResponse, nextCursor });
+  return NextResponse.json({ jobs: jobsResponse, nextCursor, totalCount, remainingCount });
 }

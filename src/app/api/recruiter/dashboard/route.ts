@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { UserRole, JobStatus, ApplicationStatus } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
+import { resolveLogoUrl } from '@/lib/r2';
 
 function fillMissingDays(
   data: Array<{ date: string; count: number }>,
@@ -100,7 +101,7 @@ export async function GET() {
       recentApplicants: recentApplicants.map((app) => ({
         id: app.id,
         seekerName: app.seeker.name ?? 'Anonymous',
-        seekerImage: app.seeker.image,
+        seekerImage: resolveLogoUrl(app.seeker.image),
         jobTitle: app.job.title,
         matchScore: app.matchScore,
         status: app.status,

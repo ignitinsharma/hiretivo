@@ -2,6 +2,8 @@ import { resend } from "@/lib/resend";
 
 const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
 
+import { formatInTimezone } from "@/lib/timezone";
+
 interface SendInterviewScheduledEmailInput {
   seekerEmail: string;
   seekerName: string;
@@ -11,10 +13,16 @@ interface SendInterviewScheduledEmailInput {
   endsAt: Date;
   meetLink?: string | null;
   notes?: string | null;
+  displayTimezone?: string | null;
 }
 
 function formatUtcDateTime(date: Date): string {
   return date.toUTCString().replace(" GMT", " UTC");
+}
+
+function formatDisplayDateTime(date: Date, timezone: string | null | undefined): string {
+  if (timezone) return formatInTimezone(date, timezone);
+  return formatUtcDateTime(date);
 }
 
 function formatDuration(startsAt: Date, endsAt: Date): string {
@@ -41,8 +49,8 @@ export async function sendInterviewScheduledEmail(
   const seekerName = escapeHtml(input.seekerName);
   const jobTitle = escapeHtml(input.jobTitle);
   const companyName = escapeHtml(input.companyName);
-  const startsAt = formatUtcDateTime(input.startsAt);
-  const endsAt = formatUtcDateTime(input.endsAt);
+  const startsAt = formatDisplayDateTime(input.startsAt, input.displayTimezone);
+  const endsAt = formatDisplayDateTime(input.endsAt, input.displayTimezone);
   const duration = formatDuration(input.startsAt, input.endsAt);
   const meetLink = input.meetLink?.trim();
   const notes = input.notes?.trim();
@@ -64,7 +72,7 @@ export async function sendInterviewScheduledEmail(
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
       ${notesSection}
-      <p style="color:#868685;font-size:12px;">All times are shown in UTC.</p>
+      <p style="color:#868685;font-size:12px;">${input.displayTimezone ? `Times shown in ${escapeHtml(input.displayTimezone)}.` : "All times are in UTC. Please convert to your local timezone."}</p>
     </div>
   `;
 

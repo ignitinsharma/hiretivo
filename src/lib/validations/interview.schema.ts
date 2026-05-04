@@ -7,6 +7,7 @@ export const ScheduleInterviewSchema = z
     endsAt: z.string().datetime(),
     meetLink: z.string().url().optional().or(z.literal("")),
     notes: z.string().max(500).optional(),
+    scheduledTimeZone: z.string().min(1).max(64).optional(),
   })
   .refine((data) => new Date(data.endsAt) > new Date(data.startsAt), {
     message: "End time must be after start time",

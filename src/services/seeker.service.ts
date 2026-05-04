@@ -30,6 +30,8 @@ export interface EducationItem {
 export interface SeekerFeedResponse {
   jobs: JobListItem[];
   nextCursor: string | null;
+  totalCount?: number;
+  remainingCount?: number;
 }
 
 export interface SeekerSettingsData {

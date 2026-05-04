@@ -47,9 +47,9 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
     });
 
     if (!result.success) {
-      // Non-blocking: log error but allow wizard to advance
-      // (data is in Zustand; they can still complete onboarding)
       console.error("[StepWelcome] saveStep1 failed:", result.error);
+      setErrors([result.error]);
+      return;
     }
 
     onNext();
@@ -60,7 +60,7 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
       return "Please select your current situation";
     if (errors.includes("Please select your experience level"))
       return "Please select your experience level";
-    return null;
+    return errors[0] ?? null;
   };
 
   return (

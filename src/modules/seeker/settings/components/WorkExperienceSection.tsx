@@ -281,7 +281,6 @@ export function WorkExperienceSection() {
       seekerService.updateSettings({
         name: profile?.name ?? "",
         workExperiences: updatedEntries.map(
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           ({ id: _id, positionType, ...rest }) => ({
             ...rest,
             positionType: positionType as PositionType | null | undefined,

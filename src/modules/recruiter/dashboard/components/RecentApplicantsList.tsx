@@ -50,8 +50,12 @@ function formatTimeAgo(dateStr: string): string {
 function ApplicantRow({ applicant }: { applicant: RecentApplicant }) {
   return (
     <div className="flex items-center gap-4">
-      <div className="h-10 w-10 rounded-full  bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-        {getInitials(applicant.seekerName)}
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0 overflow-hidden">
+        {applicant.seekerImage ? (
+          <img src={applicant.seekerImage} alt={applicant.seekerName} className="h-full w-full object-cover" />
+        ) : (
+          getInitials(applicant.seekerName)
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-bold text-sm text-slate-900 truncate">

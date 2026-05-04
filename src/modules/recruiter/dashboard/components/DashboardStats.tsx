@@ -14,7 +14,7 @@ function getStatsItems(stats: DashboardStats): DashboardStatItem[] {
     { label: 'Active Jobs', value: stats.activeJobsCount },
     { label: 'Total Applications', value: stats.totalApplications },
     { label: 'New This Week', value: stats.newThisWeek, variant: 'primary' },
-    { label: 'Avg. Match Score', value: `${Math.round(stats.avgMatchScore)}%` },
+    { label: 'Match Score', value: `${Math.round(stats.avgMatchScore)}%` },
   ];
 }
 
@@ -31,9 +31,10 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
     >
       <p
         className={cn(
-          'text-sm font-medium mb-4',
+          'text-sm font-medium mb-4 truncate',
           isPrimary ? 'opacity-60' : 'text-slate-500'
         )}
+        title={stat.label}
       >
         {stat.label}
       </p>

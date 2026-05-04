@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -21,7 +21,6 @@ import {
   recruiterLoginSchema,
   type RecruiterLoginInput,
 } from "@/lib/validations/auth";
-import { authService } from "@/services/auth.service";
 
 const RecruiterLoginLeft = (
   <>
@@ -137,7 +136,7 @@ export default function RecruiterLoginPage() {
       }
 
       // Verify the authenticated user has the RECRUITER role
-      const session = await authService.getSession();
+      const session = await getSession();
 
       if (session?.user?.role !== UserRole.RECRUITER) {
         await signOut({ redirect: false });

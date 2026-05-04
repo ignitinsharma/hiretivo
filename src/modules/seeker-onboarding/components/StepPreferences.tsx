@@ -71,6 +71,8 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
 
     if (!result.success) {
       console.error("[StepPreferences] saveStep4 failed:", result.error);
+      setErrors([result.error]);
+      return;
     }
 
     onNext();
@@ -80,7 +82,7 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
     if (errors.includes("Please select job type")) return "Please select job type";
     if (errors.includes("Please select category")) return "Please select category";
     if (errors.includes("Please select availability")) return "Please select availability";
-    return null;
+    return errors[0] ?? null;
   };
 
   return (

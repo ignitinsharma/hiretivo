@@ -31,6 +31,7 @@ export interface UpcomingInterviewItem {
   id: string;
   startsAt: string;
   meetLink: string | null;
+  scheduledTimeZone: string | null;
   application: {
     job: { title: string };
     seeker: { name: string | null };
@@ -113,6 +114,7 @@ export interface CandidateApplication {
     endsAt: string | null;
     meetLink: string | null;
     notes: string | null;
+    scheduledTimeZone: string | null;
   } | null;
 }
 
@@ -152,6 +154,7 @@ export interface InterviewPayload {
   endsAt: string;
   meetLink: string;
   notes: string;
+  scheduledTimeZone?: string;
 }
 
 export const recruiterService = {

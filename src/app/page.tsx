@@ -18,6 +18,8 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { UserRole, JobStatus } from "@/constants/enums";
@@ -128,6 +130,11 @@ function formatSalaryRange(
 export default async function Home() {
   if (SHOW_COMING_SOON) {
     return <ComingSoonPage />;
+  }
+
+  const session = await auth();
+  if (session?.user) {
+    redirect(session.user.role === UserRole.RECRUITER ? "/recruiter/dashboard" : "/seeker/dashboard");
   }
 
   const [activeJobCount, seekerCount, companyCount, featuredJobs] =

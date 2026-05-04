@@ -37,6 +37,29 @@ const YEARS_OPTIONS = [
   { value: '10', label: '10+ Years' },
 ] as const;
 
+const SITUATION_OPTIONS = [
+  { value: 'ACTIVELY_LOOKING', label: 'Actively looking' },
+  { value: 'OPEN_TO_OFFERS', label: 'Open to offers' },
+  { value: 'EXPLORING_OPTIONS', label: 'Exploring options' },
+  { value: 'STUDENT_FRESH_GRAD', label: 'Student / Fresh grad' },
+] as const;
+
+const AVAILABILITY_OPTIONS = [
+  { value: 'IMMEDIATELY', label: 'Immediately' },
+  { value: 'TWO_WEEKS', label: '2 weeks notice' },
+  { value: 'ONE_MONTH_PLUS', label: '1 month+' },
+] as const;
+
+function getSituationLabel(value: string | undefined | null): string {
+  if (!value) return 'Not set';
+  return SITUATION_OPTIONS.find((o) => o.value === value)?.label ?? value;
+}
+
+function getAvailabilityLabel(value: string | undefined | null): string {
+  if (!value) return 'Not set';
+  return AVAILABILITY_OPTIONS.find((o) => o.value === value)?.label ?? value;
+}
+
 function getProfileFormValues(
   profile: SeekerSettingsData | undefined,
 ): SeekerSettingsInput {
@@ -192,14 +215,40 @@ export function PersonalInfoSection() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Job Search Status</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("situation")} placeholder="e.g. Actively looking" disabled={isFormDisabled} />
+                <Select
+                  value={form.watch('situation') ?? ''}
+                  onValueChange={(val) => form.setValue('situation', val, { shouldValidate: true })}
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger className="rounded-lg" aria-label="Job search status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SITUATION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Availability</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("availability")} placeholder="e.g. Immediately" disabled={isFormDisabled} />
+                <Select
+                  value={form.watch('availability') ?? ''}
+                  onValueChange={(val) => form.setValue('availability', val, { shouldValidate: true })}
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger className="rounded-lg" aria-label="Availability">
+                    <SelectValue placeholder="Select availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AVAILABILITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
 

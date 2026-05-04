@@ -1,12 +1,19 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
+import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { invalidateSeekerCache } from "@/lib/match";
 import { uploadFile } from "@/lib/r2";
 import { step1Schema, step2Schema, step4Schema } from "@/lib/validations/onboarding.schema";
 
 type ActionResult = { success: true } | { success: false; error: string };
+type MissingSeekerOnboardingStep = 1 | 2 | 4;
+type CompleteSeekerOnboardingResult =
+  | { success: false; error: string; missingStep: MissingSeekerOnboardingStep }
+  | never;
 
 // --- Step 1: Situation ---
 export async function saveStep1(data: {
@@ -176,6 +183,57 @@ export async function saveStep4(data: {
   });
 
   return { success: true };
+}
+
+export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardingResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Not authenticated", missingStep: 1 };
+  }
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden", missingStep: 1 };
+  }
+
+  const profile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: {
+      situation: true,
+      primaryRole: true,
+      availability: true,
+      _count: { select: { skills: true } },
+    },
+  });
+
+  if (!profile?.situation) {
+    return {
+      success: false,
+      error: "Complete your current situation first.",
+      missingStep: 1,
+    };
+  }
+
+  if (!profile.primaryRole || profile._count.skills === 0) {
+    return {
+      success: false,
+      error: "Add your primary role and at least one skill first.",
+      missingStep: 2,
+    };
+  }
+
+  if (!profile.availability) {
+    return {
+      success: false,
+      error: "Choose your availability first.",
+      missingStep: 4,
+    };
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { onboardingCompleted: true },
+  });
+
+  redirect("/seeker/settings");
 }
 
 // --- Profile Completeness (per D-09: computed on read, not stored) ---

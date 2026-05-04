@@ -90,6 +90,8 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
 
     if (!result.success) {
       console.error("[StepSkills] saveStep2 failed:", result.error);
+      setErrors([result.error]);
+      return;
     }
 
     onNext();
@@ -143,7 +145,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     if (errors.includes("Primary role is required")) return "Primary role is required";
     if (errors.includes("Please select years of experience")) return "Please select years of experience";
     if (errors.includes("At least one skill is required")) return "At least one skill is required";
-    return null;
+    return errors[0] ?? null;
   };
 
   return (

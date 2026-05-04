@@ -81,14 +81,16 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
               </span>
             )}
           </div>
-          <p
-            className={cn(
-              "text-xs mt-1",
-              isPrimary ? "opacity-70" : "text-slate-400",
-            )}
-          >
-            vs last week
-          </p>
+          {stat.trend && (
+            <p
+              className={cn(
+                "text-xs mt-1",
+                isPrimary ? "opacity-70" : "text-slate-400",
+              )}
+            >
+              vs last week
+            </p>
+          )}
         </div>
         <Sparkline isPrimary={isPrimary} />
       </div>
@@ -138,8 +140,8 @@ export default function RecruiterDashboardPage() {
       icon: <Calendar className="w-5 h-5" />,
     },
     {
-      label: "Avg. Match Score",
-      value: data ? `${data.avgMatchScore}%` : "—",
+      label: "Match Score",
+      value: data ? `${Math.round(data.avgMatchScore)}%` : "—",
       icon: <Users className="w-5 h-5" />,
     },
   ];

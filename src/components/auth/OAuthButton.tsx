@@ -71,7 +71,7 @@ export function OAuthButton({
               fill="#EA4335"
             />
           )}
-          {provider === "github" && (
+          {provider === "github" && "iconPath" in config && (
             <path d={config.iconPath} />
           )}
         </svg>

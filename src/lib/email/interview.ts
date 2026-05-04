@@ -1,8 +1,10 @@
 import { sendEmail } from "@/lib/resend";
+import { formatInTimezone } from "@/lib/timezone";
 
 const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
 
-function formatUtcDateTime(date: Date): string {
+function formatDisplayDateTime(date: Date, timezone: string | null | undefined): string {
+  if (timezone) return formatInTimezone(date, timezone);
   return date.toUTCString().replace(" GMT", " UTC");
 }
 
@@ -21,12 +23,13 @@ interface SendInterviewScheduledEmailInput {
   startsAt: Date;
   endsAt: Date;
   meetLink?: string | null;
+  displayTimezone?: string | null;
 }
 
 export async function sendInterviewScheduledEmail(
   input: SendInterviewScheduledEmailInput,
 ): Promise<void> {
-  const dateStr = formatUtcDateTime(input.startsAt);
+  const dateStr = formatDisplayDateTime(input.startsAt, input.displayTimezone);
   const duration = formatDuration(input.startsAt, input.endsAt);
   const meetSection = input.meetLink
     ? `<p><strong>Join meeting:</strong> <a href="${input.meetLink}">${input.meetLink}</a></p>`
@@ -40,7 +43,7 @@ export async function sendInterviewScheduledEmail(
       <p><strong>Date &amp; Time:</strong> ${dateStr} (UTC)</p>
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
-      <p style="color:#666;font-size:12px;">All times are in UTC. Please convert to your local timezone.</p>
+      <p style="color:#666;font-size:12px;">${input.displayTimezone ? `Times shown in ${input.displayTimezone}.` : "All times are in UTC. Please convert to your local timezone."}</p>
     </div>
   `;
   const text = `Interview scheduled for ${input.jobTitle}. Date: ${dateStr} UTC. Duration: ${duration}.${input.meetLink ? ` Join: ${input.meetLink}` : ""}`;
@@ -64,12 +67,13 @@ interface SendInterviewRescheduledEmailInput {
   startsAt: Date;
   endsAt: Date;
   meetLink?: string | null;
+  displayTimezone?: string | null;
 }
 
 export async function sendInterviewRescheduledEmail(
   input: SendInterviewRescheduledEmailInput,
 ): Promise<void> {
-  const dateStr = formatUtcDateTime(input.startsAt);
+  const dateStr = formatDisplayDateTime(input.startsAt, input.displayTimezone);
   const duration = formatDuration(input.startsAt, input.endsAt);
   const meetSection = input.meetLink
     ? `<p><strong>Join meeting:</strong> <a href="${input.meetLink}">${input.meetLink}</a></p>`
@@ -83,7 +87,7 @@ export async function sendInterviewRescheduledEmail(
       <p><strong>New Date &amp; Time:</strong> ${dateStr} (UTC)</p>
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
-      <p style="color:#666;font-size:12px;">All times are in UTC. Please convert to your local timezone.</p>
+      <p style="color:#666;font-size:12px;">${input.displayTimezone ? `Times shown in ${input.displayTimezone}.` : "All times are in UTC. Please convert to your local timezone."}</p>
     </div>
   `;
   const text = `Interview rescheduled for ${input.jobTitle}. New date: ${dateStr} UTC. Duration: ${duration}.`;

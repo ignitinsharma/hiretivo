@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
+import { buildUtcFromLocalTime, detectBrowserTimezone, COMMON_TIMEZONES } from "@/lib/timezone";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,6 +51,7 @@ const ModalFormSchema = z.object({
   date: z.date({ error: "Please select a date" }),
   startTime: z.string().min(1, "Please select a start time"),
   duration: z.enum(["30", "45", "60"]),
+  scheduledTimeZone: z.string().min(1),
   meetLink: z.string().optional(),
   notes: z.string().max(500).optional(),
 });
@@ -64,14 +66,22 @@ export interface ScheduleInterviewModalProps {
     endsAt: Date;
     meetLink: string | null;
     notes: string | null;
+    scheduledTimeZone?: string | null;
   } | null;
   onSuccess: () => void;
 }
 
-function getDefaultStartTime(startsAt?: Date): string {
+function getDefaultStartTime(startsAt?: Date, tz?: string | null): string {
   if (!startsAt) return "";
-  const hh = String(startsAt.getUTCHours()).padStart(2, "0");
-  const mm = String(startsAt.getUTCMinutes()).padStart(2, "0");
+  const locale = tz ?? "UTC";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: locale,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(startsAt);
+  const hh = parts.find((p) => p.type === "hour")?.value ?? "00";
+  const mm = parts.find((p) => p.type === "minute")?.value ?? "00";
   return `${hh}:${mm}`;
 }
 
@@ -98,11 +108,12 @@ export function ScheduleInterviewModal({
     resolver: zodResolver(ModalFormSchema),
     defaultValues: {
       date: existingInterview?.startsAt ?? new Date(),
-      startTime: getDefaultStartTime(existingInterview?.startsAt),
+      startTime: getDefaultStartTime(existingInterview?.startsAt, existingInterview?.scheduledTimeZone),
       duration: getDefaultDuration(
         existingInterview?.startsAt,
         existingInterview?.endsAt,
       ),
+      scheduledTimeZone: existingInterview?.scheduledTimeZone ?? detectBrowserTimezone(),
       meetLink: existingInterview?.meetLink ?? "",
       notes: existingInterview?.notes ?? "",
     },
@@ -118,18 +129,13 @@ export function ScheduleInterviewModal({
   const selectedDate = watch("date");
 
   const onSubmit = async (data: ModalFormInput) => {
-    // Build startsAt from date + startTime (UTC)
-    const [hours, minutes] = data.startTime.split(":").map(Number);
-    const startsAt = new Date(data.date);
-    startsAt.setUTCHours(hours, minutes, 0, 0);
-
-    const endsAt = new Date(
-      startsAt.getTime() + Number(data.duration) * 60_000,
-    );
+    const startsAt = buildUtcFromLocalTime(data.date, data.startTime, data.scheduledTimeZone);
+    const endsAt = new Date(startsAt.getTime() + Number(data.duration) * 60_000);
 
     const payload = {
       startsAt: startsAt.toISOString(),
       endsAt: endsAt.toISOString(),
+      scheduledTimeZone: data.scheduledTimeZone,
       meetLink: data.meetLink ?? "",
       notes: data.notes ?? "",
     };
@@ -228,6 +234,30 @@ export function ScheduleInterviewModal({
             )}
           </div>
 
+          {/* Timezone */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">
+              Timezone
+            </label>
+            <Select
+              value={form.watch("scheduledTimeZone")}
+              onValueChange={(val) =>
+                setValue("scheduledTimeZone", val, { shouldValidate: true })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent>
+                {COMMON_TIMEZONES.map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Start time */}
           <div className="space-y-1.5">
             <label
@@ -243,7 +273,7 @@ export function ScheduleInterviewModal({
               aria-describedby="startTime-hint"
             />
             <p id="startTime-hint" className="text-xs text-slate-500">
-              All times are in UTC.
+              Time in selected timezone above.
             </p>
             {errors.startTime && (
               <p className="text-xs text-red-500">{errors.startTime.message}</p>

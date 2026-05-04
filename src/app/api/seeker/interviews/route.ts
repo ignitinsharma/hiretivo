@@ -19,6 +19,11 @@ export async function GET() {
     return new Response('Too Many Requests', { status: 429 });
   }
 
+  const seekerUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { timezone: true },
+  });
+
   const interviews = await prisma.interview.findMany({
     where: {
       seekerId: session.user.id,
@@ -31,6 +36,7 @@ export async function GET() {
       meetLink: true,
       notes: true,
       status: true,
+      scheduledTimeZone: true,
       application: {
         select: {
           job: {
@@ -57,6 +63,8 @@ export async function GET() {
     meetLink: interview.meetLink,
     notes: interview.notes,
     status: interview.status,
+    scheduledTimeZone: interview.scheduledTimeZone,
+    viewerTimezone: seekerUser?.timezone ?? null,
     jobTitle: interview.application.job.title,
     companyName:
       interview.recruiter.recruiterProfile?.companyName ??

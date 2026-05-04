@@ -47,4 +47,6 @@ export interface SeekerInterview {
   jobTitle: string;
   companyName: string;
   interviewerName: string;
+  scheduledTimeZone: string | null;
+  viewerTimezone: string | null;
 }

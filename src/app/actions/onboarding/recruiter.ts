@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { ApplyType, CurrencyCode, JobStatus } from "@/constants/enums";
+import { ApplyType, CurrencyCode, JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { recruiterProfileSchema, createJobFromOnboardingSchema } from "@/lib/validations/onboarding.schema";
 
@@ -98,4 +98,30 @@ export async function createJobFromOnboarding(data: {
     console.error("[createJobFromOnboarding] Failed to create job:", error);
     return { success: false, error: "Failed to create job listing" };
   }
+}
+
+export async function completeRecruiterOnboarding(): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Not authenticated" };
+  }
+  if (session.user.role !== UserRole.RECRUITER) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const profile = await prisma.recruiterProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+
+  if (!profile) {
+    return { success: false, error: "Complete your company profile first" };
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { onboardingCompleted: true },
+  });
+
+  return { success: true };
 }

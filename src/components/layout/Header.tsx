@@ -92,10 +92,11 @@ export async function Header({
           {!session && (
             <>
               <Link
-                href="/hire-talent"
+                href={isRecruiterAudience ? "/" : "/hire-talent"}
                 className="hidden sm:block px-5 py-2.5 border border-brand-primary/20 text-black bg-gray-50 rounded-lg text-sm font-bold hover:bg-brand-primary hover:text-white transition-all"
               >
-                Hire Talent
+                {/* {isRecruiterAudience ? "I'm a recruiter" : "I'm a job seeker"} */}
+                {isRecruiterAudience ? "I'm a job seeker" : "I'm a recruiter"}
               </Link>
               <Link
                 href={

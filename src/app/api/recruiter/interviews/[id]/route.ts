@@ -54,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { email: true },
     });
 
-    const { startsAt, endsAt, meetLink, notes } = parsed.data;
+    const { startsAt, endsAt, meetLink, notes, scheduledTimeZone } = parsed.data;
 
     const updated = await prisma.interview.update({
       where: { id: params.id },
@@ -64,6 +64,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         endsAt: new Date(endsAt),
         meetLink: meetLink ?? null,
         notes: notes !== undefined ? notes : existing.notes,
+        scheduledTimeZone: scheduledTimeZone ?? existing.scheduledTimeZone ?? null,
       },
     });
 
@@ -75,6 +76,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       startsAt: updated.startsAt ?? new Date(startsAt),
       endsAt: updated.endsAt ?? new Date(endsAt),
       meetLink: updated.meetLink,
+      displayTimezone: updated.scheduledTimeZone ?? null,
     }).catch((err: unknown) => {
       console.error("Failed to send interview rescheduled email:", err);
     });

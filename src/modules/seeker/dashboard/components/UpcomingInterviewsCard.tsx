@@ -1,17 +1,23 @@
 "use client";
 
-import { format } from "date-fns";
 import { Calendar, Video } from "lucide-react";
 import { useFetchSeekerInterviews } from "../queries/use-fetch-seeker-interviews";
 import type { SeekerInterview } from "../types/dashboard.types";
+import { detectBrowserTimezone } from "@/lib/timezone";
 
 const CARD_CLASSES = "bg-white rounded-2xl border border-gray-200 p-6";
 
 const SECTION_TITLE_CLASSES = "text-xl font-semibold text-foreground";
 
-function formatDateTime(dateStr: string | null): string {
+function formatDateTime(dateStr: string | null, scheduledTz?: string | null, viewerTz?: string | null): string {
   if (!dateStr) return "TBD";
-  return format(new Date(dateStr), "MMM d, yyyy · h:mm a");
+  const tz = viewerTz ?? scheduledTz ?? detectBrowserTimezone();
+  const d = new Date(dateStr);
+  return (
+    d.toLocaleDateString("en-US", { timeZone: tz, month: "short", day: "numeric", year: "numeric" }) +
+    " · " +
+    d.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" })
+  );
 }
 
 function InterviewRow({ interview }: { interview: SeekerInterview }) {
@@ -30,7 +36,7 @@ function InterviewRow({ interview }: { interview: SeekerInterview }) {
         <div className="flex font-medium flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4 text-gray-400" />
-            {formatDateTime(interview.startsAt)}
+            {formatDateTime(interview.startsAt, interview.scheduledTimeZone, interview.viewerTimezone)}
           </span>
           {interview.meetLink && (
             <a

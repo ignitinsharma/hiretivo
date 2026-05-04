@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { applicationId, startsAt, endsAt, meetLink, notes } = parsed.data;
+  const { applicationId, startsAt, endsAt, meetLink, notes, scheduledTimeZone } = parsed.data;
 
   // Verify this application belongs to this recruiter
   const application = await prisma.application.findFirst({
@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
       endsAt: new Date(endsAt),
       meetLink: meetLink || null,
       notes: notes ?? null,
+      scheduledTimeZone: scheduledTimeZone ?? null,
     },
   });
 
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
     endsAt: interview.endsAt ?? new Date(endsAt),
     meetLink: interview.meetLink,
     notes: interview.notes,
+    displayTimezone: interview.scheduledTimeZone ?? null,
   }).catch((err: unknown) => {
     console.error("Failed to send interview scheduled email:", err);
   });

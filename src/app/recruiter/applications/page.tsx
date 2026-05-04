@@ -323,12 +323,16 @@ export default function RecruiterApplicationsPage() {
                   >
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gray-50 text-gray-700 flex items-center justify-center rounded-xl font-bold text-lg ring-4 ring-slate-50 group-hover:ring-gray-100 transition-all">
-                          {application.candidateName
-                            .split(" ")
-                            .map((part) => part[0])
-                            .join("")
-                            .slice(0, 2)}
+                        <div className="w-12 h-12 bg-gray-50 text-gray-700 flex items-center justify-center rounded-xl font-bold text-lg ring-4 ring-slate-50 group-hover:ring-gray-100 transition-all overflow-hidden shrink-0">
+                          {application.candidateAvatar ? (
+                            <img src={application.candidateAvatar} alt={application.candidateName} className="h-full w-full object-cover" />
+                          ) : (
+                            application.candidateName
+                              .split(" ")
+                              .map((part) => part[0])
+                              .join("")
+                              .slice(0, 2)
+                          )}
                         </div>
                         <div>
                           <p className="font-semibold capitalize text-slate-900 text-lg group-hover:text-gray-600 transition-colors">
@@ -351,7 +355,7 @@ export default function RecruiterApplicationsPage() {
                         {visible.map((skill) => (
                           <span
                             key={`${application.id}-${skill}`}
-                            className="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase"
+                            className="px-2.5 py-1 bg-[#7560ff]/10 text-[#7560ff] text-[10px] font-bold rounded uppercase"
                           >
                             {skill}
                           </span>
