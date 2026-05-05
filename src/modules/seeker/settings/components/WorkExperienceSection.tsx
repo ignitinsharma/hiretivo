@@ -280,6 +280,16 @@ export function WorkExperienceSection() {
     mutationFn: (updatedEntries: WorkExperienceItem[]) =>
       seekerService.updateSettings({
         name: profile?.name ?? "",
+        headline: profile?.headline ?? "",
+        bio: profile?.bio ?? "",
+        location: profile?.location ?? "",
+        situation: profile?.situation ?? "",
+        primaryRole: profile?.primaryRole ?? "",
+        salaryMin: profile?.salaryMin ?? null,
+        salaryMax: profile?.salaryMax ?? null,
+        currency: profile?.currency ?? "",
+        availability: profile?.availability ?? "",
+        yearsExperience: profile?.yearsExperience ?? null,
         workExperiences: updatedEntries.map(
           ({ id: _id, positionType, ...rest }) => ({
             ...rest,
