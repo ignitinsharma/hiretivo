@@ -47,7 +47,7 @@ export async function GET() {
           recruiter: {
             select: {
               recruiterProfile: {
-                select: { companyName: true, logo: true },
+                select: { id: true, companyName: true, logo: true },
               },
             },
           },
@@ -72,6 +72,7 @@ export async function GET() {
       job: {
         id: savedJob.job.id,
         title: savedJob.job.title,
+        companyId: savedJob.job.recruiter.recruiterProfile?.id ?? null,
         companyName: savedJob.job.recruiter.recruiterProfile?.companyName ?? "Unknown",
         companyLogoUrl: resolveLogoUrl(savedJob.job.recruiter.recruiterProfile?.logo),
         location: savedJob.job.workType ?? "Remote",

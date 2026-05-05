@@ -39,10 +39,15 @@ async function unsaveJob(jobId: string): Promise<void> {
   await apiClient.delete(`/seeker/saved-jobs/${jobId}`);
 }
 
-export function useSavedJobs() {
+interface UseSavedJobsOptions {
+  enabled?: boolean;
+}
+
+export function useSavedJobs(options?: UseSavedJobsOptions) {
   return useQuery({
     queryKey: SAVED_JOBS_QUERY_KEY,
     queryFn: fetchSavedJobs,
+    enabled: options?.enabled ?? true,
   });
 }
 

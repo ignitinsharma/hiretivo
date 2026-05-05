@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,14 @@ import {
   seekerLoginSchema,
   type SeekerLoginInput,
 } from "@/lib/validations/auth";
+
+function getSafeRedirectPath(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/seeker/dashboard";
+  }
+
+  return value;
+}
 
 const SeekerLoginLeft = (
   <>
@@ -77,22 +85,24 @@ const SeekerLoginLeft = (
   </>
 );
 
-export default function SeekerLoginPage() {
+function SeekerLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [roleMismatch, setRoleMismatch] = React.useState(false);
+  const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
 
   React.useEffect(() => {
     if (status === "authenticated" && session?.user) {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
-          : "/seeker/dashboard";
+          : redirectPath;
       router.replace(dest);
     }
-  }, [status, session, router]);
+  }, [status, session, router, redirectPath]);
 
   const form = useForm<SeekerLoginInput>({
     resolver: zodResolver(seekerLoginSchema),
@@ -129,7 +139,7 @@ export default function SeekerLoginPage() {
       }
 
       toast.success("Welcome back!");
-      router.push("/seeker/dashboard");
+      router.push(redirectPath);
       router.refresh();
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -140,7 +150,7 @@ export default function SeekerLoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    await signIn("google", { callbackUrl: "/seeker/dashboard" });
+    await signIn("google", { callbackUrl: redirectPath });
   };
 
   return (
@@ -262,5 +272,13 @@ export default function SeekerLoginPage() {
         </footer>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function SeekerLoginPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <SeekerLoginContent />
+    </React.Suspense>
   );
 }

@@ -5,6 +5,7 @@ export interface SeekerApplicationItem {
   jobId: string;
   jobTitle: string;
   jobStatus?: JobStatus;
+  companyId?: string | null;
   companyName: string;
   companyLogoUrl?: string;
   salaryRange?: string;

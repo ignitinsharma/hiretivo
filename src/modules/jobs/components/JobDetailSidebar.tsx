@@ -1,40 +1,26 @@
 "use client";
 
 import React from "react";
-import { Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+
+import { Lock, ArrowRight } from "lucide-react";
+
+import { UserRole } from "@/constants/enums";
+import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { UserRole } from "@/constants/enums";
+import { SaveJobButton } from "@/modules/jobs/components/SaveJobButton";
 
-const SIMILAR_JOBS = [
-  {
-    id: "1",
-    title: "Product Designer",
-    company: "Stripe",
-    salary: "$130k-170k",
-    tag: "Higher Match",
-    tagClass: "bg-gray-100 text-black",
-  },
-  {
-    id: "2",
-    title: "Design Engineer",
-    company: "Clerk",
-    salary: "$140k-190k",
-    tag: "New",
-    tagClass: "bg-slate-100 text-slate-500",
-  },
-  {
-    id: "3",
-    title: "Lead Product Designer",
-    company: "Figma",
-    salary: "$160k-210k",
-    tag: null,
-    tagClass: "",
-  },
-];
+interface RecommendedJob {
+  id: string;
+  title: string;
+  companyName: string;
+  companyLogoUrl: string | null;
+  salaryRange: string;
+  matchLabel: string | null;
+}
 
 interface JobDetailSidebarProps {
   job: {
@@ -53,6 +39,7 @@ interface JobDetailSidebarProps {
   }> | null;
   isAuth: boolean;
   userRole: string | null;
+  recommendedJobs: RecommendedJob[];
 }
 
 export function JobDetailSidebar({
@@ -61,6 +48,7 @@ export function JobDetailSidebar({
   matchBreakdown,
   isAuth,
   userRole,
+  recommendedJobs,
 }: JobDetailSidebarProps) {
   const { openApplyModal } = useUIStore();
 
@@ -102,12 +90,14 @@ export function JobDetailSidebar({
             Apply Now
             <ArrowRight className="w-4 h-4" />
           </Button>
-          <Button
-            variant="default"
+          <SaveJobButton
+            jobId={job.id}
+            isAuth={isAuth}
+            userRole={userRole}
+            fullWidth
             className="w-full py-3"
-          >
-            Save for later
-          </Button>
+            unsavedLabel="Save for later"
+          />
         </div>
 
         <p className="mt-4 text-[11px] text-center text-slate-500">
@@ -192,7 +182,9 @@ export function JobDetailSidebar({
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="p-5 border-b border-slate-200 flex justify-between items-center">
           <h3 className="font-bold text-slate-900">Compare Similar</h3>
-          <span className="text-xs font-medium text-primary">6 Available</span>
+          <span className="text-xs font-medium text-primary">
+            {recommendedJobs.length} Available
+          </span>
         </div>
 
         <div className="divide-y divide-slate-100">
@@ -215,7 +207,13 @@ export function JobDetailSidebar({
             </div>
           </div>
 
-          {SIMILAR_JOBS.map((similarJob) => (
+          {recommendedJobs.length === 0 && (
+            <p className="p-4 text-sm text-slate-500">
+              No similar jobs available right now.
+            </p>
+          )}
+
+          {recommendedJobs.map((similarJob) => (
             <Link
               key={similarJob.id}
               href={`/jobs/${similarJob.id}`}
@@ -223,23 +221,31 @@ export function JobDetailSidebar({
             >
               <div className="flex gap-3 mb-2">
                 <div className="w-8 h-8 bg-white border border-slate-200 rounded flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
-                  {similarJob.company.charAt(0)}
+                  {similarJob.companyLogoUrl ? (
+                    <Image
+                      src={similarJob.companyLogoUrl}
+                      alt={`${similarJob.companyName} logo`}
+                      width={32}
+                      height={32}
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    similarJob.companyName.charAt(0)
+                  )}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-900 group-hover:text-primary line-clamp-1 transition-colors">
                     {similarJob.title}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    {similarJob.company} • {similarJob.salary}
+                    {similarJob.companyName} • {similarJob.salaryRange}
                   </p>
                 </div>
               </div>
-              {similarJob.tag && (
+              {similarJob.matchLabel && (
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-0.5 ${similarJob.tagClass} text-[10px] font-bold rounded`}
-                  >
-                    {similarJob.tag}
+                  <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">
+                    {similarJob.matchLabel}
                   </span>
                 </div>
               )}
@@ -251,8 +257,9 @@ export function JobDetailSidebar({
           <Button
             variant="ghost"
             className="w-full text-xs"
+            asChild
           >
-            View All Engineering Roles
+            <Link href="/jobs">View All Jobs</Link>
           </Button>
         </div>
       </div>

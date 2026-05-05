@@ -33,6 +33,7 @@ export interface SeekerNavItem {
 
 export const SEEKER_NAV_ITEMS: SeekerNavItem[] = [
   { label: 'Jobs', href: '/seeker/dashboard', iconName: 'briefcase' },
+  { label: 'Saved Jobs', href: '/seeker/saved-jobs', iconName: 'bookmark' },
   { label: 'Applied Jobs', href: '/seeker/applications', iconName: 'send' },
   { label: 'Contact & Support', href: '/contact', iconName: 'life-buoy' },
   { label: 'Settings', href: '/seeker/settings', iconName: 'settings' },

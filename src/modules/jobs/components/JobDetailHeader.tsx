@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { ChevronRight, Globe2, Bookmark } from 'lucide-react';
+import { ChevronRight, Globe2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
 import { CurrencyCode, WorkType } from '@/constants/enums';
+import { SaveJobButton } from '@/modules/jobs/components/SaveJobButton';
 
 interface JobData {
   id: string;
@@ -20,10 +21,13 @@ interface JobData {
   currency: string | null;
   applyType: string;
   externalApplyUrl: string | null;
+  companyId: string | null;
 }
 
 interface JobDetailHeaderProps {
   job: JobData;
+  isAuth: boolean;
+  userRole: string | null;
 }
 
 function formatSalary(min: number | null, max: number | null, currency: string | null): string {
@@ -36,7 +40,7 @@ function formatSalary(min: number | null, max: number | null, currency: string |
   return minStr || maxStr;
 }
 
-export function JobDetailHeader({ job }: JobDetailHeaderProps) {
+export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps) {
   const { openApplyModal } = useUIStore();
 
   return (
@@ -69,7 +73,16 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
               {job.title}
             </h1>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 text-base">
-              <span className="font-semibold text-slate-900">{job.companyName}</span>
+              {job.companyId ? (
+                <Link
+                  href={`/companies/${job.companyId}`}
+                  className="font-semibold text-slate-900 transition-colors hover:text-primary"
+                >
+                  {job.companyName}
+                </Link>
+              ) : (
+                <span className="font-semibold text-slate-900">{job.companyName}</span>
+              )}
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
               <span>{job.jobType.replace('_', ' ')}</span>
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
@@ -87,10 +100,12 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
           </div>
         </div>
         <div className="hidden lg:flex items-center gap-3">
-          <Button variant="default" className="px-6 py-3">
-            <Bookmark className="w-5 h-5" />
-            Save
-          </Button>
+          <SaveJobButton
+            jobId={job.id}
+            isAuth={isAuth}
+            userRole={userRole}
+            className="px-6 py-3"
+          />
           <Button
             onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
             variant="primary"

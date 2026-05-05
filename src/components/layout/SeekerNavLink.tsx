@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Briefcase, Send } from 'lucide-react';
+import { Bookmark, Briefcase, Send } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  bookmark: Bookmark,
   briefcase: Briefcase,
   send: Send,
 };

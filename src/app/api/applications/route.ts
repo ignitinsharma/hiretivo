@@ -157,6 +157,7 @@ export async function GET() {
             select: {
               recruiterProfile: {
                 select: {
+                  id: true,
                   companyName: true,
                   logo: true,
                   companySize: true,
@@ -178,6 +179,7 @@ export async function GET() {
       jobId: application.jobId,
       jobTitle: application.job.title,
       jobStatus: application.job.status,
+      companyId: application.job.recruiter.recruiterProfile?.id ?? null,
       companyName:
         application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company",
       companyLogoUrl: resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),

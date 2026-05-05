@@ -8,7 +8,30 @@ import { ApplyJobModal } from '@/components/shared/ApplyJobModal';
 import { auth } from '@/auth';
 import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
+import { resolveLogoUrl } from '@/lib/r2';
+import { notFound, redirect } from 'next/navigation';
+
+interface RecommendedJob {
+  id: string;
+  title: string;
+  companyName: string;
+  companyLogoUrl: string | null;
+  salaryRange: string;
+  matchLabel: string | null;
+}
+
+function formatSalaryRange(
+  min: number | null,
+  max: number | null,
+  currency: string | null,
+): string {
+  const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+  if (!min && !max) return 'Competitive';
+  const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : '';
+  const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : '';
+  if (min && max) return `${minStr} - ${maxStr}`;
+  return minStr || maxStr;
+}
 
 export default async function JobDescriptionPage({
   params,
@@ -17,13 +40,17 @@ export default async function JobDescriptionPage({
 }) {
   const session = await auth();
 
+  if (!session?.user) {
+    redirect(`/seeker/login?redirect=${encodeURIComponent(`/jobs/${params.id}`)}`);
+  }
+
   const job = await prisma.job.findUnique({
     where: { id: params.id, status: JobStatus.OPEN },
     include: {
       recruiter: {
         select: {
           recruiterProfile: {
-            select: { companyName: true, logo: true },
+            select: { id: true, companyName: true, logo: true },
           },
         },
       },
@@ -37,6 +64,7 @@ export default async function JobDescriptionPage({
 
   let matchScore: number | null = null;
   let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
+  let seekerProfileId: string | null = null;
 
   if (session?.user?.role === UserRole.SEEKER) {
     const seekerProfile = await prisma.seekerProfile.findUnique({
@@ -47,6 +75,7 @@ export default async function JobDescriptionPage({
     });
 
     if (seekerProfile) {
+      seekerProfileId = seekerProfile.id;
       const jobMatch = await prisma.jobMatch.findUnique({
         where: {
           jobId_seekerProfileId: {
@@ -93,7 +122,8 @@ export default async function JobDescriptionPage({
     applyType: job.applyType,
     externalApplyUrl: job.externalApplyUrl,
     companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-    companyLogoUrl: job.recruiter.recruiterProfile?.logo ?? null,
+    companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+    companyId: job.recruiter.recruiterProfile?.id ?? null,
     skills: job.skills.map((s) => ({
       id: s.skill.id,
       name: s.skill.name,
@@ -102,12 +132,103 @@ export default async function JobDescriptionPage({
     })),
     publishedAt: job.publishedAt?.toISOString() ?? null,
   };
+  const currentSkillIds = job.skills.map((jobSkill) => jobSkill.skillId);
+  const recommendationFilters = [
+    currentSkillIds.length > 0
+      ? { skills: { some: { skillId: { in: currentSkillIds } } } }
+      : null,
+    job.category ? { category: job.category } : null,
+    job.workType ? { workType: job.workType } : null,
+  ].filter((filter): filter is NonNullable<typeof filter> => filter !== null);
+
+  const recommendedJobRecords = await prisma.job.findMany({
+    where: {
+      id: { not: job.id },
+      status: JobStatus.OPEN,
+      ...(recommendationFilters.length > 0 ? { OR: recommendationFilters } : {}),
+    },
+    orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+    take: 12,
+    include: {
+      recruiter: {
+        select: {
+          recruiterProfile: {
+            select: { companyName: true, logo: true },
+          },
+        },
+      },
+      skills: {
+        select: { skillId: true },
+      },
+      jobMatches: seekerProfileId
+        ? {
+            where: { seekerProfileId },
+            select: { score: true },
+            take: 1,
+          }
+        : false,
+    },
+  });
+
+  const currentSkillIdSet = new Set(currentSkillIds);
+  const recommendedJobs: RecommendedJob[] = recommendedJobRecords
+    .map((recommendedJob) => {
+      const sharedSkillCount = recommendedJob.skills.filter((skill) =>
+        currentSkillIdSet.has(skill.skillId),
+      ).length;
+      const seekerMatchScore = recommendedJob.jobMatches[0]?.score ?? null;
+      const relevanceScore =
+        sharedSkillCount * 20 +
+        (recommendedJob.category === job.category ? 5 : 0) +
+        (recommendedJob.workType === job.workType ? 3 : 0) +
+        (seekerMatchScore ?? 0);
+
+      return {
+        id: recommendedJob.id,
+        title: recommendedJob.title,
+        companyName: recommendedJob.recruiter.recruiterProfile?.companyName ?? 'Unknown',
+        companyLogoUrl: resolveLogoUrl(recommendedJob.recruiter.recruiterProfile?.logo),
+        salaryRange: formatSalaryRange(
+          recommendedJob.salaryMin,
+          recommendedJob.salaryMax,
+          recommendedJob.currency,
+        ),
+        matchLabel:
+          seekerMatchScore !== null
+            ? `${seekerMatchScore}% Match`
+            : sharedSkillCount > 0
+              ? `${sharedSkillCount} Shared ${sharedSkillCount === 1 ? 'Skill' : 'Skills'}`
+              : null,
+        relevanceScore,
+        publishedAt: recommendedJob.publishedAt?.getTime() ?? 0,
+      };
+    })
+    .sort((first, second) => {
+      if (second.relevanceScore !== first.relevanceScore) {
+        return second.relevanceScore - first.relevanceScore;
+      }
+
+      return second.publishedAt - first.publishedAt;
+    })
+    .slice(0, 3)
+    .map(({ id, title, companyName, companyLogoUrl, salaryRange, matchLabel }) => ({
+      id,
+      title,
+      companyName,
+      companyLogoUrl,
+      salaryRange,
+      matchLabel,
+    }));
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <JobDetailHeader job={jobData} />
+        <JobDetailHeader
+          job={jobData}
+          isAuth={!!session?.user}
+          userRole={session?.user?.role ?? null}
+        />
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <JobDetailContent job={jobData} />
           <JobDetailSidebar
@@ -116,6 +237,7 @@ export default async function JobDescriptionPage({
             matchBreakdown={matchBreakdown}
             isAuth={!!session?.user}
             userRole={session?.user?.role ?? null}
+            recommendedJobs={recommendedJobs}
           />
         </div>
       </main>

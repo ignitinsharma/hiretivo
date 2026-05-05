@@ -6,6 +6,7 @@ interface ApplicationApiItem {
   id: string;
   jobId: string;
   jobTitle: string;
+  companyId?: string | null;
   companyName: string;
   companyLogoUrl?: string | null;
   salaryRange: string;

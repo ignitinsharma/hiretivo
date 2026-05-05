@@ -88,7 +88,7 @@ export function JobCard({
                 alt={`${job.companyName} logo`}
                 width={64}
                 height={64}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain p-2"
               />
             ) : (
               <div className="text-xl font-bold text-brand-foreground-secondary">
@@ -103,9 +103,18 @@ export function JobCard({
               </h3>
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-brand-foreground-muted">
-              <span className="text-foreground capitalize font-semibold">
-                {job.companyName}
-              </span>
+              {job.companyId ? (
+                <Link
+                  href={`/companies/${job.companyId}`}
+                  className="text-foreground capitalize font-semibold transition-colors hover:text-brand-primary"
+                >
+                  {job.companyName}
+                </Link>
+              ) : (
+                <span className="text-foreground capitalize font-semibold">
+                  {job.companyName}
+                </span>
+              )}
               {companyDetails.map((detail, index) => (
                 <React.Fragment key={`${detail}-${index}`}>
                   <span className="text-brand-foreground-secondary ">•</span>

@@ -1,9 +1,53 @@
 import React from "react";
-import { ShieldCheck, MapPin } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
-export function CompanySidebar() {
+interface CompanySidebarProps {
+  company: {
+    website: string | null;
+    companySize: string | null;
+    industry: string | null;
+    fundingType: string | null;
+    isFullyRemote: boolean;
+  };
+  openRoleCount: number;
+}
+
+interface Fact {
+  label: string;
+  value: React.ReactNode;
+}
+
+export function CompanySidebar({ company, openRoleCount }: CompanySidebarProps) {
+  const optionalFacts: Array<Fact | null> = [
+    company.industry ? { label: "Industry", value: company.industry } : null,
+    company.companySize ? { label: "Size", value: `${company.companySize} employees` } : null,
+    company.fundingType ? { label: "Funding", value: company.fundingType } : null,
+    company.isFullyRemote ? { label: "Work model", value: "Fully Remote" } : null,
+    company.website
+      ? {
+          label: "Website",
+          value: (
+            <a
+              href={company.website}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary hover:underline"
+            >
+              {company.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </a>
+          ),
+        }
+      : null,
+    {
+      label: "Open roles",
+      value: (
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+          {openRoleCount} active
+        </span>
+      ),
+    },
+  ];
+  const facts = optionalFacts.filter((fact): fact is Fact => fact !== null);
+
   return (
     <div className="flex flex-col gap-8 w-full lg:w-80 shrink-0">
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -11,79 +55,19 @@ export function CompanySidebar() {
           Company Quick Facts
         </h2>
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between border-b border-slate-50 pb-3">
-            <span className="text-sm text-slate-500">Industry</span>
-            <span className="text-sm font-semibold text-slate-900">
-              Software / SaaS
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-slate-50 pb-3">
-            <span className="text-sm text-slate-500">Size</span>
-            <span className="text-sm font-semibold text-slate-900">
-              51–200 employees
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-slate-50 pb-3">
-            <span className="text-sm text-slate-500">Headquarters</span>
-            <span className="text-sm font-semibold text-slate-900">
-              San Francisco, CA
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-slate-50 pb-3">
-            <span className="text-sm text-slate-500">Founded</span>
-            <span className="text-sm font-semibold text-slate-900">2018</span>
-          </div>
-          <div className="flex justify-between border-b border-slate-50 pb-3">
-            <span className="text-sm text-slate-500">Website</span>
-            <a
-              href="#"
-              className="text-sm font-semibold text-primary hover:underline"
+          {facts.map((fact, index) => (
+            <div
+              key={fact.label}
+              className={index === facts.length - 1 ? "flex justify-between pt-1" : "flex justify-between border-b border-slate-50 pb-3"}
             >
-              acmecorp.com
-            </a>
-          </div>
-          <div className="flex justify-between pt-1">
-            <span className="text-sm text-slate-500">Open roles</span>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-              8 active
-            </span>
-          </div>
+              <span className="text-sm text-slate-500">{fact.label}</span>
+              <span className="text-right text-sm font-semibold text-slate-900">
+                {fact.value}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
-
-      <section className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <ShieldCheck className="w-6 h-6" />
-        </div>
-        <h2 className="mb-2 text-lg font-bold text-slate-900">
-          Is this your company?
-        </h2>
-        <p className="mb-6 text-sm text-slate-500">
-          Claim this profile to manage your listing, respond to reviews, and
-          post unlimited job openings.
-        </p>
-        <Button
-          variant="default"
-          size="default"
-          className="rounded-xl font-bold transition-all"
-        >
-          Claim Profile
-        </Button>
-      </section>
-
-      <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-        <div className="h-40 w-full bg-slate-200 flex items-center justify-center text-slate-400">
-          <MapPin className="w-10 h-10" />
-        </div>
-        <div className="bg-white p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Main Hub
-          </p>
-          <p className="text-sm text-slate-900 font-semibold">
-            Market Street, San Francisco
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

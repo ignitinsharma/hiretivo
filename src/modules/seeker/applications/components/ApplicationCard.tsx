@@ -67,7 +67,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
                 alt={`${application.companyName} logo`}
                 width={64}
                 height={64}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain p-2"
               />
             ) : (
               <Building2 className="h-6 w-6 text-brand-foreground-secondary" />
@@ -80,9 +80,18 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
               </h3>
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-brand-foreground-muted">
-              <span className="font-semibold capitalize text-foreground">
-                {application.companyName}
-              </span>
+              {application.companyId ? (
+                <Link
+                  href={`/companies/${application.companyId}`}
+                  className="font-semibold capitalize text-foreground transition-colors hover:text-brand-primary"
+                >
+                  {application.companyName}
+                </Link>
+              ) : (
+                <span className="font-semibold capitalize text-foreground">
+                  {application.companyName}
+                </span>
+              )}
               {companyDetails.map((detail, index) => (
                 <React.Fragment key={`${detail}-${index}`}>
                   <span className="text-brand-foreground-secondary">•</span>

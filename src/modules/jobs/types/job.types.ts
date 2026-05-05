@@ -1,6 +1,7 @@
 export interface JobListItem {
   id: string;
   title: string;
+  companyId?: string | null;
   companyName: string;
   companyLogoUrl?: string;
   location: string;
@@ -51,6 +52,7 @@ export interface JobDetailResponse {
     applyType: string;
     externalApplyUrl: string | null;
     companyName: string;
+    companyId: string | null;
     companyLogoUrl: string | null;
     skills: JobSkillItem[];
     publishedAt: string | null;

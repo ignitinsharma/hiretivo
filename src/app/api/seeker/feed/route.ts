@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
       recruiter: {
         select: {
           recruiterProfile: {
-            select: { companyName: true, logo: true },
+            select: { id: true, companyName: true, logo: true },
           },
         },
       },
@@ -192,6 +192,7 @@ export async function GET(req: NextRequest) {
         select: {
           recruiterProfile: {
             select: {
+              id: true,
               companyName: true,
               logo: true,
               companySize: true,
@@ -220,6 +221,7 @@ export async function GET(req: NextRequest) {
   const jobsResponse: Array<{
     id: string;
     title: string;
+    companyId: string | null;
     companyName: string;
     companyLogoUrl: string | null;
     location: string;
@@ -263,6 +265,7 @@ export async function GET(req: NextRequest) {
     jobsResponse.push({
       id: job.id,
       title: job.title,
+      companyId: job.recruiter.recruiterProfile?.id ?? null,
       companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
       companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
       location: job.workType ?? 'Remote',
