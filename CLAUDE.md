@@ -266,6 +266,9 @@ className="font-extrabold text-7xl"   // ✅ font-bold
 
 // ❌ NEVER rounded-full on inputs/cards
 className="rounded-full"             // ✅ rounded-lg or rounded-xl
+
+// ❌ NEVER skip comments on functions/routes
+// Every function needs: purpose, return value, key details
 ```
 
 ---
@@ -431,12 +434,41 @@ Response.json({ data: result }, { status: 200 })
 Response.json({ error: 'message' }, { status: 500 })
 ```
 
-### 5.2 Rate Limiting
+### 5.2 Rate Limiting (MANDATORY)
 
-Apply Upstash Ratelimit to sensitive routes:
-- `/api/auth` — 10 req/min per IP
-- `/api/jobs/[id]/apply` — 5 req/min per userId
-- `/api/upload` — 20 req/min per userId
+**ALL API routes MUST have rate limiting applied.** Use Upstash Redis ratelimit.
+
+```ts
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+// Rate limiter instance
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "60s"),
+})
+
+// Apply to any API route
+export async function GET(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "anonymous"
+  const { success } = await ratelimit.limit(ip)
+  if (!success) return new Response("Too Many Requests", { status: 429 })
+  // ... rest of handler
+}
+```
+
+**Default rate limits:**
+| Endpoint Type | Limit |
+|--------------|-------|
+| Auth routes | 10 req/min per IP |
+| Write operations (POST/PUT/DELETE) | 5 req/min per user |
+| Read operations | 30 req/min per IP |
+| File uploads | 5 req/min per userId |
 
 ### 5.3 Server Actions
 
@@ -514,6 +546,55 @@ Dashboard → DashboardStats · DashboardRecentJobs
 - [ ] Mobile-first responsive (`sm:` → `md:` → `lg:`)
 - [ ] aria-* on interactive elements
 - [ ] No console.log or TODO
+- [ ] All functions/API routes have descriptive comments
+
+---
+
+## 6.7 Mandatory Comments
+
+Every function, API route, server action, and component must have a multi-line comment using `/* */`:
+
+```ts
+/*
+ * POST /api/jobs
+ * Creates a new job listing for recruiters
+ * Request body: { title, description, requiredSkills, salary, location }
+ * Returns: Created job object or validation errors
+ */
+export async function POST(req: NextRequest) {
+  // ...
+}
+
+/*
+ * calculateMatchScore
+ * Calculates job-seeker match percentage based on skills overlap
+ * @param required - Job required skills array
+ * @param seeker - Seeker skills array
+ * @returns number (0-100) or null if no skills match
+ */
+export function calculateMatchScore(required: string[], seeker: string[]): number | null {
+  // ...
+}
+
+/*
+ * JobCard
+ * Displays job listing with match score badge and apply button
+ * @param job - JobListItem object
+ * @param matchScore - Optional match percentage (0-100)
+ * @param onApply - Optional callback for apply button
+ */
+export function JobCard({ job, matchScore, onApply }: JobCardProps) {
+  // ...
+}
+```
+
+### Comment Requirements
+
+- **API Routes**: Method (GET/POST/etc), purpose, request body if applicable, response format
+- **Server Actions**: Purpose, input validation, return value, side effects
+- **Utility Functions**: What it calculates/transforms, inputs, outputs
+- **Components**: What it renders, props it accepts, key behaviors
+- **Complex Logic**: Add inline comments for non-obvious code blocks
 
 ---
 

@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getRateLimitIp, publicReadRateLimiter } from "@/lib/rate-limit";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+/*
+ * resultRedirect
+ * Builds the verification outcome redirect URL for the auth UI.
+ * Returns a NextResponse redirect with the status query parameter.
+ */
 function resultRedirect(status: string): NextResponse {
   return NextResponse.redirect(`${APP_URL}/auth/verify-email?status=${status}`);
 }
 
+/*
+ * GET /api/auth/verify-email
+ * Verifies an email token and marks the matching user as verified.
+ * Returns a redirect describing success, missing token, invalid token, or expiry.
+ */
 export async function GET(req: NextRequest) {
+  const { success } = await publicReadRateLimiter.limit(getRateLimitIp(req));
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
   const email = searchParams.get("email");

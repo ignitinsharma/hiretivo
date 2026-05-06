@@ -3,12 +3,18 @@ import { PlanTier, UserRole } from "@/constants/enums";
 import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
+import { searchRateLimiter } from "@/lib/rate-limit";
 import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
 
+/*
+ * parsePositiveInt
+ * Parses positive integer query params for pagination.
+ * Returns the fallback when the value is missing or invalid.
+ */
 function parsePositiveInt(rawValue: string | null, fallback: number): number {
   if (!rawValue) {
     return fallback;
@@ -22,6 +28,11 @@ function parsePositiveInt(rawValue: string | null, fallback: number): number {
   return parsed;
 }
 
+/*
+ * getBioExcerpt
+ * Truncates long seeker bios for talent list cards.
+ * Returns null for empty bios or a max-length excerpt.
+ */
 function getBioExcerpt(bio: string | null | undefined): string | null {
   if (!bio) {
     return null;
@@ -30,6 +41,11 @@ function getBioExcerpt(bio: string | null | undefined): string | null {
   return bio.length > 180 ? `${bio.slice(0, 177)}...` : bio;
 }
 
+/*
+ * isPaidPlan
+ * Checks whether a recruiter plan can access paid talent features.
+ * Returns true when the plan is allowed by billing access rules.
+ */
 function isPaidPlan(plan: string | null | undefined): boolean {
   if (plan === PlanTier.PRO) {
     return canAccessRecruiterPaidFeature(PlanTier.PRO);
@@ -42,6 +58,11 @@ function isPaidPlan(plan: string | null | undefined): boolean {
   return canAccessRecruiterPaidFeature(PlanTier.FREE);
 }
 
+/*
+ * GET /api/recruiter/talent
+ * Searches seeker talent profiles for paid recruiters with filters and pagination.
+ * Returns talent rows plus pagination metadata or auth/plan/rate-limit errors.
+ */
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -50,6 +71,11 @@ export async function GET(req: NextRequest) {
 
   if (session.user.role !== UserRole.RECRUITER) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  const { success } = await searchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new Response("Too Many Requests", { status: 429 });
   }
 
   const recruiter = await prisma.user.findUnique({

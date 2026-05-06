@@ -4,9 +4,20 @@ import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
 import { sendVerificationEmail } from "@/lib/email/verification";
+import { getRateLimitIp, registerRateLimiter } from "@/lib/rate-limit";
 
+/*
+ * POST /api/auth/register
+ * Creates a seeker or recruiter account after validating registration input.
+ * Returns the created user identity or validation/conflict errors.
+ */
 export async function POST(req: NextRequest) {
   try {
+    const { success } = await registerRateLimiter.limit(getRateLimitIp(req));
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const body = await req.json();
 
     // Accept optional companyName (passed by recruiter register form but not in registerSchema)

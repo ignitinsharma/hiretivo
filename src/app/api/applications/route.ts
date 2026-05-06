@@ -9,8 +9,13 @@ import {
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { createApplicationSchema } from "@/lib/validations/application";
-import { applyRateLimiter } from "@/lib/rate-limit";
+import { applyRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 
+/*
+ * formatSalaryRange
+ * Formats nullable salary bounds into the compact application card label.
+ * Returns a display string using the configured currency symbol.
+ */
 function formatSalaryRange(
   min: number | null,
   max: number | null,
@@ -32,6 +37,11 @@ function formatSalaryRange(
   return minStr || maxStr;
 }
 
+/*
+ * POST /api/applications
+ * Creates a job application for an authenticated seeker.
+ * Returns the created application or validation/auth/rate-limit errors.
+ */
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
   const { success } = await applyRateLimiter.limit(ip);
@@ -121,6 +131,11 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(application, { status: 201 });
 }
 
+/*
+ * GET /api/applications
+ * Lists the authenticated seeker's applications with job summary data.
+ * Returns normalized application cards or auth/rate-limit errors.
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -129,6 +144,11 @@ export async function GET() {
 
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const applications = await prisma.application.findMany({

@@ -4,7 +4,13 @@ import { auth } from "@/auth";
 import { JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
+import { dataFetchRateLimiter } from "@/lib/rate-limit";
 
+/*
+ * formatSalaryRange
+ * Formats nullable salary bounds for saved job cards.
+ * Returns a human-readable salary range or "Not specified".
+ */
 function formatSalaryRange(
   min: number | null,
   max: number | null,
@@ -18,6 +24,11 @@ function formatSalaryRange(
   return minStr || maxStr;
 }
 
+/*
+ * formatPostedAt
+ * Converts a job publish date into a compact relative label.
+ * Returns values such as Today, 1 day ago, weeks ago, or months ago.
+ */
 function formatPostedAt(date: Date | null): string {
   if (!date) return "Recently";
   const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -28,6 +39,11 @@ function formatPostedAt(date: Date | null): string {
   return `${Math.floor(diffDays / 30)} months ago`;
 }
 
+/*
+ * GET /api/seeker/saved-jobs
+ * Lists saved jobs for the authenticated seeker with card summary fields.
+ * Returns saved job data or auth/rate-limit errors.
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -36,6 +52,11 @@ export async function GET() {
 
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const savedJobs = await prisma.savedJob.findMany({

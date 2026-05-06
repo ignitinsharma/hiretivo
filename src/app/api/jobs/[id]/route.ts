@@ -6,12 +6,22 @@ import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
+import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 
-// GET /api/jobs/[id] — public job detail with auth-gated match breakdown
+/*
+ * GET /api/jobs/[id]
+ * Returns public job detail with optional seeker match breakdown.
+ * Responds with job data, match details, not-found, or rate-limit errors.
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { success } = await publicReadRateLimiter.limit(getRateLimitIp(req));
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const job = await prisma.job.findUnique({
     where: { id: params.id },
     include: {
@@ -94,7 +104,11 @@ export async function GET(
   });
 }
 
-// PATCH /api/jobs/[id] — edit job fields or toggle status
+/*
+ * PATCH /api/jobs/[id]
+ * Updates a recruiter's owned job fields, skills, or status.
+ * Returns the updated job or auth/ownership/validation/rate-limit errors.
+ */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -107,6 +121,11 @@ export async function PATCH(
   // Security fix: Only recruiters can modify jobs
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const job = await prisma.job.findUnique({
@@ -175,7 +194,11 @@ export async function PATCH(
   return NextResponse.json(updatedJob);
 }
 
-// DELETE /api/jobs/[id] — delete job (cascades to JobSkill, Application, JobMatch)
+/*
+ * DELETE /api/jobs/[id]
+ * Deletes a recruiter's owned job when it has no applications.
+ * Returns success or auth/ownership/conflict/rate-limit errors.
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -188,6 +211,11 @@ export async function DELETE(
   // Security fix: Only recruiters can delete jobs
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const job = await prisma.job.findUnique({

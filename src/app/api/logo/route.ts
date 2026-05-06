@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getSignedFileUrl } from '@/lib/r2';
+import { getRateLimitIp, publicReadRateLimiter } from '@/lib/rate-limit';
 
 const ALLOWED_PREFIXES = ['company-logos/', 'avatars/'];
 
+/*
+ * GET /api/logo
+ * Proxies allowed private R2 image keys through a signed URL fetch.
+ * Returns image bytes, invalid-key errors, not-found, or rate-limit errors.
+ */
 export async function GET(req: NextRequest) {
+  const { success } = await publicReadRateLimiter.limit(getRateLimitIp(req));
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const key = req.nextUrl.searchParams.get('key');
   if (!key || !ALLOWED_PREFIXES.some((p) => key.startsWith(p))) {
     return new NextResponse('Invalid key', { status: 400 });

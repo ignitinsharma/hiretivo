@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
+import { writeRateLimiter } from "@/lib/rate-limit";
 
 interface RouteContext {
   params: {
@@ -10,6 +11,11 @@ interface RouteContext {
   };
 }
 
+/*
+ * POST /api/seeker/dismissed-jobs/[jobId]
+ * Marks an open job as dismissed for the authenticated seeker.
+ * Returns the dismissed-job id or auth/not-found/rate-limit errors.
+ */
 export async function POST(_req: Request, { params }: RouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -18,6 +24,11 @@ export async function POST(_req: Request, { params }: RouteContext) {
 
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const job = await prisma.job.findFirst({

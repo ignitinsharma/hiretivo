@@ -3,6 +3,7 @@ import { PlanTier, UserRole } from "@/constants/enums";
 import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
+import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
 interface TalentDetailRouteContext {
@@ -11,6 +12,11 @@ interface TalentDetailRouteContext {
   };
 }
 
+/*
+ * isPaidPlan
+ * Checks whether a recruiter plan can view full talent profile details.
+ * Returns true when billing access rules allow the feature.
+ */
 function isPaidPlan(plan: string | null | undefined): boolean {
   if (plan === PlanTier.PRO) {
     return canAccessRecruiterPaidFeature(PlanTier.PRO);
@@ -23,8 +29,10 @@ function isPaidPlan(plan: string | null | undefined): boolean {
   return canAccessRecruiterPaidFeature(PlanTier.FREE);
 }
 
-/**
+/*
+ * resolveResumeUrl
  * Creates a temporary browser URL for a private resume file.
+ * Returns null when no key exists or signing fails.
  */
 async function resolveResumeUrl(resumeKey: string | null): Promise<string | null> {
   if (!resumeKey) {
@@ -38,8 +46,10 @@ async function resolveResumeUrl(resumeKey: string | null): Promise<string | null
   }
 }
 
-/**
+/*
+ * GET /api/recruiter/talent/[id]
  * Returns the complete Talent Pool profile for paid recruiters.
+ * Responds with profile detail or auth/plan/not-found/rate-limit errors.
  */
 export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
   const session = await auth();
@@ -49,6 +59,11 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
 
   if (session.user.role !== UserRole.RECRUITER) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new Response("Too Many Requests", { status: 429 });
   }
 
   const recruiter = await prisma.user.findUnique({

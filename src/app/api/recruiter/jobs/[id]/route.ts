@@ -5,7 +5,13 @@ import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
+import { writeRateLimiter } from '@/lib/rate-limit';
 
+/*
+ * PATCH /api/recruiter/jobs/[id]
+ * Updates an owned recruiter job and refreshes skill cache when needed.
+ * Returns the updated job or auth/ownership/validation/rate-limit errors.
+ */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -16,6 +22,11 @@ export async function PATCH(
   }
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const job = await prisma.job.findUnique({
@@ -79,6 +90,11 @@ export async function PATCH(
   return NextResponse.json({ data: updatedJob });
 }
 
+/*
+ * DELETE /api/recruiter/jobs/[id]
+ * Soft-deletes an owned recruiter job by marking it deleted.
+ * Returns success or auth/ownership/rate-limit errors.
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -89,6 +105,11 @@ export async function DELETE(
   }
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const job = await prisma.job.findUnique({

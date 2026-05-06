@@ -3,8 +3,14 @@ import { auth } from "@/auth";
 import { UserRole, JobStatus, ApplicationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
+import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { format, subDays, isValid } from "date-fns";
 
+/*
+ * fillMissingDays
+ * Pads application trend data with zero-count days for chart rendering.
+ * Returns a fixed-length chronological daily series.
+ */
 function fillMissingDays(
   data: Array<{ date: string; count: number }>,
   days: number = 30,
@@ -37,6 +43,11 @@ function fillMissingDays(
   return result;
 }
 
+/*
+ * GET /api/recruiter/dashboard
+ * Builds recruiter dashboard metrics, trends, recent applicants, and jobs.
+ * Returns dashboard data or auth/rate-limit errors.
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -45,6 +56,11 @@ export async function GET() {
 
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const recruiterId = session.user.id;

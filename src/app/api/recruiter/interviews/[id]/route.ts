@@ -4,12 +4,18 @@ import { InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { RescheduleInterviewSchema } from "@/lib/validations/interview.schema";
 import { sendInterviewRescheduledEmail } from "@/lib/email/interview";
 import { normalizeTimezone } from "@/lib/timezone";
+import { writeRateLimiter } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RouteContext {
   params: { id: string } | Promise<{ id: string }>;
 }
 
+/*
+ * PATCH /api/recruiter/interviews/[id]
+ * Reschedules an owned recruiter interview and sends a notification email.
+ * Returns the updated interview or auth/plan/validation/rate-limit errors.
+ */
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   if (!id) {
@@ -22,6 +28,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   if (session.user.plan === PlanTier.FREE) {

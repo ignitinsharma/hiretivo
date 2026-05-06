@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
+import { searchRateLimiter } from '@/lib/rate-limit';
 import { AnalyticsParamsSchema } from '@/lib/validations/analytics.schema';
 import type { JobAnalyticsResponse, ViewTrendPoint } from '@/modules/recruiter/jobs/types/analytics.types';
 
+/*
+ * GET /api/recruiter/jobs/[id]/analytics
+ * Aggregates view, application, match, skill, and trend analytics for an owned job.
+ * Returns analytics data or auth/ownership/validation/rate-limit errors.
+ */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -18,6 +24,11 @@ export async function GET(
   // 2. Role check
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { success } = await searchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   // 3. Param validation

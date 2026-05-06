@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 import { z } from 'zod';
 
-// GET /api/skills — all skills for the skills picker
-// Public endpoint — no auth required (skills are non-sensitive global data)
-export async function GET() {
+/*
+ * GET /api/skills
+ * Lists global skills for skill pickers and onboarding flows.
+ * Returns sorted skill records or rate-limit errors.
+ */
+export async function GET(req: NextRequest) {
+  const { success } = await publicReadRateLimiter.limit(getRateLimitIp(req));
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const skills = await prisma.skill.findMany({
     select: {
       id: true,
@@ -22,13 +31,20 @@ export async function GET() {
   return NextResponse.json(skills);
 }
 
-// POST /api/skills — create a new skill (auth required)
-// Any authenticated user can create skills — seekers need this during onboarding
-// Skills are global shared data; there is no security reason to restrict creation to recruiters.
+/*
+ * POST /api/skills
+ * Creates a global skill for authenticated users during onboarding/profile edits.
+ * Returns the created skill or auth/validation/conflict/rate-limit errors.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   let body: unknown;

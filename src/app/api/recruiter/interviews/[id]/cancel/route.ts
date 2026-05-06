@@ -2,12 +2,18 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { InterviewStatus, UserRole } from "@/constants/enums";
 import { sendInterviewCancelledEmail } from "@/lib/email/interview";
+import { writeRateLimiter } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RouteContext {
   params: { id: string };
 }
 
+/*
+ * PATCH /api/recruiter/interviews/[id]/cancel
+ * Cancels an owned recruiter interview and notifies the seeker.
+ * Returns the cancelled interview id or auth/not-found/rate-limit errors.
+ */
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -15,6 +21,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const existing = await prisma.interview.findFirst({

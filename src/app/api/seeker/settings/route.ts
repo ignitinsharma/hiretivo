@@ -5,7 +5,7 @@ import { invalidateSeekerCache } from "@/lib/match";
 import { resolveLogoUrl } from "@/lib/r2";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
-import { createRateLimiter } from "@/lib/rate-limit";
+import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 import type { Prisma } from "@prisma/client";
 
 const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
@@ -16,10 +16,20 @@ interface SkillCandidate {
   slug: string;
 }
 
+/*
+ * normalizeSkillName
+ * Trims and collapses whitespace in user-entered skill names.
+ * Returns the canonical display name used for matching and creation.
+ */
 function normalizeSkillName(name: string): string {
   return name.trim().replace(/\s+/g, " ");
 }
 
+/*
+ * slugifySkillName
+ * Converts a normalized skill name into a stable URL-safe slug.
+ * Returns a fallback slug for names without alphanumeric characters.
+ */
 function slugifySkillName(name: string): string {
   const normalizedName = normalizeSkillName(name);
   const slug = normalizedName
@@ -35,6 +45,11 @@ function slugifySkillName(name: string): string {
     .join("-")}`;
 }
 
+/*
+ * uniqueSkillNames
+ * Deduplicates skill names case-insensitively while preserving first-seen casing.
+ * Returns normalized names in the original input order.
+ */
 function uniqueSkillNames(names: string[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -48,6 +63,11 @@ function uniqueSkillNames(names: string[]): string[] {
   return result;
 }
 
+/*
+ * uniqueSkillIds
+ * Deduplicates skill ids while preserving first-seen order.
+ * Returns a unique skill id list for profile replacement.
+ */
 function uniqueSkillIds(ids: string[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -59,6 +79,11 @@ function uniqueSkillIds(ids: string[]): string[] {
   return result;
 }
 
+/*
+ * resolveSkillIdsFromNames
+ * Finds or creates skills from user-entered names for seeker settings.
+ * Returns unique skill ids ready for seeker profile association.
+ */
 async function resolveSkillIdsFromNames(skillNames: string[]): Promise<string[]> {
   const names = uniqueSkillNames(skillNames);
   const skillIds: string[] = [];
@@ -99,6 +124,11 @@ async function resolveSkillIdsFromNames(skillNames: string[]): Promise<string[]>
   return uniqueSkillIds(skillIds);
 }
 
+/*
+ * isPrismaUniqueConstraintError
+ * Detects Prisma unique constraint errors without relying on `any`.
+ * Returns true when the error code is P2002.
+ */
 function isPrismaUniqueConstraintError(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -108,6 +138,11 @@ function isPrismaUniqueConstraintError(error: unknown): boolean {
   );
 }
 
+/*
+ * findSkillBySlugOrName
+ * Looks up an existing skill by generated slug or case-insensitive name.
+ * Returns the earliest matching skill candidate or null.
+ */
 async function findSkillBySlugOrName(
   normalizedName: string,
   slug: string,
@@ -136,6 +171,11 @@ async function findSkillBySlugOrName(
   );
 }
 
+/*
+ * updateSkillNameIfSafe
+ * Updates skill casing when it will not conflict with another skill.
+ * Returns the skill id whether or not a display-name update was needed.
+ */
 async function updateSkillNameIfSafe(
   skill: SkillCandidate,
   normalizedName: string,
@@ -167,6 +207,12 @@ async function updateSkillNameIfSafe(
 
   return updatedSkill.id;
 }
+
+/*
+ * GET /api/seeker/settings
+ * Returns the authenticated seeker's profile, skills, work, and education settings.
+ * Responds with settings data or auth/not-found/rate-limit errors.
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -174,6 +220,11 @@ export async function GET() {
   }
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
   }
 
   const user = await prisma.user.findUnique({
@@ -236,6 +287,11 @@ export async function GET() {
   });
 }
 
+/*
+ * PATCH /api/seeker/settings
+ * Updates the authenticated seeker's account, profile, skills, work, and education settings.
+ * Returns the refreshed settings payload or validation/auth/rate-limit errors.
+ */
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {

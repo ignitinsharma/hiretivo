@@ -2,11 +2,17 @@ import { auth } from "@/auth";
 import { ApplicationStatus, InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
+import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
+/*
+ * parseLimit
+ * Normalizes the applications page size query parameter.
+ * Returns a safe positive limit capped at the configured maximum.
+ */
 function parseLimit(rawLimit: string | null): number {
   if (!rawLimit) {
     return DEFAULT_LIMIT;
@@ -20,6 +26,11 @@ function parseLimit(rawLimit: string | null): number {
   return Math.min(parsed, MAX_LIMIT);
 }
 
+/*
+ * parseStage
+ * Converts the application stage query parameter into an enum value.
+ * Returns null when the query value is absent or invalid.
+ */
 function parseStage(rawStage: string | null): ApplicationStatus | null {
   if (!rawStage) {
     return null;
@@ -32,6 +43,11 @@ function parseStage(rawStage: string | null): ApplicationStatus | null {
   return ApplicationStatus[rawStage as keyof typeof ApplicationStatus];
 }
 
+/*
+ * GET /api/recruiter/applications
+ * Lists recruiter-owned applications with filters, cursor pagination, and profile data.
+ * Returns application rows plus pagination metadata or auth/rate-limit errors.
+ */
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -40,6 +56,11 @@ export async function GET(req: NextRequest) {
 
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const url = new URL(req.url);

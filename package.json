@@ -11,6 +11,7 @@
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build",
     "verify:route-access": "tsx scripts/verify/route-access-control.ts",
+    "verify:api-rate-limits": "tsx scripts/verify/api-rate-limits.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

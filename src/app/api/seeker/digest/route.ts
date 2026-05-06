@@ -10,6 +10,11 @@ const PatchBodySchema = z.object({
   enabled: z.boolean(),
 });
 
+/*
+ * GET /api/seeker/digest
+ * Returns whether the authenticated seeker has digest emails enabled.
+ * Responds with digest settings or auth/rate-limit errors.
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -17,6 +22,11 @@ export async function GET() {
   }
   if (session.user.role !== UserRole.SEEKER) {
     return new Response('Forbidden', { status: 403 });
+  }
+
+  const { success } = await rateLimiter.limit(session.user.id);
+  if (!success) {
+    return new Response('Too Many Requests', { status: 429 });
   }
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
@@ -35,6 +45,11 @@ export async function GET() {
   );
 }
 
+/*
+ * PATCH /api/seeker/digest
+ * Updates the authenticated seeker's digest email preference.
+ * Returns the saved preference or validation/auth/rate-limit errors.
+ */
 export async function PATCH(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {

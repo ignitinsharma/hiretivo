@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getRateLimitIp, registerRateLimiter } from '@/lib/rate-limit';
 import { z } from 'zod';
 
 const EarlyAccessSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
 });
 
+/*
+ * POST /api/early-access
+ * Stores an early-access email address after validating the payload.
+ * Returns success, duplicate-email, validation, or rate-limit errors.
+ */
 export async function POST(req: NextRequest) {
+  const { success } = await registerRateLimiter.limit(getRateLimitIp(req));
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();

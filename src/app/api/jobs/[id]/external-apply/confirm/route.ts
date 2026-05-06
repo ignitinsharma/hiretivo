@@ -8,6 +8,7 @@ import {
   UserRole,
 } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
+import { writeRateLimiter } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: {
@@ -15,6 +16,11 @@ interface RouteContext {
   };
 }
 
+/*
+ * getMatchScore
+ * Looks up the seeker's precomputed match score for an external job.
+ * Returns zero when no seeker profile or match record exists.
+ */
 async function getMatchScore(jobId: string, seekerId: string): Promise<number> {
   const seekerProfile = await prisma.seekerProfile.findUnique({
     where: { userId: seekerId },
@@ -36,6 +42,11 @@ async function getMatchScore(jobId: string, seekerId: string): Promise<number> {
   return jobMatch?.score ?? 0;
 }
 
+/*
+ * POST /api/jobs/[id]/external-apply/confirm
+ * Records a seeker application after they confirm an external apply action.
+ * Returns the application id or auth/not-found/rate-limit errors.
+ */
 export async function POST(_req: NextRequest, { params }: RouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -44,6 +55,11 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
 
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const job = await prisma.job.findFirst({

@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createJobSchema } from '@/lib/validations/job';
-import { createRateLimiter } from '@/lib/rate-limit';
+import { createRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 import { JobStatus, PlanTier, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
-// GET /api/jobs — list recruiter's own jobs with server-side filtering, search, pagination
+/*
+ * GET /api/jobs
+ * Lists a recruiter's own jobs with server-side filtering and pagination.
+ * Returns jobs, pagination, dashboard stats, and available categories.
+ */
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -89,7 +93,11 @@ export async function GET(req: NextRequest) {
   });
 }
 
-// POST /api/jobs — create job with plan gate check
+/*
+ * POST /api/jobs
+ * Creates a recruiter job after plan, email, and schema validation.
+ * Returns the created job or auth/plan/validation/rate-limit errors.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -98,6 +106,11 @@ export async function POST(req: NextRequest) {
 
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const verificationError = await requireVerifiedEmailForTrustedAction(

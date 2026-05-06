@@ -1,8 +1,14 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { InterviewStatus, UserRole } from "@/constants/enums";
+import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
+/*
+ * GET /api/recruiter/interviews/upcoming
+ * Lists the next scheduled interviews for the authenticated recruiter.
+ * Returns upcoming interview data or auth/rate-limit errors.
+ */
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -10,6 +16,11 @@ export async function GET() {
   }
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const interviews = await prisma.interview.findMany({
