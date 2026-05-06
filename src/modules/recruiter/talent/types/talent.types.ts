@@ -22,6 +22,39 @@ export interface TalentListResponse {
   };
 }
 
+export interface TalentSkill {
+  name: string;
+  category: string;
+  level: string;
+}
+
+export interface TalentProfileLinks {
+  websiteUrl: string | null;
+  linkedinUrl: string | null;
+  githubUrl: string | null;
+  twitterUrl: string | null;
+}
+
+export interface TalentWorkExperience {
+  id: string;
+  company: string;
+  title: string;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string | null;
+  positionType: string | null;
+  skills: string[];
+}
+
+export interface TalentEducation {
+  id: string;
+  institution: string;
+  graduationDate: string | null;
+  degree: string | null;
+  major: string | null;
+}
+
 export interface TalentDetail {
   id: string;
   name: string | null;
@@ -34,11 +67,11 @@ export interface TalentDetail {
   primaryRole: string | null;
   availability: string | null;
   resumeKey: boolean;
-  skills: Array<{
-    name: string;
-    category: string;
-    level: string;
-  }>;
+  resumeUrl: string | null;
+  skills: TalentSkill[];
+  links: TalentProfileLinks;
+  workExperiences: TalentWorkExperience[];
+  educations: TalentEducation[];
   profile: {
     workPreference: string | null;
     situation: string | null;

@@ -1,11 +1,12 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getDodoProductId, DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
-import { PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { CurrencyCode, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
 import { CheckoutRequestSchema } from "@/lib/validations/checkout.schema";
+import { requireVerifiedEmailForTrustedAction } from "@/lib/auth/email-verification";
 
 const checkoutRateLimiter = createRateLimiter("billing-checkout", 5, "1 m");
 
@@ -25,6 +26,11 @@ export async function POST(req: NextRequest) {
       { status: 403 },
     );
   }
+
+  const verificationError = await requireVerifiedEmailForTrustedAction(
+    session.user.id,
+  );
+  if (verificationError) return verificationError;
 
   const { success } = await checkoutRateLimiter.limit(session.user.id);
   if (!success) {
@@ -55,11 +61,18 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, name: true, billingCustomerId: true },
+    select: { email: true, name: true, plan: true, billingCustomerId: true },
   });
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (user.plan !== PlanTier.FREE) {
+    return NextResponse.json(
+      { error: "Use billing management for your current plan" },
+      { status: 400 },
+    );
   }
 
   const appUrl = getAppUrl(req);
@@ -72,7 +85,7 @@ export async function POST(req: NextRequest) {
       } as const);
 
   const subscription = await dodo.subscriptions.create({
-    billing: { country: "IN" },
+    billing: { country: currency === CurrencyCode.INR ? "IN" : "US" },
     customer: customerPayload,
     product_id: productId,
     quantity: 1,

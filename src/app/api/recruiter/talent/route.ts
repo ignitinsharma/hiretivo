@@ -105,6 +105,30 @@ export async function GET(req: NextRequest) {
                     { headline: { contains: q, mode: "insensitive" } },
                     { primaryRole: { contains: q, mode: "insensitive" } },
                     { bio: { contains: q, mode: "insensitive" } },
+                    { location: { contains: q, mode: "insensitive" } },
+                    { availability: { contains: q, mode: "insensitive" } },
+                    {
+                      workExperiences: {
+                        some: {
+                          OR: [
+                            { company: { contains: q, mode: "insensitive" } },
+                            { title: { contains: q, mode: "insensitive" } },
+                            { description: { contains: q, mode: "insensitive" } },
+                          ],
+                        },
+                      },
+                    },
+                    {
+                      educations: {
+                        some: {
+                          OR: [
+                            { institution: { contains: q, mode: "insensitive" } },
+                            { degree: { contains: q, mode: "insensitive" } },
+                            { major: { contains: q, mode: "insensitive" } },
+                          ],
+                        },
+                      },
+                    },
                     {
                       skills: {
                         some: {

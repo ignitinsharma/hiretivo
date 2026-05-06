@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
+import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { OnboardingContainer } from "@/modules/onboarding";
 
 export default async function RecruiterOnboardingPage() {
@@ -21,5 +22,10 @@ export default async function RecruiterOnboardingPage() {
     redirect("/recruiter/dashboard");
   }
 
-  return <OnboardingContainer />;
+  return (
+    <>
+      <EmailVerificationBanner />
+      <OnboardingContainer />
+    </>
+  );
 }

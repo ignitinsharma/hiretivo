@@ -12,6 +12,7 @@ import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SaveJobButton } from "@/modules/jobs/components/SaveJobButton";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 
 interface RecommendedJob {
   id: string;
@@ -50,7 +51,8 @@ export function JobDetailSidebar({
   userRole,
   recommendedJobs,
 }: JobDetailSidebarProps) {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
 
   return (
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
@@ -83,7 +85,18 @@ export function JobDetailSidebar({
 
         <div className="space-y-3">
           <Button
-            onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
+            onClick={() =>
+              verificationStatus?.requiresVerification
+                ? openEmailVerificationModal()
+                :
+              openApplyModal(
+                job.id,
+                job.title,
+                job.companyName,
+                job.applyType,
+                job.externalApplyUrl,
+              )
+            }
             variant="primary"
             className="w-full py-3"
           >
@@ -99,11 +112,6 @@ export function JobDetailSidebar({
             unsavedLabel="Save for later"
           />
         </div>
-
-        <p className="mt-4 text-[11px] text-center text-slate-500">
-          Average response time:{" "}
-          <span className="font-semibold text-slate-700">24 hours</span>
-        </p>
       </div>
 
       {/* Match Score Section */}
@@ -148,7 +156,9 @@ export function JobDetailSidebar({
         ) : (
           <div className="relative">
             <div className="blur-sm select-none">
-              <div className="text-4xl font-extrabold text-primary mb-4">85%</div>
+              <div className="text-4xl font-extrabold text-primary mb-4">
+                85%
+              </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm">React</span>
@@ -254,11 +264,7 @@ export function JobDetailSidebar({
         </div>
 
         <div className="p-4">
-          <Button
-            variant="ghost"
-            className="w-full text-xs"
-            asChild
-          >
+          <Button variant="ghost" className="w-full text-xs" asChild>
             <Link href="/jobs">View All Jobs</Link>
           </Button>
         </div>

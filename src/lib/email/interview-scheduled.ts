@@ -1,8 +1,7 @@
 import { resend } from "@/lib/resend";
+import { formatInterviewTimezoneDisplay } from "@/lib/timezone";
 
 const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
-
-import { formatInTimezone } from "@/lib/timezone";
 
 interface SendInterviewScheduledEmailInput {
   seekerEmail: string;
@@ -13,16 +12,8 @@ interface SendInterviewScheduledEmailInput {
   endsAt: Date;
   meetLink?: string | null;
   notes?: string | null;
-  displayTimezone?: string | null;
-}
-
-function formatUtcDateTime(date: Date): string {
-  return date.toUTCString().replace(" GMT", " UTC");
-}
-
-function formatDisplayDateTime(date: Date, timezone: string | null | undefined): string {
-  if (timezone) return formatInTimezone(date, timezone);
-  return formatUtcDateTime(date);
+  scheduledTimeZone?: string | null;
+  viewerTimezone?: string | null;
 }
 
 function formatDuration(startsAt: Date, endsAt: Date): string {
@@ -49,8 +40,16 @@ export async function sendInterviewScheduledEmail(
   const seekerName = escapeHtml(input.seekerName);
   const jobTitle = escapeHtml(input.jobTitle);
   const companyName = escapeHtml(input.companyName);
-  const startsAt = formatDisplayDateTime(input.startsAt, input.displayTimezone);
-  const endsAt = formatDisplayDateTime(input.endsAt, input.displayTimezone);
+  const startsAt = formatInterviewTimezoneDisplay(
+    input.startsAt,
+    input.scheduledTimeZone,
+    input.viewerTimezone,
+  );
+  const endsAt = formatInterviewTimezoneDisplay(
+    input.endsAt,
+    input.scheduledTimeZone,
+    input.viewerTimezone,
+  );
   const duration = formatDuration(input.startsAt, input.endsAt);
   const meetLink = input.meetLink?.trim();
   const notes = input.notes?.trim();
@@ -67,20 +66,25 @@ export async function sendInterviewScheduledEmail(
       <h2>Interview scheduled</h2>
       <p>Hi ${seekerName},</p>
       <p>${companyName} scheduled an interview with you for <strong>${jobTitle}</strong>.</p>
-      <p><strong>Starts:</strong> ${startsAt}</p>
-      <p><strong>Ends:</strong> ${endsAt}</p>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0;">
+        <p><strong>Scheduled start:</strong> ${escapeHtml(startsAt.scheduled)}</p>
+        <p><strong>Your start:</strong> ${escapeHtml(startsAt.viewer)}</p>
+        <p><strong>Scheduled end:</strong> ${escapeHtml(endsAt.scheduled)}</p>
+        <p><strong>Your end:</strong> ${escapeHtml(endsAt.viewer)}</p>
+      </div>
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
       ${notesSection}
-      <p style="color:#868685;font-size:12px;">${input.displayTimezone ? `Times shown in ${escapeHtml(input.displayTimezone)}.` : "All times are in UTC. Please convert to your local timezone."}</p>
     </div>
   `;
 
   const text = [
     `Hi ${input.seekerName},`,
     `${input.companyName} scheduled an interview with you for ${input.jobTitle}.`,
-    `Starts: ${startsAt}`,
-    `Ends: ${endsAt}`,
+    `Scheduled start: ${startsAt.scheduled}`,
+    `Your start: ${startsAt.viewer}`,
+    `Scheduled end: ${endsAt.scheduled}`,
+    `Your end: ${endsAt.viewer}`,
     `Duration: ${duration}`,
     meetLink ? `Join meeting: ${meetLink}` : "The recruiter has not added a meeting link yet.",
     notes ? `Notes: ${notes}` : "",

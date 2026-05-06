@@ -12,9 +12,21 @@ export const metadata = generatePageMetadata({
   path: "/pricing",
 });
 
+function getCountryFromHeaders(headersList: Headers): string {
+  return (
+    headersList.get("x-vercel-ip-country") ??
+    headersList.get("cf-ipcountry") ??
+    headersList.get("cloudfront-viewer-country") ??
+    headersList.get("x-country-code") ??
+    headersList.get("x-geo-country") ??
+    headersList.get("x-forwarded-country") ??
+    "US"
+  ).toUpperCase();
+}
+
 export default async function PricingPage() {
   const headersList = await headers();
-  const country = headersList.get("CF-IPCountry") ?? headersList.get("x-vercel-ip-country") ?? "US";
+  const country = getCountryFromHeaders(headersList);
   const currency: PricingCurrency = country === "IN" ? CurrencyCode.INR : CurrencyCode.USD;
 
   return (

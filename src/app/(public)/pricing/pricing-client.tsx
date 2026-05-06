@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import {
 } from "@/constants/enums";
 import { useUIStore } from "@/store/use-ui-store";
 import { billingService } from "@/services/billing.service";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import {
   PRICING_CONFIG,
   CURRENCY_SYMBOL,
@@ -173,9 +174,13 @@ function PricingCard({
   const isHighlighted = tier.highlighted === true;
   const isCustom = tier.isCustom === true;
   const isCurrentPlan =
-    userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO;
+    (userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO) ||
+    (userPlan === PlanTier.ENTERPRISE && isCustom);
 
-  const displayedCtaText = isCurrentPlan ? "Manage Plan" : tier.cta;
+  const displayedCtaText =
+    userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO
+      ? "Manage billing"
+      : tier.cta;
   const priceFormatter = new Intl.NumberFormat(
     currency === CurrencyCode.INR ? "en-IN" : "en-US",
     { maximumFractionDigits: 0 },
@@ -202,6 +207,18 @@ function PricingCard({
       {isHighlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-extrabold px-4 py-1 rounded-full uppercase  whitespace-nowrap">
           Most Popular
+        </div>
+      )}
+      {isCurrentPlan && (
+        <div
+          className={cn(
+            "absolute right-4 top-4 rounded-lg border px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
+            isHighlighted
+              ? "border-white/30 bg-white/10 text-white"
+              : "border-brand-border bg-brand-surface text-brand-foreground",
+          )}
+        >
+          Current plan
         </div>
       )}
 
@@ -442,6 +459,23 @@ interface PricingClientProps {
   currency: PricingCurrency;
 }
 
+function getBrowserCurrencyFallback(): PricingCurrency {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const languages = navigator.languages.length > 0
+    ? navigator.languages
+    : [navigator.language];
+
+  if (
+    timeZone === "Asia/Kolkata" ||
+    timeZone === "Asia/Calcutta" ||
+    languages.some((language) => language.toLowerCase().endsWith("-in"))
+  ) {
+    return CurrencyCode.INR;
+  }
+
+  return CurrencyCode.USD;
+}
+
 async function createCheckoutSession(
   body?: CheckoutRequestInput,
 ): Promise<string> {
@@ -454,9 +488,19 @@ async function createPortalSession(): Promise<string> {
 
 export function PricingClient({ currency }: PricingClientProps) {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [activeCurrency, setActiveCurrency] =
+    useState<PricingCurrency>(currency);
   const { data: session } = useSession();
   const router = useRouter();
-  const { openLoginModal } = useUIStore();
+  const { openLoginModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
+
+  useEffect(() => {
+    setActiveCurrency((currentCurrency) => {
+      if (currentCurrency === CurrencyCode.INR) return currentCurrency;
+      return getBrowserCurrencyFallback();
+    });
+  }, []);
 
   const userPlan = session?.user?.plan as PlanTier | undefined;
   const checkoutMutation = useMutation({
@@ -464,7 +508,7 @@ export function PricingClient({ currency }: PricingClientProps) {
       createCheckoutSession({
         planId: PricingTierId.PRO,
         period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
-        currency,
+        currency: activeCurrency,
       }),
     onSuccess: (url) => {
       window.location.href = url;
@@ -502,6 +546,11 @@ export function PricingClient({ currency }: PricingClientProps) {
 
       if (session.user.plan === PlanTier.PRO) {
         portalMutation.mutate();
+        return;
+      }
+
+      if (verificationStatus?.requiresVerification) {
+        openEmailVerificationModal();
         return;
       }
 
@@ -565,7 +614,7 @@ export function PricingClient({ currency }: PricingClientProps) {
             <PricingCard
               key={tier.id}
               tier={tier}
-              currency={currency}
+              currency={activeCurrency}
               isAnnual={isAnnual}
               userPlan={userPlan}
               onCtaClick={handleCtaClick}
@@ -577,7 +626,7 @@ export function PricingClient({ currency }: PricingClientProps) {
           ))}
         </div>
 
-        {currency === CurrencyCode.INR && (
+        {activeCurrency === CurrencyCode.INR && (
           <p className="mt-6 text-xs text-slate-400 text-center">
             All prices include 18% GST. No extra charges at checkout.
           </p>

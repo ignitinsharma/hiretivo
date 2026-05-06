@@ -25,6 +25,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { InterviewTimezoneDisplay } from "@/components/shared/InterviewTimezoneDisplay";
 
 import {
   Select,
@@ -123,17 +124,6 @@ const STAGE_OPTIONS: ApplicationStatus[] = [
   ApplicationStatus.HIRED,
   ApplicationStatus.REJECTED,
 ];
-
-function formatInterviewDate(isoString: string, tz?: string | null): string {
-  const d = new Date(isoString);
-  const locale = tz ?? "UTC";
-  return (
-    d.toLocaleDateString("en-US", { timeZone: locale, month: "short", day: "numeric", year: "numeric" }) +
-    " · " +
-    d.toLocaleTimeString("en-US", { timeZone: locale, hour: "numeric", minute: "2-digit" }) +
-    " " + locale
-  );
-}
 
 function formatInterviewDuration(startsAt: string, endsAt: string): string {
   const mins = Math.round(
@@ -570,7 +560,10 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                     return (
                       <div className="space-y-3">
                         <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700 space-y-1.5 bg-white">
-                          <p><strong>Date:</strong> {formatInterviewDate(interview.startsAt!, interview.scheduledTimeZone)}</p>
+                          <InterviewTimezoneDisplay
+                            startsAt={interview.startsAt}
+                            scheduledTimeZone={interview.scheduledTimeZone}
+                          />
                           {interview.startsAt && interview.endsAt && (
                             <p><strong>Duration:</strong> {formatInterviewDuration(interview.startsAt, interview.endsAt)}</p>
                           )}

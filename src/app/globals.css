@@ -45,7 +45,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    line-height: 1.7;
+    line-height: 1.9;
   }
 }
 

@@ -3,11 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import type {
   SubscriptionActiveWebhookEvent,
   SubscriptionCancelledWebhookEvent,
+  SubscriptionExpiredWebhookEvent,
+  SubscriptionFailedWebhookEvent,
+  SubscriptionOnHoldWebhookEvent,
   SubscriptionRenewedWebhookEvent,
   PaymentFailedWebhookEvent,
   PaymentSucceededWebhookEvent,
 } from "dodopayments/resources/webhooks/webhooks";
 import type { Subscription } from "dodopayments/resources/subscriptions";
+import type { Payment } from "dodopayments/resources/payments";
 import { PlanTier } from "@/constants/enums";
 import { DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
 import { BOOST_DURATION_MS } from "@/constants/boost";
@@ -35,52 +39,165 @@ function getPlanForProduct(productId: string): PlanTier {
   return DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO;
 }
 
+function getSubscriptionUserId(sub: Subscription): string | null {
+  return sub.metadata?.userId ?? null;
+}
+
+function getPeriodEnd(sub: Subscription): Date {
+  return new Date(sub.expires_at ?? sub.next_billing_date);
+}
+
+async function upsertSubscription(
+  sub: Subscription,
+  userId: string,
+): Promise<void> {
+  const status = mapStatus(sub.status);
+
+  await prisma.subscription.upsert({
+    where: { userId },
+    create: {
+      dodoSubscriptionId: sub.subscription_id,
+      productId: sub.product_id,
+      status,
+      currentPeriodStart: new Date(sub.previous_billing_date),
+      currentPeriodEnd: getPeriodEnd(sub),
+      cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+      userId,
+    },
+    update: {
+      dodoSubscriptionId: sub.subscription_id,
+      productId: sub.product_id,
+      status,
+      currentPeriodStart: new Date(sub.previous_billing_date),
+      currentPeriodEnd: getPeriodEnd(sub),
+      cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+      userId,
+    },
+  });
+}
+
 async function handleSubscriptionActive(sub: Subscription): Promise<void> {
-  const userId = sub.metadata?.userId;
+  const userId = getSubscriptionUserId(sub);
   if (!userId) throw new Error("subscription.active missing userId in metadata");
 
   const status = mapStatus(sub.status);
   const plan = getPlanForProduct(sub.product_id);
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      plan: status === "CANCELED" ? PlanTier.FREE : plan,
-      billingCustomerId: sub.customer.customer_id,
-    },
-  });
+  await prisma.$transaction([
+    prisma.subscription.upsert({
+      where: { userId },
+      create: {
+        dodoSubscriptionId: sub.subscription_id,
+        productId: sub.product_id,
+        status,
+        currentPeriodStart: new Date(sub.previous_billing_date),
+        currentPeriodEnd: getPeriodEnd(sub),
+        cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+        userId,
+      },
+      update: {
+        dodoSubscriptionId: sub.subscription_id,
+        productId: sub.product_id,
+        status,
+        currentPeriodStart: new Date(sub.previous_billing_date),
+        currentPeriodEnd: getPeriodEnd(sub),
+        cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+        userId,
+      },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        plan: status === "CANCELED" ? PlanTier.FREE : plan,
+        billingCustomerId: sub.customer.customer_id,
+      },
+    }),
+  ]);
 }
 
 async function handleSubscriptionRenewed(sub: Subscription): Promise<void> {
-  const userId = sub.metadata?.userId;
+  const userId = getSubscriptionUserId(sub);
   if (!userId) throw new Error(`subscription.renewed: no userId for ${sub.subscription_id}`);
 
   const status = mapStatus(sub.status);
   const plan = getPlanForProduct(sub.product_id);
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { plan: status === "CANCELED" ? PlanTier.FREE : plan },
-  });
+  await prisma.$transaction([
+    prisma.subscription.upsert({
+      where: { userId },
+      create: {
+        dodoSubscriptionId: sub.subscription_id,
+        productId: sub.product_id,
+        status,
+        currentPeriodStart: new Date(sub.previous_billing_date),
+        currentPeriodEnd: getPeriodEnd(sub),
+        cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+        userId,
+      },
+      update: {
+        dodoSubscriptionId: sub.subscription_id,
+        productId: sub.product_id,
+        status,
+        currentPeriodStart: new Date(sub.previous_billing_date),
+        currentPeriodEnd: getPeriodEnd(sub),
+        cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+        userId,
+      },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { plan: status === "CANCELED" ? PlanTier.FREE : plan },
+    }),
+  ]);
 }
 
 async function handleSubscriptionCancelled(sub: Subscription): Promise<void> {
-  const userId = sub.metadata?.userId;
+  const userId = getSubscriptionUserId(sub);
   if (!userId) {
     console.warn(`subscription.cancelled: no userId in metadata for ${sub.subscription_id}`);
     return;
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { plan: PlanTier.FREE },
-  });
+  await prisma.$transaction([
+    prisma.subscription.upsert({
+      where: { userId },
+      create: {
+        dodoSubscriptionId: sub.subscription_id,
+        productId: sub.product_id,
+        status: "CANCELED",
+        currentPeriodStart: new Date(sub.previous_billing_date),
+        currentPeriodEnd: getPeriodEnd(sub),
+        cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+        userId,
+      },
+      update: {
+        dodoSubscriptionId: sub.subscription_id,
+        productId: sub.product_id,
+        status: "CANCELED",
+        currentPeriodStart: new Date(sub.previous_billing_date),
+        currentPeriodEnd: getPeriodEnd(sub),
+        cancelAtPeriodEnd: sub.cancel_at_next_billing_date,
+        userId,
+      },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { plan: PlanTier.FREE },
+    }),
+  ]);
 }
 
 // payment.failed — grace period, do not downgrade until subscription.cancelled fires
-async function handlePaymentFailed(_sub: unknown): Promise<void> {
-  // No action: user keeps current plan during grace period
-  console.info("payment.failed received — no immediate plan downgrade");
+async function handlePaymentFailed(payment: Payment): Promise<void> {
+  if (!payment.subscription_id) {
+    console.info("payment.failed received without subscription — no plan downgrade");
+    return;
+  }
+
+  await prisma.subscription.updateMany({
+    where: { dodoSubscriptionId: payment.subscription_id },
+    data: { status: "PAST_DUE" },
+  });
 }
 
 // INT-03: Activate a BoostedJob record on successful one-time boost payment.
@@ -126,6 +243,9 @@ export async function POST(req: NextRequest) {
     | SubscriptionActiveWebhookEvent
     | SubscriptionRenewedWebhookEvent
     | SubscriptionCancelledWebhookEvent
+    | SubscriptionExpiredWebhookEvent
+    | SubscriptionFailedWebhookEvent
+    | SubscriptionOnHoldWebhookEvent
     | PaymentFailedWebhookEvent
     | PaymentSucceededWebhookEvent
     | { type: string; data: unknown };
@@ -161,6 +281,22 @@ export async function POST(req: NextRequest) {
           (event as SubscriptionCancelledWebhookEvent).data,
         );
         break;
+      case "subscription.expired":
+        await handleSubscriptionCancelled(
+          (event as SubscriptionExpiredWebhookEvent).data,
+        );
+        break;
+      case "subscription.failed":
+      case "subscription.on_hold": {
+        const sub = (event as SubscriptionFailedWebhookEvent | SubscriptionOnHoldWebhookEvent).data;
+        const userId = getSubscriptionUserId(sub);
+        if (!userId) {
+          console.warn(`${event.type}: no userId in metadata for ${sub.subscription_id}`);
+          break;
+        }
+        await upsertSubscription(sub, userId);
+        break;
+      }
       case "payment.failed":
         await handlePaymentFailed((event as PaymentFailedWebhookEvent).data);
         break;

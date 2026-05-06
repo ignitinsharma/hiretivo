@@ -1,24 +1,13 @@
 "use client";
 
 import { Calendar, Video } from "lucide-react";
+import { InterviewTimezoneDisplay } from "@/components/shared/InterviewTimezoneDisplay";
 import { useFetchSeekerInterviews } from "../queries/use-fetch-seeker-interviews";
 import type { SeekerInterview } from "../types/dashboard.types";
-import { detectBrowserTimezone } from "@/lib/timezone";
 
-const CARD_CLASSES = "bg-white rounded-2xl border border-gray-200 p-6";
+const CARD_CLASSES = "bg-white rounded-xl border border-gray-200 p-6";
 
 const SECTION_TITLE_CLASSES = "text-xl font-semibold text-foreground";
-
-function formatDateTime(dateStr: string | null, scheduledTz?: string | null, viewerTz?: string | null): string {
-  if (!dateStr) return "TBD";
-  const tz = viewerTz ?? scheduledTz ?? detectBrowserTimezone();
-  const d = new Date(dateStr);
-  return (
-    d.toLocaleDateString("en-US", { timeZone: tz, month: "short", day: "numeric", year: "numeric" }) +
-    " · " +
-    d.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" })
-  );
-}
 
 function InterviewRow({ interview }: { interview: SeekerInterview }) {
   return (
@@ -33,17 +22,18 @@ function InterviewRow({ interview }: { interview: SeekerInterview }) {
         <p className="text-sm text-muted-foreground font-medium mt-0.5">
           {interview.jobTitle}
         </p>
-        <div className="flex font-medium flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            {formatDateTime(interview.startsAt, interview.scheduledTimeZone, interview.viewerTimezone)}
-          </span>
+        <div className="mt-2 space-y-3">
+          <InterviewTimezoneDisplay
+            startsAt={interview.startsAt}
+            scheduledTimeZone={interview.scheduledTimeZone}
+            viewerTimezone={interview.viewerTimezone}
+          />
           {interview.meetLink && (
             <a
               href={interview.meetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-black hover:underline transition-colors"
+              className="flex w-fit items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:underline"
             >
               <Video className="w-4 h-4" />
               Join Meeting

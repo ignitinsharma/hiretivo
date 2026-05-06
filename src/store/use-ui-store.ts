@@ -51,6 +51,10 @@ interface UIState {
     description?: string;
   }) => void;
   closePaidFeatureModal: () => void;
+
+  isEmailVerificationModalOpen: boolean;
+  openEmailVerificationModal: () => void;
+  closeEmailVerificationModal: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -70,7 +74,6 @@ export const useUIStore = create<UIState>((set) => ({
     const isExternal = applyType === 'EXTERNAL' && externalApplyUrl;
     
     if (isExternal) {
-      window.open(externalApplyUrl!, '_blank', 'noopener,noreferrer');
       set({
         isApplyModalOpen: true,
         applyJobId: jobId,
@@ -154,4 +157,8 @@ export const useUIStore = create<UIState>((set) => ({
       description: '',
     },
   }),
+
+  isEmailVerificationModalOpen: false,
+  openEmailVerificationModal: () => set({ isEmailVerificationModalOpen: true }),
+  closeEmailVerificationModal: () => set({ isEmailVerificationModalOpen: false }),
 }));

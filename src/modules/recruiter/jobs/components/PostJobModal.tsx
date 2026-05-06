@@ -35,6 +35,7 @@ import {
 import { jobService } from "@/services/job.service";
 import { skillService } from "@/services/skill.service";
 import type { SkillItem } from "@/services/skill.service";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 
 import { JdGeneratorPanel } from "./JdGeneratorPanel";
 import { SkillSuggestChips } from "./SkillSuggestChips";
@@ -195,7 +196,13 @@ function ConfirmDeleteModal({
 }
 
 export function PostJobModal() {
-  const { isPostJobModalOpen, closePostJobModal, editJobId } = useUIStore();
+  const {
+    isPostJobModalOpen,
+    closePostJobModal,
+    editJobId,
+    openEmailVerificationModal,
+  } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
   const queryClient = useQueryClient();
   const [skillSearch, setSkillSearch] = useState("");
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
@@ -326,6 +333,11 @@ export function PostJobModal() {
   }, [editJob, editJobId, reset]);
 
   const onSubmit = async (data: JobFormValues) => {
+    if (!editJobId && verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
+
     const salaryMin = data.salaryMin ? parseInt(data.salaryMin, 10) : null;
     const salaryMax = data.salaryMax ? parseInt(data.salaryMax, 10) : null;
 

@@ -1,16 +1,49 @@
 import { sendEmail } from "@/lib/resend";
-import { formatInTimezone } from "@/lib/timezone";
+import { formatInterviewTimezoneDisplay } from "@/lib/timezone";
 
 const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
-
-function formatDisplayDateTime(date: Date, timezone: string | null | undefined): string {
-  if (timezone) return formatInTimezone(date, timezone);
-  return date.toUTCString().replace(" GMT", " UTC");
-}
 
 function formatDuration(startsAt: Date, endsAt: Date): string {
   const mins = Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000);
   return `${mins} min`;
+}
+
+function formatInterviewTimeBlock(
+  startsAt: Date,
+  endsAt: Date,
+  scheduledTimeZone: string | null | undefined,
+  viewerTimezone: string | null | undefined,
+): {
+  html: string;
+  text: string;
+} {
+  const starts = formatInterviewTimezoneDisplay(
+    startsAt,
+    scheduledTimeZone,
+    viewerTimezone,
+  );
+  const ends = formatInterviewTimezoneDisplay(
+    endsAt,
+    scheduledTimeZone,
+    viewerTimezone,
+  );
+
+  return {
+    html: `
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0;">
+        <p><strong>Scheduled start:</strong> ${starts.scheduled}</p>
+        <p><strong>Your start:</strong> ${starts.viewer}</p>
+        <p><strong>Scheduled end:</strong> ${ends.scheduled}</p>
+        <p><strong>Your end:</strong> ${ends.viewer}</p>
+      </div>
+    `,
+    text: [
+      `Scheduled start: ${starts.scheduled}`,
+      `Your start: ${starts.viewer}`,
+      `Scheduled end: ${ends.scheduled}`,
+      `Your end: ${ends.viewer}`,
+    ].join(" "),
+  };
 }
 
 // --- scheduled ---
@@ -23,13 +56,19 @@ interface SendInterviewScheduledEmailInput {
   startsAt: Date;
   endsAt: Date;
   meetLink?: string | null;
-  displayTimezone?: string | null;
+  scheduledTimeZone?: string | null;
+  viewerTimezone?: string | null;
 }
 
 export async function sendInterviewScheduledEmail(
   input: SendInterviewScheduledEmailInput,
 ): Promise<void> {
-  const dateStr = formatDisplayDateTime(input.startsAt, input.displayTimezone);
+  const timeBlock = formatInterviewTimeBlock(
+    input.startsAt,
+    input.endsAt,
+    input.scheduledTimeZone,
+    input.viewerTimezone,
+  );
   const duration = formatDuration(input.startsAt, input.endsAt);
   const meetSection = input.meetLink
     ? `<p><strong>Join meeting:</strong> <a href="${input.meetLink}">${input.meetLink}</a></p>`
@@ -40,13 +79,12 @@ export async function sendInterviewScheduledEmail(
       <h2>Interview Scheduled</h2>
       <p>Hi ${input.seekerName},</p>
       <p>An interview has been scheduled for <strong>${input.jobTitle}</strong>.</p>
-      <p><strong>Date &amp; Time:</strong> ${dateStr} (UTC)</p>
+      ${timeBlock.html}
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
-      <p style="color:#666;font-size:12px;">${input.displayTimezone ? `Times shown in ${input.displayTimezone}.` : "All times are in UTC. Please convert to your local timezone."}</p>
     </div>
   `;
-  const text = `Interview scheduled for ${input.jobTitle}. Date: ${dateStr} UTC. Duration: ${duration}.${input.meetLink ? ` Join: ${input.meetLink}` : ""}`;
+  const text = `Interview scheduled for ${input.jobTitle}. ${timeBlock.text} Duration: ${duration}.${input.meetLink ? ` Join: ${input.meetLink}` : ""}`;
 
   await sendEmail({
     from: FROM_EMAIL,
@@ -67,13 +105,19 @@ interface SendInterviewRescheduledEmailInput {
   startsAt: Date;
   endsAt: Date;
   meetLink?: string | null;
-  displayTimezone?: string | null;
+  scheduledTimeZone?: string | null;
+  viewerTimezone?: string | null;
 }
 
 export async function sendInterviewRescheduledEmail(
   input: SendInterviewRescheduledEmailInput,
 ): Promise<void> {
-  const dateStr = formatDisplayDateTime(input.startsAt, input.displayTimezone);
+  const timeBlock = formatInterviewTimeBlock(
+    input.startsAt,
+    input.endsAt,
+    input.scheduledTimeZone,
+    input.viewerTimezone,
+  );
   const duration = formatDuration(input.startsAt, input.endsAt);
   const meetSection = input.meetLink
     ? `<p><strong>Join meeting:</strong> <a href="${input.meetLink}">${input.meetLink}</a></p>`
@@ -84,13 +128,12 @@ export async function sendInterviewRescheduledEmail(
       <h2>Interview Rescheduled</h2>
       <p>Hi ${input.seekerName},</p>
       <p>Your interview for <strong>${input.jobTitle}</strong> has been rescheduled.</p>
-      <p><strong>New Date &amp; Time:</strong> ${dateStr} (UTC)</p>
+      ${timeBlock.html}
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
-      <p style="color:#666;font-size:12px;">${input.displayTimezone ? `Times shown in ${input.displayTimezone}.` : "All times are in UTC. Please convert to your local timezone."}</p>
     </div>
   `;
-  const text = `Interview rescheduled for ${input.jobTitle}. New date: ${dateStr} UTC. Duration: ${duration}.`;
+  const text = `Interview rescheduled for ${input.jobTitle}. ${timeBlock.text} Duration: ${duration}.`;
 
   await sendEmail({
     from: FROM_EMAIL,

@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { ApplyType, CurrencyCode, JobStatus, UserRole } from "@/constants/enums";
+import { getEmailVerificationStatus } from "@/lib/auth/email-verification";
 import { prisma } from "@/lib/prisma";
 import { recruiterProfileSchema, createJobFromOnboardingSchema } from "@/lib/validations/onboarding.schema";
 
@@ -77,6 +78,8 @@ export async function createJobFromOnboarding(data: {
   }
 
   try {
+    const verificationStatus = await getEmailVerificationStatus(session.user.id);
+    const shouldPublish = verificationStatus?.isVerified === true;
     const job = await prisma.job.create({
       data: {
         recruiterId: session.user.id,
@@ -84,7 +87,8 @@ export async function createJobFromOnboarding(data: {
         description: parsed.data.description,
         jobType: parsed.data.jobType,
         applyType: ApplyType.INTERNAL,
-        status: JobStatus.OPEN,
+        status: shouldPublish ? JobStatus.OPEN : JobStatus.DRAFT,
+        publishedAt: shouldPublish ? new Date() : null,
         salaryMin: parsed.data.salaryMin,
         salaryMax: parsed.data.salaryMax,
         currency: CurrencyCode.USD,

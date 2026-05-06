@@ -24,6 +24,7 @@ import { JobStatus } from "@/constants/enums";
 import { jobService } from "@/services/job.service";
 import { recruiterService } from "@/services/recruiter.service";
 import { ConfirmDeleteModal } from "@/modules/recruiter/jobs/components/PostJobModal";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import {
   Popover,
   PopoverTrigger,
@@ -280,7 +281,12 @@ function Pagination({
 
 export default function RecruiterJobsPage() {
   const queryClient = useQueryClient();
-  const { openEditJobModal, openPostJobModal } = useUIStore();
+  const {
+    openEditJobModal,
+    openPostJobModal,
+    openEmailVerificationModal,
+  } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<ApiJob | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -491,9 +497,16 @@ export default function RecruiterJobsPage() {
                     key={job.id}
                     job={job}
                     onEdit={(id) => openEditJobModal(id)}
-                    onToggle={(id, status) =>
-                      toggleMutation.mutate({ id, status })
-                    }
+                    onToggle={(id, status) => {
+                      if (
+                        status === JobStatus.OPEN &&
+                        verificationStatus?.requiresVerification
+                      ) {
+                        openEmailVerificationModal();
+                        return;
+                      }
+                      toggleMutation.mutate({ id, status });
+                    }}
                     onDeleteRequest={(j) => setDeleteTarget(j)}
                   />
                 ))

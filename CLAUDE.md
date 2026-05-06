@@ -9,6 +9,19 @@
 
 ## QUICK REFERENCE (Most Used)
 
+### Before Building Anything
+
+```
+1. CHECK EXISTING CODE FIRST
+   - Search src/services/, src/lib/, src/modules/*/ for existing functions
+   - Search src/components/shared/ for reusable components
+   - Check src/app/api/ for existing API routes
+   - Never create duplicate functions or components
+
+2. IF EXISTS → use it
+3. IF NOT → build it
+```
+
 ### Styling Priority Ladder
 
 ```
@@ -556,6 +569,11 @@ API keys, tokens, secrets
 ### Core Rules Summary
 
 ```ts
+// CHECK FIRST - before building anything
+// 1. Search services/, lib/, modules/*/, components/shared/, app/api/
+// 2. If exists → use it. If not → build it
+// 3. Never create duplicate functions/components
+
 // STYLING - Priority ladder
 className="bg-brand-primary"           // 1st: brand tokens
 className="bg-gray-100"              // 2nd: native tailwind

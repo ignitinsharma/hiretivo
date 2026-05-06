@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
+import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 
 export async function PATCH(
   req: NextRequest,
@@ -42,6 +43,13 @@ export async function PATCH(
   }
 
   const { skills, ...jobFields } = parsed.data;
+
+  if (jobFields.status === JobStatus.OPEN) {
+    const verificationError = await requireVerifiedEmailForTrustedAction(
+      session.user.id,
+    );
+    if (verificationError) return verificationError;
+  }
 
   let updatedJob;
   if (skills !== undefined) {

@@ -4,9 +4,17 @@ import { JobStatus, UserRole } from '@/constants/enums';
 import { sendSeekerDigest } from '@/lib/email/seeker-digest';
 import { computeAllMatches } from '@/lib/match';
 
+// DISABLED - to enable when scaling to more users
+// Temporarily disabled - see PR #XXX or docs for re-enabling
+export async function GET(req: NextRequest) {
+  return new NextResponse('Seeker digest is temporarily disabled', { status: 503 });
+}
+
+/*
+// Original implementation - re-enable this block when ready
 const CRON_SECRET = process.env.CRON_SECRET ?? 'local-dev-secret';
 
-export async function GET(req: NextRequest) {
+export async function GET_DISABLED(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
 
   if (authHeader !== `Bearer ${CRON_SECRET}`) {
@@ -104,3 +112,4 @@ export async function GET(req: NextRequest) {
     timestamp: now.toISOString(),
   });
 }
+*/

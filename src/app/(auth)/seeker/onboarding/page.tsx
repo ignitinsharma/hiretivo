@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
+import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { SeekerOnboardingContainer } from "@/modules/seeker-onboarding";
 import type { SeekerOnboardingStep } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
 
@@ -42,5 +43,10 @@ export default async function SeekerOnboardingPage() {
           ? 4
           : 5;
 
-  return <SeekerOnboardingContainer initialStep={initialStep} />;
+  return (
+    <>
+      <EmailVerificationBanner />
+      <SeekerOnboardingContainer initialStep={initialStep} />
+    </>
+  );
 }

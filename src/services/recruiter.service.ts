@@ -7,6 +7,10 @@ import type {
 } from '@/lib/validations/interview.schema';
 import type { DashboardData } from '@/modules/recruiter/dashboard/types/dashboard.types';
 import type { JobAnalyticsResponse } from '@/modules/recruiter/jobs/types/analytics.types';
+import type {
+  TalentDetail,
+  TalentListResponse,
+} from '@/modules/recruiter/talent/types/talent.types';
 
 interface DataResponse<T> {
   data: T;
@@ -144,6 +148,15 @@ export interface RecruiterStatsResponse {
   hired: number;
 }
 
+export interface RecruiterTalentParams {
+  q?: string;
+  skill?: string;
+  location?: string;
+  availability?: string;
+  page?: number;
+  limit?: number;
+}
+
 export interface AiSummaryResult {
   summary: string;
 }
@@ -155,6 +168,20 @@ export interface InterviewPayload {
   meetLink: string;
   notes: string;
   scheduledTimeZone?: string;
+}
+
+export class TalentForbiddenError extends Error {
+  constructor() {
+    super('Talent pool requires a paid recruiter plan.');
+    this.name = 'TalentForbiddenError';
+  }
+}
+
+/**
+ * Detects 403 failures after axios normalizes the original response.
+ */
+function isForbiddenRequestError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes('403');
 }
 
 export const recruiterService = {
@@ -218,6 +245,36 @@ export const recruiterService = {
       params: jobId ? { jobId } : undefined,
     });
     return data;
+  },
+
+  getTalent: async (params: RecruiterTalentParams): Promise<TalentListResponse['data']> => {
+    try {
+      const { data } = await apiClient.get<TalentListResponse>('/recruiter/talent', {
+        params,
+      });
+      return data.data;
+    } catch (error) {
+      if (isForbiddenRequestError(error)) {
+        throw new TalentForbiddenError();
+      }
+
+      throw error;
+    }
+  },
+
+  getTalentDetail: async (seekerId: string): Promise<TalentDetail> => {
+    try {
+      const { data } = await apiClient.get<DataResponse<TalentDetail>>(
+        `/recruiter/talent/${seekerId}`,
+      );
+      return data.data;
+    } catch (error) {
+      if (isForbiddenRequestError(error)) {
+        throw new TalentForbiddenError();
+      }
+
+      throw error;
+    }
   },
 
   getApplications: async (params: RecruiterApplicationsParams): Promise<RecruiterApplicationsResponse> => {

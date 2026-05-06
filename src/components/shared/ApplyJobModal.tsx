@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { applicationService } from '@/services/application.service';
 import { ExternalLink, CheckCircle2, Briefcase } from 'lucide-react';
+import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
 
 export function ApplyJobModal() {
   const {
@@ -27,11 +28,18 @@ export function ApplyJobModal() {
     selectedExternalApplyUrl,
     showExternalConfirm,
   } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openEmailVerificationModal } = useUIStore();
   const queryClient = useQueryClient();
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleExternalRedirect = () => {
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
+
     if (selectedExternalApplyUrl) {
       window.open(selectedExternalApplyUrl, '_blank', 'noopener,noreferrer');
     }
@@ -45,6 +53,10 @@ export function ApplyJobModal() {
 
   const handleConfirmApplied = async () => {
     if (!selectedJobId) return;
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
 
     closeApplyModal();
 
@@ -61,6 +73,10 @@ export function ApplyJobModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedJobId) return;
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -94,6 +110,15 @@ export function ApplyJobModal() {
             </DialogDescription>
 
             <div className="mt-8 w-full space-y-3">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full font-bold"
+                onClick={handleExternalRedirect}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Continue to company site
+              </Button>
               <Button
                 type="button"
                 className="w-full font-bold bg-brand-primary text-white hover:bg-brand-primary/90"

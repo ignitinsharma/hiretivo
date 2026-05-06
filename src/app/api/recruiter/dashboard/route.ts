@@ -1,20 +1,37 @@
-import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { UserRole, JobStatus, ApplicationStatus } from '@/constants/enums';
-import { prisma } from '@/lib/prisma';
-import { resolveLogoUrl } from '@/lib/r2';
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { UserRole, JobStatus, ApplicationStatus } from "@/constants/enums";
+import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
+import { format, subDays, isValid } from "date-fns";
 
 function fillMissingDays(
   data: Array<{ date: string; count: number }>,
-  days: number = 30
+  days: number = 30,
 ): Array<{ date: string; count: number }> {
   const result: Array<{ date: string; count: number }> = [];
-  const map = new Map(data.map((d) => [d.date, d.count]));
-  const now = new Date();
+  const map = new Map(
+    data.map((d) => {
+      let parsedDate: Date;
+      if (typeof d.date === 'string') {
+        parsedDate = new Date(d.date);
+      } else if (typeof d.date === 'object' && d.date !== null) {
+        parsedDate = new Date(d.date as unknown as string);
+      } else {
+        parsedDate = new Date();
+      }
+
+      const dateStr = isValid(parsedDate)
+        ? format(parsedDate, 'yyyy-MM-dd')
+        : String(d.date).split('T')[0];
+      return [dateStr, d.count];
+    }),
+  );
+
+  const today = new Date();
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
+    const d = subDays(today, i);
+    const key = format(d, 'yyyy-MM-dd');
     result.push({ date: key, count: map.get(key) ?? 0 });
   }
   return result;
@@ -23,11 +40,11 @@ function fillMissingDays(
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (session.user.role !== UserRole.RECRUITER) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const recruiterId = session.user.id;
@@ -64,7 +81,7 @@ export async function GET() {
     }),
     prisma.application.findMany({
       where: { job: { recruiterId } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 5,
       select: {
         id: true,
@@ -100,7 +117,7 @@ export async function GET() {
       avgMatchScore,
       recentApplicants: recentApplicants.map((app) => ({
         id: app.id,
-        seekerName: app.seeker.name ?? 'Anonymous',
+        seekerName: app.seeker.name ?? "Anonymous",
         seekerImage: resolveLogoUrl(app.seeker.image),
         jobTitle: app.job.title,
         matchScore: app.matchScore,

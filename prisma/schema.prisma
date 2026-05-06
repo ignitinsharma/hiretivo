@@ -63,6 +63,12 @@ enum PlanTier {
   ENTERPRISE
 }
 
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
 enum InterviewStatus {
   SCHEDULED
   COMPLETED
@@ -103,6 +109,7 @@ model User {
   boostedJobs BoostedJob[] @relation("BoostedJobs")
   savedJobs            SavedJob[]
   dismissedJobs        DismissedJob[]
+  subscription         Subscription?
 }
 
 model Account {
@@ -388,6 +395,23 @@ model BoostedJob {
 
   @@index([expiresAt])
   @@index([recruiterId])
+}
+
+model Subscription {
+  id                 String    @id @default(cuid())
+  dodoSubscriptionId String    @unique
+  productId          String
+  status             SubStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean   @default(false)
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([dodoSubscriptionId])
 }
 
 model SavedJob {

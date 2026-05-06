@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@/constants/enums";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+function resultRedirect(status: string): NextResponse {
+  return NextResponse.redirect(`${APP_URL}/auth/verify-email?status=${status}`);
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -10,7 +13,7 @@ export async function GET(req: NextRequest) {
   const email = searchParams.get("email");
 
   if (!token || !email) {
-    return NextResponse.redirect(`${APP_URL}/auth/verify-email?error=missing_params`);
+    return resultRedirect("missing-token");
   }
 
   const verificationToken = await prisma.verificationToken.findUnique({
@@ -18,26 +21,26 @@ export async function GET(req: NextRequest) {
   });
 
   if (!verificationToken) {
-    return NextResponse.redirect(`${APP_URL}/auth/verify-email?error=invalid_token`);
+    return resultRedirect("invalid");
   }
 
-  if (verificationToken.identifier !== email) {
-    return NextResponse.redirect(`${APP_URL}/auth/verify-email?error=invalid_token`);
+  const normalizedEmail = email.toLowerCase();
+  if (verificationToken.identifier.toLowerCase() !== normalizedEmail) {
+    return resultRedirect("invalid");
   }
 
   if (verificationToken.expires < new Date()) {
     await prisma.verificationToken.delete({ where: { token } });
-    return NextResponse.redirect(`${APP_URL}/auth/verify-email?error=expired_token`);
+    return resultRedirect("expired");
   }
 
-  // Mark user as verified
   const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
-    select: { id: true, emailVerified: true, role: true },
+    where: { email: normalizedEmail },
+    select: { id: true, emailVerified: true },
   });
 
   if (!user) {
-    return NextResponse.redirect(`${APP_URL}/auth/verify-email?error=user_not_found`);
+    return resultRedirect("invalid");
   }
 
   if (!user.emailVerified) {
@@ -47,14 +50,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Delete used token
   await prisma.verificationToken.delete({ where: { token } }).catch(() => {});
 
-  // Redirect to appropriate dashboard
-  const redirectTo =
-    user.role === UserRole.RECRUITER
-      ? `${APP_URL}/recruiter/dashboard`
-      : `${APP_URL}/seeker/jobs`;
-
-  return NextResponse.redirect(`${redirectTo}?verified=1`);
+  return resultRedirect("success");
 }

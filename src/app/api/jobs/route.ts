@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { createJobSchema } from '@/lib/validations/job';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { JobStatus, PlanTier, SkillLevel, UserRole } from '@/constants/enums';
+import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden — recruiters only' }, { status: 403 });
   }
 
+  const verificationError = await requireVerifiedEmailForTrustedAction(
+    session.user.id,
+  );
+  if (verificationError) return verificationError;
+
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { plan: true },
@@ -110,7 +116,17 @@ export async function POST(req: NextRequest) {
     });
     if (activeCount >= 2) {
       return NextResponse.json(
-        { error: 'FREE plan allows 3 active jobs. Upgrade to post more.' },
+        { error: 'Free plan allows 2 active jobs. Upgrade to Pro for more.' },
+        { status: 403 }
+      );
+    }
+  } else if (user?.plan === PlanTier.PRO) {
+    const activeCount = await prisma.job.count({
+      where: { recruiterId: session.user.id, status: JobStatus.OPEN },
+    });
+    if (activeCount >= 10) {
+      return NextResponse.json(
+        { error: 'Pro plan allows 10 active jobs. Contact sales for more.' },
         { status: 403 }
       );
     }

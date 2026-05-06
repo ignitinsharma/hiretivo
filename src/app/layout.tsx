@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import { ApplyJobModal } from "@/components/shared/ApplyJobModal";
+import { EmailVerificationModal } from "@/components/shared/EmailVerificationModal";
 import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryProvider } from "@/providers/query-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
@@ -37,6 +38,7 @@ export default function RootLayout({
           <AuthSessionProvider>
             {children}
             <ApplyJobModal />
+            <EmailVerificationModal />
             <Toaster />
           </AuthSessionProvider>
         </ReactQueryProvider>

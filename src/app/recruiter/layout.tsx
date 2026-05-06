@@ -1,6 +1,7 @@
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AuthRedirectToast } from "@/components/auth/AuthRedirectToast";
 import { RecruiterSidebarProvider } from "@/components/layout/RecruiterSidebar";
+import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { PaidFeatureModal } from "@/components/shared/PaidFeatureModal";
 import { PostJobModal } from "@/modules/recruiter/jobs/components/PostJobModal";
 import { ReactQueryProvider } from "@/providers/query-provider";
@@ -22,6 +23,7 @@ export default function RecruiterLayout({
         <ReactQueryProvider>
           <RecruiterSidebarProvider>
             <AuthRedirectToast />
+            <EmailVerificationBanner />
             {children}
             <PostJobModal />
             <PaidFeatureModal />

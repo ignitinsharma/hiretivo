@@ -1,18 +1,40 @@
 import { z } from "zod";
+import { isValidTimezone } from "@/lib/timezone";
 
-export const ScheduleInterviewSchema = z
-  .object({
-    applicationId: z.cuid(),
-    startsAt: z.string().datetime(),
-    endsAt: z.string().datetime(),
-    meetLink: z.string().url().optional().or(z.literal("")),
-    notes: z.string().max(500).optional(),
-    scheduledTimeZone: z.string().min(1).max(64).optional(),
-  })
-  .refine((data) => new Date(data.endsAt) > new Date(data.startsAt), {
+const scheduleInterviewDateOrder = <
+  T extends { startsAt: string; endsAt: string },
+>(
+  data: T,
+): boolean => new Date(data.endsAt) > new Date(data.startsAt);
+
+export const ScheduleInterviewBaseSchema = z.object({
+  applicationId: z.cuid(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  meetLink: z.string().url().optional().or(z.literal("")),
+  notes: z.string().max(500).optional(),
+  scheduledTimeZone: z
+    .string()
+    .min(1)
+    .max(64)
+    .refine(isValidTimezone, "Please enter a valid timezone")
+    .optional(),
+});
+
+export const ScheduleInterviewSchema = ScheduleInterviewBaseSchema.refine(
+  scheduleInterviewDateOrder,
+  {
     message: "End time must be after start time",
     path: ["endsAt"],
-  });
+  },
+);
+
+export const RescheduleInterviewSchema = ScheduleInterviewBaseSchema.omit({
+  applicationId: true,
+}).refine(scheduleInterviewDateOrder, {
+  message: "End time must be after start time",
+  path: ["endsAt"],
+});
 
 export const RecruiterProfileSettingsSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),

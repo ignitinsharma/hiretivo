@@ -11,9 +11,11 @@ import { JobCard } from "@/components/shared/JobCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 
 export function RecommendedJobsList() {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
   const queryClient = useQueryClient();
   const [dismissingJobId, setDismissingJobId] = useState<string | null>(null);
   const { data, isLoading, error } = useQuery({
@@ -66,6 +68,11 @@ export function RecommendedJobsList() {
     applyType?: string,
     externalApplyUrl?: string | null,
   ) => {
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
+
     openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
   };
 

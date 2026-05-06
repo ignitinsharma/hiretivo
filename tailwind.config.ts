@@ -77,11 +77,11 @@ const config = {
         sans: ["var(--font-inter)", "sans-serif"],
       },
       lineHeight: {
-        tight: "1.35",
-        snug: "1.5",
-        normal: "1.6",
-        relaxed: "1.7",
-        loose: "2",
+        tight: "1.45",
+        snug: "1.65",
+        normal: "1.75",
+        relaxed: "1.85",
+        loose: "2.2",
       },
       borderRadius: {
         lg: "var(--radius)",

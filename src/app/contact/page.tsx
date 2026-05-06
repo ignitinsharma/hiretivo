@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { ContactRequestType, PlanTier } from "@/constants/enums";
 import {
@@ -116,25 +117,32 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white px-6 py-16">
       <section className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-        <div className="space-y-6">
+        <div className="space-y-8">
+          <Button variant="primary" asChild>
+            <Link href="/" className="inline-flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to home
+            </Link>
+          </Button>
+
           <div>
             <p className="text-sm font-medium uppercase tracking-wider text-gray-500">
               Contact & Support
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-[#0a0a0a] md:text-4xl">
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-brand-foreground md:text-4xl">
               Tell us how we can help.
             </h1>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-[#6b7280]">
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-brand-foreground-muted">
               Reach the Hiretivo team for product questions, account support, or
               a quick call about hiring and job search workflows.
             </p>
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
-            <h2 className="text-lg font-semibold text-[#0a0a0a]">
+            <h2 className="text-lg font-semibold text-brand-foreground">
               What happens next
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#6b7280]">
+            <p className="mt-3 text-sm leading-relaxed text-brand-foreground-muted">
               We review every request and reply from the support inbox. For call
               requests, include your timezone or a few windows that work for
               you.
@@ -160,7 +168,7 @@ export default function ContactPage() {
                       ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
                       : isActive
                       ? "border-brand-primary bg-brand-primary text-white"
-                      : "border-gray-200 bg-white text-[#0a0a0a] hover:bg-gray-50",
+                      : "border-gray-200 bg-white text-brand-foreground hover:bg-gray-50",
                   )}
                 >
                   <span className="block text-sm font-semibold">

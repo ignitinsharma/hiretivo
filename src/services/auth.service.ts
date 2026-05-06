@@ -24,6 +24,14 @@ export interface SessionResponse {
   };
 }
 
+export interface EmailVerificationStatus {
+  email: string | null;
+  isVerified: boolean;
+  requiresVerification: boolean;
+  verifiedAt: string | null;
+  hasGoogleAccount: boolean;
+}
+
 export const authService = {
   getSession: async (): Promise<SessionResponse> => {
     const { data } = await apiClient.get<SessionResponse>('/auth/session');
@@ -49,5 +57,16 @@ export const authService = {
     newPassword: string;
   }): Promise<void> => {
     await apiClient.post('/auth/reset-password/confirm', input);
+  },
+
+  getEmailVerificationStatus: async (): Promise<EmailVerificationStatus> => {
+    const { data } = await apiClient.get<{ data: EmailVerificationStatus }>(
+      '/auth/email-verification/status',
+    );
+    return data.data;
+  },
+
+  resendVerificationEmail: async (): Promise<void> => {
+    await apiClient.post('/auth/email-verification/resend');
   },
 };

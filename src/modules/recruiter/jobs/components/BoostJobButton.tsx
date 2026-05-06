@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
 import { billingService } from '@/services/billing.service';
+import { useUIStore } from '@/store/use-ui-store';
 
 interface BoostJobButtonProps {
   jobId: string;
@@ -30,8 +32,15 @@ function formatBoostExpiry(isoString: string): string {
 
 export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: BoostJobButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openEmailVerificationModal } = useUIStore();
 
   const handleBoost = async () => {
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
+
     setIsLoading(true);
     try {
       const url = await billingService.createBoostCheckoutSession(jobId);

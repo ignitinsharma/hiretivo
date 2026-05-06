@@ -8,6 +8,7 @@ import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
 import { CurrencyCode, WorkType } from '@/constants/enums';
 import { SaveJobButton } from '@/modules/jobs/components/SaveJobButton';
+import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
 
 interface JobData {
   id: string;
@@ -41,7 +42,8 @@ function formatSalary(min: number | null, max: number | null, currency: string |
 }
 
 export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps) {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
 
   return (
     <>
@@ -107,7 +109,13 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
             className="px-6 py-3"
           />
           <Button
-            onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
+            onClick={() => {
+              if (verificationStatus?.requiresVerification) {
+                openEmailVerificationModal();
+                return;
+              }
+              openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl);
+            }}
             variant="primary"
             className="px-8 py-3"
           >

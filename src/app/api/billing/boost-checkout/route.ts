@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { dodo } from '@/lib/dodo';
 import { BoostCheckoutSchema } from '@/lib/validations/boost-checkout.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 
 const boostCheckoutRateLimiter = createRateLimiter('boost-checkout', 5, '1 m');
 
@@ -21,6 +22,11 @@ export async function POST(req: NextRequest) {
   if (session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+
+  const verificationError = await requireVerifiedEmailForTrustedAction(
+    session.user.id,
+  );
+  if (verificationError) return verificationError;
 
   const { success } = await boostCheckoutRateLimiter.limit(session.user.id);
   if (!success) {

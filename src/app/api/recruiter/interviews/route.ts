@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { InterviewStatus, UserRole } from "@/constants/enums";
 import { ScheduleInterviewSchema } from "@/lib/validations/interview.schema";
+import { normalizeTimezone } from "@/lib/timezone";
 import {
   canAccessRecruiterPaidFeature,
   PAID_FEATURE_FORBIDDEN_MESSAGE,
@@ -58,6 +59,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { applicationId, startsAt, endsAt, meetLink, notes, scheduledTimeZone } = parsed.data;
+  const normalizedScheduledTimeZone = scheduledTimeZone
+    ? normalizeTimezone(scheduledTimeZone)
+    : null;
 
   // Verify this application belongs to this recruiter
   const application = await prisma.application.findFirst({
@@ -67,7 +71,7 @@ export async function POST(req: NextRequest) {
     },
     include: {
       job: { select: { title: true } },
-      seeker: { select: { email: true, name: true } },
+      seeker: { select: { email: true, name: true, timezone: true } },
     },
   });
 
@@ -85,7 +89,7 @@ export async function POST(req: NextRequest) {
       endsAt: new Date(endsAt),
       meetLink: meetLink || null,
       notes: notes ?? null,
-      scheduledTimeZone: scheduledTimeZone ?? null,
+      scheduledTimeZone: normalizedScheduledTimeZone,
     },
   });
 
@@ -99,7 +103,8 @@ export async function POST(req: NextRequest) {
     endsAt: interview.endsAt ?? new Date(endsAt),
     meetLink: interview.meetLink,
     notes: interview.notes,
-    displayTimezone: interview.scheduledTimeZone ?? null,
+    scheduledTimeZone: interview.scheduledTimeZone ?? null,
+    viewerTimezone: application.seeker.timezone ?? null,
   }).catch((err: unknown) => {
     console.error("Failed to send interview scheduled email:", err);
   });

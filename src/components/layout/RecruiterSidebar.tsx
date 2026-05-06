@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { signOut } from "next-auth/react";
 import { Button } from "../ui/button";
+import { apiClient } from "@/lib/axios";
 
 interface SidebarContextValue {
   collapsed: boolean;
@@ -81,6 +82,19 @@ function RecruiterSidebarInner({
 }) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const { data } = await apiClient.get<{ data: { logo: string | null; companyName: string } }>('/recruiter/settings');
+        if (data?.data?.logo) {
+          setCompanyLogo(data.data.logo);
+        }
+      } catch {}
+    }
+    fetchSettings();
+  }, []);
 
   const userName = session?.user?.name ?? "Recruiter";
   const initials =
@@ -90,11 +104,12 @@ function RecruiterSidebarInner({
       .join("")
       .toUpperCase()
       .slice(0, 2) || "R";
-  const avatarUrl = session?.user?.image
+
+  const avatarUrl = companyLogo ?? (session?.user?.image
     ? session.user.image.startsWith('http')
       ? session.user.image
       : `/api/logo?key=${encodeURIComponent(session.user.image)}`
-    : null;
+    : null);
 
   return (
     <aside

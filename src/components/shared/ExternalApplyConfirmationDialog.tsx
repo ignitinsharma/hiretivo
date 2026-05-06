@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
+import { useUIStore } from '@/store/use-ui-store';
 import {
   Dialog,
   DialogContent,
@@ -27,8 +29,18 @@ export function ExternalApplyConfirmationDialog({
 }: ExternalApplyConfirmationDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openEmailVerificationModal } = useUIStore();
+
+  const guardVerifiedEmail = (): boolean => {
+    if (!verificationStatus?.requiresVerification) return true;
+    openEmailVerificationModal();
+    return false;
+  };
 
   const confirmApplied = async () => {
+    if (!guardVerifiedEmail()) return;
+
     setIsConfirming(true);
     try {
       const response = await fetch(`/api/jobs/${jobId}/external-apply/confirm`, {
@@ -49,18 +61,23 @@ export function ExternalApplyConfirmationDialog({
   return (
     <>
       <Button
-        asChild
+        type="button"
+        onClick={() => {
+          if (!guardVerifiedEmail()) return;
+          window.open(externalUrl, '_blank', 'noopener,noreferrer');
+        }}
         className="w-full rounded-full bg-brand-primary py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
       >
-        <a href={externalUrl} target="_blank" rel="noreferrer">
-          Continue to Application
-          <ExternalLink className="ml-2 h-4 w-4" />
-        </a>
+        Continue to Application
+        <ExternalLink className="ml-2 h-4 w-4" />
       </Button>
 
       <Button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          if (!guardVerifiedEmail()) return;
+          setIsOpen(true);
+        }}
         className="w-full rounded-full bg-gray-100 font-semibold text-foreground transition-transform hover:scale-105 active:scale-95"
       >
         <CheckCircle2 className="mr-2 h-4 w-4" />

@@ -81,7 +81,7 @@ function PricingSuccessContent() {
     state === "success"
       ? "Your billing is active and your recruiter account is ready."
       : state === "timeout"
-        ? "Your plan update may take a moment while Stripe finishes sending confirmation."
+        ? "Your plan update may take a moment while payment confirmation finishes processing."
         : state === "error"
           ? "We could not refresh your plan status yet. Check billing again in a moment."
           : "This usually takes a few seconds.";

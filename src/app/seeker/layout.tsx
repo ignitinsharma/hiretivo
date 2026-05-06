@@ -1,6 +1,7 @@
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AuthRedirectToast } from "@/components/auth/AuthRedirectToast";
 import { SeekerHeader } from "@/components/layout/SeekerHeader";
+import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { UserRole } from "@/constants/enums";
 
 export default function SeekerLayout({
@@ -18,6 +19,7 @@ export default function SeekerLayout({
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
         <AuthRedirectToast />
         <SeekerHeader />
+        <EmailVerificationBanner />
         <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8">
           {children}
         </main>

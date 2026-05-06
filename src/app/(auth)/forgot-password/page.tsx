@@ -53,10 +53,7 @@ export default function ForgotPasswordPage() {
               If an account exists for that email, a reset link is on the way.
               Check your inbox.
             </p>
-            <Button
-              asChild
-              className="w-full rounded-full bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95"
-            >
+            <Button asChild variant="secondary">
               <Link href="/seeker/login">Back to sign in</Link>
             </Button>
           </div>

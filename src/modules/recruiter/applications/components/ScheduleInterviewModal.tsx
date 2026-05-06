@@ -1,13 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { buildUtcFromLocalTime, detectBrowserTimezone, COMMON_TIMEZONES } from "@/lib/timezone";
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  Search,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+
+import {
+  buildUtcFromLocalTime,
+  detectBrowserTimezone,
+  COMMON_TIMEZONES,
+  getAllTimezones,
+  getCalendarDateInTimezone,
+  isValidTimezone,
+} from "@/lib/timezone";
+import { cn } from "@/lib/utils";
+import { useUIStore } from "@/store/use-ui-store";
+import { recruiterService } from "@/services/recruiter.service";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -32,10 +49,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-
-import { useUIStore } from "@/store/use-ui-store";
-import { recruiterService } from "@/services/recruiter.service";
 
 // Duration options — typed data array per CLAUDE.md §15.1
 const DURATION_OPTIONS = [
@@ -46,12 +59,40 @@ const DURATION_OPTIONS = [
 
 type DurationValue = (typeof DURATION_OPTIONS)[number]["value"];
 
+const COMMON_TIMEZONE_VALUES = new Set(
+  COMMON_TIMEZONES.map((timezone) => timezone.value),
+);
+
+function formatTimezoneLabel(timezone: string): string {
+  const commonTimezone = COMMON_TIMEZONES.find((option) => option.value === timezone);
+  if (commonTimezone) return commonTimezone.label;
+
+  return timezone
+    .replaceAll("_", " ")
+    .replace("/", " / ");
+}
+
+function getTimezoneOptions() {
+  return [
+    ...COMMON_TIMEZONES,
+    ...getAllTimezones()
+      .filter((timezone) => !COMMON_TIMEZONE_VALUES.has(timezone))
+      .map((timezone) => ({
+        value: timezone,
+        label: formatTimezoneLabel(timezone),
+      })),
+  ];
+}
+
 // Form schema — uses separate date/time/duration fields; API payload built on submit
 const ModalFormSchema = z.object({
   date: z.date({ error: "Please select a date" }),
   startTime: z.string().min(1, "Please select a start time"),
   duration: z.enum(["30", "45", "60"]),
-  scheduledTimeZone: z.string().min(1),
+  scheduledTimeZone: z
+    .string()
+    .min(1, "Please enter a timezone")
+    .refine(isValidTimezone, "Please enter a valid timezone"),
   meetLink: z.string().optional(),
   notes: z.string().max(500).optional(),
 });
@@ -73,16 +114,115 @@ export interface ScheduleInterviewModalProps {
 
 function getDefaultStartTime(startsAt?: Date, tz?: string | null): string {
   if (!startsAt) return "";
-  const locale = tz ?? "UTC";
+  const locale = tz && isValidTimezone(tz) ? tz : "UTC";
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: locale,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   }).formatToParts(startsAt);
-  const hh = parts.find((p) => p.type === "hour")?.value ?? "00";
+  const hour = parts.find((p) => p.type === "hour")?.value ?? "00";
+  const hh = hour === "24" ? "00" : hour;
   const mm = parts.find((p) => p.type === "minute")?.value ?? "00";
   return `${hh}:${mm}`;
+}
+
+interface TimezoneComboboxProps {
+  value: string;
+  errorMessage?: string;
+  onValueChange: (value: string) => void;
+}
+
+function TimezoneCombobox({
+  value,
+  errorMessage,
+  onValueChange,
+}: TimezoneComboboxProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const options = useMemo(getTimezoneOptions, []);
+  const filteredOptions = options
+    .filter((option) => {
+      const search = query.trim().toLowerCase();
+      if (!search) return true;
+      return (
+        option.value.toLowerCase().includes(search) ||
+        option.label.toLowerCase().includes(search)
+      );
+    })
+    .slice(0, 80);
+  const displayValue = value ? formatTimezoneLabel(value) : "Select timezone";
+
+  return (
+    <div className="space-y-1.5">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="default"
+            role="combobox"
+            aria-expanded={isOpen}
+            className="w-full justify-between font-normal"
+          >
+            <span className="truncate">{displayValue}</span>
+            <ChevronsUpDown className="h-4 w-4 shrink-0 text-brand-foreground-muted" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] rounded-xl border border-brand-border bg-white p-2 shadow-none" align="start">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-foreground-muted" />
+            <Input
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                onValueChange(event.target.value);
+              }}
+              placeholder="Search or enter IANA timezone"
+              className="pl-9"
+            />
+          </div>
+          <div className="mt-2 max-h-60 overflow-y-auto">
+            {filteredOptions.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-brand-foreground-muted">
+                No matches. Enter a valid IANA timezone.
+              </p>
+            ) : (
+              filteredOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-brand-surface",
+                    option.value === value && "bg-brand-surface text-brand-primary",
+                  )}
+                  onClick={() => {
+                    setQuery(option.value);
+                    onValueChange(option.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{option.label}</span>
+                    <span className="block truncate text-xs text-brand-foreground-muted">
+                      {option.value}
+                    </span>
+                  </span>
+                  {option.value === value && <Check className="h-4 w-4 shrink-0" />}
+                </button>
+              ))
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {errorMessage ? (
+        <p className="text-xs text-red-500">{errorMessage}</p>
+      ) : (
+        <p className="text-xs text-brand-foreground-muted">
+          Use an IANA timezone such as America/New_York or Asia/Kolkata.
+        </p>
+      )}
+    </div>
+  );
 }
 
 function getDefaultDuration(startsAt?: Date, endsAt?: Date): DurationValue {
@@ -103,17 +243,24 @@ export function ScheduleInterviewModal({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const isReschedule = Boolean(existingInterview);
+  const defaultTimezone =
+    existingInterview?.scheduledTimeZone &&
+    isValidTimezone(existingInterview.scheduledTimeZone)
+      ? existingInterview.scheduledTimeZone
+      : detectBrowserTimezone();
 
   const form = useForm<ModalFormInput>({
     resolver: zodResolver(ModalFormSchema),
     defaultValues: {
-      date: existingInterview?.startsAt ?? new Date(),
-      startTime: getDefaultStartTime(existingInterview?.startsAt, existingInterview?.scheduledTimeZone),
+      date: existingInterview?.startsAt
+        ? getCalendarDateInTimezone(existingInterview.startsAt, defaultTimezone)
+        : new Date(),
+      startTime: getDefaultStartTime(existingInterview?.startsAt, defaultTimezone),
       duration: getDefaultDuration(
         existingInterview?.startsAt,
         existingInterview?.endsAt,
       ),
-      scheduledTimeZone: existingInterview?.scheduledTimeZone ?? detectBrowserTimezone(),
+      scheduledTimeZone: defaultTimezone,
       meetLink: existingInterview?.meetLink ?? "",
       notes: existingInterview?.notes ?? "",
     },
@@ -127,6 +274,7 @@ export function ScheduleInterviewModal({
     formState: { errors, isSubmitting },
   } = form;
   const selectedDate = watch("date");
+  const selectedTimezone = watch("scheduledTimeZone");
 
   const onSubmit = async (data: ModalFormInput) => {
     const startsAt = buildUtcFromLocalTime(data.date, data.startTime, data.scheduledTimeZone);
@@ -185,7 +333,7 @@ export function ScheduleInterviewModal({
         if (!open) closeScheduleModal();
       }}
     >
-      <DialogContent className="rounded-2xl sm:max-w-140">
+      <DialogContent className="rounded-xl sm:max-w-140">
         <DialogHeader>
           <DialogTitle>
             {isReschedule ? "Reschedule Interview" : "Schedule Interview"}
@@ -239,23 +387,13 @@ export function ScheduleInterviewModal({
             <label className="text-sm font-medium text-slate-700">
               Timezone
             </label>
-            <Select
-              value={form.watch("scheduledTimeZone")}
+            <TimezoneCombobox
+              value={selectedTimezone}
+              errorMessage={errors.scheduledTimeZone?.message}
               onValueChange={(val) =>
                 setValue("scheduledTimeZone", val, { shouldValidate: true })
               }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select timezone" />
-              </SelectTrigger>
-              <SelectContent>
-                {COMMON_TIMEZONES.map((tz) => (
-                  <SelectItem key={tz} value={tz}>
-                    {tz}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {/* Start time */}

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { TrendDataPoint } from '@/modules/recruiter/dashboard/types/dashboard.types';
 
@@ -9,22 +11,24 @@ interface ApplicationTrendChartProps {
 interface ChartPoint {
   x: number;
   y: number;
+  date: string;
+  count: number;
 }
 
 const CHART_EMPTY_Y = 80;
 const CHART_TOP_Y = 20;
 const CHART_BOTTOM_Y = 80;
+const HIT_AREA_RADIUS = 4;
 
 function getChartPoints(data: TrendDataPoint[], maxCount: number): ChartPoint[] {
   return data.map((point, index) => {
-    const x =
-      data.length === 1 ? 50 : (index / Math.max(data.length - 1, 1)) * 100;
+    const x = data.length === 1 ? 50 : (index / Math.max(data.length - 1, 1)) * 100;
     const y =
       maxCount === 0
         ? CHART_EMPTY_Y
         : CHART_BOTTOM_Y - (point.count / maxCount) * (CHART_BOTTOM_Y - CHART_TOP_Y);
 
-    return { x, y };
+    return { x, y, date: point.date, count: point.count };
   });
 }
 
@@ -61,14 +65,33 @@ function getDateLabels(data: TrendDataPoint[]): string[] {
   const uniqueIndexes = Array.from(new Set(labelIndexes));
 
   return uniqueIndexes.map((index) =>
-    new Date(data[index].date).toLocaleDateString('en', {
-      month: 'short',
-      day: 'numeric',
-    })
+    format(new Date(data[index].date), 'MMM d')
+  );
+}
+
+function Tooltip({ point }: { point: ChartPoint }) {
+  const formattedDate = format(new Date(point.date), 'MMMM d, yyyy');
+  const applicationLabel = point.count === 1 ? 'application' : 'applications';
+
+  return (
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 pointer-events-none">
+      <div className="bg-slate-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
+        <div className="text-center">
+          <span className="font-semibold">{point.count}</span>{' '}
+          <span className="font-normal text-slate-300">{applicationLabel} received</span>
+        </div>
+        <div className="text-slate-400 text-[10px] mt-0.5 text-center">
+          on {formattedDate}
+        </div>
+      </div>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+    </div>
   );
 }
 
 export function ApplicationTrendChart({ data, isLoading }: ApplicationTrendChartProps) {
+  const [hoveredPoint, setHoveredPoint] = useState<ChartPoint | null>(null);
+
   if (isLoading) {
     return (
       <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -141,6 +164,40 @@ export function ApplicationTrendChart({ data, isLoading }: ApplicationTrendChart
                 />
               )}
             </svg>
+
+            {/* Hit areas for hover */}
+            {points.map((point, index) => {
+              const isHovered = hoveredPoint?.date === point.date;
+              return (
+                <div
+                  key={point.date}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    left: `${point.x}%`,
+                    top: `${point.y}%`,
+                  }}
+                  onMouseEnter={() => setHoveredPoint(point)}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                >
+                  {/* Invisible hit area */}
+                  <div
+                    className={`w-8 h-8 -m-4 rounded-full cursor-pointer transition-opacity ${
+                      isHovered ? 'bg-primary/20' : 'hover:bg-primary/10'
+                    }`}
+                  />
+                  {/* Visible dot when hovered or has data */}
+                  {(isHovered || point.count > 0) && (
+                    <div
+                      className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary transition-transform ${
+                        isHovered ? 'scale-150' : 'scale-100'
+                      }`}
+                    />
+                  )}
+                  {/* Tooltip */}
+                  {isHovered && point.count > 0 && <Tooltip point={point} />}
+                </div>
+              );
+            })}
 
             {maxCount === 0 && (
               <div className="absolute inset-0 flex items-center justify-center">

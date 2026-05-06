@@ -1,23 +1,15 @@
 "use client";
 
-import { Calendar, Clock, Video } from "lucide-react";
+import { Video } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InterviewTimezoneDisplay } from "@/components/shared/InterviewTimezoneDisplay";
 import { recruiterService } from "@/services/recruiter.service";
 import type { UpcomingInterviewItem } from "@/services/recruiter.service";
-import { formatDateInTimezone, formatTimeInTimezone } from "@/lib/timezone";
 
 interface UpcomingInterviewsResponse {
   data: UpcomingInterviewItem[];
-}
-
-function formatInterviewDate(isoString: string, tz?: string | null): string {
-  return formatDateInTimezone(new Date(isoString), tz ?? "UTC");
-}
-
-function formatInterviewTime(isoString: string, tz?: string | null): string {
-  return formatTimeInTimezone(new Date(isoString), tz ?? "UTC");
 }
 
 export function UpcomingInterviewsList() {
@@ -121,16 +113,11 @@ export function UpcomingInterviewsList() {
                   )}
                 </Button>
               </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {formatInterviewDate(interview.startsAt, interview.scheduledTimeZone)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {formatInterviewTime(interview.startsAt, interview.scheduledTimeZone)}
-                </span>
-              </div>
+              <InterviewTimezoneDisplay
+                startsAt={interview.startsAt}
+                scheduledTimeZone={interview.scheduledTimeZone}
+                className="text-xs"
+              />
             </div>
           ))}
       </div>

@@ -8,13 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobCard } from "@/components/shared/JobCard";
 import { useUIStore } from "@/store/use-ui-store";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 
 import { useSavedJobs, useUnsaveJob } from "../queries/use-saved-jobs";
 
 const SKELETON_ITEMS = Array.from({ length: 3 }, (_, index) => `saved-job-${index}`);
 
 export function SavedJobsList() {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
   const { data: savedJobs, isLoading, isError } = useSavedJobs();
   const unsaveMutation = useUnsaveJob();
 
@@ -97,7 +99,13 @@ export function SavedJobsList() {
             onApply={
               savedJob.application || savedJob.job.isClosed
                 ? undefined
-                : () => openApplyModal(savedJob.job.id, savedJob.job.title, savedJob.job.companyName, savedJob.job.applyType, savedJob.job.externalApplyUrl)
+                : () => {
+                    if (verificationStatus?.requiresVerification) {
+                      openEmailVerificationModal();
+                      return;
+                    }
+                    openApplyModal(savedJob.job.id, savedJob.job.title, savedJob.job.companyName, savedJob.job.applyType, savedJob.job.externalApplyUrl);
+                  }
             }
             onToggleSave={() => handleRemove(savedJob.job.id)}
           />

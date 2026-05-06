@@ -5,6 +5,7 @@ import { resolveLogoUrl } from '@/lib/r2';
 import { updateJobBaseSchema } from '@/lib/validations/job';
 import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
+import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 
 // GET /api/jobs/[id] — public job detail with auth-gated match breakdown
 export async function GET(
@@ -135,6 +136,13 @@ export async function PATCH(
   }
 
   const { skills, ...jobFields } = parsed.data;
+
+  if (jobFields.status === JobStatus.OPEN) {
+    const verificationError = await requireVerifiedEmailForTrustedAction(
+      session.user.id,
+    );
+    if (verificationError) return verificationError;
+  }
 
   let updatedJob;
 
