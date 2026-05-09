@@ -17,7 +17,7 @@ export function NavLink({ href, label, className }: NavLinkProps) {
     <Link
       href={href}
       className={cn(
-        'font-medium text-sm transition-colors',
+        'font-semibold text-sm transition-colors',
         isActive
           ? 'text-brand-primary font-semibold'
           : 'text-muted-foreground hover:text-black',

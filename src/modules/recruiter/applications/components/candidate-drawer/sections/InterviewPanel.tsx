@@ -2,8 +2,8 @@ import { Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InterviewTimezoneDisplay } from "@/components/shared/InterviewTimezoneDisplay";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ApplicationStatus, InterviewStatus, PlanTier } from "@/constants/enums";
+import { ApplicationStatus, InterviewStatus } from "@/constants/enums";
+import { useUIStore } from "@/store/use-ui-store";
 
 import type { CandidateApplication } from "../types";
 import { formatInterviewDuration } from "../utils";
@@ -27,11 +27,12 @@ export function InterviewPanel({
   onConfirmCancel,
   onSchedule,
 }: InterviewPanelProps) {
+  const { openPaidFeatureModal } = useUIStore();
   if (application.status !== ApplicationStatus.INTERVIEW) return null;
 
   const interview = application.scheduledInterview;
   const isScheduled = interview?.status === InterviewStatus.SCHEDULED;
-  const isPlanGated = application.plan === PlanTier.FREE;
+  const shouldShowUpgrade = application.canScheduleInterviews === false;
 
   return (
     <section className="rounded-xl border border-brand-border bg-white p-4">
@@ -41,21 +42,19 @@ export function InterviewPanel({
       </p>
 
       {!isScheduled ? (
-        isPlanGated ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-block w-full">
-                  <Button className="w-full" disabled>
-                    Schedule Interview
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Available on Pro plan</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        shouldShowUpgrade ? (
+          <Button
+            className="w-full"
+            onClick={() =>
+              openPaidFeatureModal({
+                feature: "interview_scheduling",
+                title: "Schedule Interviews",
+                description: "Schedule interviews and email applicants directly from your dashboard.",
+              })
+            }
+          >
+            Schedule Interview
+          </Button>
         ) : (
           <Button className="w-full" onClick={() => onSchedule(application.id, null)}>
             Schedule Interview

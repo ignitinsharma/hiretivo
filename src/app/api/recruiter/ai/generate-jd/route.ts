@@ -5,7 +5,7 @@ import { openrouter, getAIModel } from '@/lib/openrouter';
 import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildJdGeneratorMessages, JD_GENERATOR_CONFIG } from '@/lib/ai-prompts';
-import { isAiTrialActive } from '@/lib/ai-trial';
+import { isRecruiterTrialActive } from '@/lib/recruiter-trial';
 
 const generateJdRateLimiter = createRateLimiter('generate-jd', 5, '1 m');
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
-  if (session.user.plan === PlanTier.FREE && !isAiTrialActive()) {
+  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return new Response(
       JSON.stringify({ error: 'AI job description generation requires a PRO or ENTERPRISE plan.' }),
       { status: 403 },

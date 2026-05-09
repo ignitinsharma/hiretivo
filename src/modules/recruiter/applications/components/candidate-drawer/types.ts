@@ -57,6 +57,8 @@ export interface CandidateApplication {
   appliedAt?: string;
   updatedAt?: string;
   plan?: PlanTier;
+  canScheduleInterviews?: boolean;
+  canUseAi?: boolean;
   scheduledInterview?: {
     id: string;
     status: InterviewStatus;

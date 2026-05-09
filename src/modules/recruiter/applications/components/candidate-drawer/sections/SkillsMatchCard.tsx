@@ -13,7 +13,8 @@ export function SkillsMatchCard({
   totalSkills,
   applicationId,
 }: SkillsMatchCardProps) {
-  const percent = totalSkills > 0 ? (matchedSkills.length / totalSkills) * 100 : 0;
+  const percent =
+    totalSkills > 0 ? (matchedSkills.length / totalSkills) * 100 : 0;
 
   return (
     <section className="rounded-xl border border-brand-border bg-white">
@@ -29,9 +30,14 @@ export function SkillsMatchCard({
 
       <div className="space-y-4 p-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-success">Matched Skills</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-success">
+            Matched Skills
+          </p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-surface">
-            <div className="h-full rounded-full bg-brand-success" style={{ width: `${percent}%` }} />
+            <div
+              className="h-full rounded-full bg-brand-success"
+              style={{ width: `${percent}%` }}
+            />
           </div>
           {matchedSkills.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -45,12 +51,18 @@ export function SkillsMatchCard({
               ))}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-brand-foreground-muted">No matched skills yet.</p>
+            <p className="mt-2 text-sm text-brand-foreground-muted">
+              No matched skills yet.
+            </p>
           )}
         </div>
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Missing Skills</p>
+          {missingSkills.length > 0 && (
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">
+              Missing Skills
+            </p>
+          )}
           {missingSkills.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {missingSkills.map((skill) => (

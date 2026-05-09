@@ -6,6 +6,7 @@ export interface SessionUser {
   role: Role;
   plan: PlanTier;
   emailVerified: Date | null;
+  onboardingCompleted: boolean | null;
 }
 
 export interface AuthSession extends Session {

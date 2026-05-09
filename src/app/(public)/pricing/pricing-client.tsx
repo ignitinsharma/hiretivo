@@ -49,43 +49,40 @@ interface FeatureRow {
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Active Jobs", free: "1", pro: "10", custom: "Custom" },
+  { feature: "Active Jobs", free: "4 (trial) / 1", pro: "10", custom: "Custom" },
   {
-    feature: "Applicant View Limit",
-    free: "20/mo",
+    feature: "Applicant Views",
+    free: "Unlimited",
     pro: "Unlimited",
     custom: "Custom",
   },
   {
-    feature: "AI Skill Matching",
-    free: "Basic",
-    pro: "Advanced",
-    custom: "Advanced",
-  },
-  {
-    feature: "Candidate Contact Info",
-    free: null,
+    feature: "AI Candidate Summaries",
+    free: "Trial",
     pro: true,
     custom: true,
   },
   {
-    feature: "Resume Database Search",
-    free: null,
-    pro: "Unlimited",
-    custom: "Custom",
+    feature: "AI Skill Suggestions",
+    free: "Trial",
+    pro: true,
+    custom: true,
   },
-  { feature: "AI Candidate Ranking", free: null, pro: true, custom: true },
-  { feature: "Interview Scheduling", free: null, pro: true, custom: true },
-  { feature: "ATS Integration", free: null, pro: true, custom: true },
-  { feature: "API Access", free: null, pro: null, custom: true },
-  { feature: "SSO / SAML", free: null, pro: null, custom: true },
   {
-    feature: "Support",
-    free: "Email",
-    pro: "Priority",
-    custom: "Dedicated CSM",
+    feature: "AI Job Description Generator",
+    free: "Trial",
+    pro: true,
+    custom: true,
   },
-  { feature: "Team Members", free: null, pro: "2", custom: "Custom" },
+  {
+    feature: "Interview Scheduling",
+    free: "Trial",
+    pro: true,
+    custom: true,
+  },
+  { feature: "Talent Pool", free: null, pro: true, custom: true },
+  { feature: "Basic Skill Matching", free: true, pro: true, custom: true },
+  { feature: "Email Support", free: true, pro: true, custom: true },
 ];
 
 // ─── FAQ data (CLAUDE.md §15.4) ─────────────────────────────────────────────

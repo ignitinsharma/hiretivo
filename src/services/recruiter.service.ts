@@ -109,6 +109,8 @@ export interface CandidateApplication {
   matchScore: number;
   status: ApplicationStatus;
   plan: PlanTier;
+  canScheduleInterviews: boolean;
+  canUseAi: boolean;
   coverLetter: string | null;
   resumeUrl: string | null;
   appliedAt: string;

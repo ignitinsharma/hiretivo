@@ -8,12 +8,14 @@ declare module "next-auth" {
       role: Role;
       plan: PlanTier;
       emailVerified: Date | null;
+      onboardingCompleted: boolean | null;
     };
   }
 
   interface User {
     role?: Role;
     plan?: PlanTier;
+    onboardingCompleted?: boolean | null;
   }
 }
 
@@ -22,5 +24,6 @@ declare module "next-auth/jwt" {
     role?: Role;
     plan?: PlanTier;
     emailVerified?: Date | null;
+    onboardingCompleted?: boolean | null;
   }
 }

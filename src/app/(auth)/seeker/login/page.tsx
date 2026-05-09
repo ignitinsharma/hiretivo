@@ -93,17 +93,53 @@ function SeekerLoginContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [roleMismatch, setRoleMismatch] = React.useState(false);
+  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
   const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
+  const authError = searchParams.get("authError");
+  const accountRole = searchParams.get("accountRole");
+  const hasOAuthRoleMismatch =
+    authError === "wrong_role_oauth" && accountRole === UserRole.RECRUITER;
 
   React.useEffect(() => {
-    if (status === "authenticated" && session?.user) {
+    if (!hasOAuthRoleMismatch) return;
+
+    setRoleMismatch(true);
+    let isMounted = true;
+
+    const cleanParams = () => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("authError");
+      next.delete("accountRole");
+      const query = next.toString();
+      router.replace(query ? `/seeker/login?${query}` : "/seeker/login", {
+        scroll: false,
+      });
+    };
+
+    const handleMismatch = async () => {
+      if (status === "authenticated") {
+        if (isMounted) setIsHandlingOAuthMismatch(true);
+        await signOut({ redirect: false });
+      }
+      cleanParams();
+      if (isMounted) setIsHandlingOAuthMismatch(false);
+    };
+
+    void handleMismatch();
+    return () => {
+      isMounted = false;
+    };
+  }, [hasOAuthRoleMismatch, status, searchParams, router]);
+
+  React.useEffect(() => {
+    if (status === "authenticated" && session?.user && !hasOAuthRoleMismatch && !isHandlingOAuthMismatch) {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
           : redirectPath;
       router.replace(dest);
     }
-  }, [status, session, router, redirectPath]);
+  }, [status, session, router, redirectPath, hasOAuthRoleMismatch, isHandlingOAuthMismatch]);
 
   const form = useForm<SeekerLoginInput>({
     resolver: zodResolver(seekerLoginSchema),
@@ -161,7 +197,10 @@ function SeekerLoginContent() {
       auth_method: "google",
       stage: "attempt",
     });
-    await signIn("google", { callbackUrl: redirectPath });
+    const next = encodeURIComponent(redirectPath);
+    await signIn("google", {
+      callbackUrl: `/auth/oauth/resolve?entryRole=${UserRole.SEEKER}&source=seeker-login&next=${next}`,
+    });
   };
 
   return (

@@ -5,17 +5,13 @@ import { RescheduleInterviewSchema } from "@/lib/validations/interview.schema";
 import { sendInterviewRescheduledEmail } from "@/lib/email/interview";
 import { normalizeTimezone } from "@/lib/timezone";
 import { writeRateLimiter } from "@/lib/rate-limit";
+import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RouteContext {
   params: { id: string } | Promise<{ id: string }>;
 }
 
-/*
- * PATCH /api/recruiter/interviews/[id]
- * Reschedules an owned recruiter interview and sends a notification email.
- * Returns the updated interview or auth/plan/validation/rate-limit errors.
- */
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   if (!id) {
@@ -35,9 +31,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  if (session.user.plan === PlanTier.FREE) {
+  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
-      { error: "Scheduling is available on Pro plan. Contact support to upgrade." },
+      { error: "Interview scheduling requires Pro plan. Upgrade to unlock." },
       { status: 403 },
     );
   }

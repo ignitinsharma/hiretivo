@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -81,21 +81,59 @@ const RecruiterSignupLeft = (
   </>
 );
 
-export default function RecruiterRegisterPage() {
+function RecruiterRegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  const [roleMismatch, setRoleMismatch] = React.useState(false);
+  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
+  const authError = searchParams.get("authError");
+  const accountRole = searchParams.get("accountRole");
+  const hasOAuthRoleMismatch =
+    authError === "wrong_role_oauth" && accountRole === UserRole.SEEKER;
 
   React.useEffect(() => {
-    if (status === "authenticated" && session?.user) {
+    if (!hasOAuthRoleMismatch) return;
+
+    setRoleMismatch(true);
+    let isMounted = true;
+
+    const cleanParams = () => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("authError");
+      next.delete("accountRole");
+      const query = next.toString();
+      router.replace(query ? `/recruiter/register?${query}` : "/recruiter/register", {
+        scroll: false,
+      });
+    };
+
+    const handleMismatch = async () => {
+      if (status === "authenticated") {
+        if (isMounted) setIsHandlingOAuthMismatch(true);
+        await signOut({ redirect: false });
+      }
+      cleanParams();
+      if (isMounted) setIsHandlingOAuthMismatch(false);
+    };
+
+    void handleMismatch();
+    return () => {
+      isMounted = false;
+    };
+  }, [hasOAuthRoleMismatch, status, searchParams, router]);
+
+  React.useEffect(() => {
+    if (status === "authenticated" && session?.user && !hasOAuthRoleMismatch && !isHandlingOAuthMismatch) {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
           : "/seeker/dashboard";
       router.replace(dest);
     }
-  }, [status, session, router]);
+  }, [status, session, router, hasOAuthRoleMismatch, isHandlingOAuthMismatch]);
 
   const form = useForm<RecruiterRegisterInput>({
     resolver: zodResolver(recruiterRegisterSchema),
@@ -162,8 +200,7 @@ export default function RecruiterRegisterPage() {
       stage: "attempt",
     });
     await signIn("google", {
-      role: UserRole.RECRUITER,
-      callbackUrl: "/recruiter/onboarding",
+      callbackUrl: `/auth/oauth/resolve?entryRole=${UserRole.RECRUITER}&source=recruiter-register`,
     });
   };
 
@@ -176,6 +213,20 @@ export default function RecruiterRegisterPage() {
       backHref="/"
     >
       <div className="space-y-8">
+        {roleMismatch && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-800">
+              This account is registered as a Job Seeker.{" "}
+              <Link
+                href="/seeker/login"
+                className="font-bold text-black underline underline-offset-4"
+              >
+                Please use the Seeker login
+              </Link>
+            </p>
+          </div>
+        )}
+
         <OAuthButton
           provider="google"
           onClick={handleGoogleSignIn}
@@ -348,5 +399,13 @@ export default function RecruiterRegisterPage() {
         </footer>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function RecruiterRegisterPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <RecruiterRegisterContent />
+    </React.Suspense>
   );
 }

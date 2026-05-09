@@ -9,6 +9,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
   const userRole = session?.user?.role as string | undefined;
+  const hasKnownRole = userRole === "SEEKER" || userRole === "RECRUITER";
 
   const isPublicRoute =
     pathname === "/" ||
@@ -55,18 +56,23 @@ export default auth((req) => {
   }
 
   if (isLoginOrRegister) {
+    if (!hasKnownRole) return NextResponse.next();
     const dest =
       userRole === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));
   }
 
   if (isOnboardingRoute) {
-    if (!session) {
-      if (pathname.startsWith("/seeker/"))
-        return NextResponse.redirect(new URL("/seeker/login", req.url));
-      if (pathname.startsWith("/recruiter/"))
-        return NextResponse.redirect(new URL("/recruiter/login", req.url));
+    if (session?.user?.onboardingCompleted) {
+      const dest = userRole === "RECRUITER"
+        ? "/recruiter/dashboard"
+        : "/seeker/dashboard";
+      return NextResponse.redirect(new URL(dest, req.url));
     }
+    return NextResponse.next();
+  }
+
+  if (!hasKnownRole) {
     return NextResponse.next();
   }
 

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
@@ -15,6 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Logo } from "@/components/shared/Logo";
+import { prisma } from "@/lib/prisma";
+import { resolveLogoUrl } from "@/lib/r2";
 
 interface HeaderProps {
   className?: string;
@@ -28,13 +31,27 @@ const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
 
 export async function Header({
   className,
-  publicAudience = "seeker",
+  publicAudience = "seeker"
 }: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isSeeker = !!session && role === UserRole.SEEKER;
   const isRecruiter = !!session && role === UserRole.RECRUITER;
   const isRecruiterAudience = publicAudience === "recruiter";
+
+  const initials = session?.user?.name?.[0]?.toUpperCase() ?? "U";
+  let companyLogoUrl: string | null = null;
+  if (isRecruiter && session?.user?.id) {
+    const recruiter = await prisma.recruiterProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { logo: true },
+    });
+    companyLogoUrl = resolveLogoUrl(recruiter?.logo);
+  }
+
+  const userImage = session?.user?.image;
+  const userImageUrl = userImage ? resolveLogoUrl(userImage) : null;
+  const avatarUrl = companyLogoUrl ?? userImageUrl;
 
   return (
     <nav
@@ -127,8 +144,18 @@ export async function Header({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="relative cursor-pointer flex items-center gap-2 group outline-none">
-                    <div className="w-9 h-9 rounded-full bg-black/10 border-2 border-brand-primary/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
-                      {session.user?.name?.[0]?.toUpperCase() ?? "U"}
+                    <div className="w-9 h-9 overflow-hidden rounded-full bg-black/10 border-2 border-brand-primary/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          alt={initials}
+                          width={36}
+                          height={36}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
                     </div>
                     <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </div>
@@ -139,7 +166,7 @@ export async function Header({
                       href={
                         isSeeker ? "/seeker/settings" : "/recruiter/settings"
                       }
-                      className="flex items-center gap-2 cursor-pointer"
+                      className="flex items-center gap-2 cursor-pointer font-semibold"
                     >
                       <Settings className="w-4 h-4" />
                       Settings
@@ -147,7 +174,7 @@ export async function Header({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <SignOutButton />
+                    <SignOutButton className="cursor-pointer px-2 py-1.5" />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

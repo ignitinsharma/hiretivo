@@ -1,12 +1,9 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { InterviewStatus, UserRole } from "@/constants/enums";
+import { InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { ScheduleInterviewSchema } from "@/lib/validations/interview.schema";
 import { normalizeTimezone } from "@/lib/timezone";
-import {
-  canAccessRecruiterPaidFeature,
-  PAID_FEATURE_FORBIDDEN_MESSAGE,
-} from "@/lib/billing/plan-access";
+import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
 import { sendInterviewScheduledEmail } from "@/lib/email/interview-scheduled";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
@@ -45,9 +42,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
 
-  if (!canAccessRecruiterPaidFeature(recruiter.plan)) {
+  const canAccessInterviewScheduling = (plan: string | null | undefined): boolean => {
+  return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE || isRecruiterTrialActive();
+};
+
+  if (!canAccessInterviewScheduling(recruiter.plan)) {
     return NextResponse.json(
-      { error: PAID_FEATURE_FORBIDDEN_MESSAGE },
+      { error: "Interview scheduling requires Pro plan. Upgrade to unlock." },
       { status: 403 },
     );
   }

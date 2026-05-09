@@ -5,6 +5,7 @@ import { createJobSchema } from '@/lib/validations/job';
 import { createRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 import { JobStatus, PlanTier, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
+import { getRecruiterJobLimit } from '@/lib/recruiter-trial';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
@@ -123,26 +124,17 @@ export async function POST(req: NextRequest) {
     select: { plan: true },
   });
 
-  if (user?.plan === PlanTier.FREE) {
-    const activeCount = await prisma.job.count({
-      where: { recruiterId: session.user.id, status: JobStatus.OPEN },
-    });
-    if (activeCount >= 2) {
-      return NextResponse.json(
-        { error: 'Free plan allows 2 active jobs. Upgrade to Pro for more.' },
-        { status: 403 }
-      );
-    }
-  } else if (user?.plan === PlanTier.PRO) {
-    const activeCount = await prisma.job.count({
-      where: { recruiterId: session.user.id, status: JobStatus.OPEN },
-    });
-    if (activeCount >= 10) {
-      return NextResponse.json(
-        { error: 'Pro plan allows 10 active jobs. Contact sales for more.' },
-        { status: 403 }
-      );
-    }
+  const jobLimit = getRecruiterJobLimit(user?.plan);
+  const activeCount = await prisma.job.count({
+    where: { recruiterId: session.user.id, status: JobStatus.OPEN },
+  });
+
+  if (activeCount >= jobLimit) {
+    const planName = user?.plan === PlanTier.FREE && !activeCount ? 'Free' : 'Pro';
+    return NextResponse.json(
+      { error: `${planName} plan allows ${jobLimit} active job${jobLimit > 1 ? 's' : ''}. Upgrade to Pro for more.` },
+      { status: 403 }
+    );
   }
 
   let body: unknown;

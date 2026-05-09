@@ -117,6 +117,7 @@ export const PLAN_TIER_VALUES = [PlanTier.FREE, PlanTier.PRO, PlanTier.ENTERPRIS
 export const RECRUITER_PAID_FEATURE_VALUES = [
   "talent_pool",
   "interview_scheduling",
+  "ai_candidate_summaries",
 ] as const;
 
 export type RecruiterPaidFeature = (typeof RECRUITER_PAID_FEATURE_VALUES)[number];

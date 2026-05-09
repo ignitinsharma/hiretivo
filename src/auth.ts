@@ -23,7 +23,7 @@ const googleConfigured =
   Boolean(process.env.GOOGLE_CLIENT_ID) &&
   Boolean(process.env.GOOGLE_CLIENT_SECRET);
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -88,41 +88,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      // Only intercept Google OAuth — Credentials provider handles role via register
+      // OAuth and credentials share the same post-auth resolver now.
+      // Keep Auth.js sign-in callback permissive and route users afterward.
       if (account?.provider !== "google") return true;
-
-      // Check if the user has explicitly set their role by verifying profile existence
-      // Since role defaults to SEEKER in DB, we use seeker/recruiter profile presence
-      // to determine if they have been through onboarding. Brand-new Google users have neither.
-      if (!user.id) return true;
-
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: {
-          seekerProfile: { select: { id: true } },
-          recruiterProfile: { select: { id: true } },
-        },
-      });
-
-      const hasProfile = dbUser?.seekerProfile || dbUser?.recruiterProfile;
-
-      if (!hasProfile) {
-        // New Google user — redirect to role selection page
-        return `/auth/select-role?userId=${user.id}`;
-      }
-
       return true;
     },
     async jwt({ token, user, trigger, session }) {
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, plan: true, emailVerified: true },
+          select: { role: true, plan: true, emailVerified: true, onboardingCompleted: true },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.plan = dbUser.plan;
           token.emailVerified = dbUser.emailVerified ?? null;
+          token.onboardingCompleted = dbUser.onboardingCompleted ?? null;
         }
       }
 
@@ -173,6 +154,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.role = role ?? Role.SEEKER;
       session.user.plan = plan ?? PlanTier.FREE;
       session.user.emailVerified = (token.emailVerified as Date | null | undefined) ?? null;
+      session.user.onboardingCompleted = (token.onboardingCompleted as boolean | null | undefined) ?? null;
 
       return session;
     },

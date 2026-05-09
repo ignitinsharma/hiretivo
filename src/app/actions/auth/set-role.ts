@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth, unstable_update } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
@@ -21,6 +21,7 @@ export async function setUserRole(role: UserRole): Promise<RoleResult> {
     where: { id: session.user.id },
     data: { role: role as Role },
   });
+  await unstable_update({ user: { role: role as Role } });
 
   const redirectTo = role === UserRole.SEEKER ? "/seeker/onboarding" : "/recruiter/onboarding";
   return { success: true, redirectTo };

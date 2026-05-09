@@ -9,7 +9,7 @@ import {
   buildCandidateSummaryMessages,
   CANDIDATE_SUMMARY_CONFIG,
 } from "@/lib/ai-prompts";
-import { isAiTrialActive } from "@/lib/ai-trial";
+import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
 
 const aiSummaryRateLimiter = createRateLimiter("ai-summary", 10, "1 m");
 
@@ -62,7 +62,7 @@ export async function POST(
   }
 
   // 4. Plan gate (D-07): FREE plan cannot access AI summaries (bypass during trial)
-  if (session.user.plan === PlanTier.FREE && !isAiTrialActive()) {
+  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
       { error: "AI candidate summaries require a PRO or ENTERPRISE plan." },
       { status: 403 },

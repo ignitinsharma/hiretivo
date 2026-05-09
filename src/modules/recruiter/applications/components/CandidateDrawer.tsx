@@ -145,7 +145,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
     summary: aiSummaryMutation.data?.summary,
     fitScore: aiSummaryMutation.data?.fitScore,
     fitLevel: aiSummaryMutation.data?.fitLevel as FitLevel | undefined,
-    isPlanGated: application.plan === PlanTier.FREE,
+    isPlanGated: application.canUseAi !== true,
   };
 
   return (

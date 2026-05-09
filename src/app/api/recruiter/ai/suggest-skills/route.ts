@@ -5,7 +5,7 @@ import { openrouter, getAIModel } from '@/lib/openrouter';
 import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
-import { isAiTrialActive } from '@/lib/ai-trial';
+import { isRecruiterTrialActive } from '@/lib/recruiter-trial';
 
 const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 10, '1 m');
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
-  if (session.user.plan === PlanTier.FREE && !isAiTrialActive()) {
+  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
       { error: 'AI skill suggestions require a PRO or ENTERPRISE plan.' },
       { status: 403 },

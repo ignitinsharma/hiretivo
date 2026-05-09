@@ -18,7 +18,20 @@ export const PAID_FEATURE_COPY: Record<
     description:
       "Send interview invites and email candidates directly. Available on Pro and Enterprise.",
   },
+  ai_candidate_summaries: {
+    title: "AI Candidate Summaries",
+    description:
+      "Get instant AI-powered insights on every candidate. Available on Pro and Enterprise.",
+  },
 };
 
 export const PAID_FEATURE_FORBIDDEN_MESSAGE =
   "This feature requires Pro or Enterprise. Upgrade your plan to continue.";
+
+export const PAID_FEATURES_BENEFITS = [
+  { icon: "users", text: "Search verified candidates by skills & role" },
+  { icon: "calendar", text: "Schedule interviews directly" },
+  { icon: "sparkles", text: "AI candidate summaries & insights" },
+  { icon: "mail", text: "Email candidates directly" },
+  { icon: "zap", text: "Cancel anytime, no contracts" },
+];
