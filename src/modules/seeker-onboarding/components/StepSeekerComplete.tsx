@@ -1,15 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { ArrowRight, Bell, BriefcaseBusiness, CheckCircle2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Bell,
+  BriefcaseBusiness,
+  CheckCircle2,
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import type { SeekerOnboardingStep } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
+import { Button } from "@/components/ui/button";
+import type { SeekerOnboardingStep } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
 
 interface StepSeekerCompleteProps {
   onComplete: () => Promise<
-    | { success: false; error: string; missingStep: SeekerOnboardingStep }
-    | void
+    | { success: true; redirectTo: "/seeker/settings" }
+    | {
+        success: false;
+        error: string;
+        missingStep: SeekerOnboardingStep;
+      }
   >;
 }
 
@@ -38,7 +48,7 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
 
     async function loadFeed(): Promise<void> {
       try {
-        const response = await fetch('/api/seeker/feed?limit=3', {
+        const response = await fetch("/api/seeker/feed?limit=3", {
           signal: controller.signal,
         });
         if (!response.ok) {
@@ -49,7 +59,10 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
         setFeed(data);
       } catch (error) {
         if (!controller.signal.aborted) {
-          console.error('[StepSeekerComplete] Failed to load seeker feed:', error);
+          console.error(
+            "[StepSeekerComplete] Failed to load seeker feed:",
+            error,
+          );
           setFeed({ jobs: [] });
         }
       } finally {
@@ -96,12 +109,12 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
           <p className="text-lg text-muted-foreground">
             {totalCount > 0 ? (
               <>
-                Your profile is ready. We found{' '}
-                <span className="font-semibold text-primary">{totalCount}</span>{' '}
-                matching {totalCount === 1 ? 'job' : 'jobs'} for your skills.
+                Your profile is ready. We found{" "}
+                <span className="font-semibold text-primary">{totalCount}</span>{" "}
+                matching {totalCount === 1 ? "job" : "jobs"} for your skills.
               </>
             ) : (
-              'Your profile is ready. New matched jobs will appear as recruiters post roles that fit your skills.'
+              "Your profile is ready. New matched jobs will appear as recruiters post roles that fit your skills."
             )}
           </p>
         </div>
@@ -137,7 +150,8 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
             ))
           ) : (
             <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
-              No matching jobs yet. Keep building your profile so the feed can improve as new roles are posted.
+              No matching jobs yet. Keep building your profile so the feed can
+              improve as new roles are posted.
             </div>
           )}
         </div>
@@ -145,14 +159,17 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
         {remainingCount != null && remainingCount > 0 && (
           <div className="bg-muted/50 rounded-lg py-3 px-4">
             <p className="text-sm text-muted-foreground">
-              {remainingCount} more {remainingCount === 1 ? 'job' : 'jobs'} waiting for you
+              {remainingCount} more {remainingCount === 1 ? "job" : "jobs"}{" "}
+              waiting for you
             </p>
           </div>
         )}
 
-        <div className="space-y-3 pt-4">
+        <div className="space-y-3 pt-2">
           {completionError && (
-            <p className="text-sm text-destructive text-center">{completionError}</p>
+            <p className="text-sm text-destructive text-center">
+              {completionError}
+            </p>
           )}
           <Button
             type="button"
@@ -168,15 +185,11 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
           </Button>
         </div>
 
-        <div className="pt-4">
-          <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
-            <Bell className="w-4 h-4 mr-2" />
-            Set up job alerts
-          </Button>
-        </div>
-
         <p className="text-center text-sm text-muted-foreground">
-          Need help? Chat with support
+          Need help?{" "}
+          <Link href="/contact" className="text-primary hover:underline">
+            Chat with support
+          </Link>
         </p>
       </div>
     </div>

@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
-import { ArrowRight, ArrowLeft, Upload, FileText, X, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
-import { saveStep3 } from '@/app/actions/onboarding/seeker';
+import { useCallback, useState } from "react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Upload,
+  FileText,
+  X,
+  CheckCircle,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { saveStep3 } from "@/app/actions/onboarding/seeker";
 
 interface StepResumeProps {
   onNext: () => void;
@@ -14,7 +21,10 @@ interface StepResumeProps {
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
 export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   const { step3, setResume } = useSeekerOnboardingStore();
@@ -22,46 +32,52 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFile = useCallback(async (file: File) => {
-    setError(null);
+  const handleFile = useCallback(
+    async (file: File) => {
+      setError(null);
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Please upload a PDF or DOCX file');
-      return;
-    }
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setError("Please upload a PDF or DOCX file");
+        return;
+      }
 
-    if (file.size > MAX_FILE_SIZE) {
-      setError('File size must be less than 5MB');
-      return;
-    }
+      if (file.size > MAX_FILE_SIZE) {
+        setError("File size must be less than 5MB");
+        return;
+      }
 
-    setIsUploading(true);
+      setIsUploading(true);
 
-    try {
-      setResume({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        key: null,
-        url: URL.createObjectURL(file),
-        file,
-      });
-    } catch {
-      setError('Failed to process file. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
-  }, [setResume]);
+      try {
+        setResume({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          key: null,
+          url: URL.createObjectURL(file),
+          file,
+        });
+      } catch {
+        setError("Failed to process file. Please try again.");
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [setResume],
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFile(file);
-    }
-  }, [handleFile]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        handleFile(file);
+      }
+    },
+    [handleFile],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -73,12 +89,15 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
     setIsDragging(false);
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-    }
-  }, [handleFile]);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleFile(file);
+      }
+    },
+    [handleFile],
+  );
 
   const handleRemove = useCallback(() => {
     if (step3.resume?.url) {
@@ -90,14 +109,14 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   const handleContinue = async () => {
     const formData = new FormData();
     if (step3.resume?.file) {
-      formData.append('resumeFile', step3.resume.file);
+      formData.append("resumeFile", step3.resume.file);
     }
 
     const result = await saveStep3(formData);
 
     if (!result.success) {
       console.error("[StepResume] saveStep3 failed:", result.error);
-      setError('Failed to save resume. Please try again.');
+      setError("Failed to save resume. Please try again.");
       return;
     }
 
@@ -153,11 +172,11 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               className={cn(
-                'relative flex flex-col items-center justify-center p-12 rounded-lg border-2 border-dashed transition-colors cursor-pointer',
+                "relative flex flex-col items-center justify-center p-12 rounded-lg border-2 border-dashed transition-colors cursor-pointer",
                 isDragging
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50',
-                isUploading && 'opacity-50 cursor-wait'
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50",
+                isUploading && "opacity-50 cursor-wait",
               )}
             >
               <input
@@ -185,10 +204,11 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
         </div>
 
         <div className="flex flex-col gap-3 pt-4">
-          <Button 
-            type="button" 
-            onClick={handleContinue} 
-            size="lg" 
+          <Button
+            type="button"
+            onClick={handleContinue}
+            size="lg"
+            variant={"primary"}
             className="w-full"
             disabled={isUploading}
           >
@@ -196,12 +216,22 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
             <ArrowRight className="w-4 h-4" />
           </Button>
           <div className="flex justify-between">
-            <Button type="button" variant="ghost" onClick={onBack} className="w-auto">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onBack}
+              className="w-auto"
+            >
               <ArrowLeft className="w-4 h-4" />
               Back
             </Button>
             {onSkip && !step3.resume && (
-              <Button type="button" variant="ghost" onClick={onSkip} className="w-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onSkip}
+                className="w-auto"
+              >
                 Skip for now
               </Button>
             )}

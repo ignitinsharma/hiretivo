@@ -12,12 +12,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/auth/PasswordInput";
-import { OAuthButton } from "@/components/auth/OAuthButton";
+import { AuthLastUsedBadge, OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { UserRole } from "@/constants/enums";
 import { trackEvent } from "@/lib/analytics";
+import {
+  getLastUsedAuthMethodFromDocument,
+  setBrowserLastUsedAuthMethodCookie,
+  type AuthMethod,
+} from "@/lib/auth/last-used-method";
 import {
   seekerLoginSchema,
   type SeekerLoginInput,
@@ -94,11 +98,17 @@ function SeekerLoginContent() {
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [roleMismatch, setRoleMismatch] = React.useState(false);
   const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
+  const [lastUsedAuthMethod, setLastUsedAuthMethod] =
+    React.useState<AuthMethod | null>(null);
   const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
     authError === "wrong_role_oauth" && accountRole === UserRole.RECRUITER;
+
+  React.useEffect(() => {
+    setLastUsedAuthMethod(getLastUsedAuthMethodFromDocument("seeker"));
+  }, []);
 
   React.useEffect(() => {
     if (!hasOAuthRoleMismatch) return;
@@ -176,6 +186,8 @@ function SeekerLoginContent() {
       }
 
       toast.success("Welcome back!");
+      setBrowserLastUsedAuthMethodCookie("seeker", "email");
+      setLastUsedAuthMethod("email");
       trackEvent("login", {
         role: UserRole.SEEKER,
         auth_method: "credentials",
@@ -230,6 +242,7 @@ function SeekerLoginContent() {
           provider="google"
           onClick={handleGoogleSignIn}
           isLoading={isGoogleLoading}
+          showLastUsed={lastUsedAuthMethod === "google"}
         />
 
         <div className="relative flex items-center">
@@ -242,12 +255,15 @@ function SeekerLoginContent() {
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label
-              htmlFor="email"
-              className="text-sm font-bold text-slate-900 block"
-            >
-              Email
-            </Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label
+                htmlFor="email"
+                className="text-sm font-bold text-slate-900 block"
+              >
+                Email
+              </Label>
+              {lastUsedAuthMethod === "email" && <AuthLastUsedBadge />}
+            </div>
             <Input
               id="email"
               type="email"

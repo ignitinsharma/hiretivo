@@ -569,6 +569,30 @@ CandidateDrawer.tsx (1198 lines)
 - [ ] No console.log or TODO
 - [ ] All functions/API routes have descriptive comments
 
+### 6.8 Bug Fix Standards (MANDATORY)
+
+When fixing bugs, do not apply patch-only fixes. Follow this exact process:
+
+1. Perform root-cause analysis before editing code
+   - Reproduce or trace the failure path
+   - Identify the exact failing contract/invariant
+   - Confirm why existing checks did not prevent it
+
+2. Validate cross-feature impact before finalizing
+   - Check adjacent flows that share the same function/action/component
+   - Verify API/action return shapes are consistent for all callers
+   - Ensure auth/session/cookie mutations run only in valid execution contexts
+
+3. Implement a root-cause fix, not a symptom workaround
+   - Fix the source contract/state mismatch
+   - Update types/interfaces so invalid states are not silently allowed
+   - Avoid "null/undefined guards only" unless the root cause is impossible to address
+
+4. Prove safety before completion
+   - Run relevant checks (at minimum TypeScript check)
+   - Add/update targeted tests when practical
+   - Document residual risk explicitly if something cannot be verified locally
+
 ---
 
 ## 6.7 Mandatory Comments

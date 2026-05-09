@@ -1,21 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { ArrowRight, ArrowLeft, Construction, Plus, X, PlusCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Construction,
+  Plus,
+  X,
+  PlusCircle,
+} from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { 
-  validateSeekerStep2, 
-  YEARS_OPTIONS 
-} from '@/lib/validations/seeker-onboarding.schema';
-import type { YearsOfExperience } from '@/lib/validations/seeker-onboarding.schema';
-import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
-import { saveStep2 } from '@/app/actions/onboarding/seeker';
-import { SkillLevel } from '@/constants/enums';
-import { skillService } from '@/services/skill.service';
-import type { SkillItem } from '@/services/skill.service';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import {
+  validateSeekerStep2,
+  YEARS_OPTIONS,
+} from "@/lib/validations/seeker-onboarding.schema";
+import type { YearsOfExperience } from "@/lib/validations/seeker-onboarding.schema";
+import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { saveStep2 } from "@/app/actions/onboarding/seeker";
+import { SkillLevel } from "@/constants/enums";
+import { skillService } from "@/services/skill.service";
+import type { SkillItem } from "@/services/skill.service";
 
 interface StepSkillsProps {
   onNext: () => void;
@@ -23,23 +30,20 @@ interface StepSkillsProps {
 }
 
 export function StepSkills({ onNext, onBack }: StepSkillsProps) {
-  const { 
-    step2, 
-    setPrimaryRole, 
-    setYearsOfExperience, 
-    setSkills,
-  } = useSeekerOnboardingStore();
+  const { step2, setPrimaryRole, setYearsOfExperience, setSkills } =
+    useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
   const [apiSkills, setApiSkills] = useState<SkillItem[]>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
-  const [skillSearch, setSkillSearch] = useState('');
+  const [skillSearch, setSkillSearch] = useState("");
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [isCreatingSkill, setIsCreatingSkill] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    skillService.getSkills()
+    skillService
+      .getSkills()
       .then((data) => setApiSkills(data))
       .catch(() => {})
       .finally(() => setSkillsLoading(false));
@@ -47,12 +51,15 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setShowSkillDropdown(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleContinue = async () => {
@@ -72,14 +79,18 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     const unmatchedSkills: string[] = [];
     const skillPayload = step2.skills
       .map((name) => {
-        const found = apiSkills.find((s) => s.name.toLowerCase() === name.toLowerCase());
+        const found = apiSkills.find(
+          (s) => s.name.toLowerCase() === name.toLowerCase(),
+        );
         if (!found) unmatchedSkills.push(name);
-        return found ? { skillId: found.id, level: SkillLevel.INTERMEDIATE } : null;
+        return found
+          ? { skillId: found.id, level: SkillLevel.INTERMEDIATE }
+          : null;
       })
       .filter((s): s is { skillId: string; level: SkillLevel } => s !== null);
 
     if (unmatchedSkills.length > 0) {
-      console.warn('[StepSkills] Skills not found in DB:', unmatchedSkills);
+      console.warn("[StepSkills] Skills not found in DB:", unmatchedSkills);
     }
 
     const result = await saveStep2({
@@ -101,7 +112,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     if (!step2.skills.includes(skillName)) {
       setSkills([...step2.skills, skillName]);
     }
-    setSkillSearch('');
+    setSkillSearch("");
     setShowSkillDropdown(false);
     setErrors([]);
   };
@@ -115,13 +126,22 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     if (!trimmed) return;
     setIsCreatingSkill(true);
     try {
-      const slug = trimmed.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
       try {
-        const newSkill = await skillService.createSkill({ name: trimmed, slug, category: 'Other' });
+        const newSkill = await skillService.createSkill({
+          name: trimmed,
+          slug,
+          category: "Other",
+        });
         setApiSkills((prev) => [...prev, newSkill]);
         addSkill(newSkill.name);
       } catch (error) {
-        const existing = apiSkills.find((s) => s.name.toLowerCase() === trimmed.toLowerCase());
+        const existing = apiSkills.find(
+          (s) => s.name.toLowerCase() === trimmed.toLowerCase(),
+        );
         if (existing) {
           addSkill(existing.name);
           return;
@@ -129,7 +149,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
         throw error;
       }
     } catch (err) {
-      console.error('[StepSkills] Failed to create skill:', err);
+      console.error("[StepSkills] Failed to create skill:", err);
     } finally {
       setIsCreatingSkill(false);
     }
@@ -139,12 +159,19 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     s.name.toLowerCase().includes(skillSearch.toLowerCase()),
   );
 
-  const noMatch = showSkillDropdown && skillSearch && filteredSkills.length === 0 && !skillsLoading;
+  const noMatch =
+    showSkillDropdown &&
+    skillSearch &&
+    filteredSkills.length === 0 &&
+    !skillsLoading;
 
   const getErrorMessage = () => {
-    if (errors.includes("Primary role is required")) return "Primary role is required";
-    if (errors.includes("Please select years of experience")) return "Please select years of experience";
-    if (errors.includes("At least one skill is required")) return "At least one skill is required";
+    if (errors.includes("Primary role is required"))
+      return "Primary role is required";
+    if (errors.includes("Please select years of experience"))
+      return "Please select years of experience";
+    if (errors.includes("At least one skill is required"))
+      return "At least one skill is required";
     return errors[0] ?? null;
   };
 
@@ -195,10 +222,10 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                         setErrors([]);
                       }}
                       className={cn(
-                        'flex items-center justify-center p-3 rounded-lg border-2 transition-all text-sm font-medium',
+                        "flex items-center justify-center p-3 rounded-lg border-2 transition-all text-sm font-medium",
                         isSelected
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border hover:border-primary/50 text-foreground'
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:border-primary/50 text-foreground",
                       )}
                     >
                       {option.label}
@@ -232,7 +259,11 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
 
               <div className="relative" ref={dropdownRef}>
                 <Input
-                  placeholder={skillsLoading ? 'Loading skills...' : 'Search or add skills...'}
+                  placeholder={
+                    skillsLoading
+                      ? "Loading skills..."
+                      : "Search or add skills..."
+                  }
                   className="pr-10"
                   value={skillSearch}
                   onChange={(e) => {
@@ -242,10 +273,16 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                   onFocus={() => setShowSkillDropdown(true)}
                   disabled={skillsLoading}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && skillSearch.trim() && !skillsLoading) {
+                    if (
+                      e.key === "Enter" &&
+                      skillSearch.trim() &&
+                      !skillsLoading
+                    ) {
                       e.preventDefault();
                       const existing = filteredSkills.find(
-                        (s) => s.name.toLowerCase() === skillSearch.trim().toLowerCase()
+                        (s) =>
+                          s.name.toLowerCase() ===
+                          skillSearch.trim().toLowerCase(),
                       );
                       if (existing) {
                         addSkill(existing.name);
@@ -262,26 +299,33 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                   <PlusCircle className="w-5 h-5" />
                 </button>
 
-                {showSkillDropdown && skillSearch && filteredSkills.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                    {filteredSkills
-                      .filter((s) => !step2.skills.some((ss) => ss.toLowerCase() === s.name.toLowerCase()))
-                      .slice(0, 10)
-                      .map((skill) => (
-                        <button
-                          key={skill.id}
-                          type="button"
-                          className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
-                          onClick={() => addSkill(skill.name)}
-                        >
-                          {skill.name}{' '}
-                          <span className="text-slate-400 text-xs">
-                            ({skill.category})
-                          </span>
-                        </button>
-                      ))}
-                  </div>
-                )}
+                {showSkillDropdown &&
+                  skillSearch &&
+                  filteredSkills.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      {filteredSkills
+                        .filter(
+                          (s) =>
+                            !step2.skills.some(
+                              (ss) => ss.toLowerCase() === s.name.toLowerCase(),
+                            ),
+                        )
+                        .slice(0, 10)
+                        .map((skill) => (
+                          <button
+                            key={skill.id}
+                            type="button"
+                            className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
+                            onClick={() => addSkill(skill.name)}
+                          >
+                            {skill.name}{" "}
+                            <span className="text-slate-400 text-xs">
+                              ({skill.category})
+                            </span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
 
                 {noMatch && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg overflow-hidden">
@@ -302,16 +346,29 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
             </div>
 
             {getErrorMessage() && (
-              <p className="text-sm text-destructive text-center">{getErrorMessage()}</p>
+              <p className="text-sm text-destructive text-center">
+                {getErrorMessage()}
+              </p>
             )}
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button type="button" onClick={handleContinue} size="lg" className="w-full">
+            <Button
+              type="button"
+              onClick={handleContinue}
+              variant={"primary"}
+              size="lg"
+              className="w-full"
+            >
               Continue
               <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button type="button" variant="ghost" onClick={onBack} className="w-full">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onBack}
+              className="w-full"
+            >
               <ArrowLeft className="w-4 h-4" />
               Back
             </Button>

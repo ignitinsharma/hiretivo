@@ -1,7 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
-
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
@@ -12,8 +10,8 @@ import { step1Schema, step2Schema, step4Schema } from "@/lib/validations/onboard
 type ActionResult = { success: true } | { success: false; error: string };
 type MissingSeekerOnboardingStep = 1 | 2 | 4;
 type CompleteSeekerOnboardingResult =
-  | { success: false; error: string; missingStep: MissingSeekerOnboardingStep }
-  | never;
+  | { success: true; redirectTo: "/seeker/settings" }
+  | { success: false; error: string; missingStep: MissingSeekerOnboardingStep };
 
 // --- Step 1: Situation ---
 export async function saveStep1(data: {
@@ -233,7 +231,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     data: { onboardingCompleted: true },
   });
 
-  redirect("/seeker/settings");
+  return { success: true, redirectTo: "/seeker/settings" };
 }
 
 // --- Profile Completeness (per D-09: computed on read, not stored) ---

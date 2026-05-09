@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { completeSeekerOnboarding } from '@/app/actions/onboarding/seeker';
 import { OnboardingShell } from '@/components/layout/OnboardingShell';
@@ -20,6 +21,7 @@ interface SeekerOnboardingContainerProps {
 }
 
 export function SeekerOnboardingContainer({ initialStep }: SeekerOnboardingContainerProps) {
+  const router = useRouter();
   const {
     currentStep,
     nextStep,
@@ -35,8 +37,15 @@ export function SeekerOnboardingContainer({ initialStep }: SeekerOnboardingConta
 
   const handleComplete = async () => {
     const result = await completeSeekerOnboarding();
-    console.error("[SeekerOnboardingContainer] completeSeekerOnboarding failed:", result.error);
-    setCurrentStep(result.missingStep);
+
+    if (!result.success) {
+      console.error("[SeekerOnboardingContainer] completeSeekerOnboarding failed:", result.error);
+      setCurrentStep(result.missingStep);
+      return result;
+    }
+
+    router.push(result.redirectTo);
+    router.refresh();
     return result;
   };
 

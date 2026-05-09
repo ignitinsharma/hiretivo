@@ -184,6 +184,7 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
               type="button"
               onClick={handleContinue}
               size="lg"
+              variant={"primary"}
               className="w-full"
             >
               Continue
