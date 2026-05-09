@@ -8,6 +8,11 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  Briefcase,
+  Calendar,
+  FileText,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -101,6 +106,21 @@ function getStatusPillClasses(status: ApplicationStatus): string {
   }
 }
 
+function Sparkline({ isPrimary }: { isPrimary: boolean }) {
+  const strokeColor = isPrimary ? "rgba(255,255,255,0.65)" : "currentColor";
+  return (
+    <svg className="h-8 w-20" viewBox="0 0 80 32" fill="none">
+      <path
+        d="M2 24 C8 24, 12 16, 20 18 C28 20, 32 26, 40 22 C48 18, 52 10, 60 12 C68 14, 72 8, 78 6"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function RecruiterApplicationsPage() {
   const [jobId] = useState<string | undefined>(undefined);
   const [stageFilter, setStageFilter] = useState<ApplicationStatus | null>(
@@ -137,26 +157,32 @@ export default function RecruiterApplicationsPage() {
         label: "Total",
         value: statsQuery.data?.total ?? 0,
         stage: null as ApplicationStatus | null,
+        variant: "primary" as const,
+        icon: <Users className="h-5 w-5" />,
       },
       {
         label: "Applied",
         value: statsQuery.data?.applied ?? 0,
         stage: ApplicationStatus.APPLIED,
+        icon: <FileText className="h-5 w-5" />,
       },
       {
         label: "Reviewing",
         value: statsQuery.data?.reviewing ?? 0,
         stage: ApplicationStatus.REVIEWING,
+        icon: <Briefcase className="h-5 w-5" />,
       },
       {
         label: "Interview",
         value: statsQuery.data?.interview ?? 0,
         stage: ApplicationStatus.INTERVIEW,
+        icon: <Calendar className="h-5 w-5" />,
       },
       {
         label: "Hired",
         value: statsQuery.data?.hired ?? 0,
         stage: ApplicationStatus.HIRED,
+        icon: <UserCheck className="h-5 w-5" />,
       },
     ],
     [statsQuery.data],
@@ -247,27 +273,61 @@ export default function RecruiterApplicationsPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {metricCards.map((card) => {
           const isActive = stageFilter === card.stage;
+          const isPrimary = card.variant === "primary";
+          const showSparkline = card.value > 0;
           return (
             <button
               key={card.label}
               type="button"
               onClick={() => handleStageFilter(card.stage)}
               className={cn(
-                "text-left bg-white p-5 rounded-xl transition-all",
-                isActive
-                  ? "border-2 border-gray-100 bg-gray-50/10"
-                  : "border border-slate-200 hover:border-slate-300",
+                "min-h-[170px] text-left p-5 rounded-xl transition-all flex flex-col justify-between",
+                isPrimary
+                  ? "bg-linear-to-br from-primary to-primary/80 text-white border border-transparent"
+                  : isActive
+                    ? "bg-white border-2 border-gray-100"
+                    : "bg-white border border-slate-200 hover:border-slate-300",
               )}
             >
-              <span
-                className={cn(
-                  "text-[10px] font-bold uppercase tracking-widest",
-                  isActive ? "text-gray-500" : "text-slate-400",
-                )}
-              >
-                {card.label}
-              </span>
-              <p className="text-4xl font-bold text-slate-900">{card.value}</p>
+              <div className="mb-4 flex items-center gap-3">
+                <div
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-lg",
+                    isPrimary
+                      ? "bg-white/20 text-white"
+                      : "bg-primary/10 text-primary",
+                  )}
+                >
+                  {card.icon}
+                </div>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    isPrimary
+                      ? "text-white/80"
+                      : isActive
+                        ? "text-gray-500"
+                        : "text-slate-600",
+                  )}
+                >
+                  {card.label}
+                </span>
+              </div>
+              <div className="flex items-end justify-between gap-3">
+                <p
+                  className={cn(
+                    "text-4xl font-bold",
+                    isPrimary ? "text-white" : "text-slate-900",
+                  )}
+                >
+                  {card.value}
+                </p>
+                {showSparkline ? (
+                  <span className={cn(isPrimary ? "text-white" : "text-slate-400")}>
+                    <Sparkline isPrimary={isPrimary} />
+                  </span>
+                ) : null}
+              </div>
             </button>
           );
         })}
@@ -325,7 +385,11 @@ export default function RecruiterApplicationsPage() {
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 bg-gray-50 text-gray-700 flex items-center justify-center rounded-xl font-bold text-lg ring-4 ring-slate-50 group-hover:ring-gray-100 transition-all overflow-hidden shrink-0">
                           {application.candidateAvatar ? (
-                            <img src={application.candidateAvatar} alt={application.candidateName} className="h-full w-full object-cover" />
+                            <img
+                              src={application.candidateAvatar}
+                              alt={application.candidateName}
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             application.candidateName
                               .split(" ")

@@ -20,7 +20,15 @@ function formatOptionalValue(value: string | undefined): string {
 }
 
 function getRequestTypeLabel(type: ContactRequestType): string {
-  return type === ContactRequestType.BOOK_CALL ? "Book a call" : "Contact";
+  if (type === ContactRequestType.BOOK_CALL) {
+    return "Book a call";
+  }
+
+  if (type === ContactRequestType.REPORT_BUG) {
+    return "Report a bug";
+  }
+
+  return "Contact";
 }
 
 export async function sendContactSupportEmail(
@@ -29,6 +37,10 @@ export async function sendContactSupportEmail(
   const requestType = getRequestTypeLabel(input.type);
   const subject =
     input.subject?.trim() || `${requestType} request from ${input.name}`;
+  const prefixedSubject =
+    input.type === ContactRequestType.REPORT_BUG
+      ? `[Bug] ${subject}`
+      : subject;
   const companyOrRole = formatOptionalValue(input.companyOrRole);
   const preferredTime = formatOptionalValue(input.preferredTime);
 
@@ -38,7 +50,7 @@ export async function sendContactSupportEmail(
     `Email: ${input.email}`,
     `Company/role: ${companyOrRole}`,
     `Preferred time: ${preferredTime}`,
-    `Subject: ${subject}`,
+    `Subject: ${prefixedSubject}`,
     "",
     "Message:",
     input.message,
@@ -50,13 +62,13 @@ export async function sendContactSupportEmail(
     ["Email", input.email],
     ["Company/role", companyOrRole],
     ["Preferred time", preferredTime],
-    ["Subject", subject],
+    ["Subject", prefixedSubject],
   ];
 
   await sendEmail({
     from: FROM_EMAIL,
     to: SUPPORT_EMAIL,
-    subject: `Hiretivo support: ${subject}`,
+    subject: `Hiretivo support: ${prefixedSubject}`,
     html: `
       <div style="font-family: sans-serif; max-width: 640px; margin: 0 auto;">
         <h2>New Hiretivo support request</h2>

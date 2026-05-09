@@ -85,6 +85,7 @@ export interface CandidateApplication {
   id: string;
   jobId: string;
   jobTitle: string;
+  jobSkills: string[];
   candidateName: string;
   candidateEmail: string;
   candidateAvatar: string | null;
@@ -157,8 +158,12 @@ export interface RecruiterTalentParams {
   limit?: number;
 }
 
+export type FitLevel = "excellent" | "good" | "moderate" | "low";
+
 export interface AiSummaryResult {
   summary: string;
+  fitScore: number;
+  fitLevel: FitLevel;
 }
 
 export interface InterviewPayload {

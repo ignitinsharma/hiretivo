@@ -9,9 +9,12 @@ import {
   ChevronRight,
   MoreVertical,
   Briefcase,
+  BarChart3,
   Pencil,
   Archive,
   Trash2,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,33 +52,87 @@ interface JobStatItem {
   value: string;
   badge: string;
   badgeColor: string;
+  variant?: "default" | "primary";
+  icon: React.ReactNode;
+}
+
+function Sparkline({ isPrimary }: { isPrimary: boolean }) {
+  const strokeColor = isPrimary ? "rgba(255,255,255,0.65)" : "currentColor";
+  return (
+    <svg className="h-8 w-20" viewBox="0 0 80 32" fill="none">
+      <path
+        d="M2 24 C8 24, 12 16, 20 18 C28 20, 32 26, 40 22 C48 18, 52 10, 60 12 C68 14, 72 8, 78 6"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function JobStatCard({ stat }: { stat: JobStatItem }) {
+  const isPrimary = stat.variant === "primary";
+  const numericValue = Number.parseInt(stat.value, 10);
+  const showSparkline = !Number.isNaN(numericValue) && numericValue > 0;
   return (
-    <div className="bg-white p-5 rounded-xl border border-slate-200  flex flex-col justify-between">
-      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-3">
-        {stat.label}
-      </p>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-extrabold text-slate-900">
-          {stat.value}
-        </span>
-        {stat.badge && (
+    <div
+      className={cn(
+        "min-h-42.5 p-5 rounded-xl flex flex-col justify-between",
+        isPrimary
+          ? "bg-linear-to-br from-primary to-primary/80 text-white"
+          : "bg-white border border-slate-200",
+      )}
+    >
+      <div className="mb-4 flex items-center gap-3">
+        <div
+          className={cn(
+            "flex h-10 w-10 items-center justify-center rounded-lg",
+            isPrimary ? "bg-white/20 text-white" : "bg-primary/10 text-primary",
+          )}
+        >
+          {stat.icon}
+        </div>
+        <p
+          className={cn(
+            "text-sm font-medium",
+            isPrimary ? "text-white/80" : "text-slate-600",
+          )}
+        >
+          {stat.label}
+        </p>
+      </div>
+      <div className="flex items-end justify-between gap-3">
+        <div className="flex items-baseline gap-2">
           <span
             className={cn(
-              "text-[10px] font-bold px-1.5 py-0.5 rounded border",
-              stat.badgeColor,
+              "text-3xl font-extrabold",
+              isPrimary ? "text-white" : "text-slate-900",
             )}
           >
-            {stat.badge}
+            {stat.value}
           </span>
-        )}
-        {stat.label === "Talent Score Avg." && (
-          <div className="w-full max-w-[60px] h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
-            <div className="bg-primary h-full" style={{ width: "84%" }} />
-          </div>
-        )}
+          {stat.badge && (
+            <span
+              className={cn(
+                "text-[10px] font-bold px-1.5 py-0.5 rounded border",
+                stat.badgeColor,
+              )}
+            >
+              {stat.badge}
+            </span>
+          )}
+          {stat.label === "Talent Score Avg." && (
+            <div className="w-full max-w-[60px] h-1.5 bg-slate-100 rounded-full overflow-hidden self-center">
+              <div className="bg-primary h-full" style={{ width: "84%" }} />
+            </div>
+          )}
+        </div>
+        {showSparkline ? (
+          <span className={cn(isPrimary ? "text-white" : "text-slate-400")}>
+            <Sparkline isPrimary={isPrimary} />
+          </span>
+        ) : null}
       </div>
     </div>
   );
@@ -366,20 +423,36 @@ export default function RecruiterJobsPage() {
       value: isLoading ? "—" : String(stats?.totalAll ?? 0),
       badge: "",
       badgeColor: "",
+      variant: "primary",
+      icon: <Briefcase className="h-5 w-5" />,
     },
     {
       label: "Active Jobs",
       value: isLoading ? "—" : String(stats?.activeCount ?? 0),
       badge: "",
       badgeColor: "",
+      icon: <UserCheck className="h-5 w-5" />,
     },
     {
       label: "Total Applicants",
       value: isLoading ? "—" : String(stats?.totalApplicants ?? 0),
       badge: "",
       badgeColor: "",
+      icon: <Users className="h-5 w-5" />,
     },
-    { label: "Talent Score Avg.", value: "-", badge: "", badgeColor: "" },
+    {
+      label: "Talent Score Avg.",
+      value: isLoading
+        ? "—"
+        : String(
+            stats?.activeCount
+              ? Math.round((stats?.totalApplicants ?? 0) / stats.activeCount)
+              : 0,
+          ),
+      badge: "",
+      badgeColor: "",
+      icon: <BarChart3 className="h-5 w-5" />,
+    },
   ];
 
   const showStart = pagination
@@ -399,10 +472,6 @@ export default function RecruiterJobsPage() {
           className="mb-0"
         />
         <div className="flex items-center gap-3">
-          <Button variant="default" className="gap-2 border-slate-200">
-            <Upload className="w-4 h-4" />
-            Export
-          </Button>
           <Button variant="secondary" onClick={openPostJobModal}>
             <Plus className="w-4 h-4" />
             Post New Job

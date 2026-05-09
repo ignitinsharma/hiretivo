@@ -62,6 +62,20 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { resumeKey: true },
+  });
+  if (!seekerProfile?.resumeKey) {
+    return NextResponse.json(
+      {
+        error:
+          'Upload your resume in Settings before applying. Go to /seeker/settings to continue.',
+      },
+      { status: 400 },
+    );
+  }
+
   const job = await prisma.job.findFirst({
     where: {
       id: params.id,

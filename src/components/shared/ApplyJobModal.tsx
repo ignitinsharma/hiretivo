@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { useUIStore } from '@/store/use-ui-store';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import { applicationService } from '@/services/application.service';
-import { ExternalLink, CheckCircle2, Briefcase } from 'lucide-react';
-import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
+} from "@/components/ui/dialog";
+import { useUIStore } from "@/store/use-ui-store";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { applicationService } from "@/services/application.service";
+import { ExternalLink, CheckCircle2, Briefcase } from "lucide-react";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { trackEvent } from "@/lib/analytics";
+
+const RESUME_REQUIRED_ERROR =
+  "Upload your resume in Settings before applying. Go to /seeker/settings to continue.";
 
 export function ApplyJobModal() {
   const {
@@ -31,8 +35,25 @@ export function ApplyJobModal() {
   const { data: verificationStatus } = useEmailVerificationStatus();
   const { openEmailVerificationModal } = useUIStore();
   const queryClient = useQueryClient();
-  const [coverLetter, setCoverLetter] = useState('');
+  const [coverLetter, setCoverLetter] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleApplyError = (error: unknown) => {
+    const message =
+      error instanceof Error ? error.message : "Failed to submit application";
+    if (message === RESUME_REQUIRED_ERROR) {
+      toast.error("Resume required before applying.", {
+        action: {
+          label: "Upload Resume",
+          onClick: () => {
+            window.location.href = "/seeker/settings";
+          },
+        },
+      });
+      return;
+    }
+    toast.error(message);
+  };
 
   const handleExternalRedirect = () => {
     if (verificationStatus?.requiresVerification) {
@@ -41,13 +62,18 @@ export function ApplyJobModal() {
     }
 
     if (selectedExternalApplyUrl) {
-      window.open(selectedExternalApplyUrl, '_blank', 'noopener,noreferrer');
+      trackEvent("apply_job", {
+        apply_type: "external",
+        stage: "attempt",
+        entrypoint: "modal",
+      });
+      window.open(selectedExternalApplyUrl, "_blank", "noopener,noreferrer");
     }
   };
 
   useEffect(() => {
     if (isApplyModalOpen) {
-      setCoverLetter('');
+      setCoverLetter("");
     }
   }, [selectedJobId, isApplyModalOpen]);
 
@@ -61,12 +87,20 @@ export function ApplyJobModal() {
     closeApplyModal();
 
     try {
-      await applicationService.applyToJob({ jobId: selectedJobId, coverLetter: '' });
-      await queryClient.invalidateQueries({ queryKey: ['applications'] });
-      await queryClient.invalidateQueries({ queryKey: ['seeker-dashboard'] });
-      toast.success('Application confirmed!');
+      await applicationService.applyToJob({
+        jobId: selectedJobId,
+        coverLetter: "",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard"] });
+      toast.success("Application confirmed!");
+      trackEvent("apply_job", {
+        apply_type: "external",
+        stage: "success",
+        entrypoint: "modal",
+      });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to confirm application');
+      handleApplyError(error);
     }
   };
 
@@ -80,14 +114,22 @@ export function ApplyJobModal() {
 
     setIsSubmitting(true);
     try {
-      await applicationService.applyToJob({ jobId: selectedJobId, coverLetter });
-      await queryClient.invalidateQueries({ queryKey: ['applications'] });
-      await queryClient.invalidateQueries({ queryKey: ['seeker-dashboard'] });
-      toast.success('Application submitted!');
-      setCoverLetter('');
+      await applicationService.applyToJob({
+        jobId: selectedJobId,
+        coverLetter,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard"] });
+      toast.success("Application submitted!");
+      trackEvent("apply_job", {
+        apply_type: "internal",
+        stage: "success",
+        entrypoint: "modal",
+      });
+      setCoverLetter("");
       closeApplyModal();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to submit application');
+      handleApplyError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -106,7 +148,8 @@ export function ApplyJobModal() {
               Did you apply?
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-slate-500">
-              Let us know so we can help you track your application and refine future recommendations for you!
+              Let us know so we can help you track your application and refine
+              future recommendations for you!
             </DialogDescription>
 
             <div className="mt-8 w-full space-y-3">
@@ -147,15 +190,20 @@ export function ApplyJobModal() {
       <DialogContent className="sm:max-w-xl">
         <DialogHeader className="pt-2 pb-4">
           <DialogTitle className="text-2xl font-extrabold tracking-tight text-slate-900">
-            Apply for {selectedJobTitle || 'this position'}
+            Apply for {selectedJobTitle || "this position"}
           </DialogTitle>
-          <p className="text-slate-500 font-medium mt-1">at {selectedCompanyName || 'this company'}</p>
+          <p className="text-slate-500 font-medium mt-1">
+            at {selectedCompanyName || "this company"}
+          </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <div className="flex justify-between items-end mb-2">
-              <Label htmlFor="interest" className="text-sm font-bold text-slate-900">
+              <Label
+                htmlFor="interest"
+                className="text-sm font-bold text-slate-900"
+              >
                 What interests you about working for this company?
               </Label>
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -187,7 +235,7 @@ export function ApplyJobModal() {
               className="w-full sm:w-auto font-bold bg-primary text-white hover:bg-primary/90"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+              {isSubmitting ? "Submitting..." : "Submit Application"}
             </Button>
           </div>
         </form>

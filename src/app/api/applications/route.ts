@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { jobId, coverLetter } = parsed.data;
+  const resumeGateMessage =
+    "Upload your resume in Settings before applying. Go to /seeker/settings to continue.";
 
   const job = await prisma.job.findFirst({
     where: { id: jobId, status: JobStatus.OPEN },
@@ -102,8 +104,11 @@ export async function POST(req: NextRequest) {
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
-    select: { id: true },
+    select: { id: true, resumeKey: true },
   });
+  if (!seekerProfile?.resumeKey) {
+    return NextResponse.json({ error: resumeGateMessage }, { status: 400 });
+  }
 
   let matchScore = 0;
   if (seekerProfile) {

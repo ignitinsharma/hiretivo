@@ -6,21 +6,21 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 select-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 select-none",
   {
     variants: {
       variant: {
         default:
-          "border border-input bg-white text-gray-700 hover:bg-gray-50 rounded-lg h-10 px-4 py-2",
+          "border border-input bg-white text-gray-700 font-medium hover:bg-gray-50 rounded-lg h-10 px-4 py-2",
         primary:
-          "bg-brand-primary text-white rounded-lg h-10 px-5 py-2.5 hover:bg-brand-primary-dark active:bg-[#4a37c9]",
+          "bg-brand-primary text-white font-bold rounded-lg h-10 px-5 py-2.5 hover:bg-brand-primary-dark active:bg-[#4a37c9]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg h-10 px-4 py-2",
+          "bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 rounded-lg h-10 px-4 py-2",
         secondary:
-          "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg h-10 px-4 py-2",
+          "bg-white text-gray-700 font-medium border border-gray-200 hover:bg-gray-50 rounded-lg h-10 px-4 py-2",
         ghost:
-          "hover:bg-gray-50 hover:text-foreground rounded-lg h-10 px-4 py-2",
-        link: "text-foreground underline-offset-4 hover:underline h-auto px-0 py-0",
+          "font-medium hover:bg-gray-50 hover:text-foreground rounded-lg h-10 px-4 py-2",
+        link: "font-medium text-foreground underline-offset-4 hover:underline h-auto px-0 py-0",
       },
       size: {
         sm: "h-9 rounded-lg px-3 text-xs",

@@ -54,6 +54,11 @@ export default function ContactPage() {
         : "Upgrade to PRO to book a call with our team.",
       locked: !isPaidUser,
     },
+    {
+      type: ContactRequestType.REPORT_BUG,
+      label: "Report a bug",
+      description: "Share an issue so we can investigate and fix it quickly.",
+    },
   ];
 
   const {
@@ -113,6 +118,7 @@ export default function ContactPage() {
   };
 
   const isBookCall = mode === ContactRequestType.BOOK_CALL;
+  const isBugReport = mode === ContactRequestType.REPORT_BUG;
 
   return (
     <main className="min-h-screen bg-white px-6 py-16">
@@ -151,7 +157,7 @@ export default function ContactPage() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {MODE_OPTIONS.map((option) => {
               const isActive = option.type === mode;
               const isLocked = option.locked;
@@ -186,7 +192,7 @@ export default function ContactPage() {
                         ? "text-white/80"
                         : isLocked
                         ? "text-gray-400"
-                        : "text-[#6b7280]",
+                        : "text-brand-foreground-muted",
                     )}
                   >
                     {option.description}
@@ -309,7 +315,11 @@ export default function ContactPage() {
                 <Input
                   id="subject"
                   className="mt-2"
-                  placeholder="How can we help?"
+                  placeholder={
+                    isBugReport
+                      ? "Short bug title"
+                      : "How can we help?"
+                  }
                   {...register("subject")}
                 />
                 {errors.subject?.message && (
@@ -331,6 +341,8 @@ export default function ContactPage() {
                 placeholder={
                   isBookCall
                     ? "Tell us what you want to cover on the call."
+                    : isBugReport
+                    ? "Describe what happened, what you expected, and where it happened."
                     : "Share the details of your question or issue."
                 }
                 {...register("message")}
@@ -347,7 +359,11 @@ export default function ContactPage() {
               loadingText="Sending..."
               className="w-full sm:w-auto"
             >
-              {isBookCall ? "Request call" : "Send message"}
+              {isBookCall
+                ? "Request call"
+                : isBugReport
+                ? "Send bug report"
+                : "Send message"}
             </Button>
           </form>
         </div>

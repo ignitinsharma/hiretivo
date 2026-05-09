@@ -35,12 +35,14 @@ function Sparkline({ isPrimary }: { isPrimary: boolean }) {
 
 function StatCard({ stat }: { stat: DashboardStatItem }) {
   const isPrimary = stat.variant === "primary";
+  const primaryGradient =
+    "bg-[radial-gradient(120%_130%_at_82%_0%,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0)_48%),linear-gradient(108deg,#4f46e5_0%,#7560ff_42%,#8b83f8_100%)]";
   return (
     <div
       className={cn(
-        "p-6 rounded-xl flex flex-col justify-between",
+        "min-h-42.5 p-6 rounded-xl flex flex-col justify-between",
         isPrimary
-          ? "bg-linear-to-br from-primary to-primary/80 text-white "
+          ? `${primaryGradient} text-white`
           : "bg-white border border-slate-200 ",
       )}
     >
@@ -100,10 +102,12 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="p-6 rounded-xl bg-white border border-slate-200  space-y-4">
+    <div className="min-h-[170px] p-6 rounded-xl bg-white border border-slate-200 flex flex-col justify-between">
       <Skeleton className="h-10 w-10 rounded-lg" />
-      <Skeleton className="h-8 w-20" />
-      <Skeleton className="h-4 w-28" />
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-4 w-28" />
+      </div>
     </div>
   );
 }

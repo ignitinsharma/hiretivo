@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
-import { Filter, Download } from "lucide-react";
-import { ApplicationCard } from "./ApplicationCard";
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { ApplicationListSkeleton } from "./ApplicationListSkeleton";
+import { FileText } from "lucide-react";
+
+import { Card } from "@/components/ui/card";
 import { applicationService } from "@/services/application.service";
-import type { SeekerApplicationItem } from "../types/application.types";
+
+import { ApplicationCard } from "./ApplicationCard";
+import { ApplicationListSkeleton } from "./ApplicationListSkeleton";
 
 export function ApplicationList() {
   const {
@@ -25,60 +26,38 @@ export function ApplicationList() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h3 className="text-lg font-bold text-slate-900">
+      <Card className="flex flex-col items-center justify-center py-20 text-center">
+        <h3 className="text-lg font-bold text-brand-foreground">
           Couldn&apos;t load your applications
         </h3>
-        <p className="text-slate-500 mt-2">Please refresh and try again.</p>
-      </div>
+        <p className="mt-2 text-brand-foreground-muted">Please refresh and try again.</p>
+      </Card>
     );
   }
 
   if (!applications || applications.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-          <span className="text-2xl">📄</span>
+      <Card className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-brand-surface">
+          <FileText className="h-7 w-7 text-brand-foreground-secondary" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900">
-          No applications yet
-        </h3>
-        <p className="text-slate-500 mt-2">
+        <h3 className="text-lg font-bold text-brand-foreground">No applications yet</h3>
+        <p className="mt-2 text-brand-foreground-muted">
           You haven&apos;t applied to any jobs yet. Start exploring!
         </p>
-      </div>
+      </Card>
     );
   }
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-slate-900 text-3xl md:text-4xl font-extrabold tracking-tight">
-            My Applications
-          </h1>
-          <p className="text-slate-500 text-base">
-            You have submitted applications to {applications.length} companies.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            className="flex items-center gap-2 rounded-lg font-semibold transition-all"
-          >
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            className="flex items-center gap-2 rounded-lg font-bold transition-all"
-          >
-            <Download className="w-4 h-4" />
-            Export List
-          </Button>
-        </div>
+      <div className="mb-10 flex flex-col gap-1">
+        <h1 className="text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-4xl">
+          My Applications
+        </h1>
+        <p className="text-base text-brand-foreground-muted">
+          You have submitted applications to {applications.length} companies.
+        </p>
       </div>
 
       <div className="flex flex-col gap-3">

@@ -4,15 +4,19 @@ import React from "react";
 import { Bookmark, BriefcaseBusiness } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { JobCard } from "@/components/shared/JobCard";
-import { useUIStore } from "@/store/use-ui-store";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { useUIStore } from "@/store/use-ui-store";
 
 import { useSavedJobs, useUnsaveJob } from "../queries/use-saved-jobs";
 
-const SKELETON_ITEMS = Array.from({ length: 3 }, (_, index) => `saved-job-${index}`);
+const SKELETON_ITEMS = Array.from(
+  { length: 3 },
+  (_, index) => `saved-job-${index}`,
+);
 
 export function SavedJobsList() {
   const { openApplyModal, openEmailVerificationModal } = useUIStore();
@@ -24,30 +28,29 @@ export function SavedJobsList() {
     unsaveMutation.mutate(jobId, {
       onSuccess: () => toast.success("Job removed from saved jobs."),
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to remove saved job.");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to remove saved job.",
+        );
       },
     });
   };
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="flex flex-col gap-3">
         {SKELETON_ITEMS.map((item) => (
-          <div
-            key={item}
-            className="rounded-xl border border-gray-200 bg-white p-5 shadow-[rgba(89,82,229,0.12)_0px_0px_0px_1px]"
-          >
+          <Card key={item} className="p-5">
             <div className="mb-4 flex items-start justify-between">
-              <Skeleton className="h-12 w-12 rounded-xl" />
-              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-12 w-12 rounded-lg" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
             </div>
             <Skeleton className="mb-2 h-6 w-3/4" />
             <Skeleton className="mb-8 h-4 w-1/2" />
-            <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+            <div className="flex items-center justify-between border-t border-brand-border pt-4">
               <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-9 w-24 rounded-full" />
+              <Skeleton className="h-9 w-24 rounded-lg" />
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     );
@@ -55,42 +58,43 @@ export function SavedJobsList() {
 
   if (isError) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-        <p className="text-[18px] font-semibold leading-[1.44] text-foreground ">
+      <Card className="p-8 text-center">
+        <p className="text-lg font-semibold text-brand-foreground">
           Saved jobs could not be loaded.
         </p>
-      </div>
+      </Card>
     );
   }
 
   if (!savedJobs || savedJobs.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-black">
+      <Card className="p-10 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-brand-surface text-brand-foreground">
           <Bookmark className="h-5 w-5" />
         </div>
-        <h2 className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-foreground ">
+        <h2 className="text-2xl font-semibold leading-snug tracking-tight text-brand-foreground">
           No saved jobs yet
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-[18px] font-normal leading-[1.44] tracking-[0.18px] text-[#454745] ">
-          Save jobs from your recommendations so the strongest matches stay easy to revisit.
+        <p className="mx-auto mt-3 max-w-xl text-base text-brand-foreground-muted">
+          Save jobs from your recommendations so the strongest matches stay easy
+          to revisit.
         </p>
-        <Button asChild className="mt-6 rounded-full bg-brand-primary text-white transition-transform hover:scale-105 active:scale-95">
+        <Button asChild className="mt-6" variant="primary">
           <a href="/seeker/dashboard">Browse recommendations</a>
         </Button>
-      </div>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-[#454745]">
-        <BriefcaseBusiness className="h-5 w-5 text-black" />
-        <p className="text-[14px] font-semibold leading-[1.5] ">
+      <div className="flex items-center gap-2 text-brand-foreground-muted">
+        <BriefcaseBusiness className="h-5 w-5 text-brand-foreground" />
+        <p className="text-sm font-semibold">
           {savedJobs.length} saved {savedJobs.length === 1 ? "job" : "jobs"}
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="flex flex-col gap-3">
         {savedJobs.map((savedJob) => (
           <JobCard
             key={savedJob.id}
@@ -104,7 +108,13 @@ export function SavedJobsList() {
                       openEmailVerificationModal();
                       return;
                     }
-                    openApplyModal(savedJob.job.id, savedJob.job.title, savedJob.job.companyName, savedJob.job.applyType, savedJob.job.externalApplyUrl);
+                    openApplyModal(
+                      savedJob.job.id,
+                      savedJob.job.title,
+                      savedJob.job.companyName,
+                      savedJob.job.applyType,
+                      savedJob.job.externalApplyUrl,
+                    );
                   }
             }
             onToggleSave={() => handleRemove(savedJob.job.id)}

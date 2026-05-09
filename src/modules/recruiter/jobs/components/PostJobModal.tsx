@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
+import { JobCard } from "@/components/shared/JobCard";
 import {
   Select,
   SelectContent,
@@ -33,9 +34,11 @@ import {
   WorkType,
 } from "@/constants/enums";
 import { jobService } from "@/services/job.service";
+import { recruiterService } from "@/services/recruiter.service";
 import { skillService } from "@/services/skill.service";
 import type { SkillItem } from "@/services/skill.service";
 import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import type { JobListItem } from "@/modules/jobs/types/job.types";
 
 import { JdGeneratorPanel } from "./JdGeneratorPanel";
 import { SkillSuggestChips } from "./SkillSuggestChips";
@@ -90,6 +93,34 @@ function isWorkTypeValue(value: string | null): value is WorkType {
     value === WorkType.HYBRID ||
     value === WorkType.ONSITE
   );
+}
+
+function formatSalaryRangePreview(
+  min: string,
+  max: string,
+  currency: string,
+): string {
+  const symbol =
+    currency === CurrencyCode.GBP
+      ? "£"
+      : currency === CurrencyCode.EUR
+        ? "€"
+        : currency === CurrencyCode.INR
+          ? "₹"
+          : "$";
+  if (!min && !max) return "Not specified";
+  const minText = min ? `${symbol}${Math.round(Number(min) / 1000)}k` : "";
+  const maxText = max ? `${symbol}${Math.round(Number(max) / 1000)}k` : "";
+  if (min && max) return `${minText} - ${maxText}`;
+  return minText || maxText;
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function ConfirmDeleteModal({
@@ -210,6 +241,9 @@ export function PostJobModal() {
   const [isJdPanelOpen, setIsJdPanelOpen] = useState(false);
   const [autoSuggestTrigger, setAutoSuggestTrigger] = useState(0);
   const [workType, setWorkType] = useState<WorkType>(WorkType.REMOTE);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">(
+    "desktop",
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -271,6 +305,11 @@ export function PostJobModal() {
     queryKey: ["job", editJobId],
     queryFn: () => jobService.getJobById(editJobId ?? ""),
     enabled: isPostJobModalOpen && !!editJobId,
+  });
+  const { data: recruiterSettings } = useQuery({
+    queryKey: ["recruiter-settings", "preview"],
+    queryFn: recruiterService.getSettings,
+    enabled: isPostJobModalOpen,
   });
 
   const createSkillMutation = useMutation({
@@ -403,6 +442,29 @@ export function PostJobModal() {
   const selectedSkillsData = selectedSkillIds
     .map((id: string) => skills.find((s: { id: string }) => s.id === id))
     .filter((skill): skill is SkillItem => Boolean(skill));
+
+  const previewJob: JobListItem = {
+    id: "preview",
+    title: watch("title") ? toTitleCase(watch("title")) : "Job Title Preview",
+    companyName:
+      recruiterSettings?.data.companyName?.trim() || "Your Company",
+    companyLogoUrl: recruiterSettings?.data.logo ?? undefined,
+    location: workType.toLowerCase(),
+    salaryRange: formatSalaryRangePreview(
+      watch("salaryMin"),
+      watch("salaryMax"),
+      watch("currency"),
+    ),
+    tags: selectedSkillsData.map((skill) => skill.name).slice(0, 7),
+    matchedSkillNames: selectedSkillsData.map((skill) => skill.name).slice(0, 7),
+    postedAt: "Preview",
+    jobType: watch("jobType"),
+    workType,
+    experienceLevel: watch("experienceLevel")
+      ? toTitleCase(watch("experienceLevel"))
+      : "Not Specified",
+    companyIndustry: watch("category") ? toTitleCase(watch("category")) : "General",
+  };
 
   const noMatch =
     showSkillDropdown &&
@@ -919,6 +981,40 @@ export function PostJobModal() {
                 }
               }}
             />
+          </div>
+
+          <div className="rounded-xl border border-brand-border bg-brand-surface/40 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-brand-foreground">
+                  Seeker Preview
+                </h3>
+                <p className="text-xs text-brand-foreground-muted">
+                  Live preview of how this job appears to seekers.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant={previewDevice === "desktop" ? "primary" : "secondary"}
+                  size="sm"
+                  onClick={() => setPreviewDevice("desktop")}
+                >
+                  Desktop
+                </Button>
+                <Button
+                  type="button"
+                  variant={previewDevice === "mobile" ? "primary" : "secondary"}
+                  size="sm"
+                  onClick={() => setPreviewDevice("mobile")}
+                >
+                  Mobile
+                </Button>
+              </div>
+            </div>
+            <div className={previewDevice === "mobile" ? "mx-auto max-w-sm" : ""}>
+              <JobCard job={previewJob} isPreview />
+            </div>
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-4 mt-6">

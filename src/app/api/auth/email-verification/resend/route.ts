@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getEmailVerificationStatus } from "@/lib/auth/email-verification";
 import { sendVerificationEmail } from "@/lib/email/verification";
+import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const resendRateLimiter = createRateLimiter(
@@ -11,6 +12,11 @@ const resendRateLimiter = createRateLimiter(
   "15 m",
 );
 
+/*
+ * POST /api/auth/email-verification/resend
+ * Resends a verification email for authenticated users who still need verification.
+ * Returns send confirmation or auth/validation/rate-limit errors.
+ */
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -41,7 +47,15 @@ export async function POST() {
     );
   }
 
-  await sendVerificationEmail(status.email.toLowerCase());
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true },
+  });
+
+  await sendVerificationEmail({
+    email: status.email.toLowerCase(),
+    recipientName: user?.name,
+  });
 
   return NextResponse.json({ data: { sent: true } });
 }

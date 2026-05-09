@@ -92,26 +92,28 @@ export async function Header({
           {!session && (
             <>
               <Link
-                href={isRecruiterAudience ? "/" : "/hire-talent"}
+                href={"/recruiter/register"}
                 className="hidden sm:block px-5 py-2.5 border border-brand-primary/20 text-black bg-gray-50 rounded-lg text-sm font-bold hover:bg-brand-primary hover:text-white transition-all"
               >
-                {/* {isRecruiterAudience ? "I'm a recruiter" : "I'm a job seeker"} */}
-                {isRecruiterAudience ? "I'm a job seeker" : "I'm a recruiter"}
+                 {/* {isRecruiterAudience ? "I'm a job seeker" : "I'm a recruiter"} */}
+                I&apos;m a recruiter
               </Link>
               <Link
-                href={
-                  isRecruiterAudience
-                    ? "/recruiter/register"
-                    : "/seeker/register"
-                }
+                // href={
+                //   isRecruiterAudience
+                //     ? "/recruiter/register"
+                //     : "/seeker/register"
+                // }
+                href={"/seeker/register"}
                 className="hidden sm:block px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-foreground hover:bg-gray-50 transition-all"
               >
                 Sign Up
               </Link>
               <Link
-                href={
-                  isRecruiterAudience ? "/recruiter/login" : "/seeker/login"
-                }
+                // href={
+                //   isRecruiterAudience ? "/recruiter/login" : "/seeker/login"
+                // }
+                href={"/seeker/login"}
                 className="px-6 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-semibold hover:bg-brand-primary-dark transition-all"
               >
                 Sign In

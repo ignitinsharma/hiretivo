@@ -18,6 +18,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { UserRole } from "@/constants/enums";
+import { trackEvent } from "@/lib/analytics";
 import {
   recruiterRegisterSchema,
   type RecruiterRegisterInput,
@@ -135,6 +136,11 @@ export default function RecruiterRegisterPage() {
       }
 
       toast.success("Account created successfully!");
+      trackEvent("sign_up", {
+        role: UserRole.RECRUITER,
+        auth_method: "credentials",
+        stage: "success",
+      });
       router.push("/recruiter/onboarding");
       router.refresh();
     } catch (error) {
@@ -150,6 +156,11 @@ export default function RecruiterRegisterPage() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    trackEvent("sign_up", {
+      role: UserRole.RECRUITER,
+      auth_method: "google",
+      stage: "attempt",
+    });
     await signIn("google", {
       role: UserRole.RECRUITER,
       callbackUrl: "/recruiter/onboarding",

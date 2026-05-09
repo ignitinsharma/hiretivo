@@ -17,6 +17,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { UserRole } from "@/constants/enums";
+import { trackEvent } from "@/lib/analytics";
 import {
   recruiterLoginSchema,
   type RecruiterLoginInput,
@@ -145,6 +146,11 @@ export default function RecruiterLoginPage() {
       }
 
       toast.success("Welcome back!");
+      trackEvent("login", {
+        role: UserRole.RECRUITER,
+        auth_method: "credentials",
+        stage: "success",
+      });
       router.push("/recruiter/dashboard");
       router.refresh();
     } catch {
@@ -156,6 +162,11 @@ export default function RecruiterLoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    trackEvent("login", {
+      role: UserRole.RECRUITER,
+      auth_method: "google",
+      stage: "attempt",
+    });
     await signIn("google", { callbackUrl: "/recruiter/dashboard" });
   };
 

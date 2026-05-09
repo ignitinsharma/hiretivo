@@ -528,13 +528,34 @@ if (!data?.length) return <EmptyState />
 return <Content data={data} />
 ```
 
-### 6.5 Component Size
+### 6.5 Component Size — Break Into Sub-Components
 
-Keep components under ~80 lines JSX. Break into sub-components:
+Keep components under ~80 lines JSX. Break large files into smaller, focused sub-components.
+
+**When to break:**
+- File exceeds ~300 lines
+- Multiple distinct visual sections (header, stats, actions, etc.)
+- Repeated JSX patterns that can be extracted
+
+**Example:**
 ```
-JobCard → JobCardHeader · JobCardSkills · JobCardFooter
-Dashboard → DashboardStats · DashboardRecentJobs
+CandidateDrawer.tsx (1198 lines)
+  → CandidateDrawer.tsx (main container ~200 lines)
+  → components/
+    ├── CandidateDrawerHeader.tsx
+    ├── CandidateDrawerSidebar.tsx (match score, stats, actions)
+    ├── CandidateDrawerSkills.tsx
+    ├── CandidateDrawerTabs.tsx (summary/experience/education)
+    └── CandidateDrawerInterview.tsx
 ```
+
+**Sub-component location:**
+- Used in 2+ modules → `src/components/shared/`
+- Used in 1 module only → `src/modules/[module]/components/`
+
+**Naming sub-components:**
+- If only used in one file, co-locate in same folder as `SubComponentName.tsx`
+- If extracted for reuse, follow the 2+ rule above
 
 ### 6.6 Pre-commit Checklist
 

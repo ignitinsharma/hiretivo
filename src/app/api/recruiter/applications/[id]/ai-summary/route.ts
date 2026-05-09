@@ -13,6 +13,33 @@ import { isAiTrialActive } from "@/lib/ai-trial";
 
 const aiSummaryRateLimiter = createRateLimiter("ai-summary", 10, "1 m");
 
+type FitLevel = "excellent" | "good" | "moderate" | "low";
+
+function calculateFitLevel(score: number): FitLevel {
+  if (score >= 85) return "excellent";
+  if (score >= 70) return "good";
+  if (score >= 50) return "moderate";
+  return "low";
+}
+
+function calculateSkillMatchPercentage(
+  candidateSkills: string[],
+  jobSkills: string[],
+): number {
+  if (jobSkills.length === 0) return 100;
+  if (candidateSkills.length === 0) return 0;
+
+  const normalizedCandidate = candidateSkills.map((s) => s.toLowerCase());
+  const matchedCount = jobSkills.filter((jobSkill) =>
+    normalizedCandidate.some((cSkill) =>
+      cSkill.includes(jobSkill.toLowerCase()) ||
+      jobSkill.toLowerCase().includes(cSkill)
+    )
+  ).length;
+
+  return Math.round((matchedCount / jobSkills.length) * 100);
+}
+
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -59,16 +86,43 @@ export async function POST(
       aiSummary: true,
       matchScore: true,
       job: {
-        select: { recruiterId: true },
+        select: {
+          recruiterId: true,
+          title: true,
+          skills: {
+            include: {
+              skill: { select: { name: true } },
+            },
+          },
+        },
       },
       seeker: {
         select: {
           seekerProfile: {
             select: {
               headline: true,
+              primaryRole: true,
+              yearsExperience: true,
+              bio: true,
               skills: {
                 include: {
                   skill: { select: { name: true } },
+                },
+              },
+              workExperiences: {
+                orderBy: { createdAt: "desc" },
+                take: 2,
+                select: {
+                  title: true,
+                  company: true,
+                },
+              },
+              educations: {
+                orderBy: { graduationDate: "desc" },
+                take: 1,
+                select: {
+                  degree: true,
+                  institution: true,
                 },
               },
             },
@@ -82,27 +136,54 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // 7. Cache hit — return without calling OpenRouter
-  if (application.aiSummary !== null) {
-    return NextResponse.json(
-      { data: { summary: application.aiSummary } },
-      { status: 200 },
-    );
-  }
-
-  // 8. Build prompt inputs
+  // 7. Build prompt inputs
   const skills = (application.seeker.seekerProfile?.skills ?? []).map(
     (s) => s.skill.name,
   );
+  const jobSkills = (application.job.skills ?? []).map(
+    (s) => s.skill.name,
+  );
   const matchScore = application.matchScore;
+
+  // Calculate skill-based fit score
+  const skillMatchPercentage = calculateSkillMatchPercentage(skills, jobSkills);
+  const fitScore = Math.round((matchScore + skillMatchPercentage) / 2);
+  const fitLevel = calculateFitLevel(fitScore);
+
   // T-13-03: truncate headline to 200 chars and strip HTML to prevent prompt injection
   const rawHeadline = application.seeker.seekerProfile?.headline ?? null;
   const headline = rawHeadline
     ? rawHeadline.replace(/<[^>]*>/g, "").slice(0, 200)
     : null;
 
+  // 8. Cache hit — return without calling OpenRouter
+  if (application.aiSummary !== null) {
+    return NextResponse.json(
+      {
+        data: {
+          summary: application.aiSummary,
+          fitScore,
+          fitLevel,
+        },
+      },
+      { status: 200 },
+    );
+  }
+
   // 9. Generate summary via OpenRouter
-  const { system, user } = buildCandidateSummaryMessages({ skills, matchScore, headline });
+  const { system, user } = buildCandidateSummaryMessages({
+    skills,
+    jobSkills,
+    matchScore,
+    headline,
+    primaryRole: application.seeker.seekerProfile?.primaryRole ?? null,
+    yearsExperience: application.seeker.seekerProfile?.yearsExperience ?? null,
+    bio: application.seeker.seekerProfile?.bio ?? null,
+    recentWork: application.seeker.seekerProfile?.workExperiences ?? [],
+    education: application.seeker.seekerProfile?.educations?.[0] ?? null,
+    jobTitle: application.job.title,
+  });
+
   const completion = await openrouter.chat.completions.create({
     model: getAIModel(),
     ...CANDIDATE_SUMMARY_CONFIG,
@@ -113,7 +194,8 @@ export async function POST(
   });
 
   const summary =
-    completion.choices[0]?.message?.content?.trim() ?? "No summary available.";
+    completion.choices[0]?.message?.content?.trim() ??
+    '<p class="summary-intro">Summary generation failed. Please try again.</p>';
 
   // 10. Write-back (D-04): cache on Application — continue even if write fails
   try {
@@ -125,6 +207,9 @@ export async function POST(
     console.error("[ai-summary] write-back failed:", err);
   }
 
-  // 11. Return summary
-  return NextResponse.json({ data: { summary } }, { status: 200 });
+  // 11. Return summary with fit score
+  return NextResponse.json(
+    { data: { summary, fitScore, fitLevel } },
+    { status: 200 },
+  );
 }

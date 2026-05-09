@@ -1,0 +1,85 @@
+import type { ApplicationStatus, InterviewStatus, PlanTier } from "@/constants/enums";
+import type { FitLevel } from "@/services/recruiter.service";
+
+export type TabKey = "summary" | "experience" | "education";
+
+export const TABS: { key: TabKey; label: string }[] = [
+  { key: "summary", label: "Summary" },
+  { key: "experience", label: "Experience" },
+  { key: "education", label: "Education" },
+];
+
+export interface CandidateWorkExperience {
+  id: string;
+  company: string;
+  title: string;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string | null;
+  positionType: string | null;
+  skills: string[];
+}
+
+export interface CandidateEducation {
+  id: string;
+  institution: string;
+  graduationDate: string | null;
+  degree: string | null;
+  major: string | null;
+}
+
+export interface CandidateApplication {
+  id: string;
+  jobId?: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidateAvatar?: string | null;
+  jobTitle: string;
+  matchScore: number;
+  status: ApplicationStatus;
+  coverLetter: string | null;
+  resumeUrl: string | null;
+  jobSkills: string[];
+  candidateProfile?: {
+    primaryRole: string | null;
+    headline: string | null;
+    location: string | null;
+    skills: string[];
+    yearsExperience?: number | null;
+    websiteUrl?: string | null;
+    linkedinUrl?: string | null;
+    githubUrl?: string | null;
+    twitterUrl?: string | null;
+    workExperiences?: CandidateWorkExperience[];
+    educations?: CandidateEducation[];
+  };
+  appliedAt?: string;
+  updatedAt?: string;
+  plan?: PlanTier;
+  scheduledInterview?: {
+    id: string;
+    status: InterviewStatus;
+    startsAt: string | null;
+    endsAt: string | null;
+    meetLink: string | null;
+    notes: string | null;
+    scheduledTimeZone?: string | null;
+  } | null;
+}
+
+export interface DrawerLinks {
+  href: string;
+  label: string;
+  icon: "website" | "linkedin" | "github" | "twitter";
+}
+
+export interface AiState {
+  isPending: boolean;
+  isError: boolean;
+  errorMessage?: string;
+  summary?: string;
+  fitScore?: number;
+  fitLevel?: FitLevel;
+  isPlanGated: boolean;
+}

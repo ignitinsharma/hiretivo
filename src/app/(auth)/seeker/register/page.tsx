@@ -17,6 +17,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { UserRole } from "@/constants/enums";
+import { trackEvent } from "@/lib/analytics";
 import {
   seekerRegisterSchema,
   type SeekerRegisterInput,
@@ -149,6 +150,11 @@ export default function SeekerRegisterPage() {
       }
 
       toast.success("Account created successfully!");
+      trackEvent("sign_up", {
+        role: UserRole.SEEKER,
+        auth_method: "credentials",
+        stage: "success",
+      });
       router.push("/seeker/onboarding");
       router.refresh();
     } catch (error) {
@@ -164,6 +170,11 @@ export default function SeekerRegisterPage() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    trackEvent("sign_up", {
+      role: UserRole.SEEKER,
+      auth_method: "google",
+      stage: "attempt",
+    });
     await signIn("google", {
       role: UserRole.SEEKER,
       callbackUrl: "/seeker/onboarding",

@@ -10,40 +10,109 @@
 
 export interface CandidateSummaryInput {
   skills: string[];
+  jobSkills: string[];
   matchScore: number;
   headline: string | null;
+  primaryRole: string | null;
+  yearsExperience: number | null;
+  bio: string | null;
+  recentWork: Array<{ title: string; company: string }>;
+  education: { degree: string | null; institution: string | null } | null;
+  jobTitle: string;
 }
 
 export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
-  const { skills, matchScore, headline } = input;
+  const {
+    skills,
+    jobSkills,
+    matchScore,
+    headline,
+    primaryRole,
+    yearsExperience,
+    bio,
+    recentWork,
+    education,
+    jobTitle,
+  } = input;
 
   const skillList = skills.length > 0 ? skills.join(', ') : 'No skills listed';
+  const jobSkillList = jobSkills.length > 0 ? jobSkills.join(', ') : 'Not specified';
   const headlineText = headline ?? 'Not provided';
+  const roleText = primaryRole ?? 'Professional';
+  const expText = yearsExperience != null
+    ? `${yearsExperience} ${yearsExperience === 1 ? 'year' : 'years'}`
+    : 'Experience not specified';
+  const bioText = bio ?? '';
+  const workText = recentWork.length > 0
+    ? recentWork
+        .map((w) => `${w.title} at ${w.company}`)
+        .join('; ')
+    : 'No work history available';
+  const eduText = education?.degree && education?.institution
+    ? `${education.degree} from ${education.institution}`
+    : 'Education not specified';
 
   return {
-    system: `You are an expert recruitment analyst helping hiring managers quickly evaluate candidates.
+    system: `You are an expert recruitment analyst creating comprehensive, insightful candidate profiles for hiring managers.
 
-Your job: Write ONE sharp, specific sentence (max 18 words) that tells a recruiter exactly why this candidate is or isn't a strong fit — based solely on their skills and match score.
+Create a rich, detailed candidate summary in HTML format. The summary should help recruiters quickly understand:
+1. Who this candidate is professionally
+2. How well their skills match the job requirements
+3. Their career trajectory and highlights
+4. Any notable gaps or areas to explore
 
-Rules:
-- Lead with the most signal-rich insight (strongest skill, gap, or standout fit)
-- Be direct and specific — never generic ("strong candidate", "good fit")
-- If match score is high (≥80%), highlight the strongest aligned skill
-- If match score is moderate (50–79%), note the fit with the key differentiator
-- If match score is low (<50%), briefly state the skill gap
-- Never use the candidate's name
-- No filler phrases ("This candidate...", "Based on their profile...")
-- Output the sentence only — no punctuation at start, no explanation`,
+OUTPUT FORMAT (use EXACT HTML structure):
+<div class="summary-container">
+  <p class="summary-header"><strong>{roleText}</strong> — {expText}</p>
+  <p class="summary-intro">{1-2 sentence professional overview based on headline, bio, and career trajectory}</p>
+  <p class="summary-skills"><span class="matched-skills">{matched skills with <mark>skill</mark> tags}</span>. <span class="additional-skills">{additional relevant skills from profile that weren't explicitly required}</span>.</p>
+  <p class="summary-career">Career highlights: {work history summary}. {one key strength or achievement}</p>
+  {if gaps exist: <p class="summary-gaps">Areas to explore: <em>{1-2 notable skill gaps or areas needing assessment}</em></p>}
+</div>
 
-    user: `Skills: ${skillList}
-Match score: ${matchScore}%
-Headline: ${headlineText}`,
+RULES:
+- ALWAYS use <mark> tags around skills that are relevant to the job
+- ALWAYS use <strong> tags for the candidate's role/designation
+- ALWAYS use <em> tags for skill gaps or areas needing assessment
+- Be SPECIFIC: mention actual skill names, companies, and technologies
+- Be SUBSTANTIVE: 3-4 paragraphs, not one sentence
+- Never use filler phrases like "This candidate..." or "Based on their profile..."
+- Focus on what makes this candidate unique or noteworthy
+- Compare candidate skills against the job requirements
+- Mention years of experience naturally in context
+- If experience is <2 years, note it's an early-career role
+- If experience is >7 years, highlight seniority and leadership potential
+- Output HTML only — no markdown, no explanations outside the HTML`,
+
+    user: `=== CANDIDATE DATA ===
+Headline: ${headlineText}
+Primary Role: ${roleText}
+Years of Experience: ${expText}
+Bio: ${bioText}
+
+=== CANDIDATE SKILLS ===
+${skillList}
+
+=== JOB REQUIREMENTS ===
+Job Title: ${jobTitle}
+Required Skills: ${jobSkillList}
+
+=== CAREER HISTORY ===
+${workText}
+
+=== EDUCATION ===
+${eduText}
+
+=== MATCH SCORE ===
+${matchScore}%
+
+Generate the candidate summary in HTML format following the specified structure.`,
   };
 }
 
 export const CANDIDATE_SUMMARY_CONFIG = {
-  max_tokens: 60,
-  temperature: 0.2,
+  max_tokens: 600,
+  temperature: 0.3,
 } as const;
 
 // ---------------------------------------------------------------------------

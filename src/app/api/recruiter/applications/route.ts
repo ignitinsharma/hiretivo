@@ -109,7 +109,17 @@ export async function GET(req: NextRequest) {
     take: limit + 1,
     ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
     include: {
-      job: { select: { id: true, title: true } },
+      job: {
+        select: {
+          id: true,
+          title: true,
+          skills: {
+            select: {
+              skill: { select: { name: true } },
+            },
+          },
+        },
+      },
       interviews: {
         where: { status: InterviewStatus.SCHEDULED },
         take: 1,
@@ -176,6 +186,7 @@ export async function GET(req: NextRequest) {
         id: app.id,
         jobId: app.jobId,
         jobTitle: app.job.title,
+        jobSkills: app.job.skills.map((skill) => skill.skill.name),
         candidateName: seeker.name ?? "Anonymous",
         candidateEmail: seeker.email ?? "",
         candidateAvatar: resolveLogoUrl(seeker.image),

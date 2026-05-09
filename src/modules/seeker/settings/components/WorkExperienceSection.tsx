@@ -330,7 +330,7 @@ export function WorkExperienceSection() {
   return (
     <section
       id="experience"
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+      className="rounded-xl border border-slate-200 bg-white"
     >
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
         <div>

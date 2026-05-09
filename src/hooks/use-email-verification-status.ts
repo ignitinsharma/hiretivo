@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 
 import {
@@ -15,7 +15,7 @@ export const EMAIL_VERIFICATION_STATUS_QUERY_KEY = [
 
 export function useEmailVerificationStatus() {
   const { data: session, status: sessionStatus, update } = useSession();
-  const queryClient = useQueryClient();
+  const updateCalledRef = useRef(false);
   const query = useQuery<EmailVerificationStatus>({
     queryKey: EMAIL_VERIFICATION_STATUS_QUERY_KEY,
     queryFn: authService.getEmailVerificationStatus,
@@ -25,24 +25,14 @@ export function useEmailVerificationStatus() {
   });
 
   useEffect(() => {
-    if (sessionStatus !== "authenticated") return;
-
-    const onFocus = () => {
-      void queryClient.invalidateQueries({
-        queryKey: EMAIL_VERIFICATION_STATUS_QUERY_KEY,
-      });
-    };
-
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, [queryClient, sessionStatus]);
-
-  useEffect(() => {
     if (!query.data?.isVerified) return;
     if (session?.user?.emailVerified) return;
+    if (sessionStatus === "loading") return;
+    if (updateCalledRef.current) return;
 
+    updateCalledRef.current = true;
     void update();
-  }, [query.data?.isVerified, session?.user?.emailVerified, update]);
+  }, [query.data?.isVerified, session?.user?.emailVerified, sessionStatus, update]);
 
   return query;
 }

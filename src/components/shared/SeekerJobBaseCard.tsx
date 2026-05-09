@@ -1,0 +1,155 @@
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Building2, type LucideIcon } from "lucide-react";
+
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+export interface SeekerJobCardFact {
+  icon: LucideIcon;
+  label: string;
+}
+
+interface SeekerJobBaseCardProps {
+  jobHref: string;
+  companyHref?: string | null;
+  title: string;
+  companyName: string;
+  companyLogoUrl?: string;
+  companyDetails?: string[];
+  metaBadge?: React.ReactNode;
+  topRight?: React.ReactNode;
+  facts?: SeekerJobCardFact[];
+  skills?: Array<{
+    label: string;
+    isPrimary?: boolean;
+  }>;
+  hintText?: string | null;
+  salaryRange?: string;
+  footerRight?: React.ReactNode;
+  className?: string;
+}
+
+/**
+ * SeekerJobBaseCard
+ * Shared seeker card shell used across jobs, saved jobs, and applications.
+ * Returns a consistent structure for title/company/facts/skills/footer rows.
+ */
+export function SeekerJobBaseCard({
+  jobHref,
+  companyHref,
+  title,
+  companyName,
+  companyLogoUrl,
+  companyDetails = [],
+  metaBadge,
+  topRight,
+  facts = [],
+  skills = [],
+  hintText,
+  salaryRange,
+  footerRight,
+  className,
+}: SeekerJobBaseCardProps) {
+  return (
+    <Card className={cn("group flex h-full flex-col p-5", className)}>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="flex min-w-0 gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
+            {companyLogoUrl ? (
+              <Image
+                src={companyLogoUrl}
+                alt={`${companyName} logo`}
+                width={64}
+                height={64}
+                className="h-full w-full object-contain p-2"
+              />
+            ) : (
+              <Building2 className="h-6 w-6 text-brand-foreground-secondary" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <Link href={jobHref}>
+              <h3 className="truncate text-xl font-semibold leading-snug tracking-tight text-brand-foreground transition-colors group-hover:text-brand-primary">
+                {title}
+              </h3>
+            </Link>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-brand-foreground-muted">
+              {companyHref ? (
+                <Link
+                  href={companyHref}
+                  className="font-semibold capitalize text-brand-foreground transition-colors hover:text-brand-primary"
+                >
+                  {companyName}
+                </Link>
+              ) : (
+                <span className="font-semibold capitalize text-brand-foreground">
+                  {companyName}
+                </span>
+              )}
+              {companyDetails.map((detail, index) => (
+                <React.Fragment key={`${detail}-${index}`}>
+                  <span className="text-brand-foreground-secondary">•</span>
+                  <span>{detail}</span>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {metaBadge}
+          {topRight}
+        </div>
+      </div>
+
+      {facts.length > 0 && (
+        <div className="grid gap-2 border-t border-brand-border py-4 text-sm font-medium text-brand-foreground sm:grid-cols-3">
+          {facts.map((fact) => {
+            const Icon = fact.icon;
+            return (
+              <div key={fact.label} className="flex min-w-0 items-center gap-2">
+                <Icon className="h-4 w-4 shrink-0 text-brand-foreground-muted" />
+                <span className="truncate capitalize">{fact.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {skills.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {skills.map((skill) => (
+            <span
+              key={skill.label}
+              className={cn(
+                "rounded-lg border px-3 py-1 text-sm font-medium",
+                skill.isPrimary
+                  ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary"
+                  : "border-brand-border bg-brand-surface text-brand-foreground-muted",
+              )}
+            >
+              {skill.label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {hintText ? (
+        <p className="mt-3 text-xs font-medium text-brand-warning">{hintText}</p>
+      ) : null}
+
+      <div className="mt-5 flex items-center justify-between gap-3 border-t border-brand-border pt-4">
+        {salaryRange ? (
+          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-brand-foreground">
+            <Building2 className="h-4 w-4 shrink-0 text-brand-foreground-muted" />
+            <span className="truncate">{salaryRange}</span>
+          </div>
+        ) : (
+          <span />
+        )}
+        {footerRight}
+      </div>
+    </Card>
+  );
+}

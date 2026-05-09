@@ -183,11 +183,13 @@ export enum AiMessageRole {
 export enum ContactRequestType {
   CONTACT = "CONTACT",
   BOOK_CALL = "BOOK_CALL",
+  REPORT_BUG = "REPORT_BUG",
 }
 
 export const CONTACT_REQUEST_TYPE_VALUES = [
   ContactRequestType.CONTACT,
   ContactRequestType.BOOK_CALL,
+  ContactRequestType.REPORT_BUG,
 ] as const;
 
 export enum SubscriptionStatus {

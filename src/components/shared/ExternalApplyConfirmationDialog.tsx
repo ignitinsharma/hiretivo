@@ -15,6 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { trackEvent } from '@/lib/analytics';
+
+const RESUME_REQUIRED_ERROR = 'Upload your resume in Settings before applying. Go to /seeker/settings to continue.';
 
 interface ExternalApplyConfirmationDialogProps {
   jobId: string;
@@ -47,12 +50,32 @@ export function ExternalApplyConfirmationDialog({
         method: 'POST',
       });
       if (!response.ok) {
-        throw new Error('Could not confirm application.');
+        const body = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(body?.error ?? 'Could not confirm application.');
       }
       toast.success('Application confirmed.');
+      trackEvent('apply_job', {
+        apply_type: 'external',
+        stage: 'success',
+        entrypoint: 'redirect',
+      });
       setIsOpen(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not confirm application.');
+      const message = error instanceof Error ? error.message : 'Could not confirm application.';
+      if (message === RESUME_REQUIRED_ERROR) {
+        toast.error('Resume required before applying.', {
+          action: {
+            label: 'Upload Resume',
+            onClick: () => {
+              window.location.href = '/seeker/settings';
+            },
+          },
+        });
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsConfirming(false);
     }
@@ -64,6 +87,11 @@ export function ExternalApplyConfirmationDialog({
         type="button"
         onClick={() => {
           if (!guardVerifiedEmail()) return;
+          trackEvent('apply_job', {
+            apply_type: 'external',
+            stage: 'attempt',
+            entrypoint: 'redirect',
+          });
           window.open(externalUrl, '_blank', 'noopener,noreferrer');
         }}
         className="w-full rounded-full bg-brand-primary py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"

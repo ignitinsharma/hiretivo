@@ -17,6 +17,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { UserRole } from "@/constants/enums";
+import { trackEvent } from "@/lib/analytics";
 import {
   seekerLoginSchema,
   type SeekerLoginInput,
@@ -139,6 +140,11 @@ function SeekerLoginContent() {
       }
 
       toast.success("Welcome back!");
+      trackEvent("login", {
+        role: UserRole.SEEKER,
+        auth_method: "credentials",
+        stage: "success",
+      });
       router.push(redirectPath);
       router.refresh();
     } catch {
@@ -150,6 +156,11 @@ function SeekerLoginContent() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    trackEvent("login", {
+      role: UserRole.SEEKER,
+      auth_method: "google",
+      stage: "attempt",
+    });
     await signIn("google", { callbackUrl: redirectPath });
   };
 

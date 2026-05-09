@@ -10,8 +10,15 @@ import { LifeBuoy, Plus, LogOut, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { signOut } from "next-auth/react";
+import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
 import { apiClient } from "@/lib/axios";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarContextValue {
   collapsed: boolean;
@@ -83,11 +90,18 @@ function RecruiterSidebarInner({
   const pathname = usePathname();
   const { data: session } = useSession();
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const currentPlan = session?.user?.plan ?? PlanTier.FREE;
+  const planLabel =
+    currentPlan === PlanTier.ENTERPRISE ? "Enterprise" : currentPlan;
+  const isPaidPlan =
+    currentPlan === PlanTier.PRO || currentPlan === PlanTier.ENTERPRISE;
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const { data } = await apiClient.get<{ data: { logo: string | null; companyName: string } }>('/recruiter/settings');
+        const { data } = await apiClient.get<{
+          data: { logo: string | null; companyName: string };
+        }>("/recruiter/settings");
         if (data?.data?.logo) {
           setCompanyLogo(data.data.logo);
         }
@@ -105,45 +119,60 @@ function RecruiterSidebarInner({
       .toUpperCase()
       .slice(0, 2) || "R";
 
-  const avatarUrl = companyLogo ?? (session?.user?.image
-    ? session.user.image.startsWith('http')
-      ? session.user.image
-      : `/api/logo?key=${encodeURIComponent(session.user.image)}`
-    : null);
+  const avatarUrl =
+    companyLogo ??
+    (session?.user?.image
+      ? session.user.image.startsWith("http")
+        ? session.user.image
+        : `/api/logo?key=${encodeURIComponent(session.user.image)}`
+      : null);
+  const sidebarTooltipClasses =
+    "rounded-lg border border-brand-border bg-white text-[#0a0a0a] shadow-none font-medium";
 
   return (
-    <aside
-      className={cn(
-        "sticky top-0 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden",
-        collapsed ? "w-17" : "w-65",
-      )}
-    >
-      {/* Logo + Toggle */}
-      <div
+    <TooltipProvider delayDuration={0} skipDelayDuration={0}>
+      <aside
         className={cn(
-          "px-5 py-5 flex items-center gap-3",
-          collapsed && "justify-center px-0",
+          "sticky top-0 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden",
+          collapsed ? "w-17" : "w-65",
         )}
       >
-        {collapsed ? (
-          <SidebarToggle />
-        ) : (
-          <>
-            <Link
-              href="/recruiter/dashboard"
-              className="flex items-center gap-3 flex-1"
-            >
-              <Logo />
-            </Link>
+        {/* Logo + Toggle */}
+        <div
+          className={cn(
+            "px-5 py-5 flex items-center gap-3",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          {collapsed ? (
             <SidebarToggle />
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <Link
+                href="/recruiter/dashboard"
+                className="flex items-center justify-between gap-3 flex-1"
+              >
+                <Logo />
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    isPaidPlan
+                      ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
+                      : "border-brand-border bg-brand-surface text-brand-foreground-muted",
+                  )}
+                >
+                  {planLabel}
+                </span>
+              </Link>
+              <SidebarToggle />
+            </>
+          )}
+        </div>
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
+        {/* Divider */}
+        <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
 
-      {/* User profile */}
+        {/* User profile
       <div
         className={cn(
           "px-5 py-4 flex items-center gap-3",
@@ -165,126 +194,174 @@ function RecruiterSidebarInner({
             <span className="font-semibold text-base text-slate-900 truncate">
               {userName}
             </span>
-            {/* <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
-              <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
-                Recruiter
-              </span>
-            </div> */}
+          
           </div>
         )}
-      </div>
+      </div> */}
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
+        {/* Divider */}
+        <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
 
-      {/* Post New Job CTA */}
-      <div className={cn("px-4 py-5", collapsed && "px-2 py-3")}>
-        {collapsed ? (
-          <Button
-            variant="primary"
-            onClick={() => {
-              const { useUIStore } = require("@/store/use-ui-store");
-              useUIStore.getState().openPostJobModal();
-            }}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
-        ) : (
-          <Button
-            variant="primary"
-            className="w-full py-3 px-4"
-            onClick={() => {
-              const { useUIStore } = require("@/store/use-ui-store");
-              useUIStore.getState().openPostJobModal();
-            }}
-          >
-            <Plus className="w-5 h-5 shrink-0" />
-            Post New Job
-          </Button>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-        {RECRUITER_NAV_ITEMS.map((item, index) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-          const showSeparator = index === 4;
-
-          return (
-            <React.Fragment key={item.href}>
-              {showSeparator && (
-                <div className="mx-3 my-2 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-30" />
-              )}
-              <Link
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                className={cn(
-                  "flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all",
-                  isActive
-                    ? "border-brand-primary bg-brand-primary/10 text-brand-primary font-semibold"
-                    : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium",
-                  collapsed && "justify-center px-0 border-l-0 rounded-md mx-1",
-                )}
-              >
-                <div
-                  className={cn(
-                    "flex items-center gap-3",
-                    collapsed && "gap-0",
-                  )}
+        {/* Post New Job CTA */}
+        <div className={cn("px-4 py-5", collapsed && "px-2 py-3")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="primary"
+                  className="transition-transform duration-200 hover:scale-105"
+                  onClick={() => {
+                    const { useUIStore } = require("@/store/use-ui-store");
+                    useUIStore.getState().openPostJobModal();
+                  }}
                 >
-                  <item.icon className="w-5 h-5 shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </div>
-                {!collapsed && item.badge && (
-                  <span
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className={sidebarTooltipClasses}>
+                Post New Job
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="primary"
+              className="w-full py-3 px-4"
+              onClick={() => {
+                const { useUIStore } = require("@/store/use-ui-store");
+                useUIStore.getState().openPostJobModal();
+              }}
+            >
+              <Plus className="w-5 h-5 shrink-0" />
+              Post New Job
+            </Button>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+          {RECRUITER_NAV_ITEMS.map((item, index) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+            const showSeparator = index === 4;
+
+            return (
+              <React.Fragment key={item.href}>
+                {showSeparator && (
+                  <div className="mx-3 my-2 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-30" />
+                )}
+                {collapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "relative flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all justify-center px-0 border-l-0 rounded-md mx-1 hover:bg-brand-primary/10 hover:text-brand-primary",
+                          isActive
+                            ? "border-brand-primary bg-brand-primary/10 text-brand-primary font-semibold"
+                            : "border-transparent text-slate-500 font-medium",
+                        )}
+                      >
+                        <div className="flex items-center gap-0">
+                          <item.icon className="w-5 h-5 shrink-0" />
+                        </div>
+                        {item.badge && (
+                          <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-primary text-[8px] font-semibold flex items-center justify-center rounded-full text-white border border-white">
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      className={sidebarTooltipClasses}
+                    >
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Link
+                    href={item.href}
                     className={cn(
-                      "text-[10px] font-semibold rounded px-1.5 py-0.5",
-                      item.badgeVariant === "primary"
-                        ? "bg-brand-primary text-white"
-                        : "bg-slate-100 text-slate-600",
+                      "relative flex items-center justify-between py-2.5 px-3 border-l-[3px] rounded-r-md text-sm transition-all",
+                      isActive
+                        ? "border-brand-primary bg-brand-primary/10 text-brand-primary font-semibold"
+                        : "border-transparent text-slate-500 hover:bg-brand-surface hover:text-brand-foreground font-medium",
                     )}
                   >
-                    {item.badge}
-                  </span>
+                    <div className="flex items-center gap-3">
+                      <item.icon className="w-5 h-5 shrink-0" />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span
+                        className={cn(
+                          "text-[10px] font-semibold rounded px-1.5 py-0.5",
+                          item.badgeVariant === "primary"
+                            ? "bg-brand-primary text-white"
+                            : "bg-slate-100 text-slate-600",
+                        )}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
                 )}
-                {collapsed && item.badge && (
-                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-primary text-[8px] font-semibold flex items-center justify-center rounded-full text-white border border-white">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            </React.Fragment>
-          );
-        })}
-      </nav>
+              </React.Fragment>
+            );
+          })}
+        </nav>
 
-      {/* Sign Out */}
-      <div className="border-t border-slate-200">
-        <Link
-          href="/contact"
-          title={collapsed ? "Contact & Support" : undefined}
-          className={cn(
-            "flex items-center gap-3 py-4 px-6 text-slate-600 font-semibold text-sm hover:bg-slate-50 hover:text-slate-900 transition-colors",
-            collapsed && "justify-center px-0",
+        {/* Sign Out */}
+        <div className="border-t border-slate-200">
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/contact"
+                  className="flex items-center gap-3 py-4 px-0 justify-center text-slate-600 font-semibold text-sm hover:bg-brand-primary/10 hover:text-brand-primary transition-colors"
+                >
+                  <LifeBuoy className="w-5 h-5 shrink-0" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" className={sidebarTooltipClasses}>
+                Contact & Support
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href="/contact"
+              className="flex items-center gap-3 py-4 px-6 text-slate-600 font-semibold text-sm hover:bg-brand-surface hover:text-brand-foreground transition-colors"
+            >
+              <LifeBuoy className="w-5 h-5 shrink-0" />
+              <span>Contact & Support</span>
+            </Link>
           )}
-        >
-          <LifeBuoy className="w-5 h-5 shrink-0" />
-          {!collapsed && <span>Contact & Support</span>}
-        </Link>
-        <button
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className={cn(
-            "w-full flex items-center gap-3 py-4 px-6 text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors",
-            collapsed && "justify-center px-0",
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="w-full flex items-center gap-3 py-4 px-0 justify-center text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-5 h-5 shrink-0" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className={sidebarTooltipClasses}>
+                Sign Out
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="w-full flex items-center gap-3 py-4 px-6 text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="w-5 h-5 shrink-0" />
+              <span>Sign Out</span>
+            </button>
           )}
-        >
-          <LogOut className="w-5 h-5 shrink-0" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </TooltipProvider>
   );
 }

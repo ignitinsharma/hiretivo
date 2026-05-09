@@ -1,25 +1,13 @@
 import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  BriefcaseBusiness,
-  Building2,
-  Clock,
-  MapPin,
-  type LucideIcon,
-} from "lucide-react";
+import { BriefcaseBusiness, Clock, MapPin } from "lucide-react";
 
 import { ApplicationStatus, JobStatus } from "@/constants/enums";
+import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
 import { cn } from "@/lib/utils";
 import type { SeekerApplicationItem } from "../types/application.types";
 
 interface ApplicationCardProps {
   application: SeekerApplicationItem;
-}
-
-interface CardFact {
-  icon: LucideIcon;
-  label: string;
 }
 
 function formatEnumLabel(value?: string | null): string | null {
@@ -41,6 +29,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
     application.companyFundingType,
     application.companySize,
   ].filter(hasText);
+
   const facts = [
     {
       icon: MapPin,
@@ -54,108 +43,46 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       icon: Clock,
       label: application.experienceLevel,
     },
-  ].filter((fact): fact is CardFact => hasText(fact.label));
+  ].filter((fact): fact is { icon: typeof MapPin; label: string } =>
+    hasText(fact.label),
+  );
+
+  const skills = (application.skills ?? []).slice(0, 7).map((skill) => ({
+    label: skill,
+    isPrimary: true,
+  }));
 
   return (
-    <div className="group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="flex min-w-0 gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-brand-surface">
-            {application.companyLogoUrl ? (
-              <Image
-                src={application.companyLogoUrl}
-                alt={`${application.companyName} logo`}
-                width={64}
-                height={64}
-                className="h-full w-full object-contain p-2"
-              />
-            ) : (
-              <Building2 className="h-6 w-6 text-brand-foreground-secondary" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <Link href={`/jobs/${application.jobId}`}>
-              <h3 className="truncate text-[22px] font-semibold leading-[1.25] tracking-[-0.22px] text-foreground transition-colors group-hover:text-brand-primary">
-                {application.jobTitle}
-              </h3>
-            </Link>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-brand-foreground-muted">
-              {application.companyId ? (
-                <Link
-                  href={`/companies/${application.companyId}`}
-                  className="font-semibold capitalize text-foreground transition-colors hover:text-brand-primary"
-                >
-                  {application.companyName}
-                </Link>
-              ) : (
-                <span className="font-semibold capitalize text-foreground">
-                  {application.companyName}
-                </span>
-              )}
-              {companyDetails.map((detail, index) => (
-                <React.Fragment key={`${detail}-${index}`}>
-                  <span className="text-brand-foreground-secondary">•</span>
-                  <span>{detail}</span>
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </div>
+    <SeekerJobBaseCard
+      jobHref={`/jobs/${application.jobId}`}
+      companyHref={application.companyId ? `/companies/${application.companyId}` : null}
+      title={application.jobTitle}
+      companyName={application.companyName}
+      companyLogoUrl={application.companyLogoUrl}
+      companyDetails={companyDetails}
+      metaBadge={
         <span className="shrink-0 text-sm font-medium text-brand-foreground-secondary">
           Applied {application.appliedAt}
         </span>
-      </div>
-
-      {facts.length > 0 && (
-        <div className="grid gap-2 border-t border-gray-200 py-4 text-sm font-medium text-foreground sm:grid-cols-3">
-          {facts.map((fact) => {
-            const Icon = fact.icon;
-            return (
-              <div key={fact.label} className="flex min-w-0 items-center gap-2">
-                <Icon className="h-4 w-4 shrink-0 text-brand-foreground-muted" />
-                <span className="truncate">{fact.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {application.skills && application.skills.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {application.skills.slice(0, 7).map((skill) => (
-            <span
-              key={skill}
-              className="rounded-lg border border-gray-200 bg-gray-100 px-3 py-1 text-sm font-medium text-brand-foreground-muted"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-gray-200 pt-4">
-        {application.salaryRange ? (
-          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
-            <Building2 className="h-4 w-4 shrink-0 text-brand-foreground-muted" />
-            <span className="truncate">{application.salaryRange}</span>
-          </div>
-        ) : (
-          <span />
-        )}
-        {application.jobStatus === JobStatus.DELETED ? (
+      }
+      facts={facts}
+      skills={skills}
+      salaryRange={application.salaryRange}
+      footerRight={
+        application.jobStatus === JobStatus.DELETED ? (
           <JobClosedBadge />
         ) : (
           <StatusBadge status={application.status} />
-        )}
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }
 
 function JobClosedBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-gray-100 text-gray-500">
-      <span className="h-2 w-2 rounded-full bg-gray-400" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-surface px-3 py-1 text-xs font-bold text-brand-foreground-muted">
+      <span className="h-2 w-2 rounded-full bg-brand-foreground-secondary" />
       Job Closed
     </span>
   );
@@ -168,33 +95,33 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
 
   switch (status) {
     case ApplicationStatus.INTERVIEW:
-      badgeClasses = "bg-primary/10 text-primary";
-      dotClasses = "bg-primary";
+      badgeClasses = "border border-brand-primary/30 bg-brand-primary/10 text-brand-primary";
+      dotClasses = "bg-brand-primary";
       label = "Interview";
       break;
     case ApplicationStatus.REVIEWING:
-      badgeClasses = "bg-blue-100 text-blue-700";
-      dotClasses = "bg-blue-500";
+      badgeClasses = "border border-brand-border bg-brand-surface text-brand-foreground";
+      dotClasses = "bg-brand-foreground-secondary";
       label = "Under Review";
       break;
     case ApplicationStatus.APPLIED:
-      badgeClasses = "bg-slate-100 text-slate-600";
-      dotClasses = "bg-slate-400";
+      badgeClasses = "border border-brand-border bg-brand-surface text-brand-foreground-muted";
+      dotClasses = "bg-brand-foreground-secondary";
       label = "Applied";
       break;
     case ApplicationStatus.OFFER:
-      badgeClasses = "bg-amber-100 text-amber-700";
-      dotClasses = "bg-amber-500";
+      badgeClasses = "border border-brand-warning/30 bg-brand-warning/10 text-brand-warning";
+      dotClasses = "bg-brand-warning";
       label = "Offer Received";
       break;
     case ApplicationStatus.HIRED:
-      badgeClasses = "bg-gray-100 text-black";
-      dotClasses = "bg-black";
+      badgeClasses = "border border-brand-success/30 bg-brand-success/10 text-brand-success";
+      dotClasses = "bg-brand-success";
       label = "Hired";
       break;
     case ApplicationStatus.REJECTED:
-      badgeClasses = "bg-red-100 text-red-600";
-      dotClasses = "bg-red-500";
+      badgeClasses = "border border-brand-danger/30 bg-brand-danger/10 text-brand-danger";
+      dotClasses = "bg-brand-danger";
       label = "Not Selected";
       break;
   }

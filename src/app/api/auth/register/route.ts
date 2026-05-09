@@ -57,7 +57,10 @@ export async function POST(req: NextRequest) {
     });
 
     // Send verification email — non-blocking; don't fail registration if email fails
-    sendVerificationEmail(normalizedEmail).catch((err) => {
+    sendVerificationEmail({
+      email: normalizedEmail,
+      recipientName: name,
+    }).catch((err) => {
       console.error("[register] failed to send verification email:", err);
     });
 
