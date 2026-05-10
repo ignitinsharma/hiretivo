@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlanTier } from "@/constants/enums";
 import { billingService } from "@/services/billing.service";
@@ -18,12 +18,13 @@ type PollState = "loading" | "success" | "timeout" | "error";
 function PricingSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const { data: session, update } = useSession();
+  const { update } = useSession();
   const [state, setState] = useState<PollState>("loading");
 
   useEffect(() => {
     let attempts = 0;
     let cancelled = false;
+    let timeoutId: number | null = null;
 
     async function pollSubscription(): Promise<void> {
       attempts += 1;
@@ -35,13 +36,16 @@ function PricingSuccessContent() {
           payload.subscription?.status === "ACTIVE";
 
         if (isActive) {
-          await update({
+          if (!cancelled) setState("success");
+
+          void update({
             user: {
-              role: session?.user.role,
               plan: payload.plan ?? PlanTier.PRO,
             },
+          }).catch(() => {
+            // Billing status is already persisted in the database. Session
+            // refresh is best-effort so the success screen never gets stuck.
           });
-          if (!cancelled) setState("success");
           return;
         }
 
@@ -56,7 +60,7 @@ function PricingSuccessContent() {
         }
       }
 
-      window.setTimeout(() => {
+      timeoutId = window.setTimeout(() => {
         if (!cancelled) void pollSubscription();
       }, POLL_INTERVAL_MS);
     }
@@ -65,8 +69,9 @@ function PricingSuccessContent() {
 
     return () => {
       cancelled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [session?.user.role, update]);
+  }, [update]);
 
   const title =
     state === "success"
@@ -87,37 +92,47 @@ function PricingSuccessContent() {
           : "This usually takes a few seconds.";
 
   return (
-    <main className="min-h-[70vh] px-6 py-24">
-      <section className="mx-auto flex max-w-xl flex-col items-center text-center">
-        {state === "loading" ? (
-          <Loader2
-            className="mb-6 h-12 w-12 animate-spin text-black"
-            aria-hidden
-          />
-        ) : (
-          <CheckCircle2
-            className="mb-6 h-12 w-12 text-black"
-            aria-hidden
-          />
-        )}
+    <main className="min-h-[70vh] bg-white px-6 py-24">
+      <section className="mx-auto flex max-w-2xl flex-col items-center text-center">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10">
+          {state === "loading" ? (
+            <Loader2
+              className="h-8 w-8 animate-spin text-brand-primary"
+              aria-hidden
+            />
+          ) : (
+            <CheckCircle2
+              className="h-8 w-8 text-brand-primary"
+              aria-hidden
+            />
+          )}
+        </div>
 
-        <h1 className="mb-4 text-3xl font-extrabold text-slate-950">
+        <h1 className="mb-4 text-3xl font-bold tracking-tight text-brand-foreground md:text-4xl">
           {title}
         </h1>
-        <p className="mb-8 text-base text-slate-600">{message}</p>
+        <p className="mb-8 max-w-lg text-base leading-relaxed text-brand-foreground-muted">
+          {message}
+        </p>
 
         {sessionId && (
-          <p className="mb-8 text-xs text-slate-400">
+          <p className="mb-8 rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-xs text-brand-foreground-muted">
             Checkout session: {sessionId}
           </p>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <Link href="/recruiter/dashboard">Go to Dashboard</Link>
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <Button asChild size="lg" variant="primary">
+            <Link href="/recruiter/dashboard">
+              Go to Dashboard
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
           </Button>
-          <Button asChild size="lg" variant="default">
-            <Link href="/recruiter/settings">Billing Settings</Link>
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/recruiter/settings?tab=billing">
+              <Settings className="h-4 w-4" aria-hidden />
+              Billing Settings
+            </Link>
           </Button>
         </div>
       </section>
