@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Hiretivo | Find Remote Work That Fits Your Life",
   description:
     "Skills-based remote job portal connecting talented professionals with remote-first companies worldwide.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

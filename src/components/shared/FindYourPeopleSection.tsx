@@ -17,10 +17,23 @@ const PROOF_SIGNALS = [
   "Remote-first hiring",
 ];
 
+/*
+ * withPlus
+ * Normalizes proof values so social proof cards always include a plus suffix.
+ * @param value - Count label to display
+ * @returns Count label with a trailing plus sign
+ */
 function withPlus(value: string): string {
   return value.endsWith("+") ? value : `${value}+`;
 }
 
+/*
+ * FindYourPeopleSection
+ * Renders recruiter social proof with a static image and proof-card stack.
+ * @param clientCount - Public company proof number
+ * @param candidateCount - Public candidate proof number
+ * @param className - Optional section wrapper classes
+ */
 export function FindYourPeopleSection({
   clientCount,
   candidateCount,
@@ -28,7 +41,7 @@ export function FindYourPeopleSection({
 }: FindYourPeopleSectionProps) {
   return (
     <section className={className} data-purpose="find-your-people-section">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-xl border border-brand-border bg-brand-primary/5 p-6 md:p-10 lg:p-14">
+      <div className="grid-bg mx-auto max-w-7xl overflow-hidden rounded-xl border border-brand-border bg-white p-6 md:p-10 lg:p-14">
         <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="relative z-10">
             <h2 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl lg:text-6xl">
@@ -48,8 +61,8 @@ export function FindYourPeopleSection({
             </div>
           </div>
 
-          <div className="group/proof-image relative min-h-[500px] lg:min-h-[620px]">
-            <div className="absolute left-0 top-0 z-20 w-52 rounded-xl border border-brand-border bg-white transition-all duration-700 ease-out group-hover/proof-image:z-10 group-hover/proof-image:opacity-80 md:left-[-10px] md:w-64">
+          <div className="relative min-h-[500px] lg:min-h-[620px]">
+            <div className="absolute left-0 top-0 z-20 w-52 rounded-xl border border-brand-border bg-white md:left-[-10px] md:w-64">
               <div className="border-b border-brand-border px-4 py-2 text-center text-sm font-semibold text-brand-foreground">
                 Our clients
               </div>
@@ -63,7 +76,7 @@ export function FindYourPeopleSection({
               </div>
             </div>
 
-            <div className="absolute right-[-18px] top-8 z-10 h-[445px] w-[106%] overflow-hidden rounded-xl border border-brand-border bg-white transition-all duration-700 ease-out group-hover/proof-image:z-30 group-hover/proof-image:-translate-y-3 group-hover/proof-image:scale-[1.04] md:h-[535px]">
+            <div className="absolute right-[-18px] top-8 z-10 h-[445px] w-[106%] overflow-hidden rounded-xl border border-brand-border bg-white md:h-[535px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt="Diverse team reviewing hiring work around a laptop"
@@ -72,7 +85,7 @@ export function FindYourPeopleSection({
               />
             </div>
 
-            <div className="absolute bottom-0 right-0 z-20 w-60 rounded-xl border border-brand-border bg-white transition-all duration-700 ease-out group-hover/proof-image:z-10 group-hover/proof-image:opacity-80 md:w-72">
+            <div className="absolute bottom-0 right-0 z-20 w-60 rounded-xl border border-brand-border bg-white md:w-72">
               <div className="border-b border-brand-border px-4 py-2 text-center text-sm font-semibold text-brand-foreground">
                 Our candidates
               </div>

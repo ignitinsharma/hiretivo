@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SUPPORT_URL } from "@/lib/config";
 import type { SeekerOnboardingStep } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
 
 interface StepSeekerCompleteProps {
@@ -186,8 +187,8 @@ export function StepSeekerComplete({ onComplete }: StepSeekerCompleteProps) {
         </div>
 
         <p className="text-center text-sm text-muted-foreground">
-          Need help?{" "}
-          <Link href="/contact" className="text-primary hover:underline">
+          Need help?{' '}
+          <Link href={SUPPORT_URL} className="text-primary hover:underline">
             Chat with support
           </Link>
         </p>

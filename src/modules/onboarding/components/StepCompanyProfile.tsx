@@ -11,6 +11,8 @@ import type { CompanySize, Industry, FundingType } from '@/lib/validations/recru
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
 import { saveRecruiterProfile } from '@/app/actions/onboarding/recruiter';
 import { useSession } from 'next-auth/react';
+import { SUPPORT_URL } from '@/lib/config';
+import Link from 'next/link';
 
 interface StepCompanyProfileProps {
   onNext: () => void;
@@ -293,7 +295,10 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
         </div>
 
         <p className="text-center text-sm text-muted-foreground">
-          Need help? Contact support
+          Need help?{' '}
+          <Link href={SUPPORT_URL} className="text-primary hover:underline">
+            Contact support
+          </Link>
         </p>
       </div>
     </div>
