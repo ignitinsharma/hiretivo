@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CircleCheck, CirclePlus } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -89,13 +95,30 @@ const FEATURE_ROWS: FeatureRow[] = [
 
 interface FaqItem {
   question: string;
+  answer: string;
 }
 
 const FAQ_ITEMS: FaqItem[] = [
-  { question: "Can I change plans later?" },
-  { question: "What payment methods do you accept?" },
-  { question: "Is there a free trial for PRO?" },
-  { question: "What happens to my listings if I downgrade?" },
+  {
+    question: "Can I change plans later?",
+    answer:
+      "Yes. Recruiters can upgrade to Pro from the pricing page. If you are already on Pro, the pricing CTA opens billing management so you can manage your subscription.",
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer:
+      "Checkout is handled securely through our billing provider. Available payment methods are shown during checkout based on your region and selected currency.",
+  },
+  {
+    question: "Is there a free trial for PRO?",
+    answer:
+      "The Free plan includes a trial-style offer with up to 4 active job posts and access to core AI hiring features. Pro unlocks the full paid recruiter workflow.",
+  },
+  {
+    question: "What happens to my listings if I downgrade?",
+    answer:
+      "Your existing listings remain tied to your recruiter account, but Free plan limits apply after downgrade. You can manage billing from the pricing page when signed in on Pro.",
+  },
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -415,25 +438,22 @@ function PricingFaqSection() {
         <h2 className="text-4xl font-extrabold text-center text-slate-900 mb-16">
           Frequently asked questions
         </h2>
-        <div className="space-y-4">
+        <Accordion type="single" collapsible className="space-y-4">
           {FAQ_ITEMS.map((item) => (
-            <div
+            <AccordionItem
               key={item.question}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden group"
+              value={item.question}
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden"
             >
-              <div className="p-6 flex items-center justify-between cursor-pointer">
-                <h4 className="font-bold text-lg text-slate-900">
-                  {item.question}
-                </h4>
-                <CirclePlus
-                  className="h-6 w-6 shrink-0 fill-slate-100 text-slate-500 transition-colors group-hover:fill-black-light group-hover:text-brand-primary"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-              </div>
-            </div>
+              <AccordionTrigger className="px-6 py-6 text-left text-lg font-bold text-slate-900 hover:no-underline hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-slate-500 [&[data-state=open]>svg]:text-brand-primary">
+                {item.question}
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-6 text-base leading-relaxed text-brand-foreground-muted">
+                {item.answer}
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
         <div className="mt-16 text-center">
           <p className="text-slate-500">
             Still have questions?{" "}
