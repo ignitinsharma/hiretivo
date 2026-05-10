@@ -12,89 +12,102 @@
  */
 export function getAppUrl(): string {
   // Explicit production URL
-  if (process.env.VERCEL_ENV === 'production') {
-    return process.env.NEXT_PUBLIC_APP_URL ?? 'https://hiretivo.com'
+  if (process.env.VERCEL_ENV === "production") {
+    return process.env.NEXT_PUBLIC_APP_URL ?? "https://hiretivo.com";
   }
 
   // Check if we're on a specific branch (staging or develop)
-  const branch = process.env.VERCEL_GIT_COMMIT_REF
+  const branch = process.env.VERCEL_GIT_COMMIT_REF;
 
   // Staging branch
-  if (branch === 'staging') {
+  if (branch === "staging") {
     return (
       process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-    )
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000")
+    );
   }
 
   // Develop branch
-  if (branch === 'develop') {
+  if (branch === "develop") {
     return (
       process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-    )
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000")
+    );
   }
 
   // All other previews and local development
   return (
     process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  )
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000")
+  );
 }
 
 /**
  * Current application URL
  * Use this throughout the app for OAuth redirects, email links, etc.
  */
-export const APP_URL = getAppUrl()
+export const APP_URL = getAppUrl();
 
 /**
  * Environment detection helpers
  */
-export const IS_PRODUCTION = process.env.VERCEL_ENV === 'production'
-export const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
-export const IS_DEVELOPMENT = process.env.VERCEL_ENV === 'development'
+export const IS_PRODUCTION = process.env.VERCEL_ENV === "production";
+export const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
+export const IS_DEVELOPMENT = process.env.VERCEL_ENV === "development";
 
 /**
  * Branch detection helpers
  */
-export const IS_STAGING = process.env.VERCEL_GIT_COMMIT_REF === 'staging'
-export const IS_DEVELOP = process.env.VERCEL_GIT_COMMIT_REF === 'develop'
-export const IS_MAIN = process.env.VERCEL_GIT_COMMIT_REF === 'main'
+export const IS_STAGING = process.env.VERCEL_GIT_COMMIT_REF === "staging";
+export const IS_DEVELOP = process.env.VERCEL_GIT_COMMIT_REF === "develop";
+export const IS_MAIN = process.env.VERCEL_GIT_COMMIT_REF === "main";
 
 /**
  * Current branch name (useful for debugging)
  */
-export const CURRENT_BRANCH = process.env.VERCEL_GIT_COMMIT_REF ?? 'local'
+export const CURRENT_BRANCH = process.env.VERCEL_GIT_COMMIT_REF ?? "local";
 
 /**
  * Environment display name
  */
 export function getEnvironmentName(): string {
-  if (IS_PRODUCTION) return 'Production'
-  if (IS_STAGING) return 'Staging'
-  if (IS_DEVELOP) return 'Development'
-  if (IS_PREVIEW) return 'Preview'
-  return 'Local'
+  if (IS_PRODUCTION) return "Production";
+  if (IS_STAGING) return "Staging";
+  if (IS_DEVELOP) return "Development";
+  if (IS_PREVIEW) return "Preview";
+  return "Local";
 }
+
+/**
+ * support url
+ */
+
+export const SUPPORT_URL = "/contact";
 
 /**
  * Check if we're in a server environment
  */
-export const IS_SERVER = typeof window === 'undefined'
+export const IS_SERVER = typeof window === "undefined";
 
 /**
  * Site metadata
  */
-export const SITE_NAME = 'Hiretivo'
-export const SITE_DESCRIPTION = 'Skills-based remote job portal connecting talented professionals with great opportunities'
+export const SITE_NAME = "Hiretivo";
+export const SITE_DESCRIPTION =
+  "Skills-based remote job portal connecting talented professionals with great opportunities";
 
 /**
  * Get OAuth redirect URL for a provider
  * Example: getOAuthCallbackUrl('google') → 'https://hiretivo.com/api/auth/callback/google'
  */
 export function getOAuthCallbackUrl(provider: string): string {
-  return `${APP_URL}/api/auth/callback/${provider}`
+  return `${APP_URL}/api/auth/callback/${provider}`;
 }
 
 /**
@@ -103,15 +116,15 @@ export function getOAuthCallbackUrl(provider: string): string {
  */
 export function getAbsoluteUrl(path: string): string {
   // Ensure path starts with /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  return `${APP_URL}${normalizedPath}`
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${APP_URL}${normalizedPath}`;
 }
 
 /**
  * Database configuration
  * The DATABASE_URL is automatically set by Vercel based on branch
  */
-export const DATABASE_URL = process.env.DATABASE_URL
+export const DATABASE_URL = process.env.DATABASE_URL;
 
 /**
  * Feature flags based on environment
@@ -131,4 +144,4 @@ export const FEATURES = {
 
   // Show environment badge in non-production
   SHOW_ENV_BADGE: !IS_PRODUCTION,
-} as const
+} as const;

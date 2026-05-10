@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { ArrowRight, ArrowLeft, Info } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SkillsTagInput } from '@/components/forms/skills-tag-input';
 import { RichTextEditor } from '@/components/forms/RichTextEditor';
 import { cn } from '@/lib/utils';
+import { SUPPORT_URL } from '@/lib/config';
 import { OnboardingJobType } from '@/constants/enums';
 import type { JobType, ExperienceLevel, JobCategory } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
@@ -325,7 +327,10 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
         </div>
 
         <p className="text-center text-sm text-muted-foreground">
-          Need help? Chat with an expert
+          Need help?{' '}
+          <Link href={SUPPORT_URL} className="text-primary hover:underline">
+            Chat with an expert
+          </Link>
         </p>
       </div>
     </div>
