@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { validateStep1 } from '@/lib/validations/recruiter-onboarding.schema';
 import type { RecruiterRole, HiringScale } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
+import { saveRecruiterRole } from '@/app/actions/onboarding/recruiter';
 
 interface StepRoleHiringProps {
   onNext: () => void;
@@ -30,8 +31,10 @@ const hiringScaleOptions: { value: HiringScale; label: string }[] = [
 export function StepRoleHiring({ onNext, onSkip }: StepRoleHiringProps) {
   const { step1, setRole, setHiringScale } = useOnboardingStore();
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (isSaving) return;
     const validation = validateStep1({
       role: step1.role ?? undefined,
       hiringScale: step1.hiringScale ?? undefined,
@@ -43,6 +46,18 @@ export function StepRoleHiring({ onNext, onSkip }: StepRoleHiringProps) {
     }
     
     setErrors([]);
+    setIsSaving(true);
+    const result = await saveRecruiterRole({
+      role: step1.role!,
+      hiringScale: step1.hiringScale!,
+    });
+    setIsSaving(false);
+
+    if (!result.success) {
+      setErrors([result.error]);
+      return;
+    }
+
     onNext();
   };
 
@@ -137,10 +152,23 @@ export function StepRoleHiring({ onNext, onSkip }: StepRoleHiringProps) {
             {errors.includes('Please select hiring scale') && (
               <p className="text-sm text-destructive">Please select hiring scale</p>
             )}
+            {errors.length > 0 &&
+              !errors.includes('Please select your role') &&
+              !errors.includes('Please select hiring scale') && (
+                <p className="text-sm text-destructive">{errors[0]}</p>
+              )}
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button type="button" onClick={handleContinue} size="lg" variant="primary" className="w-full">
+            <Button
+              type="button"
+              onClick={handleContinue}
+              size="lg"
+              variant="primary"
+              className="w-full"
+              loading={isSaving}
+              loadingText="Saving..."
+            >
               Continue
               <ArrowRight className="w-4 h-4" />
             </Button>

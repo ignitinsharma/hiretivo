@@ -1,7 +1,11 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth, unstable_update } from "@/auth";
 import { UserRole } from "@/constants/enums";
+import {
+  mergeOnboardingDraft,
+  nextProgressStep,
+} from "@/lib/onboarding/progress";
 import { prisma } from "@/lib/prisma";
 import { invalidateSeekerCache } from "@/lib/match";
 import { uploadFile } from "@/lib/r2";
@@ -20,22 +24,41 @@ export async function saveStep1(data: {
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
 
   const parsed = step1Schema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
   }
 
-  await prisma.seekerProfile.upsert({
-    where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      situation: parsed.data.situation,
-    },
-    update: {
-      situation: parsed.data.situation,
-    },
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingStep: true, onboardingDraft: true },
   });
+
+  await prisma.$transaction([
+    prisma.seekerProfile.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        situation: parsed.data.situation,
+      },
+      update: {
+        situation: parsed.data.situation,
+      },
+    }),
+    prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        onboardingStep: nextProgressStep(user?.onboardingStep, 2),
+        onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
+          seeker: { experienceLevel: parsed.data.experienceLevel },
+        }),
+      },
+    }),
+  ]);
 
   return { success: true };
 }
@@ -48,6 +71,9 @@ export async function saveStep2(data: {
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
 
   const parsed = step2Schema.safeParse(data);
   if (!parsed.success) {
@@ -55,6 +81,11 @@ export async function saveStep2(data: {
   }
 
   await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: session.user.id },
+      select: { onboardingStep: true, onboardingDraft: true },
+    });
+
     const profile = await tx.seekerProfile.upsert({
       where: { userId: session.user.id },
       create: { userId: session.user.id, primaryRole: parsed.data.primaryRole },
@@ -75,6 +106,16 @@ export async function saveStep2(data: {
         })),
       });
     }
+
+    await tx.user.update({
+      where: { id: session.user.id },
+      data: {
+        onboardingStep: nextProgressStep(user?.onboardingStep, 3),
+        onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
+          seeker: { yearsOfExperience: parsed.data.yearsOfExperience },
+        }),
+      },
+    });
   });
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
@@ -100,6 +141,9 @@ export async function saveStep2(data: {
 export async function saveStep3(formData: FormData): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
 
   const resumeFile = formData.get('resumeFile') as File | null;
   let resumeKey: string | null = null;
@@ -131,14 +175,64 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
     }
   }
 
-  await prisma.seekerProfile.upsert({
+  const existingProfile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      resumeKey,
+    select: { resumeKey: true },
+  });
+
+  if (resumeKey) {
+    await prisma.seekerProfile.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        resumeKey,
+      },
+      update: {
+        resumeKey,
+      },
+    });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingStep: true, onboardingDraft: true },
+  });
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      onboardingStep: nextProgressStep(user?.onboardingStep, 4),
+      onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
+        seeker: { resumeSkipped: !resumeKey && !existingProfile?.resumeKey },
+      }),
     },
-    update: {
-      resumeKey,
+  });
+
+  return { success: true };
+}
+
+export async function skipSeekerResumeOnboarding(): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingStep: true, onboardingDraft: true },
+  });
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      onboardingStep: nextProgressStep(user?.onboardingStep, 4),
+      onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
+        seeker: { resumeSkipped: true },
+      }),
     },
   });
 
@@ -147,6 +241,8 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
 
 // --- Step 4: Job Preferences ---
 export async function saveStep4(data: {
+  jobType: string | null;
+  category: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
   currency: string;
@@ -177,6 +273,24 @@ export async function saveStep4(data: {
       currency: parsed.data.currency,
       availability: parsed.data.availability,
       workPreference: parsed.data.workPreference,
+    },
+  });
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingStep: true, onboardingDraft: true },
+  });
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      onboardingStep: nextProgressStep(user?.onboardingStep, 5),
+      onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
+        seeker: {
+          jobType: data.jobType,
+          category: data.category,
+        },
+      }),
     },
   });
 
@@ -228,7 +342,10 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { onboardingCompleted: true },
+    data: { onboardingCompleted: true, onboardingStep: null },
+  });
+  await unstable_update({
+    user: { onboardingCompleted: true, onboardingStep: null },
   });
 
   return { success: true, redirectTo: "/seeker/settings" };

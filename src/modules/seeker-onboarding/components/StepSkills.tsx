@@ -39,6 +39,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
   const [skillSearch, setSkillSearch] = useState("");
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [isCreatingSkill, setIsCreatingSkill] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
   }, []);
 
   const handleContinue = async () => {
+    if (isSaving) return;
     const validation = validateSeekerStep2({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience ?? undefined,
@@ -93,11 +95,13 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
       console.warn("[StepSkills] Skills not found in DB:", unmatchedSkills);
     }
 
+    setIsSaving(true);
     const result = await saveStep2({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience,
       skills: skillPayload,
     });
+    setIsSaving(false);
 
     if (!result.success) {
       console.error("[StepSkills] saveStep2 failed:", result.error);
@@ -359,6 +363,8 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
               variant={"primary"}
               size="lg"
               className="w-full"
+              loading={isSaving}
+              loadingText="Saving..."
             >
               Continue
               <ArrowRight className="w-4 h-4" />
