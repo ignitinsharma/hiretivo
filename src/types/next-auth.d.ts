@@ -9,6 +9,7 @@ declare module "next-auth" {
       plan: PlanTier;
       emailVerified: Date | null;
       onboardingCompleted: boolean | null;
+      onboardingStep: number | null;
     };
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
     role?: Role;
     plan?: PlanTier;
     onboardingCompleted?: boolean | null;
+    onboardingStep?: number | null;
   }
 }
 
@@ -25,5 +27,6 @@ declare module "next-auth/jwt" {
     plan?: PlanTier;
     emailVerified?: Date | null;
     onboardingCompleted?: boolean | null;
+    onboardingStep?: number | null;
   }
 }

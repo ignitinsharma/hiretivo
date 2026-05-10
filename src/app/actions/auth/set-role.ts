@@ -19,9 +19,9 @@ export async function setUserRole(role: UserRole): Promise<RoleResult> {
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { role: role as Role },
+    data: { role: role as Role, onboardingStep: 1 },
   });
-  await unstable_update({ user: { role: role as Role } });
+  await unstable_update({ user: { role: role as Role, onboardingStep: 1 } });
 
   const redirectTo = role === UserRole.SEEKER ? "/seeker/onboarding" : "/recruiter/onboarding";
   return { success: true, redirectTo };

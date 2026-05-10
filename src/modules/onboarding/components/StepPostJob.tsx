@@ -16,7 +16,8 @@ import { createJobFromOnboarding } from '@/app/actions/onboarding/recruiter';
 interface StepPostJobProps {
   onNext: () => void;
   onBack: () => void;
-  onSkip?: () => void;
+  onSkip?: () => void | Promise<void>;
+  isSkipping?: boolean;
 }
 
 const jobTypeOptions: { value: JobType; label: string }[] = [
@@ -41,7 +42,7 @@ const categoryOptions: { value: JobCategory; label: string }[] = [
   { value: 'SALES', label: 'Sales' },
 ];
 
-export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
+export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobProps) {
   const { 
     step3, 
     setJobTitle, 
@@ -54,6 +55,7 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
   } = useOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const validateStep = (): boolean => {
     const newErrors: string[] = [];
@@ -82,8 +84,10 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
   };
 
   const handleContinue = async () => {
+    if (isSaving) return;
     if (validateStep()) {
       // Persist job to DB before advancing (per D-06)
+      setIsSaving(true);
       const result = await createJobFromOnboarding({
         title: step3.jobTitle,
         description: step3.jobDescription,
@@ -97,9 +101,12 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
 
       if (!result.success) {
         console.error("[StepPostJob] createJobFromOnboarding failed:", result.error);
-        // Non-blocking: advance anyway — job can be created later
+        setErrors([result.error]);
+        setIsSaving(false);
+        return;
       }
 
+      setIsSaving(false);
       onNext();
     }
   };
@@ -134,7 +141,7 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
     if (errors.includes('Please select category')) return 'Please select category';
     if (errors.includes('Job description must be at least 50 characters')) return 'Job description must be at least 50 characters';
     if (errors.includes('At least one skill is required')) return 'At least one skill is required';
-    return null;
+    return errors[0] ?? null;
   };
 
   return (
@@ -285,7 +292,15 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button type="button" onClick={handleContinue} size="lg" variant="primary" className="w-full">
+            <Button
+              type="button"
+              onClick={handleContinue}
+              size="lg"
+              variant="primary"
+              className="w-full"
+              loading={isSaving}
+              loadingText="Posting..."
+            >
               Post Job & Continue
               <ArrowRight className="w-4 h-4" />
             </Button>
@@ -295,9 +310,15 @@ export function StepPostJob({ onNext, onBack, onSkip }: StepPostJobProps) {
                 Back
               </Button>
               {onSkip && (
-                <Button type="button" variant="ghost" onClick={onSkip}>
-                  Skip for now
-                </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={onSkip}
+                    loading={isSkipping}
+                    loadingText="Skipping..."
+                  >
+                    Skip for now
+                  </Button>
               )}
             </div>
           </div>

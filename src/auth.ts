@@ -97,23 +97,41 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { role: true, plan: true, emailVerified: true, onboardingCompleted: true },
+          select: {
+            role: true,
+            plan: true,
+            emailVerified: true,
+            onboardingCompleted: true,
+            onboardingStep: true,
+          },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.plan = dbUser.plan;
           token.emailVerified = dbUser.emailVerified ?? null;
           token.onboardingCompleted = dbUser.onboardingCompleted ?? null;
+          token.onboardingStep = dbUser.onboardingStep ?? null;
         }
       }
 
       if (trigger === "update" && session?.user) {
-        const u = session.user as { role?: Role; plan?: PlanTier };
+        const u = session.user as {
+          role?: Role;
+          plan?: PlanTier;
+          onboardingCompleted?: boolean | null;
+          onboardingStep?: number | null;
+        };
         if (u.role) {
           token.role = u.role;
         }
         if (u.plan) {
           token.plan = u.plan;
+        }
+        if (typeof u.onboardingCompleted === "boolean" || u.onboardingCompleted === null) {
+          token.onboardingCompleted = u.onboardingCompleted;
+        }
+        if (typeof u.onboardingStep === "number" || u.onboardingStep === null) {
+          token.onboardingStep = u.onboardingStep;
         }
         if (token.sub) {
           const dbUser = await prisma.user.findUnique({
@@ -155,6 +173,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       session.user.plan = plan ?? PlanTier.FREE;
       session.user.emailVerified = (token.emailVerified as Date | null | undefined) ?? null;
       session.user.onboardingCompleted = (token.onboardingCompleted as boolean | null | undefined) ?? null;
+      session.user.onboardingStep = (token.onboardingStep as number | null | undefined) ?? null;
 
       return session;
     },

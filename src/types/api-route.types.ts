@@ -7,6 +7,7 @@ export interface SessionUser {
   plan: PlanTier;
   emailVerified: Date | null;
   onboardingCompleted: boolean | null;
+  onboardingStep: number | null;
 }
 
 export interface AuthSession extends Session {

@@ -134,6 +134,13 @@ export default async function Home() {
 
   const session = await auth();
   if (session?.user) {
+    if (session.user.onboardingCompleted === false) {
+      redirect(
+        session.user.role === UserRole.RECRUITER
+          ? "/recruiter/onboarding"
+          : "/seeker/onboarding",
+      );
+    }
     redirect(session.user.role === UserRole.RECRUITER ? "/recruiter/dashboard" : "/seeker/dashboard");
   }
 

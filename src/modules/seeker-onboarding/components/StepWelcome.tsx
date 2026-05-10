@@ -26,8 +26,10 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
   const { step1, userName, setSituation, setExperienceLevel } =
     useSeekerOnboardingStore();
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleContinue = async () => {
+    if (isSaving) return;
     const validation = validateSeekerStep1({
       situation: step1.situation ?? undefined,
       experienceLevel: step1.experienceLevel ?? undefined,
@@ -41,10 +43,12 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
     setErrors([]);
 
     // Persist to DB before advancing (per D-04)
+    setIsSaving(true);
     const result = await saveStep1({
       situation: step1.situation!,
       experienceLevel: step1.experienceLevel!,
     });
+    setIsSaving(false);
 
     if (!result.success) {
       console.error("[StepWelcome] saveStep1 failed:", result.error);
@@ -186,6 +190,8 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
               size="lg"
               variant={"primary"}
               className="w-full"
+              loading={isSaving}
+              loadingText="Saving..."
             >
               Continue
               <ArrowRight className="w-4 h-4" />

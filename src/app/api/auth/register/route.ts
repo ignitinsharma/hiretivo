@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         name: name ?? null,
         passwordHash,
         role: role as Role,
+        onboardingStep: 1,
       },
       select: { id: true, email: true, role: true },
     });
