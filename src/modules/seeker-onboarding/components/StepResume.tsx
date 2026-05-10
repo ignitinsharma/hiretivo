@@ -17,7 +17,7 @@ import { saveStep3 } from "@/app/actions/onboarding/seeker";
 interface StepResumeProps {
   onNext: () => void;
   onBack: () => void;
-  onSkip?: () => void;
+  onSkip?: () => void | Promise<void>;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -30,6 +30,8 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   const { step3, setResume } = useSeekerOnboardingStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFile = useCallback(
@@ -107,12 +109,15 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   }, [setResume, step3.resume]);
 
   const handleContinue = async () => {
+    if (isSaving) return;
     const formData = new FormData();
     if (step3.resume?.file) {
       formData.append("resumeFile", step3.resume.file);
     }
 
+    setIsSaving(true);
     const result = await saveStep3(formData);
+    setIsSaving(false);
 
     if (!result.success) {
       console.error("[StepResume] saveStep3 failed:", result.error);
@@ -121,6 +126,17 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
     }
 
     onNext();
+  };
+
+  const handleSkip = async () => {
+    if (!onSkip || isSkipping) return;
+    setIsSkipping(true);
+    setError(null);
+    try {
+      await onSkip();
+    } finally {
+      setIsSkipping(false);
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -211,6 +227,8 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
             variant={"primary"}
             className="w-full"
             disabled={isUploading}
+            loading={isSaving}
+            loadingText="Saving..."
           >
             Continue
             <ArrowRight className="w-4 h-4" />
@@ -229,8 +247,10 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={onSkip}
+                onClick={handleSkip}
                 className="w-auto"
+                loading={isSkipping}
+                loadingText="Skipping..."
               >
                 Skip for now
               </Button>

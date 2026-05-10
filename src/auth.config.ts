@@ -14,6 +14,20 @@ export const authConfig = {
       if (session.user && token.sub) {
         session.user.id = token.sub;
         (session.user as { role?: string }).role = token.role as string;
+        (
+          session.user as {
+            onboardingCompleted?: boolean | null;
+            onboardingStep?: number | null;
+          }
+        ).onboardingCompleted =
+          (token.onboardingCompleted as boolean | null | undefined) ?? null;
+        (
+          session.user as {
+            onboardingCompleted?: boolean | null;
+            onboardingStep?: number | null;
+          }
+        ).onboardingStep =
+          (token.onboardingStep as number | null | undefined) ?? null;
       }
       return session;
     },

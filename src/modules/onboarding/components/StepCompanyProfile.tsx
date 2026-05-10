@@ -49,6 +49,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
   const { step2, setCompanyName, setCompanyWebsite, setCompanySize, setIndustry, setFundingType, setIsFullyRemote, setLogoUrl } = useOnboardingStore();
   const [logoPreview, setLogoPreview] = useState<string | null>(step2.logoUrl);
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateStep = (): boolean => {
@@ -85,8 +86,10 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
   };
 
   const handleContinue = async () => {
+    if (isSaving) return;
     if (validateStep()) {
       // Persist to DB before advancing (per D-06)
+      setIsSaving(true);
       const result = await saveRecruiterProfile({
         companyName: step2.companyName,
         website: step2.companyWebsite || null,
@@ -100,9 +103,12 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
 
       if (!result.success) {
         console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
-        // Non-blocking: advance anyway — RecruiterProfile can be created on retry
+        setErrors([result.error]);
+        setIsSaving(false);
+        return;
       }
 
+      setIsSaving(false);
       onNext();
     }
   };
@@ -283,7 +289,15 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
           </div>
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button type="button" onClick={handleContinue} size="lg" variant="primary" className="w-full">
+            <Button
+              type="button"
+              onClick={handleContinue}
+              size="lg"
+              variant="primary"
+              className="w-full"
+              loading={isSaving}
+              loadingText="Saving..."
+            >
               Continue
               <ArrowRight className="w-4 h-4" />
             </Button>

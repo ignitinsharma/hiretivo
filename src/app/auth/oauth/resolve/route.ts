@@ -103,6 +103,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     select: {
       role: true,
       onboardingCompleted: true,
+      onboardingStep: true,
       passwordHash: true,
       seekerProfile: { select: { id: true } },
       recruiterProfile: { select: { id: true } },
@@ -138,11 +139,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (effectiveRole !== user.role) {
       await prisma.user.update({
         where: { id: userId },
-        data: { role: effectiveRole },
+        data: { role: effectiveRole, onboardingStep: user.onboardingStep ?? 1 },
+      });
+    } else if (user.onboardingStep === null) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { onboardingStep: 1 },
       });
     }
 
-    await unstable_update({ user: { role: effectiveRole } });
+    await unstable_update({ user: { role: effectiveRole, onboardingStep: user.onboardingStep ?? 1 } });
   }
 
   if (!entryRole && isLikelyFirstGoogleUser) {

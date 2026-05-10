@@ -51,8 +51,10 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleContinue = async () => {
+    if (isSaving) return;
     const validation = validateSeekerStep4({
       jobType: step4.jobType ?? undefined,
       category: step4.category ?? undefined,
@@ -68,13 +70,17 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
     setErrors([]);
 
     // Persist to DB before advancing (per D-04)
+    setIsSaving(true);
     const result = await saveStep4({
+      jobType: step4.jobType,
+      category: step4.category,
       salaryMin: step4.salaryRange.min,
       salaryMax: step4.salaryRange.max,
       currency: step4.salaryRange.currency,
       availability: step4.availability,
       workPreference: null,
     });
+    setIsSaving(false);
 
     if (!result.success) {
       console.error("[StepPreferences] saveStep4 failed:", result.error);
@@ -281,6 +287,8 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
               size="lg"
               className="w-full"
               variant={"primary"}
+              loading={isSaving}
+              loadingText="Saving..."
             >
               Continue
               <ArrowRight className="w-4 h-4" />

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type {
   OnboardingStep,
   Step1Data,
@@ -22,6 +21,13 @@ interface OnboardingState {
   step1: Step1Data;
   step2: Step2Data;
   step3: Step3Data;
+
+  initializeOnboarding: (data: {
+    currentStep: OnboardingStep;
+    step1?: Partial<Step1Data>;
+    step2?: Partial<Step2Data>;
+    step3?: Partial<Step3Data>;
+  }) => void;
 
   setCurrentStep: (step: OnboardingStep) => void;
   nextStep: () => void;
@@ -80,20 +86,7 @@ const initialStep3Data: Step3Data = {
   requiredSkills: [],
 };
 
-function migratePersistedState(persisted: unknown): unknown {
-  if (!persisted || typeof persisted !== 'object') {
-    return persisted;
-  }
-  const s = persisted as Record<string, unknown>;
-  if (typeof s.currentStep === 'number' && s.currentStep > 4) {
-    s.currentStep = 4;
-  }
-  delete s.step4;
-  return persisted;
-}
-
 export const useOnboardingStore = create<OnboardingState>()(
-  persist(
     (set, get) => ({
       currentStep: 1,
       isCompleted: false,
@@ -101,6 +94,21 @@ export const useOnboardingStore = create<OnboardingState>()(
       step1: initialStep1Data,
       step2: initialStep2Data,
       step3: initialStep3Data,
+
+      initializeOnboarding: (data) => set({
+        currentStep: data.currentStep,
+        isCompleted: false,
+        step1: { ...initialStep1Data, ...data.step1 },
+        step2: { ...initialStep2Data, ...data.step2 },
+        step3: {
+          ...initialStep3Data,
+          ...data.step3,
+          salaryRange: {
+            ...initialStep3Data.salaryRange,
+            ...data.step3?.salaryRange,
+          },
+        },
+      }),
 
       setCurrentStep: (step) => set({ currentStep: step }),
 
@@ -217,27 +225,5 @@ export const useOnboardingStore = create<OnboardingState>()(
         step2: initialStep2Data,
         step3: initialStep3Data,
       }),
-    }),
-    {
-      name: 'hiretivo-onboarding',
-      version: 1,
-      migrate: (persistedState, version) => {
-        if (version < 1) {
-          return migratePersistedState(persistedState) as OnboardingState;
-        }
-        return persistedState as OnboardingState;
-      },
-      merge: (persistedState, currentState) => {
-        const merged = {
-          ...currentState,
-          ...(persistedState as Partial<OnboardingState> & { step4?: unknown }),
-        };
-        if (typeof merged.currentStep === 'number' && merged.currentStep > 4) {
-          merged.currentStep = 4;
-        }
-        const { step4: _discard, ...rest } = merged;
-        return rest;
-      },
-    }
-  )
+    })
 );

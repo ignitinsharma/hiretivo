@@ -29,8 +29,13 @@ export default auth((req) => {
 
   if (isPublicRoute) {
     if (session && pathname === "/") {
-      const dest =
-        userRole === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
+      const dest = session.user?.onboardingCompleted === false
+        ? userRole === "RECRUITER"
+          ? "/recruiter/onboarding"
+          : "/seeker/onboarding"
+        : userRole === "RECRUITER"
+          ? "/recruiter/dashboard"
+          : "/seeker/dashboard";
       return NextResponse.redirect(new URL(dest, req.url));
     }
     return NextResponse.next();
@@ -57,8 +62,13 @@ export default auth((req) => {
 
   if (isLoginOrRegister) {
     if (!hasKnownRole) return NextResponse.next();
-    const dest =
-      userRole === "RECRUITER" ? "/recruiter/dashboard" : "/seeker/dashboard";
+    const dest = session.user?.onboardingCompleted === false
+      ? userRole === "RECRUITER"
+        ? "/recruiter/onboarding"
+        : "/seeker/onboarding"
+      : userRole === "RECRUITER"
+        ? "/recruiter/dashboard"
+        : "/seeker/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));
   }
 

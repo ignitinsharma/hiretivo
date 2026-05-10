@@ -3,7 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { completeSeekerOnboarding } from '@/app/actions/onboarding/seeker';
+import {
+  completeSeekerOnboarding,
+  skipSeekerResumeOnboarding,
+} from '@/app/actions/onboarding/seeker';
 import { OnboardingShell } from '@/components/layout/OnboardingShell';
 import { cn } from '@/lib/utils';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
@@ -12,28 +15,58 @@ import { StepSkills } from './StepSkills';
 import { StepResume } from './StepResume';
 import { StepPreferences } from './StepPreferences';
 import { StepSeekerComplete } from './StepSeekerComplete';
-import type { SeekerOnboardingStep } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
+import type {
+  SeekerOnboardingStep,
+  Step1Data,
+  Step2Data,
+  Step3Data,
+  Step4Data,
+} from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
 const STEP_LABELS = ['Welcome', 'Skills', 'Resume', 'Preferences', 'Complete'];
 
 interface SeekerOnboardingContainerProps {
   initialStep: SeekerOnboardingStep;
+  initialData: {
+    userName: string;
+    step1: Partial<Step1Data>;
+    step2: Partial<Step2Data>;
+    step3: Partial<Step3Data>;
+    step4: Partial<Step4Data>;
+  };
 }
 
-export function SeekerOnboardingContainer({ initialStep }: SeekerOnboardingContainerProps) {
+export function SeekerOnboardingContainer({
+  initialStep,
+  initialData,
+}: SeekerOnboardingContainerProps) {
   const router = useRouter();
   const {
     currentStep,
     nextStep,
     previousStep,
     setCurrentStep,
+    initializeOnboarding,
   } = useSeekerOnboardingStore();
 
   const progressPercent = ((currentStep - 1) / 4) * 100;
 
   useEffect(() => {
-    setCurrentStep(initialStep);
-  }, [initialStep, setCurrentStep]);
+    initializeOnboarding({
+      currentStep: initialStep,
+      ...initialData,
+    });
+    window.localStorage.removeItem('hiretivo-seeker-onboarding');
+  }, [initialData, initialStep, initializeOnboarding]);
+
+  const handleSkipResume = async () => {
+    const result = await skipSeekerResumeOnboarding();
+    if (!result.success) {
+      console.error("[SeekerOnboardingContainer] skipSeekerResumeOnboarding failed:", result.error);
+      return;
+    }
+    setCurrentStep(4);
+  };
 
   const handleComplete = async () => {
     const result = await completeSeekerOnboarding();
@@ -69,7 +102,7 @@ export function SeekerOnboardingContainer({ initialStep }: SeekerOnboardingConta
           <StepResume
             onNext={nextStep}
             onBack={previousStep}
-            onSkip={() => nextStep()}
+            onSkip={handleSkipResume}
           />
         );
       case 4:

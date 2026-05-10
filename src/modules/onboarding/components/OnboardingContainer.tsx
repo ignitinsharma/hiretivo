@@ -1,11 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   completeRecruiterOnboarding,
   saveRecruiterProfile,
+  skipRecruiterJobOnboarding,
 } from '@/app/actions/onboarding/recruiter';
 import { OnboardingShell } from '@/components/layout/OnboardingShell';
 import { cn } from '@/lib/utils';
@@ -14,15 +15,63 @@ import { StepRoleHiring } from './StepRoleHiring';
 import { StepCompanyProfile } from './StepCompanyProfile';
 import { StepPostJob } from './StepPostJob';
 import { StepComplete } from './StepComplete';
+import type {
+  OnboardingStep,
+  Step1Data,
+  Step2Data,
+  Step3Data,
+} from '@/modules/onboarding/types/onboarding.types';
 
 const stepLabels = ['Role', 'Company', 'Job', 'Complete'];
 
-export function OnboardingContainer() {
+interface OnboardingContainerProps {
+  initialStep: OnboardingStep;
+  initialData: {
+    step1: Partial<Step1Data>;
+    step2: Partial<Step2Data>;
+    step3?: Partial<Step3Data>;
+  };
+}
+
+export function OnboardingContainer({
+  initialStep,
+  initialData,
+}: OnboardingContainerProps) {
   const router = useRouter();
-  const { currentStep, nextStep, previousStep, completeOnboarding, step2 } = useOnboardingStore();
+  const {
+    currentStep,
+    nextStep,
+    previousStep,
+    setCurrentStep,
+    initializeOnboarding,
+    completeOnboarding,
+    step2,
+  } = useOnboardingStore();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isSkippingJob, setIsSkippingJob] = useState(false);
 
   const progressPercent = ((currentStep - 1) / 3) * 100;
+
+  useEffect(() => {
+    initializeOnboarding({
+      currentStep: initialStep,
+      ...initialData,
+    });
+    window.localStorage.removeItem('hiretivo-onboarding');
+  }, [initialData, initialStep, initializeOnboarding]);
+
+  const handleSkipJob = async () => {
+    if (isSkippingJob) return;
+    setIsSkippingJob(true);
+    const result = await skipRecruiterJobOnboarding();
+    if (!result.success) {
+      console.error("[OnboardingContainer] skipRecruiterJobOnboarding failed:", result.error);
+      setIsSkippingJob(false);
+      return;
+    }
+    setCurrentStep(4);
+    setIsSkippingJob(false);
+  };
 
   const handleComplete = async () => {
     if (isNavigating) return;
@@ -60,7 +109,6 @@ export function OnboardingContainer() {
         return (
           <StepRoleHiring
             onNext={nextStep}
-            onSkip={() => nextStep()}
           />
         );
       case 2:
@@ -75,7 +123,8 @@ export function OnboardingContainer() {
           <StepPostJob
             onNext={nextStep}
             onBack={previousStep}
-            onSkip={() => nextStep()}
+            onSkip={handleSkipJob}
+            isSkipping={isSkippingJob}
           />
         );
       case 4:

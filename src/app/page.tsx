@@ -10,7 +10,7 @@ import { FindYourPeopleSection } from "@/components/shared/FindYourPeopleSection
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { JobStatus } from "@/constants/enums";
+import { JobStatus, UserRole } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
 import { HOMEPAGE_DISPLAY_STATS } from "@/config/home-page";
 
@@ -35,8 +35,15 @@ export default async function Home() {
 
   const session = await auth();
   if (session?.user) {
+    if (session.user.onboardingCompleted === false) {
+      redirect(
+        session.user.role === UserRole.RECRUITER
+          ? "/recruiter/onboarding"
+          : "/seeker/onboarding",
+      );
+    }
     redirect(
-      session.user.role === "RECRUITER"
+      session.user.role === UserRole.RECRUITER
         ? "/recruiter/dashboard"
         : "/seeker/dashboard",
     );
