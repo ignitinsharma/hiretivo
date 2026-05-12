@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Globe2,
   Clock3,
@@ -42,25 +43,23 @@ interface CompanyLogoProps {
 }
 
 function CompanyLogo({ name, src }: CompanyLogoProps) {
+  const [showFallback, setShowFallback] = useState(false);
+
   return (
     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        alt={`${name} logo`}
-        className="h-full w-full object-cover"
-        src={src}
-        onError={(e) => {
-          const target = e.currentTarget;
-          target.style.display = "none";
-          const parent = target.parentElement;
-          if (parent) {
-            const fallback = document.createElement("span");
-            fallback.className = "text-lg font-bold text-brand-primary";
-            fallback.textContent = name.charAt(0);
-            parent.appendChild(fallback);
-          }
-        }}
-      />
+      {showFallback ? (
+        <span className="text-lg font-bold text-brand-primary">
+          {name.charAt(0)}
+        </span>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt={`${name} logo`}
+          className="h-full w-full object-cover"
+          src={src}
+          onError={() => setShowFallback(true)}
+        />
+      )}
     </div>
   );
 }
@@ -102,7 +101,7 @@ export function FakeJobCard({ job, className }: FakeJobCardProps) {
       </div>
 
       <Link href="/seeker/login" className="block">
-        <h3 className="text-xl font-semibold leading-snug tracking-tight text-brand-foreground transition-colors group-hover:text-brand-primary">
+        <h3 className="truncate whitespace-nowrap overflow-hidden text-xl font-semibold leading-snug tracking-tight text-brand-foreground transition-colors group-hover:text-brand-primary">
           {job.title}
         </h3>
       </Link>

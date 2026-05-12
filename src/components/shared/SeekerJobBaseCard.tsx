@@ -71,7 +71,7 @@ export function SeekerJobBaseCard({
           </div>
           <div className="min-w-0">
             <Link href={jobHref}>
-              <h3 className="truncate text-xl font-semibold leading-snug tracking-tight text-brand-foreground transition-colors group-hover:text-brand-primary">
+              <h3 className="truncate text-xl capitalize font-semibold leading-snug tracking-tight text-brand-foreground transition-colors group-hover:text-brand-primary">
                 {title}
               </h3>
             </Link>
@@ -136,7 +136,9 @@ export function SeekerJobBaseCard({
       )}
 
       {hintText ? (
-        <p className="mt-3 text-xs font-medium text-brand-warning">{hintText}</p>
+        <p className="mt-3 text-xs font-medium text-brand-warning">
+          {hintText}
+        </p>
       ) : null}
 
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-brand-border pt-4">

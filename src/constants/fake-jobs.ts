@@ -1,3 +1,5 @@
+import { differenceInCalendarDays, startOfYear } from "date-fns";
+
 export interface FakeJob {
   id: string;
   title: string;
@@ -12,12 +14,16 @@ export interface FakeJob {
   isNew: boolean;
 }
 
+function getLogoUrl(domain: string): string {
+  return `https://icon.horse/icon/${domain}`;
+}
+
 export const FAKE_JOBS: FakeJob[] = [
   {
     id: "fake-1",
     title: "Senior Frontend Engineer",
     companyName: "Stripe",
-    companyLogo: "https://logo.clearbit.com/stripe.com",
+    companyLogo: getLogoUrl("stripe.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -30,7 +36,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-2",
     title: "Product Designer",
     companyName: "Airbnb",
-    companyLogo: "https://logo.clearbit.com/airbnb.com",
+    companyLogo: getLogoUrl("airbnb.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "design",
@@ -43,7 +49,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-3",
     title: "Backend Engineer (Go)",
     companyName: "Datadog",
-    companyLogo: "https://logo.clearbit.com/datadoghq.com",
+    companyLogo: getLogoUrl("datadoghq.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -56,7 +62,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-4",
     title: "Senior Product Manager",
     companyName: "Notion",
-    companyLogo: "https://logo.clearbit.com/notion.so",
+    companyLogo: getLogoUrl("notion.so"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "product",
@@ -69,7 +75,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-5",
     title: "Growth Marketing Lead",
     companyName: "Figma",
-    companyLogo: "https://logo.clearbit.com/figma.com",
+    companyLogo: getLogoUrl("figma.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "marketing",
@@ -82,7 +88,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-6",
     title: "DevOps Engineer",
     companyName: "Vercel",
-    companyLogo: "https://logo.clearbit.com/vercel.com",
+    companyLogo: getLogoUrl("vercel.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -95,7 +101,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-7",
     title: "Staff Software Engineer",
     companyName: "GitHub",
-    companyLogo: "https://logo.clearbit.com/github.com",
+    companyLogo: getLogoUrl("github.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -108,7 +114,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-8",
     title: "UX Researcher",
     companyName: "Spotify",
-    companyLogo: "https://logo.clearbit.com/spotify.com",
+    companyLogo: getLogoUrl("spotify.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "design",
@@ -121,7 +127,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-9",
     title: "Sales Engineer",
     companyName: "Snowflake",
-    companyLogo: "https://logo.clearbit.com/snowflake.com",
+    companyLogo: getLogoUrl("snowflake.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "sales",
@@ -134,7 +140,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-10",
     title: "Data Engineer",
     companyName: "Databricks",
-    companyLogo: "https://logo.clearbit.com/databricks.com",
+    companyLogo: getLogoUrl("databricks.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -147,7 +153,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-11",
     title: "Customer Success Manager",
     companyName: "Slack",
-    companyLogo: "https://logo.clearbit.com/slack.com",
+    companyLogo: getLogoUrl("slack.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "customer support",
@@ -160,7 +166,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-12",
     title: "Technical Writer",
     companyName: "HashiCorp",
-    companyLogo: "https://logo.clearbit.com/hashicorp.com",
+    companyLogo: getLogoUrl("hashicorp.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "product",
@@ -173,7 +179,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-13",
     title: "ML Engineer",
     companyName: "OpenAI",
-    companyLogo: "https://logo.clearbit.com/openai.com",
+    companyLogo: getLogoUrl("openai.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -186,7 +192,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-14",
     title: "iOS Developer",
     companyName: "Shopify",
-    companyLogo: "https://logo.clearbit.com/shopify.com",
+    companyLogo: getLogoUrl("shopify.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -199,7 +205,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-15",
     title: "Security Engineer",
     companyName: "Cloudflare",
-    companyLogo: "https://logo.clearbit.com/cloudflare.com",
+    companyLogo: getLogoUrl("cloudflare.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -212,7 +218,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-16",
     title: "Content Strategist",
     companyName: "Webflow",
-    companyLogo: "https://logo.clearbit.com/webflow.com",
+    companyLogo: getLogoUrl("webflow.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "marketing",
@@ -225,7 +231,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-17",
     title: "Full Stack Developer",
     companyName: "Linear",
-    companyLogo: "https://logo.clearbit.com/linear.app",
+    companyLogo: getLogoUrl("linear.app"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -238,7 +244,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-18",
     title: "Data Analyst",
     companyName: "Mixpanel",
-    companyLogo: "https://logo.clearbit.com/mixpanel.com",
+    companyLogo: getLogoUrl("mixpanel.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "data",
@@ -251,7 +257,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-19",
     title: "QA Automation Engineer",
     companyName: "BrowserStack",
-    companyLogo: "https://logo.clearbit.com/browserstack.com",
+    companyLogo: getLogoUrl("browserstack.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "engineering",
@@ -264,7 +270,7 @@ export const FAKE_JOBS: FakeJob[] = [
     id: "fake-20",
     title: "Product Marketing Manager",
     companyName: "Loom",
-    companyLogo: "https://logo.clearbit.com/loom.com",
+    companyLogo: getLogoUrl("loom.com"),
     workType: "Remote",
     jobType: "Full-Time",
     category: "marketing",
@@ -387,11 +393,8 @@ export const FAKE_COMPANIES: string[] = [
  * Seeded shuffle based on day of year for daily rotation.
  */
 export function getDailyShuffledJobs(jobs: FakeJob[], count = 6): FakeJob[] {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor(
-    (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const today = new Date();
+  const dayOfYear = differenceInCalendarDays(today, startOfYear(today));
 
   const shuffled = [...jobs];
   let seed = dayOfYear;
@@ -402,6 +405,20 @@ export function getDailyShuffledJobs(jobs: FakeJob[], count = 6): FakeJob[] {
   }
 
   return shuffled.slice(0, count);
+}
+
+export function getDailyRotatingJobs(jobs: FakeJob[], count = 6): FakeJob[] {
+  if (jobs.length <= count) return jobs;
+
+  const today = new Date();
+  const dayOfYear = differenceInCalendarDays(today, startOfYear(today));
+  const batchCount = Math.ceil(jobs.length / count);
+  const startIndex = (dayOfYear % batchCount) * count;
+  const batch = jobs.slice(startIndex, startIndex + count);
+
+  if (batch.length === count) return batch;
+
+  return [...batch, ...jobs.slice(0, count - batch.length)];
 }
 
 export function getCompanyDomain(name: string): string {
@@ -503,4 +520,8 @@ export function getCompanyDomain(name: string): string {
     Prisma: "prisma.io",
   };
   return map[name] ?? `${name.toLowerCase().replace(/\s+/g, "")}.com`;
+}
+
+export function getCompanyLogoUrl(name: string): string {
+  return getLogoUrl(getCompanyDomain(name));
 }

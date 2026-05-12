@@ -4,13 +4,12 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { AIMatchmakingSection } from "@/components/home/AIMatchmakingSection";
 import { StatsBar } from "@/components/home/StatsBar";
 import { FeaturedJobsSection } from "@/components/home/FeaturedJobsSection";
-import { CategoriesSection } from "@/components/home/CategoriesSection";
+// import { CategoriesSection } from "@/components/home/CategoriesSection";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 import { FindYourPeopleSection } from "@/components/shared/FindYourPeopleSection";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { JobStatus, UserRole } from "@/constants/enums";
+import { UserRole } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
 import { HOMEPAGE_DISPLAY_STATS } from "@/config/home-page";
 
@@ -25,8 +24,7 @@ export const metadata = generatePageMetadata({
 /*
  * Home
  * Renders the public Hiretivo homepage for signed-out visitors.
- * Fetches live marketplace data for featured jobs while displaying temporary
- * marketing proof numbers from HOMEPAGE_DISPLAY_STATS.
+ * Displays temporary marketing proof numbers from HOMEPAGE_DISPLAY_STATS.
  */
 export default async function Home() {
   if (SHOW_COMING_SOON) {
@@ -49,24 +47,6 @@ export default async function Home() {
     );
   }
 
-  const featuredJobs = await prisma.job
-    .findMany({
-      where: { status: JobStatus.OPEN },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      include: {
-        skills: { include: { skill: true } },
-        recruiter: {
-          select: {
-            recruiterProfile: {
-              select: { companyName: true, logo: true },
-            },
-          },
-        },
-      },
-    })
-    .catch(() => []);
-
   return (
     <>
       <Header />
@@ -78,13 +58,13 @@ export default async function Home() {
           companiesHiring={HOMEPAGE_DISPLAY_STATS.companiesHiring}
           jobSeekers={HOMEPAGE_DISPLAY_STATS.jobSeekers}
         />
-        <FeaturedJobsSection jobs={featuredJobs} />
+        <FeaturedJobsSection />
         <FindYourPeopleSection
           clientCount={HOMEPAGE_DISPLAY_STATS.companiesHiring}
           candidateCount={HOMEPAGE_DISPLAY_STATS.jobSeekers}
           className="bg-brand-surface px-4 py-20 md:px-8"
         />
-        <CategoriesSection activeJobs={HOMEPAGE_DISPLAY_STATS.activeJobs} />
+        {/* <CategoriesSection activeJobs={HOMEPAGE_DISPLAY_STATS.activeJobs} /> */}
       </main>
       <Footer />
     </>

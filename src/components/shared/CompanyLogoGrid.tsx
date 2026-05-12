@@ -1,30 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { FAKE_COMPANIES, getCompanyDomain } from "@/constants/fake-jobs";
+import { FAKE_COMPANIES, getCompanyLogoUrl } from "@/constants/fake-jobs";
 
 interface CompanyLogoGridProps {
   className?: string;
 }
 
 function CompanyLogoCell({ name }: { name: string }) {
-  const [src, setSrc] = useState(() => {
-    const domain = getCompanyDomain(name);
-    return `https://icon.horse/icon/${domain}`;
-  });
+  const [showFallback, setShowFallback] = useState(false);
 
   return (
     <div className="flex h-12 items-center justify-center rounded-lg border border-brand-border bg-white p-2 transition-colors hover:border-brand-primary/40">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        alt={`${name} logo`}
-        className="max-h-7 max-w-full object-contain opacity-60 grayscale transition-all hover:opacity-100 hover:grayscale-0"
-        src={src}
-        onError={() => {
-          const domain = getCompanyDomain(name);
-          setSrc(`https://logo.clearbit.com/${domain}`);
-        }}
-      />
+      {showFallback ? (
+        <span className="text-sm font-bold text-brand-primary">
+          {name.charAt(0)}
+        </span>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt={`${name} logo`}
+          className="max-h-7 max-w-full object-contain opacity-60 grayscale transition-all hover:opacity-100 hover:grayscale-0"
+          src={getCompanyLogoUrl(name)}
+          onError={() => setShowFallback(true)}
+        />
+      )}
     </div>
   );
 }
