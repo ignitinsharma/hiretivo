@@ -14,32 +14,32 @@ interface StatsBarProps {
 export function StatsBar({ activeJobs, companiesHiring, jobSeekers }: StatsBarProps) {
   return (
     <section
-      className="bg-white border-y border-gray-200 py-12"
+      className="border-y border-brand-border bg-white py-10 md:py-12"
       data-purpose="stats-bar"
     >
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="grid grid-cols-1 gap-8 text-center md:grid-cols-3">
           <div>
-            <div className="text-black text-4xl font-bold mb-2">
+            <div className="mb-2 text-3xl font-bold text-brand-foreground md:text-4xl">
               {activeJobs}
             </div>
-            <div className="text-muted-foreground font-medium uppercase tracking-wider text-sm">
+            <div className="text-xs font-medium uppercase tracking-wider text-brand-foreground-muted md:text-sm">
               Active Jobs
             </div>
           </div>
           <div>
-            <div className="text-black text-4xl font-bold mb-2">
+            <div className="mb-2 text-3xl font-bold text-brand-foreground md:text-4xl">
               {companiesHiring}
             </div>
-            <div className="text-muted-foreground font-medium uppercase tracking-wider text-sm">
+            <div className="text-xs font-medium uppercase tracking-wider text-brand-foreground-muted md:text-sm">
               Companies Hiring
             </div>
           </div>
           <div>
-            <div className="text-black text-4xl font-bold mb-2">
+            <div className="mb-2 text-3xl font-bold text-brand-foreground md:text-4xl">
               {jobSeekers}
             </div>
-            <div className="text-muted-foreground font-medium uppercase tracking-wider text-sm">
+            <div className="text-xs font-medium uppercase tracking-wider text-brand-foreground-muted md:text-sm">
               Job Seekers
             </div>
           </div>

@@ -223,6 +223,26 @@ className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-600/
 className="rounded-xl border border-gray-200"
 ```
 
+### Mobile-First UI (MANDATORY)
+
+Write every UI change with a mobile-first approach:
+
+```ts
+// ✅ CORRECT - mobile base first, larger screens enhance
+className="flex flex-col gap-4 lg:flex-row lg:gap-8"
+
+// ✅ CORRECT - desktop-only absolute positioning is gated behind lg:
+className="relative w-full lg:absolute lg:left-0 lg:top-0 lg:w-72"
+
+// ❌ WRONG - desktop layout applies to mobile and clips content
+className="absolute left-0 top-0 w-72"
+```
+
+- Base classes must produce a usable mobile layout before adding `sm:`, `md:`, or `lg:` overrides.
+- Any absolute positioning, fixed width, or fixed height that can overflow must be desktop-gated with `lg:` and have mobile-safe base classes.
+- Header/navigation changes must expose all critical auth/actions on mobile through visible buttons or a menu.
+- Before finalizing UI work, verify the affected screen at approximately 390px wide and desktop width.
+
 ### Button Variants Reference
 
 | Variant | Use |

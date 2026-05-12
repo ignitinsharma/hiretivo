@@ -6,8 +6,11 @@ export function isRecruiterTrialActive(): boolean {
   return new Date() < new Date(end);
 }
 
-export function getRecruiterJobLimit(plan: PlanTier | string | null | undefined): number {
-  if (plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE) return 10;
+export function getRecruiterJobLimit(
+  plan: PlanTier | string | null | undefined,
+): number | null {
+  if (plan === PlanTier.ENTERPRISE) return null;
+  if (plan === PlanTier.PRO) return 10;
   if (isRecruiterTrialActive()) return 4;
   return 1;
 }

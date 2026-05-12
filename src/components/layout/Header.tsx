@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SignOutButton } from "@/components/layout/SignOutButton";
+import { PublicMobileNavMenu } from "@/components/layout/PublicMobileNavMenu";
 import { Logo } from "@/components/shared/Logo";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
@@ -29,15 +30,16 @@ const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
   (item) => item.href !== "/seeker/settings" && item.href !== "/contact",
 );
 
-export async function Header({
-  className,
-  publicAudience = "seeker"
-}: HeaderProps) {
+/*
+ * Header
+ * Renders the shared top navigation for public, seeker, and recruiter views.
+ * Returns mobile-first public auth controls and role-specific desktop nav.
+ */
+export async function Header({ className }: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isSeeker = !!session && role === UserRole.SEEKER;
   const isRecruiter = !!session && role === UserRole.RECRUITER;
-  const isRecruiterAudience = publicAudience === "recruiter";
 
   const initials = session?.user?.name?.[0]?.toUpperCase() ?? "U";
   let companyLogoUrl: string | null = null;
@@ -56,7 +58,7 @@ export async function Header({
   return (
     <nav
       className={cn(
-        "sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3",
+        "sticky top-0 z-50 w-full border-b border-brand-border bg-white px-4 py-3 md:px-6",
         className,
       )}
       data-purpose="main-navigation"
@@ -110,31 +112,23 @@ export async function Header({
             <>
               <Link
                 href={"/recruiter/register"}
-                className="hidden sm:block px-5 py-2.5 border border-brand-primary/20 text-black bg-gray-50 rounded-lg text-sm font-bold hover:bg-brand-primary hover:text-white transition-all"
+                className="hidden rounded-lg border border-brand-primary/20 bg-brand-surface px-5 py-2.5 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-primary hover:text-white sm:block"
               >
-                 {/* {isRecruiterAudience ? "I'm a job seeker" : "I'm a recruiter"} */}
                 I&apos;m a recruiter
               </Link>
               <Link
-                // href={
-                //   isRecruiterAudience
-                //     ? "/recruiter/register"
-                //     : "/seeker/register"
-                // }
                 href={"/seeker/register"}
-                className="hidden sm:block px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-foreground hover:bg-gray-50 transition-all"
+                className="hidden rounded-lg border border-brand-border px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface sm:block"
               >
                 Sign Up
               </Link>
               <Link
-                // href={
-                //   isRecruiterAudience ? "/recruiter/login" : "/seeker/login"
-                // }
                 href={"/seeker/login"}
-                className="px-6 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-semibold hover:bg-brand-primary-dark transition-all"
+                className="hidden rounded-lg bg-brand-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark sm:block"
               >
                 Sign In
               </Link>
+              <PublicMobileNavMenu />
             </>
           )}
 

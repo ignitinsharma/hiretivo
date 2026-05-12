@@ -150,18 +150,18 @@ function RecruiterSidebarInner({
             <>
               <Link
                 href="/recruiter/dashboard"
-                className="flex items-center justify-between gap-3 flex-1"
+                className="flex items-center justify-between gap-1 flex-1"
               >
                 <Logo />
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    "inline-flex items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
                     isPaidPlan
                       ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
                       : "border-brand-border bg-brand-surface text-brand-foreground-muted",
                   )}
                 >
-                  {planLabel}
+                  {planLabel === "Enterprise" ? "Ente." : planLabel}
                 </span>
               </Link>
               <SidebarToggle />

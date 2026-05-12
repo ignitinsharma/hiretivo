@@ -124,17 +124,33 @@ export async function POST(req: NextRequest) {
     select: { plan: true },
   });
 
-  const jobLimit = getRecruiterJobLimit(user?.plan);
-  const activeCount = await prisma.job.count({
-    where: { recruiterId: session.user.id, status: JobStatus.OPEN },
-  });
+  const currentPlan = user?.plan ?? PlanTier.FREE;
+  const jobLimit = getRecruiterJobLimit(currentPlan);
 
-  if (activeCount >= jobLimit) {
-    const planName = user?.plan === PlanTier.FREE && !activeCount ? 'Free' : 'Pro';
-    return NextResponse.json(
-      { error: `${planName} plan allows ${jobLimit} active job${jobLimit > 1 ? 's' : ''}. Upgrade to Pro for more.` },
-      { status: 403 }
-    );
+  if (jobLimit !== null) {
+    const activeCount = await prisma.job.count({
+      where: { recruiterId: session.user.id, status: JobStatus.OPEN },
+    });
+
+    if (activeCount >= jobLimit) {
+      const planName =
+        currentPlan === PlanTier.FREE && jobLimit > 1
+          ? 'Free trial'
+          : currentPlan === PlanTier.PRO
+            ? 'Pro'
+            : 'Free';
+      const nextStep =
+        currentPlan === PlanTier.PRO
+          ? 'Contact sales for Enterprise.'
+          : 'Upgrade to Pro for more.';
+
+      return NextResponse.json(
+        {
+          error: `${planName} plan allows ${jobLimit} active job${jobLimit > 1 ? 's' : ''}. ${nextStep}`,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   let body: unknown;

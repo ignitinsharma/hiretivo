@@ -31,7 +31,13 @@ interface JdGeneratorPanelProps {
   onGenerated: (jd: string) => void;
 }
 
-export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, prefillDescription, onGenerated }: JdGeneratorPanelProps) {
+export function JdGeneratorPanel({
+  open,
+  onOpenChange,
+  prefillTitle,
+  prefillDescription,
+  onGenerated,
+}: JdGeneratorPanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const shortDescRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -43,20 +49,20 @@ export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, prefillDesc
     formState: { errors },
   } = useForm<JdGeneratorInput>({
     resolver: zodResolver(JdGeneratorSchema),
-    defaultValues: { title: '', shortDesc: '', vibe: '' },
+    defaultValues: { title: "", shortDesc: "", vibe: "" },
   });
 
-  const shortDescValue = watch('shortDesc');
+  const shortDescValue = watch("shortDesc");
 
   useEffect(() => {
-    setValue('title', prefillTitle);
-    setValue('shortDesc', stripHtml(prefillDescription));
+    setValue("title", prefillTitle);
+    setValue("shortDesc", stripHtml(prefillDescription));
   }, [prefillTitle, prefillDescription, setValue]);
 
   useEffect(() => {
     const el = shortDescRef.current;
     if (!el) return;
-    el.style.height = 'auto';
+    el.style.height = "auto";
     el.style.height = `${Math.max(200, Math.min(el.scrollHeight, 400))}px`;
   }, [shortDescValue]);
 
@@ -75,7 +81,10 @@ export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, prefillDesc
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[640px] overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-160 overflow-y-auto"
+      >
         <SheetHeader>
           <SheetTitle>Generate Job Description</SheetTitle>
           <SheetDescription>
@@ -117,14 +126,14 @@ export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, prefillDesc
                   onChange: () => {
                     const el = shortDescRef.current;
                     if (!el) return;
-                    el.style.height = 'auto';
+                    el.style.height = "auto";
                     el.style.height = `${Math.max(200, Math.min(el.scrollHeight, 400))}px`;
                   },
                 });
                 return {
                   ...rhfRest,
                   ref: (e: HTMLTextAreaElement | null) => {
-                    if (typeof rhfRef === 'function') rhfRef(e);
+                    if (typeof rhfRef === "function") rhfRef(e);
                     shortDescRef.current = e;
                   },
                 };
@@ -155,8 +164,8 @@ export function JdGeneratorPanel({ open, onOpenChange, prefillTitle, prefillDesc
 
           <Button
             type="submit"
-            variant="secondary"
-            className="w-full font-semibold rounded-full"
+            variant="primary"
+            className="w-full"
             disabled={isGenerating}
           >
             {isGenerating ? "Generating..." : "Generate Job Description"}
