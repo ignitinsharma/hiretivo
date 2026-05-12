@@ -38,7 +38,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 5 MB)' }, { status: 400 });
   }
 
-  const key = R2_KEYS.resume(session.user.id);
+  const ext = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ? 'docx'
+    : file.type === 'application/msword'
+      ? 'doc'
+      : 'pdf';
+  const key = R2_KEYS.resume(session.user.id, ext);
   const { url } = await uploadFile(file, key);
 
   await prisma.seekerProfile.update({

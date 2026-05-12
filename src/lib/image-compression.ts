@@ -2,18 +2,20 @@ import { AVATAR_MAX_BYTES } from "@/lib/validations/upload.schema";
 
 const MAX_DIMENSION = 800;
 const TARGET_QUALITY = 0.8;
+const SKIP_THRESHOLD_BYTES = 200_000;
 
 /**
  * Compresses an image file client-side using Canvas API.
  * - Converts to WebP format
  * - Resizes if either dimension exceeds MAX_DIMENSION (800px)
  * - Reduces quality until under AVATAR_MAX_BYTES (2MB)
+ * - Skips SVG files (Canvas cannot render them)
  *
- * Returns the original file if already under limit and small enough.
+ * Returns the original file if already small enough in both dimensions and size.
  */
 export async function compressImage(file: File): Promise<File> {
-  // Already small enough and not huge dimensions — skip compression
-  if (file.size <= AVATAR_MAX_BYTES) {
+  // SVG files cannot be rendered on Canvas — return as-is
+  if (file.type === 'image/svg+xml') {
     return file;
   }
 
@@ -22,17 +24,26 @@ export async function compressImage(file: File): Promise<File> {
     img.onload = () => {
       URL.revokeObjectURL(img.src);
 
+      const { width, height } = img;
+
+      // Skip compression if already small enough
+      if (width <= MAX_DIMENSION && height <= MAX_DIMENSION && file.size <= SKIP_THRESHOLD_BYTES) {
+        resolve(file);
+        return;
+      }
+
       // Calculate resized dimensions
-      let { width, height } = img;
-      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
+      let w = width;
+      let h = height;
+      if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / w, MAX_DIMENSION / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
       }
 
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = w;
+      canvas.height = h;
 
       const ctx = canvas.getContext("2d");
       if (!ctx) {
@@ -40,7 +51,7 @@ export async function compressImage(file: File): Promise<File> {
         return;
       }
 
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, w, h);
 
       // Progressive quality reduction until under limit
       let quality = TARGET_QUALITY;

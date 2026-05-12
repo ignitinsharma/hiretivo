@@ -5,6 +5,7 @@ import { UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { R2_KEYS, uploadFile } from '@/lib/r2';
 import { uploadRateLimiter } from '@/lib/rate-limit';
+import { compressImageOnServer } from '@/lib/image.server';
 import {
   LOGO_MAX_BYTES,
   LOGO_MIME_TYPES,
@@ -38,13 +39,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 2 MB)' }, { status: 400 });
   }
 
-  const key = R2_KEYS.companyLogo(session.user.id);
-  const { url } = await uploadFile(file, key);
+  try {
+    const raw = Buffer.from(await file.arrayBuffer());
+    const { buffer, mimeType } = await compressImageOnServer(raw, file.type);
+    const optimized = new File([new Uint8Array(buffer)], 'logo.webp', { type: mimeType });
+    const key = R2_KEYS.companyLogo(session.user.id);
+    const { url } = await uploadFile(optimized, key);
 
-  await prisma.recruiterProfile.update({
-    where: { userId: session.user.id },
-    data: { logo: key },
-  });
+    await prisma.recruiterProfile.update({
+      where: { userId: session.user.id },
+      data: { logo: key },
+    });
 
-  return NextResponse.json({ data: { key, url } }, { status: 200 });
+    return NextResponse.json({ data: { key, url } }, { status: 200 });
+  } catch (error) {
+    console.error('[upload/company-logo] Failed to process image:', error);
+    return NextResponse.json({ error: 'Failed to process image' }, { status: 400 });
+  }
 }

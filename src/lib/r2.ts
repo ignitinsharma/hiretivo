@@ -37,7 +37,7 @@ function getR2Client(): S3Client {
 //
 export const R2_KEYS = {
   /** Seeker resume — always overwrites so no orphaned files */
-  resume: (seekerId: string) => `resumes/${seekerId}/resume.pdf`,
+  resume: (seekerId: string, ext = 'pdf') => `resumes/${seekerId}/resume.${ext}`,
 
   /** Seeker profile photo */
   avatar: (userId: string) => `avatars/${userId}/avatar.webp`,

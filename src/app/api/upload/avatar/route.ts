@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { R2_KEYS, uploadFile } from '@/lib/r2';
 import { uploadRateLimiter } from '@/lib/rate-limit';
+import { compressImageOnServer } from '@/lib/image.server';
 import {
   AVATAR_MAX_BYTES,
   AVATAR_MIME_TYPES,
@@ -34,13 +35,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 2 MB)' }, { status: 400 });
   }
 
-  const key = R2_KEYS.avatar(session.user.id);
-  const { url } = await uploadFile(file, key);
+  try {
+    const raw = Buffer.from(await file.arrayBuffer());
+    const { buffer, mimeType } = await compressImageOnServer(raw, file.type);
+    const optimized = new File([new Uint8Array(buffer)], 'avatar.webp', { type: mimeType });
+    const key = R2_KEYS.avatar(session.user.id);
+    const { url } = await uploadFile(optimized, key);
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { image: key },
-  });
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { image: key },
+    });
 
-  return NextResponse.json({ data: { key, url } }, { status: 200 });
+    return NextResponse.json({ data: { key, url } }, { status: 200 });
+  } catch (error) {
+    console.error('[upload/avatar] Failed to process image:', error);
+    return NextResponse.json({ error: 'Failed to process image' }, { status: 400 });
+  }
 }

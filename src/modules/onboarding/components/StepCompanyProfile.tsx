@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Upload, Camera, Globe, Check } from 'lucide-react';
 import Image from 'next/image';
 
@@ -10,7 +10,8 @@ import { cn } from '@/lib/utils';
 import type { CompanySize, Industry, FundingType } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
 import { saveRecruiterProfile } from '@/app/actions/onboarding/recruiter';
-import { useSession } from 'next-auth/react';
+import { compressImage } from '@/lib/image-compression';
+import { uploadService } from '@/services/upload.service';
 import { SUPPORT_URL } from '@/lib/config';
 import Link from 'next/link';
 
@@ -51,6 +52,16 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoFileRef = useRef<File | null>(null);
+
+  // Clean up blob URL on unmount or when preview changes
+  useEffect(() => {
+    return () => {
+      if (logoPreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
 
   const validateStep = (): boolean => {
     const newErrors: string[] = [];
@@ -72,45 +83,75 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
     return newErrors.length === 0;
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setLogoPreview(result);
-        setLogoUrl(result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      const compressed = await compressImage(file);
+      logoFileRef.current = compressed;
+    } catch {
+      logoFileRef.current = file;
     }
+
+    if (logoPreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(logoPreview);
+    }
+    setLogoPreview(URL.createObjectURL(logoFileRef.current));
+    e.target.value = '';
   };
 
   const handleContinue = async () => {
     if (isSaving) return;
-    if (validateStep()) {
-      // Persist to DB before advancing (per D-06)
-      setIsSaving(true);
-      const result = await saveRecruiterProfile({
-        companyName: step2.companyName,
-        website: step2.companyWebsite || null,
-        companySize: step2.companySize,
-        bio: null,
-        industry: step2.industry,
-        fundingType: step2.fundingType,
-        isFullyRemote: step2.isFullyRemote,
-        logo: step2.logoUrl,
-      });
+    if (!validateStep()) return;
 
-      if (!result.success) {
-        console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
-        setErrors([result.error]);
+    setIsSaving(true);
+    let logoKey: string | null = step2.logoUrl;
+
+    if (logoFileRef.current) {
+      try {
+        const result = await uploadService.uploadCompanyLogo(logoFileRef.current);
+        logoKey = result.key;
+        setLogoUrl(logoKey);
+        logoFileRef.current = null;
+      } catch {
+        setErrors(['Logo upload failed. Please try again.']);
         setIsSaving(false);
         return;
       }
-
-      setIsSaving(false);
-      onNext();
+    } else if (step2.logoUrl?.startsWith('data:')) {
+      try {
+        const response = await fetch(step2.logoUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'logo.webp', { type: 'image/webp' });
+        const result = await uploadService.uploadCompanyLogo(file);
+        logoKey = result.key;
+        setLogoUrl(logoKey);
+      } catch {
+        logoKey = step2.logoUrl;
+      }
     }
+
+    const result = await saveRecruiterProfile({
+      companyName: step2.companyName,
+      website: step2.companyWebsite || null,
+      companySize: step2.companySize,
+      bio: null,
+      industry: step2.industry,
+      fundingType: step2.fundingType,
+      isFullyRemote: step2.isFullyRemote,
+      logo: logoKey,
+    });
+
+    if (!result.success) {
+      console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
+      setErrors([result.error]);
+      setIsSaving(false);
+      return;
+    }
+
+    setIsSaving(false);
+    onNext();
   };
 
   const OptionButton = ({ 
@@ -142,6 +183,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
     if (errors.includes('Please select company size')) return 'Please select company size';
     if (errors.includes('Please select industry')) return 'Please select industry';
     if (errors.includes('Please select funding type')) return 'Please select funding type';
+    if (errors.length > 0) return errors[errors.length - 1];
     return null;
   };
 
@@ -166,6 +208,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                     alt="Company logo"
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera className="w-6 h-6 text-white" />

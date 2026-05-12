@@ -8,6 +8,7 @@ import {
   parseOnboardingDraft,
   resolveRecruiterOnboardingStep,
 } from "@/lib/onboarding/progress";
+import { resolveLogoUrl } from "@/lib/r2";
 import type {
   CompanySize,
   FundingType,
@@ -72,7 +73,7 @@ export default async function RecruiterOnboardingPage() {
             industry: profile?.industry as Industry | null | undefined,
             fundingType: profile?.fundingType as FundingType | null | undefined,
             isFullyRemote: profile?.isFullyRemote ?? false,
-            logoUrl: profile?.logo ?? null,
+            logoUrl: resolveLogoUrl(profile?.logo),
           },
         }}
       />
