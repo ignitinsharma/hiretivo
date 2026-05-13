@@ -6,7 +6,7 @@
 
 **Architecture:** Keep `Job.recruiterId` required. Imported jobs use the existing `Job` model and hidden internal recruiter/company profiles, so feed, detail, saved jobs, dismissals, match scoring, and external apply keep using the existing app paths. Security-sensitive fetching is isolated behind allowlisted source configs, SSRF-safe URL validation, mandatory cron auth, and DOMPurify HTML sanitization.
 
-**Tech Stack:** Next.js App Router, TypeScript, Prisma, PostgreSQL, Vercel Cron, DOMPurify, OpenRouter-compatible AI client, `node:test`.
+**Tech Stack:** Next.js App Router, TypeScript, Prisma, PostgreSQL, Vercel Cron, DOMPurify, OpenRouter-compatible AI client.
 
 ---
 
@@ -19,6 +19,24 @@
 - Do not allow cron execution when `CRON_SECRET` is missing.
 - Do not use regex HTML sanitization.
 - Do not fetch arbitrary URLs or follow cross-host redirects.
+
+## Implementation Phases
+
+### Phase 1: Foundations
+
+Tasks 1-4. Add schema fields, dependency/script wiring, source config, shared types, and URL safety helpers. This phase creates no production import behavior yet.
+
+### Phase 2: Import Pipeline
+
+Tasks 5-10. Add RemoteOK fetching, safe detail scraping, skill normalization, AI fallback, hidden employer creation, and the transactional import service. At the end of this phase, imports can create `DRAFT` RSS jobs locally.
+
+### Phase 3: Operations and Review
+
+Tasks 11-14. Add protected cron execution, Vercel schedule config, external-apply copy cleanup, and the minimal review script for `DRAFT -> OPEN` approval or `UNPUBLISHED` rejection.
+
+### Phase 4: Verification
+
+Task 15. Run TypeScript/build checks, route/security checks, disabled cron check, enabled import check, approval check, and duplicate import check.
 
 ## File Structure
 
@@ -34,11 +52,7 @@
 - `src/services/jobs/imported-employer.service.ts` - hidden recruiter/profile upsert.
 - `src/services/jobs/job-import.service.ts` - import orchestration and transactional job creation.
 - `src/app/api/cron/import-jobs/route.ts` - protected cron endpoint.
-- `src/services/rss/__tests__/url-safety.test.ts`
-- `src/services/rss/__tests__/skill-normalizer.test.ts`
-- `src/services/ai/__tests__/imported-job-skill-extractor.test.ts`
-- `src/services/jobs/__tests__/job-import.service.test.ts`
-- `src/app/api/cron/import-jobs/__tests__/route-source.test.ts`
+- `scripts/rss-import-review.ts` - minimal operator script to list, approve, and unpublish imported jobs.
 
 ### Modified files
 
@@ -47,7 +61,7 @@
 - `src/lib/ai-prompts.ts` - add imported job skill extraction prompt.
 - `src/app/jobs/[id]/redirect/page.tsx` - remove "verified partner" wording for external jobs.
 - `vercel.json` - add daily import cron if the file exists; create it if missing.
-- `package.json` - add `cheerio`; add focused test script.
+- `package.json` - add `cheerio`; add review script.
 
 ## Task 1: Add Schema Fields
 
@@ -146,7 +160,7 @@ Expected: dependencies are added to `package.json` and `pnpm-lock.yaml`.
 In `package.json`, add:
 
 ```json
-"test:rss-import": "node --import tsx --test src/services/rss/__tests__/*.test.ts src/services/ai/__tests__/*.test.ts src/services/jobs/__tests__/*.test.ts src/app/api/cron/import-jobs/__tests__/*.test.ts"
+"rss-import:review": "tsx scripts/rss-import-review.ts"
 ```
 
 - [ ] **Step 3: Commit**
@@ -258,62 +272,8 @@ git commit -m "feat: add rss source configuration"
 
 **Files:**
 - Create: `src/services/rss/url-safety.ts`
-- Test: `src/services/rss/__tests__/url-safety.test.ts`
 
-- [ ] **Step 1: Write failing URL safety tests**
-
-Create `src/services/rss/__tests__/url-safety.test.ts`:
-
-```ts
-import assert from "node:assert/strict";
-import test from "node:test";
-import {
-  isPrivateHostname,
-  normalizeSourceUrl,
-  validateAllowedSourceUrl,
-} from "@/services/rss/url-safety";
-
-test("normalizeSourceUrl removes fragments and common tracking params", () => {
-  assert.equal(
-    normalizeSourceUrl("https://remoteok.com/remote-jobs/123?utm_source=x&ref=abc#apply"),
-    "https://remoteok.com/remote-jobs/123",
-  );
-});
-
-test("validateAllowedSourceUrl accepts configured https host", () => {
-  assert.equal(
-    validateAllowedSourceUrl("https://remoteok.com/api", ["remoteok.com"]),
-    "https://remoteok.com/api",
-  );
-});
-
-test("validateAllowedSourceUrl rejects javascript URLs", () => {
-  assert.throws(() => validateAllowedSourceUrl("javascript:alert(1)", ["remoteok.com"]));
-});
-
-test("validateAllowedSourceUrl rejects unallowlisted hosts", () => {
-  assert.throws(() => validateAllowedSourceUrl("https://example.com/jobs/1", ["remoteok.com"]));
-});
-
-test("isPrivateHostname catches local and metadata hosts", () => {
-  assert.equal(isPrivateHostname("localhost"), true);
-  assert.equal(isPrivateHostname("127.0.0.1"), true);
-  assert.equal(isPrivateHostname("169.254.169.254"), true);
-  assert.equal(isPrivateHostname("remoteok.com"), false);
-});
-```
-
-- [ ] **Step 2: Run test to verify failure**
-
-Run:
-
-```bash
-pnpm exec tsx --test src/services/rss/__tests__/url-safety.test.ts
-```
-
-Expected: fails because `url-safety.ts` does not exist.
-
-- [ ] **Step 3: Implement URL safety helpers**
+- [ ] **Step 1: Implement URL safety helpers**
 
 Create `src/services/rss/url-safety.ts`:
 
@@ -389,18 +349,18 @@ export function validateAllowedSourceUrl(input: string, allowedHosts: string[]):
 }
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [ ] **Step 2: Run TypeScript check**
 
 ```bash
-pnpm exec tsx --test src/services/rss/__tests__/url-safety.test.ts
+pnpm exec tsc --noEmit
 ```
 
-Expected: PASS.
+Expected: no type errors from the URL safety helper.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/services/rss/url-safety.ts src/services/rss/__tests__/url-safety.test.ts
+git add src/services/rss/url-safety.ts
 git commit -m "feat: add rss source url safety checks"
 ```
 
@@ -571,41 +531,8 @@ git commit -m "feat: add safe imported job detail scraper"
 
 **Files:**
 - Create: `src/services/rss/skill-normalizer.ts`
-- Test: `src/services/rss/__tests__/skill-normalizer.test.ts`
 
-- [ ] **Step 1: Write failing tests**
-
-Create `src/services/rss/__tests__/skill-normalizer.test.ts`:
-
-```ts
-import assert from "node:assert/strict";
-import test from "node:test";
-import { normalizeSkillNames } from "@/services/rss/skill-normalizer";
-
-test("normalizeSkillNames maps aliases and dedupes", () => {
-  assert.deepEqual(
-    normalizeSkillNames(["ReactJS", "react", "NodeJS", "Postgres", " communication "]),
-    ["React", "Node.js", "PostgreSQL"],
-  );
-});
-
-test("normalizeSkillNames rejects sentence fragments and long names", () => {
-  assert.deepEqual(
-    normalizeSkillNames(["Experience building scalable systems", "A".repeat(60), "TypeScript"]),
-    ["TypeScript"],
-  );
-});
-```
-
-- [ ] **Step 2: Run test to verify failure**
-
-```bash
-pnpm exec tsx --test src/services/rss/__tests__/skill-normalizer.test.ts
-```
-
-Expected: fails because implementation does not exist.
-
-- [ ] **Step 3: Implement normalizer**
+- [ ] **Step 1: Implement normalizer**
 
 Create `src/services/rss/skill-normalizer.ts`:
 
@@ -655,18 +582,18 @@ export function normalizeSkillNames(values: string[]): string[] {
 }
 ```
 
-- [ ] **Step 4: Run test to verify pass**
+- [ ] **Step 2: Run TypeScript check**
 
 ```bash
-pnpm exec tsx --test src/services/rss/__tests__/skill-normalizer.test.ts
+pnpm exec tsc --noEmit
 ```
 
-Expected: PASS.
+Expected: no type errors from the normalizer.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/services/rss/skill-normalizer.ts src/services/rss/__tests__/skill-normalizer.test.ts
+git add src/services/rss/skill-normalizer.ts
 git commit -m "feat: normalize imported job skills"
 ```
 
@@ -675,7 +602,6 @@ git commit -m "feat: normalize imported job skills"
 **Files:**
 - Modify: `src/lib/ai-prompts.ts`
 - Create: `src/services/ai/imported-job-skill-extractor.ts`
-- Test: `src/services/ai/__tests__/imported-job-skill-extractor.test.ts`
 
 - [ ] **Step 1: Add prompt helper**
 
@@ -711,29 +637,7 @@ export const IMPORTED_JOB_SKILL_EXTRACTION_CONFIG = {
 } as const;
 ```
 
-- [ ] **Step 2: Write parser tests**
-
-Create `src/services/ai/__tests__/imported-job-skill-extractor.test.ts`:
-
-```ts
-import assert from "node:assert/strict";
-import test from "node:test";
-import { parseSkillExtractionResponse } from "@/services/ai/imported-job-skill-extractor";
-
-test("parseSkillExtractionResponse parses plain JSON array", () => {
-  assert.deepEqual(parseSkillExtractionResponse('["TypeScript","React"]'), ["TypeScript", "React"]);
-});
-
-test("parseSkillExtractionResponse parses fenced JSON", () => {
-  assert.deepEqual(parseSkillExtractionResponse('```json\n["Node.js","PostgreSQL"]\n```'), ["Node.js", "PostgreSQL"]);
-});
-
-test("parseSkillExtractionResponse returns empty array for malformed content", () => {
-  assert.deepEqual(parseSkillExtractionResponse("not json"), []);
-});
-```
-
-- [ ] **Step 3: Create AI extractor**
+- [ ] **Step 2: Create AI extractor**
 
 Create `src/services/ai/imported-job-skill-extractor.ts`:
 
@@ -783,18 +687,18 @@ export async function extractImportedJobSkills(input: {
 }
 ```
 
-- [ ] **Step 4: Run parser tests**
+- [ ] **Step 3: Run TypeScript check**
 
 ```bash
-pnpm exec tsx --test src/services/ai/__tests__/imported-job-skill-extractor.test.ts
+pnpm exec tsc --noEmit
 ```
 
-Expected: PASS.
+Expected: no type errors from the AI extractor.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/lib/ai-prompts.ts src/services/ai/imported-job-skill-extractor.ts src/services/ai/__tests__/imported-job-skill-extractor.test.ts
+git add src/lib/ai-prompts.ts src/services/ai/imported-job-skill-extractor.ts
 git commit -m "feat: add imported job skill extraction"
 ```
 
@@ -876,25 +780,8 @@ git commit -m "feat: add imported employer profile service"
 
 **Files:**
 - Create: `src/services/jobs/job-import.service.ts`
-- Test: `src/services/jobs/__tests__/job-import.service.test.ts`
 
-- [ ] **Step 1: Write source-level smoke test**
-
-Create `src/services/jobs/__tests__/job-import.service.test.ts`:
-
-```ts
-import assert from "node:assert/strict";
-import test from "node:test";
-import { shouldSkipImport } from "@/services/jobs/job-import.service";
-
-test("shouldSkipImport skips unless RSS_IMPORT_ENABLED is exactly true", () => {
-  assert.equal(shouldSkipImport(undefined), true);
-  assert.equal(shouldSkipImport("false"), true);
-  assert.equal(shouldSkipImport("true"), false);
-});
-```
-
-- [ ] **Step 2: Create orchestration service**
+- [ ] **Step 1: Create orchestration service**
 
 Create `src/services/jobs/job-import.service.ts`:
 
@@ -1070,15 +957,7 @@ export async function importAllSources(): Promise<JobImportRunResult> {
 }
 ```
 
-- [ ] **Step 3: Run focused service test**
-
-```bash
-pnpm exec tsx --test src/services/jobs/__tests__/job-import.service.test.ts
-```
-
-Expected: PASS.
-
-- [ ] **Step 4: Run TypeScript check**
+- [ ] **Step 2: Run TypeScript check**
 
 ```bash
 pnpm exec tsc --noEmit
@@ -1086,10 +965,10 @@ pnpm exec tsc --noEmit
 
 Expected: no type errors. If Prisma enum names are not generated yet, run `pnpm exec prisma generate` and repeat.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/services/jobs/job-import.service.ts src/services/jobs/__tests__/job-import.service.test.ts
+git add src/services/jobs/job-import.service.ts
 git commit -m "feat: add rss job import service"
 ```
 
@@ -1097,32 +976,8 @@ git commit -m "feat: add rss job import service"
 
 **Files:**
 - Create: `src/app/api/cron/import-jobs/route.ts`
-- Test: `src/app/api/cron/import-jobs/__tests__/route-source.test.ts`
 
-- [ ] **Step 1: Create source guard test**
-
-Create `src/app/api/cron/import-jobs/__tests__/route-source.test.ts`:
-
-```ts
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import test from "node:test";
-
-const SOURCE = "src/app/api/cron/import-jobs/route.ts";
-
-test("cron route fails closed when CRON_SECRET is missing", () => {
-  const source = readFileSync(SOURCE, "utf8");
-  assert.match(source, /if \(!expectedToken\)/);
-  assert.doesNotMatch(source, /local-dev-secret/);
-});
-
-test("cron route uses timingSafeEqual", () => {
-  const source = readFileSync(SOURCE, "utf8");
-  assert.match(source, /timingSafeEqual/);
-});
-```
-
-- [ ] **Step 2: Create route**
+- [ ] **Step 1: Create route**
 
 Create `src/app/api/cron/import-jobs/route.ts`:
 
@@ -1158,18 +1013,18 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 3: Run route source tests**
+- [ ] **Step 2: Run TypeScript check**
 
 ```bash
-pnpm exec tsx --test src/app/api/cron/import-jobs/__tests__/route-source.test.ts
+pnpm exec tsc --noEmit
 ```
 
-Expected: PASS.
+Expected: no type errors from the cron route.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/app/api/cron/import-jobs/route.ts src/app/api/cron/import-jobs/__tests__/route-source.test.ts
+git add src/app/api/cron/import-jobs/route.ts
 git commit -m "feat: add protected rss import cron route"
 ```
 
@@ -1250,18 +1105,192 @@ git add 'src/app/jobs/[id]/redirect/page.tsx'
 git commit -m "fix: avoid verified partner copy for external apply"
 ```
 
-## Task 14: Verification
+## Task 14: Minimal Import Review Script
+
+**Files:**
+- Create: `scripts/rss-import-review.ts`
+- Modify: `package.json`
+
+- [ ] **Step 1: Create review script**
+
+Create `scripts/rss-import-review.ts`:
+
+```ts
+import { PrismaClient, JobStatus, JobSource } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+type Command = "list" | "approve" | "unpublish";
+
+function getArg(name: string): string | undefined {
+  const prefix = `--${name}=`;
+  const match = process.argv.find((arg) => arg.startsWith(prefix));
+  return match?.slice(prefix.length);
+}
+
+function getCommand(): Command {
+  const command = process.argv[2] as Command | undefined;
+  if (command === "list" || command === "approve" || command === "unpublish") {
+    return command;
+  }
+  console.error("Usage:");
+  console.error("  pnpm rss-import:review list --status=DRAFT");
+  console.error("  pnpm rss-import:review approve --ids=job_id_1,job_id_2");
+  console.error("  pnpm rss-import:review unpublish --ids=job_id_1,job_id_2");
+  process.exit(1);
+}
+
+function getIds(): string[] {
+  const ids = getArg("ids")
+    ?.split(",")
+    .map((id) => id.trim())
+    .filter(Boolean) ?? [];
+  if (ids.length === 0) {
+    console.error("--ids is required and must contain at least one job id.");
+    process.exit(1);
+  }
+  return ids;
+}
+
+async function listImportedJobs() {
+  const statusArg = getArg("status") ?? JobStatus.DRAFT;
+  const status = statusArg as JobStatus;
+  const jobs = await prisma.job.findMany({
+    where: {
+      source: JobSource.RSS,
+      status,
+    },
+    orderBy: { importedAt: "desc" },
+    take: 50,
+    select: {
+      id: true,
+      title: true,
+      sourceName: true,
+      sourceUrl: true,
+      status: true,
+      importedAt: true,
+      recruiter: {
+        select: {
+          recruiterProfile: {
+            select: { companyName: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (jobs.length === 0) {
+    console.log(`No RSS jobs found with status ${status}.`);
+    return;
+  }
+
+  for (const job of jobs) {
+    console.log([
+      job.id,
+      job.status,
+      job.sourceName ?? "unknown-source",
+      job.recruiter.recruiterProfile?.companyName ?? "Unknown company",
+      job.title,
+      job.sourceUrl ?? "",
+    ].join(" | "));
+  }
+}
+
+async function approveImportedJobs(ids: string[]) {
+  const result = await prisma.job.updateMany({
+    where: {
+      id: { in: ids },
+      source: JobSource.RSS,
+      status: JobStatus.DRAFT,
+    },
+    data: {
+      status: JobStatus.OPEN,
+      publishedAt: new Date(),
+    },
+  });
+  console.log(`Approved ${result.count} imported job(s).`);
+}
+
+async function unpublishImportedJobs(ids: string[]) {
+  const result = await prisma.job.updateMany({
+    where: {
+      id: { in: ids },
+      source: JobSource.RSS,
+    },
+    data: {
+      status: JobStatus.UNPUBLISHED,
+    },
+  });
+  console.log(`Unpublished ${result.count} imported job(s).`);
+}
+
+async function main() {
+  const command = getCommand();
+  if (command === "list") {
+    await listImportedJobs();
+    return;
+  }
+  const ids = getIds();
+  if (command === "approve") {
+    await approveImportedJobs(ids);
+    return;
+  }
+  await unpublishImportedJobs(ids);
+}
+
+main()
+  .catch((error) => {
+    console.error("RSS import review failed:", error);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
+```
+
+- [ ] **Step 2: Add package script if missing**
+
+In `package.json`, ensure this script exists:
+
+```json
+"rss-import:review": "tsx scripts/rss-import-review.ts"
+```
+
+- [ ] **Step 3: Run TypeScript check**
+
+```bash
+pnpm exec tsc --noEmit
+```
+
+Expected: no type errors from the review script.
+
+- [ ] **Step 4: Manual script smoke check**
+
+Run:
+
+```bash
+pnpm rss-import:review list --status=DRAFT
+```
+
+Expected: prints imported draft jobs or `No RSS jobs found with status DRAFT.`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add scripts/rss-import-review.ts package.json
+git commit -m "feat: add rss import review script"
+```
+
+## Task 15: Verification
 
 **Files:**
 - Read-only verification plus any failing test fixes in touched files.
 
-- [ ] **Step 1: Run focused tests**
+- [ ] **Step 1: Run TypeScript check**
 
 ```bash
-pnpm run test:rss-import
+pnpm exec tsc --noEmit
 ```
 
-Expected: all RSS import tests pass.
+Expected: no type errors.
 
 - [ ] **Step 2: Run route/security verifiers**
 
@@ -1319,7 +1348,13 @@ Trigger cron once. Confirm imported jobs:
 
 - [ ] **Step 6: Manual approval check**
 
-Open one imported job by changing `status` from `DRAFT` to `OPEN` in local/staging. Confirm:
+Approve one imported job using the review script:
+
+```bash
+pnpm rss-import:review approve --ids=<job_id>
+```
+
+Confirm:
 
 - Seeker feed can show the job after match recompute/cache invalidation.
 - Job detail page renders.
