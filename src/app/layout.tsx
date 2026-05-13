@@ -8,6 +8,7 @@ import { ReactQueryProvider } from "@/providers/query-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 
 const inter = Inter({
@@ -49,7 +50,9 @@ export default function RootLayout({
             <EmailVerificationModal />
             <Toaster />
             {analyticsEnabled && measurementId ? (
-              <GoogleAnalytics measurementId={measurementId} />
+              <Suspense fallback={null}>
+                <GoogleAnalytics measurementId={measurementId} />
+              </Suspense>
             ) : null}
           </AuthSessionProvider>
         </ReactQueryProvider>
