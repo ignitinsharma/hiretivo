@@ -3,9 +3,6 @@
 .claude
 .codex
 .opencode
-.qwen
-CONTEXT.md
-PROGRESS.md
 node_modules
 .pnpm-store
 .env*
@@ -24,7 +21,3 @@ coverage
 docs
 .superpowers/
 .worktrees
-PROJECT-STATUS.md
-QWEN.md
-BRANCHING-STRATEGY.md
-SECURITY-AUDIT-FINDINGS.md
