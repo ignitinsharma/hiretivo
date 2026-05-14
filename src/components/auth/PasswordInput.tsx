@@ -5,8 +5,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-interface PasswordInputProps
-  extends Omit<React.ComponentProps<"input">, "type"> {
+interface PasswordInputProps extends Omit<
+  React.ComponentProps<"input">,
+  "type"
+> {
   error?: boolean;
 }
 
@@ -21,7 +23,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           className={cn(
             "pr-10",
             error && "border-destructive focus-visible:ring-destructive",
-            className
+            className,
           )}
           ref={ref}
           {...props}
@@ -33,14 +35,14 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           tabIndex={-1}
         >
           {showPassword ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
             <Eye className="h-4 w-4" />
+          ) : (
+            <EyeOff className="h-4 w-4" />
           )}
         </button>
       </div>
     );
-  }
+  },
 );
 
 PasswordInput.displayName = "PasswordInput";

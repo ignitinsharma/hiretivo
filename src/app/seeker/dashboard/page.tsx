@@ -11,10 +11,10 @@ export default async function SeekerDashboardPage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-3xl font-bold text-brand-foreground tracking-tight">
           Welcome back, {greetingName}!
         </h1>
-        <p className="text-slate-500 mt-2 text-lg">
+        <p className="text-brand-foreground-muted mt-2 text-lg">
           Your personalized job market is ready.
         </p>
       </div>
