@@ -134,8 +134,8 @@ export function AdminJobForm({ existing }: Props) {
     externalApplyUrl: values.externalApplyUrl,
     salaryMin: values.salaryMin ? parseInt(values.salaryMin, 10) : undefined,
     salaryMax: values.salaryMax ? parseInt(values.salaryMax, 10) : undefined,
-    currency: values.currency || undefined,
-    experienceLevel: values.experienceLevel || undefined,
+    currency: (values.currency || undefined) as AdminJobCreateInput["currency"],
+    experienceLevel: (values.experienceLevel || undefined) as AdminJobCreateInput["experienceLevel"],
     category: values.category || undefined,
     skills: values.selectedSkillIds.map((skillId) => ({
       skillId,
