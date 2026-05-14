@@ -34,8 +34,10 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
   });
 
   useEffect(() => {
-    setSkills(settings?.skills.map((skill) => skill.name) ?? []);
-  }, [settings?.skills]);
+    if (!isEditing) {
+      setSkills(settings?.skills.map((skill) => skill.name) ?? []);
+    }
+  }, [settings?.skills, isEditing]);
 
   const handleCancel = (): void => {
     setSkills(settings?.skills.map((skill) => skill.name) ?? []);
