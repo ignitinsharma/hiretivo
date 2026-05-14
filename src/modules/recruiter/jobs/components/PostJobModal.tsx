@@ -464,6 +464,7 @@ export function PostJobModal() {
       ? toTitleCase(watch("experienceLevel"))
       : "Not Specified",
     companyIndustry: watch("category") ? toTitleCase(watch("category")) : "General",
+    description: watch("description") ? watch("description") : null,
   };
 
   const noMatch =
@@ -1013,7 +1014,7 @@ export function PostJobModal() {
               </div>
             </div>
             <div className={previewDevice === "mobile" ? "mx-auto max-w-sm" : ""}>
-              <JobCard job={previewJob} isPreview />
+              <JobCard job={previewJob} isPreview showDescription />
             </div>
           </div>
 

@@ -23,12 +23,27 @@ function hasText(value: string | null | undefined): value is string {
   return Boolean(value);
 }
 
+/*
+ * formatDetail
+ * Converts raw enum strings (e.g. "PUBLICLY_TRADED") into readable labels
+ * by replacing underscores with spaces and title-casing each word.
+ */
+function formatDetail(str: string): string {
+  return str
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export function ApplicationCard({ application }: ApplicationCardProps) {
   const companyDetails = [
     application.companyIndustry,
     application.companyFundingType,
     application.companySize,
-  ].filter(hasText);
+  ]
+    .filter(hasText)
+    .map((item) => formatDetail(item));
 
   const facts = [
     {
@@ -67,6 +82,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       }
       facts={facts}
       skills={skills}
+      description={application.description ?? null}
       salaryRange={application.salaryRange}
       footerRight={
         application.jobStatus === JobStatus.DELETED ? (

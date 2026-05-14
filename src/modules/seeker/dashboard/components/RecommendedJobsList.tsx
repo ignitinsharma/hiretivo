@@ -84,7 +84,32 @@ export function RecommendedJobsList() {
         </div>
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="h-56 animate-pulse bg-brand-surface" />
+            <Card key={i} className="animate-pulse p-5">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div className="flex gap-4">
+                  <div className="h-16 w-16 shrink-0 rounded-lg bg-gray-200" />
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="h-5 w-48 rounded bg-gray-200" />
+                    <div className="h-4 w-32 rounded bg-gray-200" />
+                  </div>
+                </div>
+                <div className="h-6 w-20 rounded-full bg-gray-200" />
+              </div>
+              <div className="grid gap-2 border-t border-brand-border py-4 sm:grid-cols-3">
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="h-4 rounded bg-gray-200" />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="h-7 w-20 rounded-lg bg-gray-200" />
+                ))}
+              </div>
+              <div className="mt-5 flex items-center justify-between border-t border-brand-border pt-4">
+                <div className="h-4 w-28 rounded bg-gray-200" />
+                <div className="h-9 w-24 rounded-lg bg-gray-200" />
+              </div>
+            </Card>
           ))}
         </div>
       </div>
@@ -120,6 +145,7 @@ export function RecommendedJobsList() {
             <JobCard
               key={job.id}
               job={job}
+              showDescription
               onNotInterested={() => dismissMutation.mutate(job.id)}
               isDismissing={dismissingJobId === job.id}
               onApply={() =>

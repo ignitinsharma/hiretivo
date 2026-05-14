@@ -100,6 +100,7 @@ export function SavedJobsList() {
             key={savedJob.id}
             job={savedJob.job}
             isSaved
+            showDescription
             onApply={
               savedJob.application || savedJob.job.isClosed
                 ? undefined

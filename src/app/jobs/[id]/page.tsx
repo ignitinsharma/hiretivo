@@ -57,6 +57,7 @@ export default async function JobDescriptionPage({
       skills: {
         include: { skill: { select: { id: true, name: true, slug: true } } },
       },
+      _count: { select: { applications: true } },
     },
   });
 
@@ -131,6 +132,7 @@ export default async function JobDescriptionPage({
       level: s.level,
     })),
     publishedAt: job.publishedAt?.toISOString() ?? null,
+    applicantCount: job._count.applications,
   };
   const currentSkillIds = job.skills.map((jobSkill) => jobSkill.skillId);
   const recommendationFilters = [

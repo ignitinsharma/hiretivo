@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Building2, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -26,6 +25,7 @@ interface SeekerJobBaseCardProps {
     isPrimary?: boolean;
   }>;
   hintText?: string | null;
+  description?: string | null;
   salaryRange?: string;
   footerRight?: React.ReactNode;
   className?: string;
@@ -48,6 +48,7 @@ export function SeekerJobBaseCard({
   facts = [],
   skills = [],
   hintText,
+  description,
   salaryRange,
   footerRight,
   className,
@@ -58,12 +59,16 @@ export function SeekerJobBaseCard({
         <div className="flex min-w-0 gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
             {companyLogoUrl ? (
-              <Image
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
                 src={companyLogoUrl}
                 alt={`${companyName} logo`}
                 width={64}
                 height={64}
                 className="h-full w-full object-contain p-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
             ) : (
               <Building2 className="h-6 w-6 text-brand-foreground-secondary" />
@@ -134,6 +139,12 @@ export function SeekerJobBaseCard({
           ))}
         </div>
       )}
+
+      {description ? (
+        <p className="mt-4 line-clamp-1 text-sm font-bold capitalize  text-brand-foreground-muted">
+          {description}
+        </p>
+      ) : null}
 
       {hintText ? (
         <p className="mt-3 text-xs font-medium text-brand-warning">

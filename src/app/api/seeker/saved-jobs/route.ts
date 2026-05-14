@@ -5,6 +5,7 @@ import { JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
+import { stripHtml } from "@/lib/utils";
 
 /*
  * formatSalaryRange
@@ -75,6 +76,7 @@ export async function GET() {
           skills: {
             include: { skill: { select: { name: true } } },
           },
+          _count: { select: { applications: true } },
           applications: {
             where: { seekerId: session.user.id },
             select: { id: true, status: true },
@@ -107,6 +109,8 @@ export async function GET() {
         isClosed: savedJob.job.status !== JobStatus.OPEN,
         applyType: savedJob.job.applyType,
         externalApplyUrl: savedJob.job.externalApplyUrl,
+        description: savedJob.job.description ? stripHtml(savedJob.job.description) : null,
+        applicantCount: savedJob.job._count.applications,
       },
     })),
   });

@@ -7,6 +7,7 @@ import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
+import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
 
 /*
  * GET /api/jobs/[id]
@@ -29,13 +30,14 @@ export async function GET(
         select: {
           id: true,
           recruiterProfile: {
-            select: { companyName: true, logo: true },
+            select: { id: true, companyName: true, logo: true },
           },
         },
       },
       skills: {
         include: { skill: { select: { id: true, name: true, slug: true } } },
       },
+      _count: { select: { applications: true } },
     },
   });
   const session = await auth();
@@ -43,6 +45,15 @@ export async function GET(
   if (!job || (job.status !== JobStatus.OPEN && !isOwner)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
+
+  const company = resolveJobCompany({
+    companyName: job.companyName,
+    companyLogoUrl: job.companyLogoUrl,
+    companySize: job.companySize,
+    companyIndustry: job.companyIndustry,
+    companyFunding: job.companyFunding,
+    recruiter: job.recruiter,
+  });
 
   let matchScore: number | null = null;
   let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
@@ -89,8 +100,9 @@ export async function GET(
       category: job.category,
       applyType: job.applyType,
       externalApplyUrl: job.externalApplyUrl,
-      companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-      companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+      companyId: company.companyId,
+      companyName: company.companyName,
+      companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
       skills: job.skills.map((s) => ({
         id: s.skill.id,
         name: s.skill.name,
@@ -98,6 +110,7 @@ export async function GET(
         level: s.level,
       })),
       publishedAt: job.publishedAt?.toISOString() ?? null,
+      applicantCount: job._count.applications,
     },
     matchScore,
     matchBreakdown,

@@ -6,6 +6,7 @@ import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
 import { isRecruiterTrialActive } from '@/lib/recruiter-trial';
+import { isAdminSession } from '@/lib/admin/is-admin';
 
 const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 10, '1 m');
 
@@ -16,8 +17,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Role check
-  if (session.user.role !== UserRole.RECRUITER) {
+  const admin = isAdminSession(session);
+
+  // 2. Role check — admin bypasses recruiter-only gate
+  if (!admin && session.user.role !== UserRole.RECRUITER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -27,8 +30,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
-  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
+  // 4. Plan gate — FREE plan cannot access AI features (bypass during trial or for admin)
+  if (!admin && session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
       { error: 'AI skill suggestions require a PRO or ENTERPRISE plan.' },
       { status: 403 },

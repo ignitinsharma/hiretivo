@@ -22,6 +22,10 @@ export interface JobListItem {
   missingSkills?: string[];
   /** Compact inline explainer for low-match cards, e.g. "Missing: Docker, AWS". Null when not applicable. */
   missingSkillsHint?: string | null;
+  /** Short job description snippet shown on cards (1-line truncated). */
+  description?: string | null;
+  /** Total number of applications received for this job (all statuses). */
+  applicantCount?: number;
 }
 
 export interface JobSkillItem {
@@ -56,6 +60,7 @@ export interface JobDetailResponse {
     companyLogoUrl: string | null;
     skills: JobSkillItem[];
     publishedAt: string | null;
+    applicantCount: number;
   };
   matchScore: number | null;
   matchBreakdown: JobMatchBreakdown[] | null;

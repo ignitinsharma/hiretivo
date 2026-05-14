@@ -8,6 +8,7 @@ import {
 } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
+import { stripHtml } from "@/lib/utils";
 import { createApplicationSchema } from "@/lib/validations/application";
 import { applyRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 
@@ -167,6 +168,7 @@ export async function GET() {
         select: {
           title: true,
           status: true,
+          description: true,
           salaryMin: true,
           salaryMax: true,
           currency: true,
@@ -178,6 +180,7 @@ export async function GET() {
               skill: { select: { name: true } },
             },
           },
+          _count: { select: { applications: true } },
           recruiter: {
             select: {
               recruiterProfile: {
@@ -221,6 +224,8 @@ export async function GET() {
       companyFundingType:
         application.job.recruiter.recruiterProfile?.fundingType ?? null,
       skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
+      description: application.job.description ? stripHtml(application.job.description) : null,
+      applicantCount: application.job._count.applications,
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
     })),
