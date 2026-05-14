@@ -1,20 +1,15 @@
 "use client";
 
-import { use } from "react";
 import { useAdminJob } from "@/modules/admin/hooks/use-admin-job";
 import { AdminJobForm } from "@/modules/admin/components/AdminJobForm";
-
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
 
 /*
  * /admin/jobs/[id]/edit
  * Loads an existing admin job and reuses AdminJobForm in edit mode.
- * Uses React `use()` to unwrap the async params Promise in a client component.
+ * Next.js 14: params is a plain object, not a Promise — no use() needed.
  */
-export default function EditAdminJobPage({ params }: PageProps) {
-  const { id } = use(params);
+export default function EditAdminJobPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { data, isLoading, isError } = useAdminJob(id);
 
   if (isLoading) {
