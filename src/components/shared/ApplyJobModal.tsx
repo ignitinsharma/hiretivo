@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { applicationService } from "@/services/application.service";
-import { ExternalLink, CheckCircle2, Briefcase } from "lucide-react";
+import { CheckCircle2, Briefcase } from "lucide-react";
 import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import { trackEvent } from "@/lib/analytics";
 
@@ -148,20 +148,11 @@ export function ApplyJobModal() {
               Did you apply?
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-slate-500">
-              Let us know so we can help you track your application and refine
-              future recommendations for you!
+              We&apos;ve opened the company site in a new tab. Did you complete
+              your application there?
             </DialogDescription>
 
             <div className="mt-8 w-full space-y-3">
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full font-bold"
-                onClick={handleExternalRedirect}
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Continue to company site
-              </Button>
               <Button
                 type="button"
                 className="w-full font-bold bg-brand-primary text-white hover:bg-brand-primary/90"
