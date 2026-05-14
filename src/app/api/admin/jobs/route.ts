@@ -41,10 +41,22 @@ export async function GET(req: NextRequest) {
       status: true,
       createdAt: true,
       publishedAt: true,
+      _count: { select: { applications: true } },
     },
   });
 
-  return NextResponse.json({ jobs });
+  return NextResponse.json({
+    jobs: jobs.map((j) => ({
+      id: j.id,
+      title: j.title,
+      companyName: j.companyName,
+      companyLogoUrl: j.companyLogoUrl,
+      status: j.status,
+      createdAt: j.createdAt,
+      publishedAt: j.publishedAt,
+      applicantCount: j._count.applications,
+    })),
+  });
 }
 
 /*

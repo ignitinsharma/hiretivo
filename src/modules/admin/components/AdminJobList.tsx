@@ -118,6 +118,7 @@ export function AdminJobList() {
                 <th className="px-4 py-3">Company</th>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Applicants</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -144,6 +145,9 @@ export function AdminJobList() {
                     >
                       {STATUS_LABEL[j.status] ?? j.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-brand-foreground-muted">
+                    {j.applicantCount}
                   </td>
                   <td className="px-4 py-3 text-sm text-brand-foreground-muted">
                     {format(new Date(j.createdAt), "MMM d, yyyy")}

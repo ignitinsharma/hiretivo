@@ -13,6 +13,7 @@ export interface AdminJobListItem {
   status: JobStatus;
   createdAt: string;
   publishedAt: string | null;
+  applicantCount: number;
 }
 
 /*
