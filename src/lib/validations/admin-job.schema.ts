@@ -11,6 +11,9 @@ import {
  * overrides instead of relying on a recruiter profile.
  */
 
+const ADMIN_EXPERIENCE_LEVEL_VALUES = ["entry", "mid", "senior"] as const;
+const ADMIN_CURRENCY_VALUES = ["USD", "EUR", "GBP", "INR"] as const;
+
 const ADMIN_COMPANY_SIZE_VALUES = ["1-10", "11-50", "51-200", "201-500", "500+"] as const;
 const ADMIN_COMPANY_INDUSTRY_VALUES = ["TECHNOLOGY", "FINANCE", "HEALTHCARE", "EDUCATION", "OTHER"] as const;
 const ADMIN_COMPANY_FUNDING_VALUES = [
@@ -43,12 +46,10 @@ export const adminJobCompanySchema = z.object({
 });
 
 /*
- * adminJobCreateSchema
- * Full validation schema for creating an admin-posted job.
- * Extends adminJobCompanySchema with job content and skill fields.
- * Enforces salaryMin <= salaryMax via superRefine.
+ * adminJobBaseSchema
+ * Pre-refinement base for create + update. Kept un-refined so .partial() works.
  */
-export const adminJobCreateSchema = adminJobCompanySchema.extend({
+const adminJobBaseSchema = adminJobCompanySchema.extend({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(50, "Description must be at least 50 characters").max(50_000),
   jobType: z.enum(JOB_TYPE_VALUES),
@@ -56,11 +57,21 @@ export const adminJobCreateSchema = adminJobCompanySchema.extend({
   externalApplyUrl: z.string().url("Apply URL must be valid"),
   salaryMin: z.number().int().nonnegative().nullable().optional(),
   salaryMax: z.number().int().nonnegative().nullable().optional(),
-  currency: z.string().trim().length(3).optional(),
-  experienceLevel: z.string().trim().max(50).optional(),
+  currency: z.enum(ADMIN_CURRENCY_VALUES).optional().or(z.literal("")),
+  experienceLevel: z.enum(ADMIN_EXPERIENCE_LEVEL_VALUES).optional().or(z.literal("")),
   category: z.string().trim().max(100).optional(),
   skills: z.array(jobSkillSchema).min(1, "At least one skill required"),
-}).superRefine((data, ctx) => {
+});
+
+/*
+ * salaryRangeRefine
+ * Enforces salaryMin <= salaryMax. Applied to both create and update schemas
+ * via superRefine on each separately (cannot share — superRefine output is terminal).
+ */
+const salaryRangeRefine = (
+  data: { salaryMin?: number | null; salaryMax?: number | null },
+  ctx: z.RefinementCtx,
+) => {
   if (
     typeof data.salaryMin === "number" &&
     typeof data.salaryMax === "number" &&
@@ -72,14 +83,20 @@ export const adminJobCreateSchema = adminJobCompanySchema.extend({
       path: ["salaryMax"],
     });
   }
-});
+};
+
+/*
+ * adminJobCreateSchema
+ * Full validation schema for creating an admin-posted job.
+ */
+export const adminJobCreateSchema = adminJobBaseSchema.superRefine(salaryRangeRefine);
 
 /*
  * adminJobUpdateSchema
- * Partial version of adminJobCreateSchema for PATCH operations.
- * All fields optional — only provided fields are validated and updated.
+ * Partial version for PATCH operations. .partial() runs on un-refined base,
+ * then salary refinement is re-applied on top.
  */
-export const adminJobUpdateSchema = adminJobCreateSchema.partial();
+export const adminJobUpdateSchema = adminJobBaseSchema.partial().superRefine(salaryRangeRefine);
 
 export type AdminJobCreateInput = z.infer<typeof adminJobCreateSchema>;
 export type AdminJobUpdateInput = z.infer<typeof adminJobUpdateSchema>;
@@ -88,3 +105,5 @@ export type AdminJobUpdateInput = z.infer<typeof adminJobUpdateSchema>;
 export const ADMIN_COMPANY_SIZE_OPTIONS = ADMIN_COMPANY_SIZE_VALUES;
 export const ADMIN_COMPANY_INDUSTRY_OPTIONS = ADMIN_COMPANY_INDUSTRY_VALUES;
 export const ADMIN_COMPANY_FUNDING_OPTIONS = ADMIN_COMPANY_FUNDING_VALUES;
+export const ADMIN_EXPERIENCE_LEVEL_OPTIONS = ADMIN_EXPERIENCE_LEVEL_VALUES;
+export const ADMIN_CURRENCY_OPTIONS = ADMIN_CURRENCY_VALUES;
