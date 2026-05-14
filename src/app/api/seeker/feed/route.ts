@@ -9,8 +9,10 @@ import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
 import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
+import { stripHtml } from '@/lib/strip-html';
 
 const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
+
 
 // Jobs below this match score receive an inline missing-skills explainer.
 // Using MatchThreshold.GOOD (60) as the low-match threshold — seeker is unlikely
@@ -209,6 +211,7 @@ export async function GET(req: NextRequest) {
           skill: { select: { name: true } },
         },
       },
+      _count: { select: { applications: true } },
     },
   });
 
@@ -241,6 +244,8 @@ export async function GET(req: NextRequest) {
     externalApplyUrl: string | null;
     missingSkills: string[];
     missingSkillsHint: string | null;
+    description: string | null;
+    applicantCount: number;
   }> = [];
 
   for (const m of pageItems) {
@@ -294,6 +299,8 @@ export async function GET(req: NextRequest) {
       externalApplyUrl: job.externalApplyUrl,
       missingSkills,
       missingSkillsHint,
+      description: job.description ? stripHtml(job.description) : null,
+      applicantCount: job._count.applications,
     });
   }
 

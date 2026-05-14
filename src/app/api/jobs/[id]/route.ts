@@ -37,6 +37,7 @@ export async function GET(
       skills: {
         include: { skill: { select: { id: true, name: true, slug: true } } },
       },
+      _count: { select: { applications: true } },
     },
   });
   const session = await auth();
@@ -109,6 +110,7 @@ export async function GET(
         level: s.level,
       })),
       publishedAt: job.publishedAt?.toISOString() ?? null,
+      applicantCount: job._count.applications,
     },
     matchScore,
     matchBreakdown,
