@@ -13,7 +13,11 @@ import { cn } from "@/lib/utils";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
 
 const formatDetail = (str: string) =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  str
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 
 interface JobCardProps {
   job: JobListItem;
