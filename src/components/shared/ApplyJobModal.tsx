@@ -29,7 +29,6 @@ export function ApplyJobModal() {
     selectedJobId,
     selectedJobTitle,
     selectedCompanyName,
-    selectedExternalApplyUrl,
     showExternalConfirm,
   } = useUIStore();
   const { data: verificationStatus } = useEmailVerificationStatus();
@@ -53,22 +52,6 @@ export function ApplyJobModal() {
       return;
     }
     toast.error(message);
-  };
-
-  const handleExternalRedirect = () => {
-    if (verificationStatus?.requiresVerification) {
-      openEmailVerificationModal();
-      return;
-    }
-
-    if (selectedExternalApplyUrl) {
-      trackEvent("apply_job", {
-        apply_type: "external",
-        stage: "attempt",
-        entrypoint: "modal",
-      });
-      window.open(selectedExternalApplyUrl, "_blank", "noopener,noreferrer");
-    }
   };
 
   useEffect(() => {

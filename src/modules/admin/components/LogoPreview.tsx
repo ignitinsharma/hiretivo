@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 
+type LogoSize = 28 | 32 | 48 | 56;
+
 interface LogoPreviewProps {
   url: string;
   companyName: string;
-  size?: number;
+  size?: LogoSize;
 }
+
+const SIZE_CLASS: Record<LogoSize, string> = {
+  28: "w-7 h-7 text-[11px]",
+  32: "w-8 h-8 text-xs",
+  48: "w-12 h-12 text-lg",
+  56: "w-14 h-14 text-xl",
+};
 
 /*
  * LogoPreview
@@ -27,11 +36,12 @@ export function LogoPreview({ url, companyName, size = 48 }: LogoPreviewProps) {
     typeof window !== "undefined" &&
     window.location.protocol === "https:";
 
+  const sizeClass = SIZE_CLASS[size];
+
   if (!url || errored || isMixedContent) {
     return (
       <div
-        className="flex items-center justify-center rounded-lg bg-brand-surface text-brand-foreground font-semibold border border-brand-border"
-        style={{ width: size, height: size, fontSize: size * 0.4 }}
+        className={`flex items-center justify-center rounded-lg bg-brand-surface text-brand-foreground font-semibold border border-brand-border ${sizeClass}`}
         aria-label={`${companyName} logo placeholder`}
       >
         {initial}
@@ -44,9 +54,7 @@ export function LogoPreview({ url, companyName, size = 48 }: LogoPreviewProps) {
     <img
       src={url}
       alt={`${companyName} logo`}
-      width={size}
-      height={size}
-      className="rounded-lg object-contain border border-brand-border bg-white"
+      className={`rounded-lg object-contain border border-brand-border bg-white ${sizeClass}`}
       onError={() => setErrored(true)}
     />
   );

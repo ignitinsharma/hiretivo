@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
     companySize,
     companyIndustry,
     companyFunding,
+    externalApplyUrl,
     ...jobFields
   } = parsed.data;
 
@@ -109,6 +110,7 @@ export async function POST(req: NextRequest) {
     companySize: companySize || null,
     companyIndustry: companyIndustry || null,
     companyFunding: companyFunding || null,
+    externalApplyUrl: externalApplyUrl || null,
   };
 
   const job = await prisma.$transaction(async (tx) => {

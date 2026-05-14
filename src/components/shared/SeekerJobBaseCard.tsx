@@ -141,7 +141,7 @@ export function SeekerJobBaseCard({
       )}
 
       {description ? (
-        <p className="mt-4 line-clamp-1 text-sm font-bold capitalize  text-brand-foreground-muted">
+        <p className="mt-4 line-clamp-1 text-sm font-normal text-brand-foreground-muted">
           {description}
         </p>
       ) : null}

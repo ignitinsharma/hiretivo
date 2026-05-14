@@ -54,7 +54,11 @@ const adminJobBaseSchema = adminJobCompanySchema.extend({
   description: z.string().trim().min(50, "Description must be at least 50 characters").max(50_000),
   jobType: z.enum(JOB_TYPE_VALUES),
   workType: z.enum(WORK_TYPE_VALUES).optional(),
-  externalApplyUrl: z.string().url("Apply URL must be valid"),
+  externalApplyUrl: z
+    .string()
+    .url("Apply URL must be a valid URL")
+    .optional()
+    .or(z.literal("")),
   salaryMin: z.number().int().nonnegative().nullable().optional(),
   salaryMax: z.number().int().nonnegative().nullable().optional(),
   currency: z.enum(ADMIN_CURRENCY_VALUES).optional().or(z.literal("")),

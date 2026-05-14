@@ -12,43 +12,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { LogoPreview } from "./LogoPreview";
+import { JobStatusBadge } from "@/components/shared/JobStatusBadge";
 import { useAdminJobs } from "../hooks/use-admin-jobs";
 import { usePublishAdminJob, useDeleteAdminJob } from "../hooks/use-admin-mutations";
 import { JobStatus } from "@/constants/enums";
 import type { AdminJobListItem } from "../types/admin-job.types";
-
-const STATUS_LABEL: Record<JobStatus, string> = {
-  [JobStatus.DRAFT]: "Draft",
-  [JobStatus.OPEN]: "Open",
-  [JobStatus.PAUSED]: "Paused",
-  [JobStatus.CLOSED]: "Closed",
-  [JobStatus.UNPUBLISHED]: "Unpublished",
-  [JobStatus.DELETED]: "Deleted",
-};
-
-const STATUS_COLOR: Record<JobStatus, string> = {
-  [JobStatus.DRAFT]: "bg-brand-surface text-brand-foreground-muted",
-  [JobStatus.OPEN]: "bg-green-100 text-green-700",
-  [JobStatus.PAUSED]: "bg-amber-100 text-amber-700",
-  [JobStatus.CLOSED]: "bg-gray-100 text-gray-700",
-  [JobStatus.UNPUBLISHED]: "bg-gray-100 text-gray-500",
-  [JobStatus.DELETED]: "bg-red-100 text-red-700",
-};
 
 /*
  * AdminJobList
  * Table view of admin-posted jobs. Provides status filter, publish, edit, delete actions.
  * Fetches jobs via useAdminJobs with an optional status filter.
  * Publish transitions DRAFT → OPEN; Delete soft-deletes the job.
+ * Per-row pending state scopes loading to the active row only.
  */
 export function AdminJobList() {
   const [status, setStatus] = useState<string>("ALL");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const { data, isLoading, isError } = useAdminJobs(status === "ALL" ? undefined : status);
   const publishMut = usePublishAdminJob();
   const deleteMut = useDeleteAdminJob();
 
+  /*
+   * onPublish
+   * Fires publish mutation for a single row and tracks pendingId to scope the
+   * disabled state to only that row.
+   */
   const onPublish = async (id: string) => {
+    setPendingId(id);
     try {
       await publishMut.mutateAsync(id);
       toast.success("Published");
@@ -57,11 +57,21 @@ export function AdminJobList() {
         (e as { response?: { data?: { error?: string } } })?.response?.data?.error ??
         "Publish failed";
       toast.error(msg);
+    } finally {
+      setPendingId(null);
     }
   };
 
-  const onDelete = async (id: string) => {
-    if (!confirm("Delete this job?")) return;
+  /*
+   * confirmDelete
+   * Called after the AlertDialog confirmation. Runs delete mutation and clears
+   * pending/target state.
+   */
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    const id = deleteTargetId;
+    setPendingId(id);
+    setDeleteTargetId(null);
     try {
       await deleteMut.mutateAsync(id);
       toast.success("Deleted");
@@ -70,12 +80,14 @@ export function AdminJobList() {
         (e as { response?: { data?: { error?: string } } })?.response?.data?.error ??
         "Delete failed";
       toast.error(msg);
+    } finally {
+      setPendingId(null);
     }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-bold text-2xl text-brand-foreground">Admin jobs</h1>
         <div className="flex items-center gap-3">
           <Select value={status} onValueChange={setStatus}>
@@ -96,7 +108,7 @@ export function AdminJobList() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
+      <div className="rounded-xl border border-brand-border bg-white">
         {isLoading && (
           <div className="p-8 text-center text-brand-foreground-muted">Loading…</div>
         )}
@@ -112,77 +124,109 @@ export function AdminJobList() {
           </div>
         )}
         {!isLoading && !isError && (data?.jobs?.length ?? 0) > 0 && (
-          <table className="w-full">
-            <thead className="bg-brand-surface text-left text-xs uppercase tracking-wider text-brand-foreground-muted">
-              <tr>
-                <th className="px-4 py-3">Company</th>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Applicants</th>
-                <th className="px-4 py-3">Created</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data!.jobs.map((j: AdminJobListItem) => (
-                <tr key={j.id} className="border-t border-brand-border">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <LogoPreview
-                        url={j.companyLogoUrl ?? ""}
-                        companyName={j.companyName ?? "?"}
-                        size={32}
-                      />
-                      <span className="text-sm text-brand-foreground">
-                        {j.companyName ?? "—"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-brand-foreground">{j.title}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded-md text-xs font-medium ${STATUS_COLOR[j.status] ?? ""}`}
-                    >
-                      {STATUS_LABEL[j.status] ?? j.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-brand-foreground-muted">
-                    {j.applicantCount}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-brand-foreground-muted">
-                    {format(new Date(j.createdAt), "MMM d, yyyy")}
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    <Link href={`/admin/jobs/${j.id}/edit`}>
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                    </Link>
-                    {j.status === JobStatus.DRAFT && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => onPublish(j.id)}
-                        disabled={publishMut.isPending}
-                      >
-                        Publish
-                      </Button>
-                    )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => onDelete(j.id)}
-                      disabled={deleteMut.isPending}
-                    >
-                      Delete
-                    </Button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px]">
+              <thead className="bg-brand-surface text-left text-xs uppercase tracking-wider text-brand-foreground-muted">
+                <tr>
+                  <th className="px-4 py-3">Company</th>
+                  <th className="px-4 py-3">Title</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Applicants</th>
+                  <th className="px-4 py-3">Created</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data!.jobs.map((j: AdminJobListItem) => {
+                  const rowPending = pendingId === j.id;
+                  return (
+                    <tr key={j.id} className="border-t border-brand-border">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <LogoPreview
+                            url={j.companyLogoUrl ?? ""}
+                            companyName={j.companyName ?? "?"}
+                            size={32}
+                          />
+                          <span className="text-sm text-brand-foreground">
+                            {j.companyName ?? "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-brand-foreground">{j.title}</td>
+                      <td className="px-4 py-3">
+                        <JobStatusBadge status={j.status} />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-brand-foreground-muted">
+                        {j.applicantCount}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-brand-foreground-muted">
+                        {format(new Date(j.createdAt), "MMM d, yyyy")}
+                      </td>
+                      <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                        <Link href={`/admin/jobs/${j.id}/edit`}>
+                          <Button variant="ghost" size="sm">
+                            Edit
+                          </Button>
+                        </Link>
+                        {j.status === JobStatus.DRAFT && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => onPublish(j.id)}
+                            disabled={rowPending}
+                          >
+                            {rowPending && publishMut.isPending ? "Publishing…" : "Publish"}
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeleteTargetId(j.id)}
+                          disabled={rowPending}
+                        >
+                          {rowPending && deleteMut.isPending ? "Deleting…" : "Delete"}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
+
+      <AlertDialog
+        open={deleteTargetId !== null}
+        onOpenChange={(open) => !open && setDeleteTargetId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The job will be soft-deleted and removed from the seeker feed.
+              You can recreate it later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteTargetId(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
