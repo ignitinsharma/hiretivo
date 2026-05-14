@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Building2, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -58,12 +57,16 @@ export function SeekerJobBaseCard({
         <div className="flex min-w-0 gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
             {companyLogoUrl ? (
-              <Image
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
                 src={companyLogoUrl}
                 alt={`${companyName} logo`}
                 width={64}
                 height={64}
                 className="h-full w-full object-contain p-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
             ) : (
               <Building2 className="h-6 w-6 text-brand-foreground-secondary" />
