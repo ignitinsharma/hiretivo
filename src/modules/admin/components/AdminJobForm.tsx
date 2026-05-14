@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +17,7 @@ import {
 import { AdminCompanySection } from "./AdminCompanySection";
 import { AdminJobSection } from "./AdminJobSection";
 import { AdminJobPreview } from "./AdminJobPreview";
+import { PublishConfirmModal } from "./PublishConfirmModal";
 import type { AdminJobDetail, AdminJobFormValues } from "../types/admin-job.types";
 
 interface Props {
@@ -51,7 +53,7 @@ const formSchema = z.object({
  * Two-column orchestrator for the admin job create/edit page.
  * Left column: form (company section + job section + action bar).
  * Right column: live preview mirroring the seeker-facing job card.
- * Handles draft create/update and publish flow.
+ * Handles draft create/update and publish flow (gated behind PublishConfirmModal).
  * Reusable for both the create page and the edit page via the `existing` prop.
  *
  * @param existing - Pre-populated AdminJobDetail for edit mode; omit for create mode.
@@ -59,6 +61,8 @@ const formSchema = z.object({
 export function AdminJobForm({ existing }: Props) {
   const router = useRouter();
   const isEdit = Boolean(existing);
+
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
 
   const form = useForm<AdminJobFormValues, unknown, AdminJobFormValues>({
     resolver: zodResolver(formSchema) as Resolver<AdminJobFormValues>,
@@ -171,11 +175,25 @@ export function AdminJobForm({ existing }: Props) {
   });
 
   /*
-   * onPublish
-   * Validates the form, creates or updates the job if needed, then immediately
-   * publishes it (DRAFT → OPEN). Redirects to the admin jobs list on success.
+   * onPublishClick
+   * Validates the form via trigger(). Opens PublishConfirmModal only if valid.
+   * Does not mutate — confirmation is required first.
    */
-  const onPublish = form.handleSubmit(async (values) => {
+  const onPublishClick = async () => {
+    const valid = await form.trigger();
+    if (valid) {
+      setPublishModalOpen(true);
+    }
+  };
+
+  /*
+   * onConfirmPublish
+   * Called when admin confirms the PublishConfirmModal.
+   * Creates or updates the job if needed, then publishes it (DRAFT → OPEN).
+   * Closes modal and redirects to the admin jobs list on success.
+   */
+  const onConfirmPublish = async () => {
+    const values = form.getValues();
     const payload = buildPayload(values);
     const validated = adminJobCreateSchema.safeParse(payload);
     if (!validated.success) {
@@ -193,6 +211,7 @@ export function AdminJobForm({ existing }: Props) {
       }
       await publishMut.mutateAsync(id);
       toast.success("Job published");
+      setPublishModalOpen(false);
       router.push("/admin/jobs");
     } catch (e) {
       const msg =
@@ -200,43 +219,52 @@ export function AdminJobForm({ existing }: Props) {
         "Publish failed";
       toast.error(msg);
     }
-  });
+  };
 
   const isPending = createMut.isPending || updateMut.isPending || publishMut.isPending;
   const values = form.watch();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left column: form */}
-      <form className="space-y-6">
-        <AdminCompanySection form={form} />
-        <AdminJobSection form={form} />
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left column: form */}
+        <form className="space-y-6">
+          <AdminCompanySection form={form} />
+          <AdminJobSection form={form} />
 
-        {/* Sticky action bar */}
-        <div className="flex justify-end gap-3 sticky bottom-4 bg-white/80 backdrop-blur p-4 rounded-xl border border-brand-border">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onSaveDraft}
-            disabled={isPending}
-          >
-            {isEdit ? "Save draft" : "Create draft"}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onPublish}
-            disabled={isPending}
-          >
-            Publish
-          </Button>
-        </div>
-      </form>
+          {/* Sticky action bar */}
+          <div className="flex justify-end gap-3 sticky bottom-4 bg-white/80 backdrop-blur p-4 rounded-xl border border-brand-border">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onSaveDraft}
+              disabled={isPending}
+            >
+              {isEdit ? "Save draft" : "Create draft"}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={onPublishClick}
+              disabled={isPending || !form.formState.isValid}
+            >
+              Publish
+            </Button>
+          </div>
+        </form>
 
-      {/* Right column: live preview */}
-      <aside>
-        <AdminJobPreview values={values} />
-      </aside>
-    </div>
+        {/* Right column: live preview */}
+        <aside>
+          <AdminJobPreview values={values} />
+        </aside>
+      </div>
+
+      <PublishConfirmModal
+        open={publishModalOpen}
+        onOpenChange={setPublishModalOpen}
+        onConfirm={onConfirmPublish}
+        isPending={publishMut.isPending || createMut.isPending || updateMut.isPending}
+      />
+    </>
   );
 }
