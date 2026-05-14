@@ -5,11 +5,13 @@ import {
   BriefcaseBusiness,
   Clock,
   MapPin,
+  Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
 import { cn } from "@/lib/utils";
+import { formatApplicantCount } from "@/lib/jobs/format-applicant-count";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
 
 const formatDetail = (str: string) =>
@@ -28,6 +30,7 @@ interface JobCardProps {
   isDismissing?: boolean;
   variant?: "default" | "compact";
   isPreview?: boolean;
+  showDescription?: boolean;
 }
 
 function formatEnumLabel(value?: string | null): string | null {
@@ -52,6 +55,7 @@ export function JobCard({
   isDismissing = false,
   variant = "default",
   isPreview = false,
+  showDescription = false,
 }: JobCardProps) {
   const isCompact = variant === "compact";
   const saveLabel = isSaved
@@ -70,6 +74,7 @@ export function JobCard({
     { icon: MapPin, label: formatEnumLabel(job.workType) ?? job.location },
     { icon: BriefcaseBusiness, label: formatEnumLabel(job.jobType) },
     { icon: Clock, label: job.experienceLevel },
+    { icon: Users, label: formatApplicantCount(job.applicantCount ?? 0) },
   ].filter((fact): fact is { icon: typeof MapPin; label: string } =>
     hasText(fact.label),
   );
@@ -129,6 +134,7 @@ export function JobCard({
       }
       facts={facts}
       skills={skills}
+      description={showDescription ? (job.description ?? null) : null}
       hintText={job.missingSkillsHint}
       salaryRange={job.salaryRange}
       footerRight={
