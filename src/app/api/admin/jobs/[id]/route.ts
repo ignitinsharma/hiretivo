@@ -8,11 +8,12 @@ import { JobStatus, SkillLevel } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const adminWriteLimiter = createRateLimiter("admin-write", 30, "1 m");
+const adminReadLimiter = createRateLimiter("admin-read", 60, "1 m");
 
 /*
  * GET /api/admin/jobs/[id]
  * Returns a single admin-posted job with its skills, for the edit page.
- * Returns 403 for non-admin, 404 if not found or not admin-posted.
+ * Returns 403 for non-admin, 404 if not found or not admin-posted, 429 on rate limit.
  */
 export async function GET(
   _req: NextRequest,
@@ -21,6 +22,11 @@ export async function GET(
   const session = await auth();
   if (!isAdminSession(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await adminReadLimiter.limit(session!.user!.id!);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const job = await prisma.job.findUnique({
@@ -93,6 +99,7 @@ export async function PATCH(
     companySize,
     companyIndustry,
     companyFunding,
+    externalApplyUrl,
     ...rest
   } = parsed.data;
 
@@ -102,6 +109,7 @@ export async function PATCH(
   if (companySize !== undefined) normalized.companySize = companySize || null;
   if (companyIndustry !== undefined) normalized.companyIndustry = companyIndustry || null;
   if (companyFunding !== undefined) normalized.companyFunding = companyFunding || null;
+  if (externalApplyUrl !== undefined) normalized.externalApplyUrl = externalApplyUrl || null;
 
   let updated;
   if (skills !== undefined) {

@@ -1,12 +1,20 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { skillService } from "@/services/skill.service";
 import { JobCard } from "@/components/shared/JobCard";
 import { LogoPreview } from "./LogoPreview";
-import { CurrencyCode } from "@/constants/enums";
+import { CurrencyCode, WorkType } from "@/constants/enums";
+import { sanitizeHtml } from "@/lib/utils/html-sanitizer";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
 import type { AdminJobFormValues } from "../types/admin-job.types";
+
+const WORK_TYPE_LABELS: Record<string, string> = {
+  [WorkType.REMOTE]: "Remote",
+  [WorkType.HYBRID]: "Hybrid",
+  [WorkType.ONSITE]: "Onsite",
+};
 
 interface Props {
   values: AdminJobFormValues;
@@ -51,9 +59,13 @@ export function AdminJobPreview({ values }: Props) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const selectedSkillNames = (skills ?? [])
-    .filter((s) => values.selectedSkillIds?.includes(s.id))
-    .map((s) => s.name);
+  const selectedSkillNames = useMemo(
+    () =>
+      (skills ?? [])
+        .filter((s) => values.selectedSkillIds?.includes(s.id))
+        .map((s) => s.name),
+    [skills, values.selectedSkillIds],
+  );
 
   /* Build a JobListItem from live form values so JobCard renders a real preview. */
   const jobItem: JobListItem = {
@@ -61,7 +73,7 @@ export function AdminJobPreview({ values }: Props) {
     title: values.title || "Job title",
     companyName: values.companyName || "Company",
     companyLogoUrl: values.companyLogoUrl || undefined,
-    location: values.workType || "Remote",
+    location: WORK_TYPE_LABELS[values.workType ?? ""] ?? "Remote",
     salaryRange: formatSalaryRange(values.salaryMin, values.salaryMax, values.currency),
     tags: selectedSkillNames.slice(0, 3),
     postedAt: "Just now",
@@ -126,9 +138,9 @@ export function AdminJobPreview({ values }: Props) {
         <div
           className="prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{
-            __html:
-              values.description ||
-              "<p class='text-brand-foreground-muted'>Description preview…</p>",
+            __html: values.description
+              ? sanitizeHtml(values.description)
+              : "<p class='text-brand-foreground-muted'>Description preview…</p>",
           }}
         />
       </div>

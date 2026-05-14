@@ -76,7 +76,9 @@ export const useUIStore = create<UIState>((set) => ({
     if (isExternal) {
       // Open the company site immediately so the user lands there without an
       // extra click. The modal then asks whether they completed the application.
-      window.open(externalApplyUrl, '_blank', 'noopener,noreferrer');
+      if (typeof window !== 'undefined') {
+        window.open(externalApplyUrl, '_blank', 'noopener,noreferrer');
+      }
       set({
         isApplyModalOpen: true,
         applyJobId: jobId,

@@ -47,7 +47,11 @@ const formSchema = z.object({
   description: z.string().trim().min(50, "Description must be at least 50 characters"),
   jobType: z.string().min(1, "Job type required"),
   workType: z.string().optional().or(z.literal("")),
-  externalApplyUrl: z.string().url("Apply URL required"),
+  externalApplyUrl: z
+    .string()
+    .url("Apply URL must be a valid URL")
+    .optional()
+    .or(z.literal("")),
   salaryMin: z.string().optional().or(z.literal("")),
   salaryMax: z.string().optional().or(z.literal("")),
   currency: z.string().optional().or(z.literal("")),
@@ -157,7 +161,7 @@ export function AdminJobForm({ existing }: Props) {
     description: values.description,
     jobType: values.jobType as JobType,
     workType: (values.workType || undefined) as WorkType | undefined,
-    externalApplyUrl: values.externalApplyUrl,
+    externalApplyUrl: values.externalApplyUrl || undefined,
     salaryMin: values.salaryMin ? parseInt(values.salaryMin, 10) : undefined,
     salaryMax: values.salaryMax ? parseInt(values.salaryMax, 10) : undefined,
     currency: (values.currency || undefined) as AdminJobCreateInput["currency"],
@@ -270,7 +274,11 @@ export function AdminJobForm({ existing }: Props) {
               onClick={onSaveDraft}
               disabled={isPending}
             >
-              {isEdit ? "Save draft" : "Create draft"}
+              {createMut.isPending || updateMut.isPending
+                ? "Saving…"
+                : isEdit
+                  ? "Save draft"
+                  : "Create draft"}
             </Button>
             <Button
               type="button"
@@ -278,7 +286,7 @@ export function AdminJobForm({ existing }: Props) {
               onClick={onPublishClick}
               disabled={isPending || !form.formState.isValid}
             >
-              Publish
+              {publishMut.isPending ? "Publishing…" : "Publish"}
             </Button>
           </div>
         </form>

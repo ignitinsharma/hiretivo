@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { stripHtml } from "@/lib/utils";
+import { resolveJobCompany } from "@/lib/jobs/resolve-job-company";
 
 /*
  * formatSalaryRange
@@ -69,7 +70,14 @@ export async function GET() {
           recruiter: {
             select: {
               recruiterProfile: {
-                select: { id: true, companyName: true, logo: true },
+                select: {
+                  id: true,
+                  companyName: true,
+                  logo: true,
+                  companySize: true,
+                  industry: true,
+                  fundingType: true,
+                },
               },
             },
           },
@@ -88,30 +96,43 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    data: savedJobs.map((savedJob) => ({
-      id: savedJob.id,
-      savedAt: savedJob.createdAt.toISOString(),
-      application: savedJob.job.applications[0] ?? null,
-      job: {
-        id: savedJob.job.id,
-        title: savedJob.job.title,
-        companyId: savedJob.job.recruiter.recruiterProfile?.id ?? null,
-        companyName: savedJob.job.recruiter.recruiterProfile?.companyName ?? "Unknown",
-        companyLogoUrl: resolveLogoUrl(savedJob.job.recruiter.recruiterProfile?.logo),
-        location: savedJob.job.workType ?? "Remote",
-        salaryRange: formatSalaryRange(
-          savedJob.job.salaryMin,
-          savedJob.job.salaryMax,
-          savedJob.job.currency,
-        ),
-        tags: savedJob.job.skills.slice(0, 3).map((jobSkill) => jobSkill.skill.name),
-        postedAt: formatPostedAt(savedJob.job.publishedAt),
-        isClosed: savedJob.job.status !== JobStatus.OPEN,
-        applyType: savedJob.job.applyType,
-        externalApplyUrl: savedJob.job.externalApplyUrl,
-        description: savedJob.job.description ? stripHtml(savedJob.job.description) : null,
-        applicantCount: savedJob.job._count.applications,
-      },
-    })),
+    data: savedJobs.map((savedJob) => {
+      const company = resolveJobCompany({
+        companyName: savedJob.job.companyName,
+        companyLogoUrl: savedJob.job.companyLogoUrl,
+        companySize: savedJob.job.companySize,
+        companyIndustry: savedJob.job.companyIndustry,
+        companyFunding: savedJob.job.companyFunding,
+        recruiter: savedJob.job.recruiter,
+      });
+      return {
+        id: savedJob.id,
+        savedAt: savedJob.createdAt.toISOString(),
+        application: savedJob.job.applications[0] ?? null,
+        job: {
+          id: savedJob.job.id,
+          title: savedJob.job.title,
+          companyId: company.companyId,
+          companyName: company.companyName,
+          companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+          location: savedJob.job.workType ?? "Remote",
+          salaryRange: formatSalaryRange(
+            savedJob.job.salaryMin,
+            savedJob.job.salaryMax,
+            savedJob.job.currency,
+          ),
+          tags: savedJob.job.skills.slice(0, 3).map((jobSkill) => jobSkill.skill.name),
+          postedAt: formatPostedAt(savedJob.job.publishedAt),
+          isClosed: savedJob.job.status !== JobStatus.OPEN,
+          applyType: savedJob.job.applyType,
+          externalApplyUrl: savedJob.job.externalApplyUrl,
+          description: savedJob.job.description ? stripHtml(savedJob.job.description) : null,
+          applicantCount: savedJob.job._count.applications,
+          companyIndustry: company.companyIndustry,
+          companySize: company.companySize,
+          companyFundingType: company.companyFundingType,
+        },
+      };
+    }),
   });
 }
