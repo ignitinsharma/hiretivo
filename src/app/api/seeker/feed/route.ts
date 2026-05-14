@@ -8,6 +8,7 @@ import { computeAllMatches, upsertJobMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
+import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
 
 const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
 
@@ -262,12 +263,21 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const company = resolveJobCompany({
+      companyName: job.companyName,
+      companyLogoUrl: job.companyLogoUrl,
+      companySize: job.companySize,
+      companyIndustry: job.companyIndustry,
+      companyFunding: job.companyFunding,
+      recruiter: job.recruiter,
+    });
+
     jobsResponse.push({
       id: job.id,
       title: job.title,
-      companyId: job.recruiter.recruiterProfile?.id ?? null,
-      companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-      companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+      companyId: company.companyId,
+      companyName: company.companyName,
+      companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
       location: job.workType ?? 'Remote',
       salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
       matchScore: score,
@@ -276,9 +286,9 @@ export async function GET(req: NextRequest) {
       jobType: job.jobType,
       workType: job.workType,
       experienceLevel: job.experienceLevel,
-      companyIndustry: job.recruiter.recruiterProfile?.industry ?? null,
-      companySize: job.recruiter.recruiterProfile?.companySize ?? null,
-      companyFundingType: job.recruiter.recruiterProfile?.fundingType ?? null,
+      companyIndustry: company.companyIndustry,
+      companySize: company.companySize,
+      companyFundingType: company.companyFundingType,
       matchedSkillNames,
       applyType: job.applyType,
       externalApplyUrl: job.externalApplyUrl,
