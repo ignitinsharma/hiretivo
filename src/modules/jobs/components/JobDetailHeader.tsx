@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronRight, Globe2 } from 'lucide-react';
+import { ChevronRight, Globe2, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CurrencyCode, WorkType } from '@/constants/enums';
 import { SaveJobButton } from '@/modules/jobs/components/SaveJobButton';
 import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
+import { formatApplicantCount } from '@/lib/jobs/format-applicant-count';
 
 interface JobData {
   id: string;
@@ -23,6 +24,7 @@ interface JobData {
   applyType: string;
   externalApplyUrl: string | null;
   companyId: string | null;
+  applicantCount: number;
 }
 
 interface JobDetailHeaderProps {
@@ -98,6 +100,11 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
                   </span>
                 </>
               )}
+              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+              <span className="flex items-center gap-1 text-brand-foreground-muted">
+                <Users className="w-4 h-4" />
+                {formatApplicantCount(job.applicantCount)}
+              </span>
             </div>
           </div>
         </div>
