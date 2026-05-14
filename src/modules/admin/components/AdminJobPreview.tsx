@@ -73,6 +73,7 @@ export function AdminJobPreview({ values }: Props) {
     companyFundingType: values.companyFunding || null,
     applyType: "EXTERNAL",
     externalApplyUrl: values.externalApplyUrl || null,
+    description: values.description || null,
   };
 
   return (
@@ -80,7 +81,7 @@ export function AdminJobPreview({ values }: Props) {
       <div className="text-sm font-medium text-brand-foreground-muted">Preview</div>
 
       {/* Seeker-facing job card */}
-      <JobCard job={jobItem} isPreview />
+      <JobCard job={jobItem} isPreview showDescription />
 
       {/* Condensed detail card */}
       <div className="rounded-xl border border-brand-border bg-white p-6 space-y-4">

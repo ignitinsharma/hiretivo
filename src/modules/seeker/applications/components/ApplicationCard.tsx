@@ -82,6 +82,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       }
       facts={facts}
       skills={skills}
+      description={application.description ?? null}
       salaryRange={application.salaryRange}
       footerRight={
         application.jobStatus === JobStatus.DELETED ? (

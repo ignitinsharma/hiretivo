@@ -16,6 +16,7 @@ export interface SeekerApplicationItem {
   companySize?: string | null;
   companyFundingType?: string | null;
   skills?: string[];
+  description?: string | null;
   status: ApplicationStatus;
   appliedAt: string;
 }

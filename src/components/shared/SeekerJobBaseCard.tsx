@@ -25,6 +25,7 @@ interface SeekerJobBaseCardProps {
     isPrimary?: boolean;
   }>;
   hintText?: string | null;
+  description?: string | null;
   salaryRange?: string;
   footerRight?: React.ReactNode;
   className?: string;
@@ -47,6 +48,7 @@ export function SeekerJobBaseCard({
   facts = [],
   skills = [],
   hintText,
+  description,
   salaryRange,
   footerRight,
   className,
@@ -137,6 +139,12 @@ export function SeekerJobBaseCard({
           ))}
         </div>
       )}
+
+      {description ? (
+        <p className="mt-4 line-clamp-1 text-sm font-bold capitalize  text-brand-foreground-muted">
+          {description}
+        </p>
+      ) : null}
 
       {hintText ? (
         <p className="mt-3 text-xs font-medium text-brand-warning">

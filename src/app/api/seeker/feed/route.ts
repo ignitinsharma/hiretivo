@@ -9,7 +9,7 @@ import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
 import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
-import { stripHtml } from '@/lib/strip-html';
+import { stripHtml } from '@/lib/utils';
 
 const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
 

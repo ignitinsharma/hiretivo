@@ -5,7 +5,7 @@ import { JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
-import { stripHtml } from "@/lib/strip-html";
+import { stripHtml } from "@/lib/utils";
 
 /*
  * formatSalaryRange

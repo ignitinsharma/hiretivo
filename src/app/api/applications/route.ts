@@ -8,7 +8,7 @@ import {
 } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
-import { stripHtml } from "@/lib/strip-html";
+import { stripHtml } from "@/lib/utils";
 import { createApplicationSchema } from "@/lib/validations/application";
 import { applyRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 
