@@ -256,6 +256,16 @@ model Job {
 
   externalApplyUrl String?
 
+  // Admin-posted job company overrides — null on regular recruiter jobs.
+  // When non-null, take precedence over the recruiter's profile for display.
+  companyName     String?
+  companyLogoUrl  String?
+  companyWebsite  String?
+  companySize     String?
+  companyIndustry String?
+  companyFunding  String?
+  isAdminPosted   Boolean   @default(false)
+
   publishedAt DateTime?
   closedAt    DateTime?
 
@@ -273,6 +283,7 @@ model Job {
   @@index([recruiterId])
   @@index([status])
   @@index([createdAt])
+  @@index([isAdminPosted])
 }
 
 model JobSkill {
