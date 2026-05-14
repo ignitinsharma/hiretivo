@@ -8,7 +8,15 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { JobType, SkillLevel, WorkType } from "@/constants/enums";
-import { adminJobCreateSchema, type AdminJobCreateInput } from "@/lib/validations/admin-job.schema";
+import {
+  adminJobCreateSchema,
+  type AdminJobCreateInput,
+  ADMIN_COMPANY_SIZE_OPTIONS,
+  ADMIN_COMPANY_INDUSTRY_OPTIONS,
+  ADMIN_COMPANY_FUNDING_OPTIONS,
+  ADMIN_EXPERIENCE_LEVEL_OPTIONS,
+  ADMIN_CURRENCY_OPTIONS,
+} from "@/lib/validations/admin-job.schema";
 import {
   useCreateAdminJob,
   useUpdateAdminJob,
@@ -58,6 +66,24 @@ const formSchema = z.object({
  *
  * @param existing - Pre-populated AdminJobDetail for edit mode; omit for create mode.
  */
+/*
+ * normalizeEnumValue
+ * Returns the input value only when it matches one of the allowed options;
+ * otherwise returns an empty string. Used so legacy free-text values in the
+ * DB (e.g. experienceLevel="Senior") don't break the now-stricter enum schema.
+ */
+function normalizeEnumValue(
+  value: string | null | undefined,
+  options: readonly string[],
+  transform: "lower" | "upper" | "asis" = "asis",
+): string {
+  if (!value) return "";
+  const candidate =
+    transform === "lower" ? value.toLowerCase() :
+    transform === "upper" ? value.toUpperCase() : value;
+  return options.includes(candidate) ? candidate : "";
+}
+
 export function AdminJobForm({ existing }: Props) {
   const router = useRouter();
   const isEdit = Boolean(existing);
@@ -71,9 +97,9 @@ export function AdminJobForm({ existing }: Props) {
           companyName: existing.companyName ?? "",
           companyLogoUrl: existing.companyLogoUrl ?? "",
           companyWebsite: existing.companyWebsite ?? "",
-          companySize: existing.companySize ?? "",
-          companyIndustry: existing.companyIndustry ?? "",
-          companyFunding: existing.companyFunding ?? "",
+          companySize: normalizeEnumValue(existing.companySize, ADMIN_COMPANY_SIZE_OPTIONS),
+          companyIndustry: normalizeEnumValue(existing.companyIndustry, ADMIN_COMPANY_INDUSTRY_OPTIONS, "upper"),
+          companyFunding: normalizeEnumValue(existing.companyFunding, ADMIN_COMPANY_FUNDING_OPTIONS, "upper"),
           title: existing.title,
           description: existing.description,
           jobType: existing.jobType ?? "",
@@ -81,8 +107,8 @@ export function AdminJobForm({ existing }: Props) {
           externalApplyUrl: existing.externalApplyUrl ?? "",
           salaryMin: existing.salaryMin?.toString() ?? "",
           salaryMax: existing.salaryMax?.toString() ?? "",
-          currency: existing.currency ?? "",
-          experienceLevel: existing.experienceLevel ?? "",
+          currency: normalizeEnumValue(existing.currency, ADMIN_CURRENCY_OPTIONS, "upper") || "USD",
+          experienceLevel: normalizeEnumValue(existing.experienceLevel, ADMIN_EXPERIENCE_LEVEL_OPTIONS, "lower"),
           category: existing.category ?? "",
           selectedSkillIds: existing.skills.map((s) => s.skillId),
         }
@@ -153,7 +179,9 @@ export function AdminJobForm({ existing }: Props) {
     const payload = buildPayload(values);
     const validated = adminJobCreateSchema.safeParse(payload);
     if (!validated.success) {
-      toast.error(validated.error.issues[0]?.message ?? "Validation failed");
+      const issue = validated.error.issues[0];
+      const path = issue?.path.join(".") || "input";
+      toast.error(`${path}: ${issue?.message ?? "Validation failed"}`);
       return;
     }
 
@@ -197,7 +225,9 @@ export function AdminJobForm({ existing }: Props) {
     const payload = buildPayload(values);
     const validated = adminJobCreateSchema.safeParse(payload);
     if (!validated.success) {
-      toast.error(validated.error.issues[0]?.message ?? "Validation failed");
+      const issue = validated.error.issues[0];
+      const path = issue?.path.join(".") || "input";
+      toast.error(`${path}: ${issue?.message ?? "Validation failed"}`);
       return;
     }
 
