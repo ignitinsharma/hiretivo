@@ -284,6 +284,7 @@ model Job {
   @@index([status])
   @@index([createdAt])
   @@index([isAdminPosted])
+  @@index([status, createdAt])
 }
 
 model JobSkill {
@@ -338,6 +339,7 @@ model Application {
   @@unique([jobId, seekerId])
   @@index([seekerId])
   @@index([status])
+  @@index([jobId, status])
 }
 
 model Interview {
