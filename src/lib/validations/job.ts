@@ -24,7 +24,14 @@ const baseJobSchema = z.object({
   salaryMin: z.number().int().nonnegative().optional(),
   salaryMax: z.number().int().nonnegative().optional(),
   currency: z.string().trim().length(3).optional(),
-  externalApplyUrl: z.string().url().optional(),
+  externalApplyUrl: z
+    .string()
+    .url("Apply URL must be a valid URL")
+    .refine(
+      (url) => /^https?:\/\//i.test(url),
+      { message: "Apply URL must use http or https" }
+    )
+    .optional(),
   experienceLevel: z.string().trim().max(50).optional(),
   category: z.string().trim().max(100).optional(),
   skills: z.array(jobSkillSchema).min(1),

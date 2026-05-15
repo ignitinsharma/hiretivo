@@ -57,6 +57,10 @@ const adminJobBaseSchema = adminJobCompanySchema.extend({
   externalApplyUrl: z
     .string()
     .url("Apply URL must be a valid URL")
+    .refine(
+      (url) => /^https?:\/\//i.test(url),
+      { message: "Apply URL must use http or https" }
+    )
     .optional()
     .or(z.literal("")),
   salaryMin: z.number().int().nonnegative().nullable().optional(),
