@@ -64,11 +64,11 @@ export default function Error({
             </svg>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-brand-foreground mb-4">
             Something went wrong!
           </h1>
 
-          <p className="text-lg text-gray-500 mb-8">
+          <p className="text-lg text-brand-foreground-muted mb-8">
             It looks like something happened on our end. Try again later.
           </p>
 

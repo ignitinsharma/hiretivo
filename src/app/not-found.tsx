@@ -50,11 +50,11 @@ export default function NotFound() {
             </svg>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-brand-foreground mb-4">
             Oops!
           </h1>
 
-          <p className="text-lg text-gray-500 mb-8">
+          <p className="text-lg text-brand-foreground-muted mb-8">
             We can&apos;t seem to find the page you&apos;re looking for.
           </p>
 
