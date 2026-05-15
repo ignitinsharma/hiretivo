@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/resend';
 
-const RESET_EXPIRY_MINUTES = 60;
+const RESET_EXPIRY_MINUTES = 30;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Hiretivo <noreply@hiretivo.com>';
 const IDENTIFIER_PREFIX = 'password-reset:';

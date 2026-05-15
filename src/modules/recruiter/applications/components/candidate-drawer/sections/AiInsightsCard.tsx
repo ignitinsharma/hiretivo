@@ -1,5 +1,6 @@
 import { ChevronRight, Sparkles } from "lucide-react";
 
+import { sanitizeHtml } from "@/lib/utils/html-sanitizer";
 import type { AiState } from "../types";
 import { getFitBadge } from "../utils";
 
@@ -63,7 +64,7 @@ export function AiInsightsCard({ state }: AiInsightsCardProps) {
           </p>
           <div
             className="mt-3 text-sm leading-relaxed text-white/90 [&_.summary-container]:space-y-2 [&_.summary-skills_mark]:rounded [&_.summary-skills_mark]:bg-white/15 [&_.summary-skills_mark]:px-1"
-            dangerouslySetInnerHTML={{ __html: state.summary }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(state.summary) }}
           />
         </div>
         <div className="space-y-2 text-right">
