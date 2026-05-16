@@ -25,14 +25,47 @@ export function getUnlockQuota(plan: PlanTier | string | null | undefined): numb
 }
 
 /*
+ * getJobPostingLimit
+ * Returns the max number of OPEN jobs allowed for a plan tier.
+ * Returns null for unlimited (GROWTH, SCALE, ENTERPRISE).
+ * FREE = 0 (cannot post), STARTER = 2, PRO = 10 (legacy), others null.
+ */
+export function getJobPostingLimit(plan: string | null | undefined): number | null {
+  switch (plan) {
+    case PlanTier.FREE:    return 0;
+    case PlanTier.STARTER: return 2;
+    case PlanTier.GROWTH:  return null;   // unlimited
+    case PlanTier.SCALE:   return null;   // unlimited
+    case "PRO":            return 10;     // legacy — old plan tier
+    case "ENTERPRISE":     return null;   // legacy — old plan tier
+    default:               return 0;      // unknown = treat as FREE
+  }
+}
+
+/*
  * canPostJob
  * Returns true when the plan allows posting another job.
  * FREE: never. STARTER: up to 2 active jobs. GROWTH/SCALE: unlimited.
  */
 export function canPostJob(plan: PlanTier | string | null | undefined, currentOpenJobCount: number): boolean {
-  if (plan === PlanTier.FREE) return false;
-  if (plan === PlanTier.STARTER) return currentOpenJobCount < 2;
-  return true; // GROWTH, SCALE
+  const limit = getJobPostingLimit(plan);
+  if (limit === null) return true;  // unlimited
+  return currentOpenJobCount < limit;
+}
+
+/*
+ * canAccessRecruiterPaidFeature
+ * Returns true when the plan tier is a paid tier eligible for premium features.
+ * FREE is not paid; all other tiers are.
+ */
+export function canAccessRecruiterPaidFeature(plan: string | null | undefined): boolean {
+  return (
+    plan === PlanTier.STARTER ||
+    plan === PlanTier.GROWTH ||
+    plan === PlanTier.SCALE ||
+    plan === "PRO" ||        // legacy
+    plan === "ENTERPRISE"    // legacy
+  );
 }
 
 export const TALENT_POOL_UPGRADE_COPY = {
