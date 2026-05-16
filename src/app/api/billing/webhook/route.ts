@@ -12,7 +12,7 @@ import type {
 } from "dodopayments/resources/webhooks/webhooks";
 import type { Subscription } from "dodopayments/resources/subscriptions";
 import type { Payment } from "dodopayments/resources/payments";
-import { PlanTier } from "@/constants/enums";
+import { JobStatus, PlanTier } from "@/constants/enums";
 import { DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
@@ -184,6 +184,9 @@ async function handleSubscriptionCancelled(sub: Subscription): Promise<void> {
       data: { plan: PlanTier.FREE },
     }),
   ]);
+
+  // Auto-draft excess jobs for the NEW (FREE) plan limit
+  await handleJobDowngrade(userId, PlanTier.FREE);
 }
 
 // payment.failed — grace period, do not downgrade until subscription.cancelled fires
@@ -197,6 +200,33 @@ async function handlePaymentFailed(payment: Payment): Promise<void> {
     where: { dodoSubscriptionId: payment.subscription_id },
     data: { status: "PAST_DUE" },
   });
+}
+
+/*
+ * handleJobDowngrade
+ * When a recruiter's plan is downgraded, auto-drafts excess OPEN jobs
+ * beyond the new plan's job posting limit. Most-recently-created jobs
+ * are kept OPEN; oldest excess jobs become DRAFT.
+ */
+async function handleJobDowngrade(userId: string, newPlan: PlanTier): Promise<void> {
+  const { getJobPostingLimit } = await import("@/lib/billing/plan-access");
+  const newQuota = getJobPostingLimit(newPlan);
+  if (newQuota === null) return; // unlimited — nothing to draft
+
+  const openJobs = await prisma.job.findMany({
+    where: { recruiterId: userId, status: JobStatus.OPEN },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+
+  const excess = openJobs.slice(newQuota);
+  if (excess.length === 0) return;
+
+  await prisma.job.updateMany({
+    where: { id: { in: excess.map((j) => j.id) } },
+    data: { status: JobStatus.DRAFT },
+  });
+  console.info(`[billing] Downgrade: auto-drafted ${excess.length} excess jobs for user ${userId}`);
 }
 
 export async function POST(req: NextRequest) {

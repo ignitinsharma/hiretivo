@@ -5,7 +5,7 @@ import { createJobSchema } from '@/lib/validations/job';
 import { createRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 import { JobStatus, PlanTier, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
-import { getRecruiterJobLimit } from '@/lib/recruiter-trial';
+import { canPostJob } from '@/lib/billing/plan-access';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
@@ -125,32 +125,21 @@ export async function POST(req: NextRequest) {
   });
 
   const currentPlan = user?.plan ?? PlanTier.FREE;
-  const jobLimit = getRecruiterJobLimit(currentPlan);
+  const activeCount = await prisma.job.count({
+    where: { recruiterId: session.user.id, status: JobStatus.OPEN },
+  });
 
-  if (jobLimit !== null) {
-    const activeCount = await prisma.job.count({
-      where: { recruiterId: session.user.id, status: JobStatus.OPEN },
-    });
-
-    if (activeCount >= jobLimit) {
-      const planName =
-        currentPlan === PlanTier.FREE && jobLimit > 1
-          ? 'Free trial'
-          : currentPlan === PlanTier.STARTER
-            ? 'Starter'
-            : 'Free';
-      const nextStep =
-        currentPlan === PlanTier.STARTER
-          ? 'Upgrade to Growth for unlimited active jobs.'
-          : 'Upgrade to Starter for more.';
-
-      return NextResponse.json(
-        {
-          error: `${planName} plan allows ${jobLimit} active job${jobLimit > 1 ? 's' : ''}. ${nextStep}`,
-        },
-        { status: 403 }
-      );
-    }
+  if (!canPostJob(currentPlan, activeCount)) {
+    return NextResponse.json(
+      {
+        error:
+          currentPlan === PlanTier.FREE
+            ? 'Upgrade to post jobs'
+            : 'Upgrade to post more jobs',
+        code: 'JOB_QUOTA_EXCEEDED',
+      },
+      { status: 403 }
+    );
   }
 
   let body: unknown;
