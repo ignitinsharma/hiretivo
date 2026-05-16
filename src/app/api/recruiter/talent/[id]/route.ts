@@ -1,177 +1,131 @@
 import { auth } from "@/auth";
-import { PlanTier, UserRole } from "@/constants/enums";
-import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
+import { UserRole } from "@/constants/enums";
+import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
-import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
-import { dataFetchRateLimiter } from "@/lib/rate-limit";
-import { NextResponse } from "next/server";
-
-interface TalentDetailRouteContext {
-  params: {
-    id: string;
-  };
-}
-
-/*
- * isPaidPlan
- * Checks whether a recruiter plan can view full talent profile details.
- * Returns true when billing access rules allow the feature.
- */
-function isPaidPlan(plan: string | null | undefined): boolean {
-  return canAccessRecruiterPaidFeature(plan);
-}
-
-/*
- * resolveResumeUrl
- * Creates a temporary browser URL for a private resume file.
- * Returns null when no key exists or signing fails.
- */
-async function resolveResumeUrl(resumeKey: string | null): Promise<string | null> {
-  if (!resumeKey) {
-    return null;
-  }
-
-  try {
-    return await getSignedFileUrl(resumeKey);
-  } catch {
-    return null;
-  }
-}
+import { resolveLogoUrl } from "@/lib/r2";
+import { dataFetchRateLimiter, getRateLimitIp } from "@/lib/rate-limit";
+import { NextRequest, NextResponse } from "next/server";
 
 /*
  * GET /api/recruiter/talent/[id]
- * Returns the complete Talent Pool profile for paid recruiters.
- * Responds with profile detail or auth/plan/not-found/rate-limit errors.
+ * Returns single engineer detail in locked or unlocked shape.
+ * Locked: firstName/lastInitial + metadata. Unlocked: adds fullName/email/github/linkedin/resumeUrl.
+ * Returns 404 if engineer not VERIFIED+profilePublic or hiddenUntil active.
  */
-export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  if (session.user.role !== UserRole.RECRUITER) {
+  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+  if (session.user.role !== UserRole.RECRUITER)
     return new Response("Forbidden", { status: 403 });
-  }
 
-  const { success } = await dataFetchRateLimiter.limit(session.user.id);
-  if (!success) {
-    return new Response("Too Many Requests", { status: 429 });
-  }
+  const ip = getRateLimitIp(req);
+  const { success } = await dataFetchRateLimiter.limit(ip);
+  if (!success) return new Response("Too Many Requests", { status: 429 });
 
   const recruiter = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { plan: true },
   });
-
-  if (!isPaidPlan(recruiter?.plan)) {
-    return new Response("Forbidden", { status: 403 });
+  if (!canAccessTalentPool(recruiter?.plan)) {
+    return NextResponse.json({ code: "UPGRADE_REQUIRED" }, { status: 403 });
   }
 
-  const seeker = await prisma.user.findFirst({
+  const engineer = await prisma.user.findFirst({
     where: {
       id: params.id,
       role: "SEEKER",
+      verificationStatus: "VERIFIED",
+      seekerProfile: { is: { profilePublic: true } },
+      AND: [
+        { OR: [{ hiddenUntil: null }, { hiddenUntil: { lt: new Date() } }] },
+      ],
     },
     select: {
       id: true,
       name: true,
       email: true,
-      image: true,
+      hiretivoScore: true,
+      timezoneOverlapHours: true,
+      availableFrom: true,
       seekerProfile: {
         select: {
-          headline: true,
-          bio: true,
-          location: true,
-          yearsExperience: true,
-          workPreference: true,
-          situation: true,
           primaryRole: true,
-          salaryMin: true,
-          salaryMax: true,
-          currency: true,
-          availability: true,
-          resumeKey: true,
-          websiteUrl: true,
-          linkedinUrl: true,
+          yearsExperience: true,
+          salaryMinUsd: true,
+          salaryMaxUsd: true,
           githubUrl: true,
-          twitterUrl: true,
-          workExperiences: {
-            orderBy: [{ isCurrent: "desc" }, { updatedAt: "desc" }],
-            select: {
-              id: true,
-              company: true,
-              title: true,
-              startDate: true,
-              endDate: true,
-              isCurrent: true,
-              description: true,
-              positionType: true,
-              skills: true,
-            },
-          },
-          educations: {
-            orderBy: { updatedAt: "desc" },
-            select: {
-              id: true,
-              institution: true,
-              graduationDate: true,
-              degree: true,
-              major: true,
-            },
-          },
+          linkedinUrl: true,
+          resumeKey: true,
           skills: {
             select: {
-              level: true,
-              skill: { select: { name: true, category: true } },
+              skill: { select: { name: true } },
             },
-            orderBy: { skill: { name: "asc" } },
           },
         },
       },
     },
   });
 
-  if (!seeker?.seekerProfile) {
-    return new Response("Not found", { status: 404 });
-  }
+  if (!engineer) return new Response("Not Found", { status: 404 });
 
-  const profile = seeker.seekerProfile;
-  const resumeUrl = await resolveResumeUrl(profile.resumeKey);
+  const [unlock, savedRecord] = await Promise.all([
+    prisma.engineerUnlock.findUnique({
+      where: {
+        recruiterId_engineerId: {
+          recruiterId: session.user.id,
+          engineerId: params.id,
+        },
+      },
+    }),
+    prisma.savedEngineer.findUnique({
+      where: {
+        recruiterId_engineerId: {
+          recruiterId: session.user.id,
+          engineerId: params.id,
+        },
+      },
+    }),
+  ]);
+
+  const profile = engineer.seekerProfile;
+  const nameParts = (engineer.name ?? "").split(" ");
+  const firstName = nameParts[0] ?? "";
+  const lastInitial =
+    nameParts.length > 1
+      ? (nameParts[nameParts.length - 1]?.[0] ?? "")
+      : "";
+
+  const base = {
+    id: engineer.id,
+    firstName,
+    lastInitial,
+    hiretivoScore: engineer.hiretivoScore ?? 0,
+    role: profile?.primaryRole ?? "",
+    yearsExperience: profile?.yearsExperience ?? 0,
+    skills: profile?.skills.map((s) => s.skill.name) ?? [],
+    salaryMinUsd: profile?.salaryMinUsd ?? 0,
+    salaryMaxUsd: profile?.salaryMaxUsd ?? 0,
+    timezoneOverlapHours: engineer.timezoneOverlapHours ?? 0,
+    availableFrom: engineer.availableFrom?.toISOString() ?? null,
+    isUnlocked: !!unlock,
+    isSaved: !!savedRecord,
+  };
+
+  if (!unlock) return NextResponse.json({ data: base });
 
   return NextResponse.json({
     data: {
-      id: seeker.id,
-      name: seeker.name,
-      email: seeker.email,
-      image: resolveLogoUrl(seeker.image),
-      headline: profile.headline,
-      bio: profile.bio,
-      location: profile.location,
-      yearsExperience: profile.yearsExperience,
-      primaryRole: profile.primaryRole,
-      availability: profile.availability,
-      resumeKey: Boolean(profile.resumeKey),
-      resumeUrl,
-      skills: profile.skills.map((item) => ({
-        name: item.skill.name,
-        category: item.skill.category,
-        level: item.level,
-      })),
-      links: {
-        websiteUrl: profile.websiteUrl,
-        linkedinUrl: profile.linkedinUrl,
-        githubUrl: profile.githubUrl,
-        twitterUrl: profile.twitterUrl,
-      },
-      workExperiences: profile.workExperiences,
-      educations: profile.educations,
-      profile: {
-        workPreference: profile.workPreference,
-        situation: profile.situation,
-        salaryMin: profile.salaryMin,
-        salaryMax: profile.salaryMax,
-        currency: profile.currency,
-      },
+      ...base,
+      fullName: engineer.name ?? "",
+      email: engineer.email ?? "",
+      githubUrl: profile?.githubUrl ?? null,
+      linkedinUrl: profile?.linkedinUrl ?? null,
+      resumeUrl: profile?.resumeKey
+        ? resolveLogoUrl(profile.resumeKey)
+        : null,
     },
   });
 }
