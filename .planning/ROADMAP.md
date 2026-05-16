@@ -76,7 +76,14 @@ Plans:
   5. Recruiters can save engineers (no quota) and view saved list at `/recruiter/saved`.
   6. Homepage, pricing (4-tier), and nav reflect talent marketplace positioning.
   7. Billing plan access rewritten for FREE/STARTER/GROWTH/SCALE with unlock quotas.
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Billing plan access rewrite (canAccessTalentPool/getUnlockQuota/canPostJob) + talent pool GET API (locked/unlocked shape, cursor pagination) + GET single engineer detail + POST atomic unlock with quota enforcement + unlock notification email
+- [ ] 10-02-PLAN.md — Save/unsave API + interview invite API + public /e/[slug] profile page + engineer hide-profile API + block-recruiter API (POST/GET)
+- [ ] 10-03-PLAN.md — Talent pool browse page /recruiter/talent (3-state cards + upgrade modal + quota display + save button) + /recruiter/saved page
+- [ ] 10-04-PLAN.md — Homepage rebuild (3 pillars, dual-audience hero, how-it-works, CTA) + pricing page rebuild (4-tier + annual toggle) + nav update
+- [ ] 10-05-PLAN.md — Engineer settings additions: HideProfileToggle + WhoViewedMeSection + BlockedRecruiterSection wired into /seeker/settings
 
 ### Phase 11: Job Match & Notifications
 **Goal**: Replace existing match score with weighted formula, gate apply on VERIFIED status, send job-match notifications to verified engineers, and handle RECRUITER_INITIATED application flow from talent pool.
@@ -128,6 +135,6 @@ Plans:
 | 7. Polish | 0/TBD | Not started | - |
 | 8. Paid Workflows & Account Completion | 5/5 | Complete | 2026-04-26 |
 | 9. Verification System (Pivot v2) | 0/TBD | Not started | - |
-| 10. Talent Pool & Public Profiles (Pivot v2) | 0/TBD | Not started | - |
+| 10. Talent Pool & Public Profiles (Pivot v2) | 0/5 | Not started | - |
 | 11. Job Match & Notifications (Pivot v2) | 0/3 | Not started | - |
 | 12. AI Review & Feedback (Pivot v2) | 0/3 | Not started | - |
