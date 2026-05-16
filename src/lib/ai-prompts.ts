@@ -223,3 +223,49 @@ export const SKILL_SUGGEST_CONFIG = {
   max_tokens: 200,
   temperature: 0.1,
 } as const;
+
+// ---------------------------------------------------------------------------
+// GitHub Analysis (Phase 12 — Admin AI Review)
+// ---------------------------------------------------------------------------
+
+/*
+ * GITHUB_ANALYSIS_PROMPT
+ * Prompt template for Claude Haiku to analyze a GitHub profile.
+ * {GITHUB_DATA} is replaced with an inputSnapshot of typed GitHub fields.
+ * No raw repo descriptions are sent to the AI (prompt injection guard).
+ */
+export const GITHUB_ANALYSIS_PROMPT = `
+You are reviewing a GitHub profile for a software engineer applying for verification on Hiretivo, a talent marketplace for Indian engineers targeting US/EU startups.
+
+Analyze the following GitHub data and provide:
+1. A recommendation: APPROVE or REJECT
+2. Confidence: 0.0–1.0
+3. A score suggestion: 0–100 (quality of the engineer's work)
+4. Relevant rejection reasons from the predefined list (only if recommending REJECT)
+5. A brief summary for the admin
+
+GitHub data:
+{GITHUB_DATA}
+
+Respond in JSON:
+{
+  "recommendation": "APPROVE" | "REJECT",
+  "confidence": 0.0-1.0,
+  "scoreSuggestion": 0-100,
+  "reasons": string[],
+  "summary": string
+}
+`
+
+export interface GithubAnalysisOutput {
+  recommendation: 'APPROVE' | 'REJECT'
+  confidence: number
+  scoreSuggestion: number
+  reasons: string[]
+  summary: string
+}
+
+export const GITHUB_ANALYSIS_CONFIG = {
+  max_tokens: 400,
+  temperature: 0.1,
+} as const
