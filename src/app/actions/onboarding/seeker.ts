@@ -239,60 +239,56 @@ export async function skipSeekerResumeOnboarding(): Promise<ActionResult> {
   return { success: true };
 }
 
-// --- Step 4: Job Preferences ---
+// --- Step 4: Salary, timezone, and availability ---
 export async function saveStep4(data: {
-  jobType: string | null;
-  category: string | null;
-  salaryMin: number | null;
-  salaryMax: number | null;
-  currency: string;
-  availability: string | null;
-  workPreference: string | null;
+  targetSalaryMin: number;
+  targetSalaryMax: number;
+  timezoneOverlapHours: number;
+  availableFrom: string;
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
 
   const parsed = step4Schema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
   }
 
-  await prisma.seekerProfile.upsert({
-    where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      salaryMin: parsed.data.salaryMin,
-      salaryMax: parsed.data.salaryMax,
-      currency: parsed.data.currency,
-      availability: parsed.data.availability,
-      workPreference: parsed.data.workPreference,
-    },
-    update: {
-      salaryMin: parsed.data.salaryMin,
-      salaryMax: parsed.data.salaryMax,
-      currency: parsed.data.currency,
-      availability: parsed.data.availability,
-      workPreference: parsed.data.workPreference,
-    },
-  });
+  const availableFromDate = new Date(parsed.data.availableFrom);
+  if (Number.isNaN(availableFromDate.getTime())) {
+    return { success: false, error: "Invalid date for availableFrom" };
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { onboardingStep: true, onboardingDraft: true },
+    select: { onboardingStep: true },
   });
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      onboardingStep: nextProgressStep(user?.onboardingStep, 5),
-      onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
-        seeker: {
-          jobType: data.jobType,
-          category: data.category,
-        },
-      }),
-    },
-  });
+  await prisma.$transaction([
+    prisma.seekerProfile.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        salaryMinUsd: parsed.data.targetSalaryMin,
+        salaryMaxUsd: parsed.data.targetSalaryMax,
+      },
+      update: {
+        salaryMinUsd: parsed.data.targetSalaryMin,
+        salaryMaxUsd: parsed.data.targetSalaryMax,
+      },
+    }),
+    prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        timezoneOverlapHours: parsed.data.timezoneOverlapHours,
+        availableFrom: availableFromDate,
+        onboardingStep: nextProgressStep(user?.onboardingStep, 5),
+      },
+    }),
+  ]);
 
   return { success: true };
 }
@@ -311,7 +307,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     select: {
       situation: true,
       primaryRole: true,
-      availability: true,
+      salaryMinUsd: true,
       _count: { select: { skills: true } },
     },
   });
@@ -332,10 +328,10 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     };
   }
 
-  if (!profile.availability) {
+  if (!profile.salaryMinUsd) {
     return {
       success: false,
-      error: "Choose your availability first.",
+      error: "Complete salary preferences first.",
       missingStep: 4,
     };
   }
@@ -353,19 +349,24 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
 
 // --- Profile Completeness (per D-09: computed on read, not stored) ---
 export async function computeProfileCompleteness(userId: string): Promise<number> {
-  const profile = await prisma.seekerProfile.findUnique({
-    where: { userId },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
     select: {
-      situation: true,
-      primaryRole: true,
-      bio: true,
-      salaryMin: true,
-      salaryMax: true,
-      availability: true,
-      _count: { select: { skills: true } },
+      timezoneOverlapHours: true,
+      seekerProfile: {
+        select: {
+          situation: true,
+          primaryRole: true,
+          bio: true,
+          salaryMinUsd: true,
+          salaryMaxUsd: true,
+          _count: { select: { skills: true } },
+        },
+      },
     },
   });
 
+  const profile = user?.seekerProfile;
   if (!profile) return 0;
 
   // 7 tracked fields across steps 1–4
@@ -374,9 +375,9 @@ export async function computeProfileCompleteness(userId: string): Promise<number
     profile.primaryRole,
     profile._count.skills > 0 ? 'has_skills' : null,
     profile.bio,
-    profile.salaryMin,
-    profile.salaryMax,
-    profile.availability,
+    profile.salaryMinUsd,
+    profile.salaryMaxUsd,
+    user.timezoneOverlapHours,
   ];
 
   const filled = fields.filter((f) => f !== null && f !== undefined && f !== "").length;

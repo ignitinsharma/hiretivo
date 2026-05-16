@@ -4,10 +4,6 @@ export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5;
 export type RecruiterOnboardingStep = 1 | 2 | 3 | 4;
 
 export interface SeekerOnboardingDraft {
-  experienceLevel?: string | null;
-  yearsOfExperience?: string | null;
-  jobType?: string | null;
-  category?: string | null;
   resumeSkipped?: boolean;
 }
 
@@ -25,7 +21,7 @@ export interface OnboardingDraft {
 export interface SeekerProgressProfile {
   situation: string | null;
   primaryRole: string | null;
-  availability: string | null;
+  salaryMinUsd: number | null;
   skillsCount: number;
 }
 
@@ -60,10 +56,6 @@ export function parseOnboardingDraft(
 
   if (isRecord(value.seeker)) {
     draft.seeker = {
-      experienceLevel: asNullableString(value.seeker.experienceLevel),
-      yearsOfExperience: asNullableString(value.seeker.yearsOfExperience),
-      jobType: asNullableString(value.seeker.jobType),
-      category: asNullableString(value.seeker.category),
       resumeSkipped:
         typeof value.seeker.resumeSkipped === "boolean"
           ? value.seeker.resumeSkipped
@@ -127,11 +119,11 @@ export function resolveSeekerOnboardingStep(
   if (!profile.primaryRole || profile.skillsCount === 0) return 2;
 
   if (isSeekerStep(storedStep)) {
-    if (storedStep === 5 && !profile.availability) return 4;
+    if (storedStep === 5 && !profile.salaryMinUsd) return 4;
     return storedStep;
   }
 
-  return profile.availability ? 5 : 4;
+  return profile.salaryMinUsd ? 5 : 4;
 }
 
 export function resolveRecruiterOnboardingStep(

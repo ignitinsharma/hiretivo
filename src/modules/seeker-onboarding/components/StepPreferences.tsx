@@ -1,31 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowRight,
-  ArrowLeft,
-  Target,
-  Briefcase,
-  RefreshCw,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, ArrowLeft, Target } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import {
-  validateSeekerStep4,
-  JOB_TYPES,
-  JOB_CATEGORIES,
-  CURRENCIES,
-  AVAILABILITY_OPTIONS,
-} from "@/lib/validations/seeker-onboarding.schema";
-import type {
-  JobType,
-  JobCategory,
-  Currency,
-  Availability,
-} from "@/lib/validations/seeker-onboarding.schema";
+import { validateSeekerStep4 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep4 } from "@/app/actions/onboarding/seeker";
 
@@ -34,20 +14,12 @@ interface StepPreferencesProps {
   onBack: () => void;
 }
 
-const JOB_TYPE_ICONS: Record<JobType, typeof Briefcase> = {
-  FULL_TIME: Briefcase,
-  CONTRACT: RefreshCw,
-  BOTH: Zap,
-};
-
 export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
   const {
     step4,
-    setJobType,
-    setCategory,
-    setSalaryRange,
-    setCurrency,
-    setAvailability,
+    setTargetSalaryRange,
+    setTimezoneOverlapHours,
+    setAvailableFrom,
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -56,10 +28,10 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
   const handleContinue = async () => {
     if (isSaving) return;
     const validation = validateSeekerStep4({
-      jobType: step4.jobType ?? undefined,
-      category: step4.category ?? undefined,
-      salaryRange: step4.salaryRange,
-      availability: step4.availability ?? undefined,
+      targetSalaryMin: step4.targetSalaryMin,
+      targetSalaryMax: step4.targetSalaryMax,
+      timezoneOverlapHours: step4.timezoneOverlapHours,
+      availableFrom: step4.availableFrom,
     });
 
     if (!validation.valid) {
@@ -72,13 +44,10 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
     // Persist to DB before advancing (per D-04)
     setIsSaving(true);
     const result = await saveStep4({
-      jobType: step4.jobType,
-      category: step4.category,
-      salaryMin: step4.salaryRange.min,
-      salaryMax: step4.salaryRange.max,
-      currency: step4.salaryRange.currency,
-      availability: step4.availability,
-      workPreference: null,
+      targetSalaryMin: step4.targetSalaryMin!,
+      targetSalaryMax: step4.targetSalaryMax!,
+      timezoneOverlapHours: step4.timezoneOverlapHours!,
+      availableFrom: step4.availableFrom!,
     });
     setIsSaving(false);
 
@@ -92,12 +61,14 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
   };
 
   const getErrorMessage = () => {
-    if (errors.includes("Please select job type"))
-      return "Please select job type";
-    if (errors.includes("Please select category"))
-      return "Please select category";
-    if (errors.includes("Please select availability"))
-      return "Please select availability";
+    if (errors.includes("Please enter minimum target salary"))
+      return "Please enter minimum target salary";
+    if (errors.includes("Please enter maximum target salary"))
+      return "Please enter maximum target salary";
+    if (errors.includes("Please enter timezone overlap hours"))
+      return "Please enter timezone overlap hours";
+    if (errors.includes("Please select availability date"))
+      return "Please select availability date";
     return errors[0] ?? null;
   };
 
@@ -120,157 +91,85 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
           <div className="space-y-6">
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
-                Job Type
+                Target salary in USD
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                {JOB_TYPES.map((option) => {
-                  const Icon = JOB_TYPE_ICONS[option.value];
-                  const isSelected = step4.jobType === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setJobType(option.value as JobType);
-                        setErrors([]);
-                      }}
-                      className={cn(
-                        "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50",
-                      )}
-                    >
-                      <Icon
-                        className={cn(
-                          "w-5 h-5",
-                          isSelected ? "text-primary" : "text-muted-foreground",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-sm font-medium",
-                          isSelected ? "text-primary" : "text-foreground",
-                        )}
-                      >
-                        {option.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">
-                Category
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {JOB_CATEGORIES.map((option) => {
-                  const isSelected = step4.category === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setCategory(option.value as JobCategory);
-                        setErrors([]);
-                      }}
-                      className={cn(
-                        "flex items-center justify-center p-3 rounded-lg border-2 transition-all text-sm font-medium",
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary/50 text-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">
-                Desired Salary (Annual)
-              </label>
-              <div className="flex items-center gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     $
                   </span>
                   <Input
                     type="number"
+                    min={1000}
+                    max={1000000}
                     placeholder="Min"
-                    value={step4.salaryRange.min ?? ""}
-                    onChange={(e) =>
-                      setSalaryRange(
-                        e.target.value ? parseInt(e.target.value) : null,
-                        step4.salaryRange.max,
-                      )
-                    }
+                    value={step4.targetSalaryMin ?? ""}
+                    onChange={(e) => {
+                      const value = Number.parseInt(e.target.value, 10);
+                      setTargetSalaryRange(
+                        Number.isNaN(value) ? null : value,
+                        step4.targetSalaryMax,
+                      );
+                      setErrors([]);
+                    }}
                     className="pl-7"
                   />
                 </div>
-                <span className="text-muted-foreground">–</span>
+                <span className="hidden text-muted-foreground sm:block">-</span>
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     $
                   </span>
                   <Input
                     type="number"
+                    min={1000}
+                    max={1000000}
                     placeholder="Max"
-                    value={step4.salaryRange.max ?? ""}
-                    onChange={(e) =>
-                      setSalaryRange(
-                        step4.salaryRange.min,
-                        e.target.value ? parseInt(e.target.value) : null,
-                      )
-                    }
+                    value={step4.targetSalaryMax ?? ""}
+                    onChange={(e) => {
+                      const value = Number.parseInt(e.target.value, 10);
+                      setTargetSalaryRange(
+                        step4.targetSalaryMin,
+                        Number.isNaN(value) ? null : value,
+                      );
+                      setErrors([]);
+                    }}
                     className="pl-7"
                   />
                 </div>
-                <select
-                  value={step4.salaryRange.currency}
-                  onChange={(e) => setCurrency(e.target.value as Currency)}
-                  className="px-3 py-2 rounded-md text-sm font-medium border border-input bg-background"
-                >
-                  {CURRENCIES.map((currency) => (
-                    <option key={currency.value} value={currency.value}>
-                      {currency.label}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
 
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
-                Availability
+                Timezone overlap hours
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                {AVAILABILITY_OPTIONS.map((option) => {
-                  const isSelected = step4.availability === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setAvailability(option.value as Availability);
-                        setErrors([]);
-                      }}
-                      className={cn(
-                        "flex items-center justify-center p-4 rounded-lg border-2 transition-all text-sm font-medium",
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary/50 text-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <Input
+                type="number"
+                min={0}
+                max={16}
+                placeholder="e.g. 4"
+                value={step4.timezoneOverlapHours ?? ""}
+                onChange={(e) => {
+                  const value = Number.parseInt(e.target.value, 10);
+                  setTimezoneOverlapHours(Number.isNaN(value) ? null : value);
+                  setErrors([]);
+                }}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">
+                Available from
+              </label>
+              <Input
+                type="date"
+                value={step4.availableFrom ?? ""}
+                onChange={(e) => {
+                  setAvailableFrom(e.target.value || null);
+                  setErrors([]);
+                }}
+              />
             </div>
 
             {getErrorMessage() && (

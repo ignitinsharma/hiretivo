@@ -6,35 +6,6 @@ export type SeekerSituation =
 
 export type YearsOfExperience = number;
 
-export type JobType =
-  | OnboardingJobType.FULL_TIME
-  | OnboardingJobType.CONTRACT
-  | OnboardingJobType.BOTH;
-
-export type JobCategory = 
-  | 'ENGINEERING' 
-  | 'DESIGN' 
-  | 'MARKETING' 
-  | 'SALES' 
-  | 'DEVOPS' 
-  | 'PRODUCT' 
-  | 'DATA' 
-  | 'SUPPORT' 
-  | 'OTHER';
-
-export type Currency = CurrencyCode.USD | CurrencyCode.EUR | CurrencyCode.GBP;
-
-export type Availability = 
-  | 'IMMEDIATELY' 
-  | 'TWO_WEEKS' 
-  | 'ONE_MONTH_PLUS';
-
-export interface SalaryRange {
-  min: number | null;
-  max: number | null;
-  currency: Currency;
-}
-
 export interface ResumeFile {
   name: string;
   size: number;
@@ -59,10 +30,10 @@ export interface Step3Data {
 }
 
 export interface Step4Data {
-  jobType: JobType | null;
-  category: JobCategory | null;
-  salaryRange: SalaryRange;
-  availability: Availability | null;
+  targetSalaryMin: number | null;
+  targetSalaryMax: number | null;
+  timezoneOverlapHours: number | null;
+  availableFrom: string | null;
 }
 
 export interface SeekerOnboardingData {
@@ -73,4 +44,3 @@ export interface SeekerOnboardingData {
 }
 
 export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5;
-import type { CurrencyCode, OnboardingJobType } from '@/constants/enums';

@@ -1,7 +1,7 @@
 /** Zod schemas for seeker and recruiter onboarding step validation */
 
 import { z } from "zod";
-import { WorkType, SkillLevel, JobType } from "@/constants/enums";
+import { SkillLevel, JobType } from "@/constants/enums";
 
 export const step1Schema = z.object({
   situation: z.string().trim().min(1, "Situation is required").max(500, "Situation must be under 500 characters"),
@@ -23,11 +23,13 @@ export const step3Schema = z.object({
 });
 
 export const step4Schema = z.object({
-  salaryMin: z.number().min(0, "Minimum salary cannot be negative").nullable(),
-  salaryMax: z.number().min(0, "Maximum salary cannot be negative").nullable(),
-  currency: z.string().length(3, "Currency must be a 3-letter ISO code"),
-  availability: z.string().max(100, "Availability must be under 100 characters").nullable(),
-  workPreference: z.nativeEnum(WorkType).nullable(),
+  targetSalaryMin: z.number().int().min(1000, "Minimum salary must be at least $1,000").max(1000000, "Maximum salary seems too high"),
+  targetSalaryMax: z.number().int().min(1000, "Maximum salary must be at least $1,000").max(1000000, "Maximum salary seems too high"),
+  timezoneOverlapHours: z.number().int().min(0, "Overlap hours must be 0-16").max(16, "Overlap hours must be 0-16"),
+  availableFrom: z.string().min(1, "Availability date is required"),
+}).refine((data) => data.targetSalaryMax >= data.targetSalaryMin, {
+  message: "Maximum salary must be >= minimum salary",
+  path: ["targetSalaryMax"],
 });
 
 export const recruiterProfileSchema = z.object({

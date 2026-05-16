@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { CurrencyCode } from '@/constants/enums';
 import type {
   SeekerOnboardingStep,
   Step1Data,
@@ -7,10 +6,6 @@ import type {
   Step3Data,
   Step4Data,
   SeekerSituation,
-  JobType,
-  JobCategory,
-  Currency,
-  Availability,
   ResumeFile,
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
@@ -49,11 +44,9 @@ interface SeekerOnboardingState {
 
   setResume: (resume: ResumeFile | null) => void;
 
-  setJobType: (type: JobType) => void;
-  setCategory: (category: JobCategory) => void;
-  setSalaryRange: (min: number | null, max: number | null) => void;
-  setCurrency: (currency: Currency) => void;
-  setAvailability: (availability: Availability) => void;
+  setTargetSalaryRange: (min: number | null, max: number | null) => void;
+  setTimezoneOverlapHours: (hours: number | null) => void;
+  setAvailableFrom: (date: string | null) => void;
 
   completeOnboarding: () => void;
   resetOnboarding: () => void;
@@ -74,10 +67,10 @@ const initialStep3Data: Step3Data = {
 };
 
 const initialStep4Data: Step4Data = {
-  jobType: null,
-  category: null,
-  salaryRange: { min: null, max: null, currency: CurrencyCode.USD },
-  availability: null,
+  targetSalaryMin: null,
+  targetSalaryMax: null,
+  timezoneOverlapHours: null,
+  availableFrom: null,
 };
 
 export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
@@ -98,14 +91,7 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
         step1: { ...initialStep1Data, ...data.step1 },
         step2: { ...initialStep2Data, ...data.step2 },
         step3: { ...initialStep3Data, ...data.step3 },
-        step4: {
-          ...initialStep4Data,
-          ...data.step4,
-          salaryRange: {
-            ...initialStep4Data.salaryRange,
-            ...data.step4?.salaryRange,
-          },
-        },
+        step4: { ...initialStep4Data, ...data.step4 },
       }),
 
       setCurrentStep: (step) => set({ currentStep: step }),
@@ -160,30 +146,23 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
         step3: { ...state.step3, resume },
       })),
 
-      setJobType: (type) => set((state) => ({
-        step4: { ...state.step4, jobType: type },
-      })),
-
-      setCategory: (category) => set((state) => ({
-        step4: { ...state.step4, category },
-      })),
-
-      setSalaryRange: (min, max) => set((state) => ({
+      setTargetSalaryRange: (min, max) => set((state) => ({
         step4: {
           ...state.step4,
-          salaryRange: { ...state.step4.salaryRange, min, max },
+          targetSalaryMin: min,
+          targetSalaryMax: max,
         },
       })),
 
-      setCurrency: (currency) => set((state) => ({
+      setTimezoneOverlapHours: (hours) => set((state) => ({
         step4: {
           ...state.step4,
-          salaryRange: { ...state.step4.salaryRange, currency },
+          timezoneOverlapHours: hours,
         },
       })),
 
-      setAvailability: (availability) => set((state) => ({
-        step4: { ...state.step4, availability },
+      setAvailableFrom: (date) => set((state) => ({
+        step4: { ...state.step4, availableFrom: date },
       })),
 
       completeOnboarding: () => set({ isCompleted: true }),
