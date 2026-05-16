@@ -5,6 +5,7 @@ import {
   CurrencyCode,
   JobStatus,
   UserRole,
+  VerificationStatus,
 } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
@@ -57,6 +58,21 @@ export async function POST(req: NextRequest) {
 
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const engineerStatus = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { verificationStatus: true },
+  });
+  if (engineerStatus?.verificationStatus !== VerificationStatus.VERIFIED) {
+    return NextResponse.json(
+      {
+        error: "Verification required",
+        code: "NOT_VERIFIED",
+        redirectTo: "/seeker/verification",
+      },
+      { status: 403 },
+    );
   }
 
   let body: unknown;

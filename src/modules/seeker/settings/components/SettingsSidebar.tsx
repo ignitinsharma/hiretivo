@@ -2,10 +2,10 @@ import React from "react";
 import {
   User,
   Shield,
-  Trash2,
   Link,
   Briefcase,
   GraduationCap,
+  Database,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "#experience", label: "Work Experience", icon: Briefcase },
   { href: "#education", label: "Education", icon: GraduationCap },
   { href: "#security", label: "Password & Security", icon: Shield },
+  { href: "#privacy", label: "Privacy & Data", icon: Database },
 ] as const;
 
 export function SettingsSidebar() {
