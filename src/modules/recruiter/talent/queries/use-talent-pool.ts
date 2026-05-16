@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TalentEngineer, TalentFilters } from "../types/talent.types";
 
@@ -33,7 +34,8 @@ export function useTalentPool(filters: TalentFilters) {
 
 /*
  * useUnlockEngineer
- * Mutation to unlock an engineer profile. Invalidates talent-pool query on success.
+ * Mutation to unlock an engineer profile. Throws on non-OK responses so
+ * React Query's onError handler fires and UI can surface the error.
  */
 export function useUnlockEngineer() {
   const qc = useQueryClient();
@@ -41,11 +43,32 @@ export function useUnlockEngineer() {
     mutationFn: async (engineerId: string) => {
       const res = await fetch(`/api/recruiter/talent/${engineerId}/unlock`, { method: "POST" });
       const json = await res.json();
-      if (!res.ok) return { ok: false, code: json.code as string, resetAt: json.resetAt as string | null };
-      return { ok: true, data: json.data };
+      if (!res.ok) {
+        const err = new Error(json.code ?? "Failed to unlock profile") as Error & { code: string; resetAt: string | null };
+        err.code = json.code;
+        err.resetAt = json.resetAt ?? null;
+        throw err;
+      }
+      return json.data;
     },
-    onSuccess: (result) => {
-      if (result.ok) qc.invalidateQueries({ queryKey: ["talent-pool"] });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["talent-pool"] });
+    },
+    onError: (err: Error & { code?: string; resetAt?: string | null }) => {
+      switch (err.code) {
+        case "UPGRADE_REQUIRED":
+          toast.error("Upgrade your plan to unlock engineer profiles");
+          break;
+        case "QUOTA_EXHAUSTED":
+          toast.error(
+            err.resetAt
+              ? `Unlock quota exhausted — resets ${new Date(err.resetAt).toLocaleDateString()}`
+              : "Unlock quota exhausted for this billing period",
+          );
+          break;
+        default:
+          toast.error("Failed to unlock profile. Please try again.");
+      }
     },
   });
 }

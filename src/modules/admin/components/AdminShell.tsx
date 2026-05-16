@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/admin/jobs", label: "Jobs" },
-  { href: "/admin/jobs/new", label: "New job" },
+  { href: "/admin/verification", label: "Verification" },
 ];
 
 /*
@@ -17,10 +16,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/admin/jobs") {
-      // Only highlight Jobs when on the list itself, not on /new or /edit
-      return pathname === "/admin/jobs";
-    }
     return pathname === href || pathname.startsWith(href + "/");
   };
 
@@ -28,7 +23,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-brand-surface">
       <header className="border-b border-brand-border bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
-          <Link href="/admin/jobs" className="font-bold text-lg text-brand-foreground">
+          <Link href="/admin/verification" className="font-bold text-lg text-brand-foreground">
             Hiretivo Admin
           </Link>
           <nav className="flex gap-4">

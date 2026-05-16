@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -202,14 +200,6 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
             <div>
               <p className="font-bold text-slate-900">{job.companyName}</p>
             </div>
-            {job.companyId && (
-              <Link
-                href={`/companies/${job.companyId}`}
-                className="ml-auto text-sm font-bold text-primary hover:underline flex items-center gap-1"
-              >
-                Visit Profile <ArrowUpRight className="w-4 h-4" />
-              </Link>
-            )}
           </div>
         </div>
       </div>

@@ -48,6 +48,7 @@ export interface SeekerSettingsData {
   currency: string;
   availability: string;
   resumeKey: string | null;
+  hiddenUntil: string | null;
   skills: Array<{ id: string; name: string; slug: string }>;
   websiteUrl: string | null;
   linkedinUrl: string | null;

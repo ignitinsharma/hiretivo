@@ -6,7 +6,7 @@ import { JobDetailContent } from '@/modules/jobs/components/JobDetailContent';
 import { JobDetailSidebar } from '@/modules/jobs/components/JobDetailSidebar';
 import { ApplyJobModal } from '@/components/shared/ApplyJobModal';
 import { auth } from '@/auth';
-import { JobStatus, UserRole } from '@/constants/enums';
+import { JobStatus, UserRole, VerificationStatus } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { resolveLogoUrl } from '@/lib/r2';
 import { notFound, redirect } from 'next/navigation';
@@ -66,8 +66,17 @@ export default async function JobDescriptionPage({
   let matchScore: number | null = null;
   let matchBreakdown: Array<{ skillId: string; skillName: string; isMatch: boolean }> | null = null;
   let seekerProfileId: string | null = null;
+  let engineerVerificationStatus: VerificationStatus | null = null;
 
   if (session?.user?.role === UserRole.SEEKER) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { verificationStatus: true },
+    });
+    engineerVerificationStatus =
+      (currentUser?.verificationStatus as VerificationStatus | undefined) ??
+      VerificationStatus.NOT_SUBMITTED;
+
     const seekerProfile = await prisma.seekerProfile.findUnique({
       where: { userId: session.user.id },
       include: {
@@ -230,6 +239,7 @@ export default async function JobDescriptionPage({
           job={jobData}
           isAuth={!!session?.user}
           userRole={session?.user?.role ?? null}
+          engineerVerificationStatus={engineerVerificationStatus}
         />
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <JobDetailContent job={jobData} />
@@ -239,6 +249,7 @@ export default async function JobDescriptionPage({
             matchBreakdown={matchBreakdown}
             isAuth={!!session?.user}
             userRole={session?.user?.role ?? null}
+            engineerVerificationStatus={engineerVerificationStatus}
             recommendedJobs={recommendedJobs}
           />
         </div>

@@ -48,6 +48,14 @@ function formatOptionalDate(value: Date | string | null) {
   return format(new Date(value), "MMM d, yyyy");
 }
 
+function AiReviewNotice() {
+  return (
+    <p className="mt-4 rounded-lg border border-brand-border bg-brand-surface p-3 text-xs leading-relaxed text-brand-foreground-muted">
+      AI may help organize profile evidence, but final verification decisions are reviewed by a human.
+    </p>
+  );
+}
+
 export function VerificationStatusCard({
   verificationStatus,
   hiretivoScore,
@@ -95,6 +103,7 @@ export function VerificationStatusCard({
         <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
           We&apos;ll email you within 48 hours
         </p>
+        <AiReviewNotice />
       </section>
     );
   }
@@ -109,6 +118,7 @@ export function VerificationStatusCard({
         <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
           Almost there - hang tight
         </p>
+        <AiReviewNotice />
       </section>
     );
   }
@@ -125,6 +135,7 @@ export function VerificationStatusCard({
         <p className="mt-2 text-sm text-brand-foreground-muted">
           Score: {hiretivoScore ?? lastReview?.scoreGiven ?? 0}/100
         </p>
+        <AiReviewNotice />
 
         {isProfilePublic ? (
           <div className="mt-4 space-y-3">
@@ -223,6 +234,7 @@ export function VerificationStatusCard({
         Can reapply: {formatOptionalDate(reapplyDate)} / Available in{" "}
         {daysRemaining} days
       </p>
+      <AiReviewNotice />
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         <Button asChild variant="secondary" className="flex-1">
           <Link href="/seeker/settings">Update Profile</Link>

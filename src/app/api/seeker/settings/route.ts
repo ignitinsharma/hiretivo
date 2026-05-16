@@ -233,6 +233,7 @@ export async function GET() {
       name: true,
       email: true,
       image: true,
+      hiddenUntil: true,
       seekerProfile: {
         select: {
           headline: true,

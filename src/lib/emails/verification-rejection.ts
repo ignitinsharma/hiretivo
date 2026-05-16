@@ -37,6 +37,8 @@ const FIX_INSTRUCTIONS: Record<RejectionReasonKey, string> = {
     "Complete all profile sections: bio, work experience, skills, and projects.",
   too_junior:
     "Build more production experience. We recommend reapplying after 2+ years of professional work.",
+  unprofessional_content:
+    "Remove or update linked content that could distract from your professional profile.",
 };
 
 const REJECTION_REASON_LABELS = new Map(

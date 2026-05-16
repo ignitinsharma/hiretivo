@@ -10,7 +10,7 @@ import {
 import { sendApprovalEmail } from "@/lib/emails/verification-approval";
 import { sendRejectionEmail } from "@/lib/emails/verification-rejection";
 import { prisma } from "@/lib/prisma";
-import { writeRateLimiter } from "@/lib/rate-limit";
+import { verificationWriteRateLimiter } from "@/lib/rate-limit";
 
 interface RouteContext {
   params: { id: string };
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { success } = await writeRateLimiter.limit(session.user.id);
+  const { success } = await verificationWriteRateLimiter.limit(session.user.id);
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }

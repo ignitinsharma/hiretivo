@@ -73,7 +73,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   return (
     <SeekerJobBaseCard
       jobHref={`/jobs/${application.jobId}`}
-      companyHref={application.companyId ? `/companies/${application.companyId}` : null}
+      companyHref={null}
       title={application.jobTitle}
       companyName={application.companyName}
       companyLogoUrl={application.companyLogoUrl}

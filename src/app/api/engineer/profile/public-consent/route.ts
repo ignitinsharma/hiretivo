@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { UserRole, VerificationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { writeRateLimiter } from "@/lib/rate-limit";
+import { verificationWriteRateLimiter } from "@/lib/rate-limit";
 
 /*
  * POST /api/engineer/profile/public-consent
@@ -19,7 +19,7 @@ export async function POST() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { success } = await writeRateLimiter.limit(session.user.id);
+  const { success } = await verificationWriteRateLimiter.limit(session.user.id);
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }

@@ -4,15 +4,15 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import { Lock, ArrowRight } from "lucide-react";
+import { Lock } from "lucide-react";
 
-import { UserRole } from "@/constants/enums";
+import { UserRole, VerificationStatus } from "@/constants/enums";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SaveJobButton } from "@/modules/jobs/components/SaveJobButton";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { ApplyButton } from "@/modules/jobs/components/ApplyButton";
 
 interface RecommendedJob {
   id: string;
@@ -40,6 +40,7 @@ interface JobDetailSidebarProps {
   }> | null;
   isAuth: boolean;
   userRole: string | null;
+  engineerVerificationStatus: VerificationStatus | null;
   recommendedJobs: RecommendedJob[];
 }
 
@@ -49,10 +50,10 @@ export function JobDetailSidebar({
   matchBreakdown,
   isAuth,
   userRole,
+  engineerVerificationStatus,
   recommendedJobs,
 }: JobDetailSidebarProps) {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
 
   return (
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
@@ -84,11 +85,11 @@ export function JobDetailSidebar({
         </div>
 
         <div className="space-y-3">
-          <Button
-            onClick={() =>
-              verificationStatus?.requiresVerification
-                ? openEmailVerificationModal()
-                :
+          <ApplyButton
+            jobId={job.id}
+            verificationStatus={isAuth ? engineerVerificationStatus : null}
+            userRole={userRole}
+            onApply={() =>
               openApplyModal(
                 job.id,
                 job.title,
@@ -97,12 +98,17 @@ export function JobDetailSidebar({
                 job.externalApplyUrl,
               )
             }
-            variant="primary"
+            onLoginRequired={() =>
+              openApplyModal(
+                job.id,
+                job.title,
+                job.companyName,
+                job.applyType,
+                job.externalApplyUrl,
+              )
+            }
             className="w-full py-3"
-          >
-            Apply Now
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          />
           <SaveJobButton
             jobId={job.id}
             isAuth={isAuth}

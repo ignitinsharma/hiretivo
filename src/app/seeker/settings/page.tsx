@@ -118,7 +118,7 @@ function SeekerSettingsPanels() {
             Control your visibility in the talent pool and manage recruiter access.
           </p>
         </div>
-        <HideProfileToggle hiddenUntil={null} />
+        <HideProfileToggle hiddenUntil={settings?.hiddenUntil ?? null} />
         <WhoViewedMeSection />
         <BlockedRecruiterSection />
       </section>

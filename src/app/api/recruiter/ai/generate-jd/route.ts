@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
   if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return new Response(
-      JSON.stringify({ error: 'AI job description generation requires a PRO or ENTERPRISE plan.' }),
+      JSON.stringify({ error: 'AI job description generation requires a paid plan.' }),
       { status: 403 },
     );
   }

@@ -24,6 +24,13 @@ export const authPostRateLimiter = createRateLimiter("auth-post", 10, "1 m");
 /** POST apply / upload style limits — reuse with distinct ids in routes */
 export const applyRateLimiter = createRateLimiter("job-apply", 5, "1 m");
 
+/** Engineer verification writes: submit, consent, and admin review actions. */
+export const verificationWriteRateLimiter = createRateLimiter(
+  "verification-write",
+  5,
+  "1 m"
+);
+
 export const uploadRateLimiter = createRateLimiter("upload", 20, "1 m");
 
 /** Public read endpoints such as job detail, logos, and skills. */

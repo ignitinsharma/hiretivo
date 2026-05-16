@@ -152,7 +152,7 @@ export default async function PublicEngineerProfile({ params }: { params: { slug
             Hire engineers like {engineer.name?.split(" ")[0]}
           </p>
           <p className="mt-1 text-sm text-brand-foreground-muted">Sign up free and unlock verified engineer profiles</p>
-          <a href="/auth/signup" className="mt-4 inline-block rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-medium text-brand-primary-foreground hover:bg-brand-primary-dk">
+          <a href="/auth/signup" className="mt-4 inline-block rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-medium text-brand-primary-foreground hover:bg-brand-primary-dark">
             Sign up free →
           </a>
         </section>

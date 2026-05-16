@@ -93,29 +93,7 @@ export async function POST(
     });
   }
 
-  // 3. Quota check
-  const quota = getUnlockQuota(recruiter?.plan ?? "FREE");
-  if (quota !== null) {
-    const periodStart =
-      recruiter?.subscription?.currentPeriodStart ??
-      new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const usedQuota = await prisma.engineerUnlock.count({
-      where: {
-        recruiterId: session.user.id,
-        source: "talent_pool",
-        unlockedAt: { gte: periodStart },
-      },
-    });
-    if (usedQuota >= quota) {
-      const resetAt = recruiter?.subscription?.currentPeriodEnd ?? null;
-      return NextResponse.json(
-        { code: "QUOTA_EXHAUSTED", resetAt },
-        { status: 429 },
-      );
-    }
-  }
-
-  // 4. Verify engineer exists and is VERIFIED+public
+  // 3. Verify engineer exists and is VERIFIED+public
   const engineer = await prisma.user.findFirst({
     where: {
       id: params.id,
@@ -141,8 +119,27 @@ export async function POST(
   });
   if (!engineer) return new Response("Not Found", { status: 404 });
 
-  // 5. Atomic transaction: create EngineerUnlock
-  await prisma.$transaction(async (tx) => {
+  // 4. Atomic transaction: quota check + create EngineerUnlock
+  const quota = getUnlockQuota(recruiter?.plan ?? "FREE");
+  const periodStart =
+    recruiter?.subscription?.currentPeriodStart ??
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const resetAt = recruiter?.subscription?.currentPeriodEnd ?? null;
+
+  const unlockResult = await prisma.$transaction(async (tx) => {
+    // Re-count quota inside transaction to prevent TOCTOU
+    if (quota !== null) {
+      const usedQuota = await tx.engineerUnlock.count({
+        where: {
+          recruiterId: session.user.id,
+          source: "talent_pool",
+          unlockedAt: { gte: periodStart },
+        },
+      });
+      if (usedQuota >= quota) {
+        return { type: "quota_exhausted" as const };
+      }
+    }
     await tx.engineerUnlock.create({
       data: {
         recruiterId: session.user.id,
@@ -150,7 +147,15 @@ export async function POST(
         source: "talent_pool",
       },
     });
+    return { type: "ok" as const };
   });
+
+  if (unlockResult.type === "quota_exhausted") {
+    return NextResponse.json(
+      { code: "QUOTA_EXHAUSTED", resetAt },
+      { status: 429 },
+    );
+  }
 
   // 6. Fire-and-forget unlock notification email
   const companyName =
