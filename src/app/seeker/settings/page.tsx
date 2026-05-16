@@ -14,6 +14,9 @@ import { AvatarSection } from '@/modules/seeker/settings/components/AvatarSectio
 import { SocialProfilesSection } from '@/modules/seeker/settings/components/SocialProfilesSection';
 import { WorkExperienceSection } from '@/modules/seeker/settings/components/WorkExperienceSection';
 import { EducationSection } from '@/modules/seeker/settings/components/EducationSection';
+import { HideProfileToggle } from '@/modules/seeker/settings/components/HideProfileToggle';
+import { WhoViewedMeSection } from '@/modules/seeker/settings/components/WhoViewedMeSection';
+import { BlockedRecruiterSection } from '@/modules/seeker/settings/components/BlockedRecruiterSection';
 
 interface PrivacyDataSectionProps {
   email?: string | null;
@@ -106,6 +109,20 @@ function SeekerSettingsPanels() {
       <EducationSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
+
+      {/* Who can find me */}
+      <section id="visibility" className="flex flex-col gap-4">
+        <div>
+          <h2 className="font-bold text-xl text-brand-foreground">Who can find me</h2>
+          <p className="text-sm text-brand-foreground-muted mt-0.5">
+            Control your visibility in the talent pool and manage recruiter access.
+          </p>
+        </div>
+        <HideProfileToggle hiddenUntil={null} />
+        <WhoViewedMeSection />
+        <BlockedRecruiterSection />
+      </section>
+
       <PrivacyDataSection email={settings?.email} />
     </main>
   );
