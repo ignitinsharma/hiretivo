@@ -61,7 +61,14 @@ Plans:
   5. Apply button on job listings replaced with "Get Verified to Apply →" for unverified/rejected engineers.
   6. Onboarding Step 4 captures USD salary min/max, timezone overlap hours, availability date.
   7. All legacy files (boost, early-access, admin jobs, SavedJob references) removed.
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Schema clean slate (remove BoostedJob/SavedJob/DismissedJob, update PlanTier, add 3 new enums + 6 new models + new fields), update TS enums/pricing/billing constants, delete legacy files, disable seeker-digest
+- [ ] 09-02-PLAN.md — Onboarding Step 4 (USD salary/timezone/availableFrom) + all 5 engineer API routes (verification GET+POST, check-slug, github-scan stub, public-consent, data-export)
+- [ ] 09-03-PLAN.md — All 3 admin verification API routes (queue, detail/IN_REVIEW, approve/reject) + stale cron + email templates (approval + rejection) + middleware route protection
+- [ ] 09-04-PLAN.md — Phase B verification multi-step UI (/seeker/verification) + engineer dashboard VerificationStatusCard (all 5 states) + ProfilePublicConsentModal
+- [ ] 09-05-PLAN.md — Admin verification queue page + admin review page (/admin/verification/[id]) + ApplyButton gate update + GDPR settings buttons
 
 ### Phase 10: Talent Pool & Public Profiles
 **Goal**: Recruiters can browse verified engineers (blurred), unlock profiles using quota, save engineers, and schedule interviews. Public engineer profiles live at `/e/[slug]`. Homepage, pricing, and nav rebuilt for talent marketplace positioning.
@@ -72,18 +79,11 @@ Plans:
   1. Talent pool shows VERIFIED+profilePublic engineers with blurred name (first + last initial), Hiretivo Score, skills, salary range, timezone, availability.
   2. FREE recruiters see upgrade modal on unlock attempt; paid recruiters deduct 1 quota credit and see full PII (name, email, GitHub, LinkedIn).
   3. Unlock is atomic (DB transaction); idempotent; quota counts only source='talent_pool' within billing period.
-  4. Public profile `/e/[slug]` returns 404 unless VERIFIED + profilePublic=true + hiddenUntil not active.
+  4. Public profile `/e/[slug]` returns 404 unless VERIFIED + profilePublic=true + hiddenUntil not active; shows full name, score, skills, bio, projects, salary range (no email/GitHub/LinkedIn on public page).
   5. Recruiters can save engineers (no quota) and view saved list at `/recruiter/saved`.
   6. Homepage, pricing (4-tier), and nav reflect talent marketplace positioning.
   7. Billing plan access rewritten for FREE/STARTER/GROWTH/SCALE with unlock quotas.
-**Plans**: 5 plans
-
-Plans:
-- [ ] 10-01-PLAN.md — Billing plan access rewrite (canAccessTalentPool/getUnlockQuota/canPostJob) + talent pool GET API (locked/unlocked shape, cursor pagination) + GET single engineer detail + POST atomic unlock with quota enforcement + unlock notification email
-- [ ] 10-02-PLAN.md — Save/unsave API + interview invite API + public /e/[slug] profile page + engineer hide-profile API + block-recruiter API (POST/GET)
-- [ ] 10-03-PLAN.md — Talent pool browse page /recruiter/talent (3-state cards + upgrade modal + quota display + save button) + /recruiter/saved page
-- [ ] 10-04-PLAN.md — Homepage rebuild (3 pillars, dual-audience hero, how-it-works, CTA) + pricing page rebuild (4-tier + annual toggle) + nav update
-- [ ] 10-05-PLAN.md — Engineer settings additions: HideProfileToggle + WhoViewedMeSection + BlockedRecruiterSection wired into /seeker/settings
+**Plans**: TBD
 
 ### Phase 11: Job Match & Notifications
 **Goal**: Replace existing match score with weighted formula, gate apply on VERIFIED status, send job-match notifications to verified engineers, and handle RECRUITER_INITIATED application flow from talent pool.
@@ -91,17 +91,12 @@ Plans:
 **Requirements**: [PIVM-01, PIVM-02, PIVM-03, PIVM-04, PIVM-05]
 **Branch**: feature/pivot-v2
 **Success Criteria** (what must be TRUE):
-  1. computeMatchScore replaced with weighted formula: skills(50%) + salary(20%) + experience(15%) + timezone(10%) + availability(5%); null fields renormalized.
-  2. POST /api/applications rejects UNVERIFIED engineers with 403 and structured error.
-  3. seeker-digest cron deleted; job-match-notification cron sends VERIFIED engineers match digest.
+  1. computeMatchScore replaced with weighted formula: skills(50%) + salary(20%) + experience(15%) + timezone(10%) + availability(5%); null fields trigger weight renormalization.
+  2. POST /api/applications rejects non-VERIFIED engineers with 403; VERIFIED engineers bypass resume requirement; auto-creates EngineerUnlock(source=application_auto).
+  3. seeker-digest cron deleted; new job-match-notification cron at `/api/cron/job-match-notification` notifies VERIFIED engineers of new matching jobs using weighted score.
   4. RECRUITER_INITIATED application (from talent pool invite) creates Application(source=RECRUITER_INITIATED) and sends engineer email.
   5. Seeker dashboard shows "Recruiter Invites" tab separate from "My Applications".
-**Plans**: 3 plans
-
-Plans:
-- [ ] 11-01-PLAN.md — computeWeightedJobMatch formula + computeBestJobMatchForEngineer + talent pool match scores
-- [ ] 11-02-PLAN.md — VERIFIED apply gate + auto-unlock + job quota enforcement + billing downgrade handler
-- [ ] 11-03-PLAN.md — job-match-notification cron + seeker dashboard Recruiter Invites tab
+**Plans**: TBD
 
 ### Phase 12: AI Review & Feedback
 **Goal**: Reduce admin review time to ~45 seconds with AI pre-fill (Claude Haiku via OpenRouter), collect structured employer feedback after HIRED applications, and auto-recalc Hiretivo Score incorporating feedback.
@@ -134,7 +129,7 @@ Plans:
 | 6. Interview Scheduling | 0/TBD | Not started | - |
 | 7. Polish | 0/TBD | Not started | - |
 | 8. Paid Workflows & Account Completion | 5/5 | Complete | 2026-04-26 |
-| 9. Verification System (Pivot v2) | 0/TBD | Not started | - |
-| 10. Talent Pool & Public Profiles (Pivot v2) | 0/5 | Not started | - |
-| 11. Job Match & Notifications (Pivot v2) | 0/3 | Not started | - |
+| 9. Verification System (Pivot v2) | 0/5 | Not started | - |
+| 10. Talent Pool & Public Profiles (Pivot v2) | 0/TBD | Not started | - |
+| 11. Job Match & Notifications (Pivot v2) | 0/TBD | Not started | - |
 | 12. AI Review & Feedback (Pivot v2) | 0/3 | Not started | - |
