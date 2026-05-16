@@ -122,5 +122,11 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     });
   }
 
-  return NextResponse.json({ engineer, alreadyInReview });
+  return NextResponse.json({
+    engineer:
+      engineer.verificationStatus === VerificationStatus.PENDING
+        ? { ...engineer, verificationStatus: VerificationStatus.IN_REVIEW }
+        : engineer,
+    alreadyInReview,
+  });
 }

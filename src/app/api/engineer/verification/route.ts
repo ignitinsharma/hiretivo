@@ -35,6 +35,15 @@ const RESERVED_SLUGS = new Set([
   "hiretivo",
 ]);
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const projectSchema = z.object({
   name: z.string().trim().min(1).max(100),
   description: z.string().trim().min(1).max(500),
@@ -248,14 +257,19 @@ export async function POST(req: NextRequest) {
 
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@hiretivo.com";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://hiretivo.com";
+  const safeLegalName = escapeHtml(legalName);
+  const safeGithubUsername = escapeHtml(githubUsername);
+  const safeGithubUrl = escapeHtml(githubUrl);
+  const safeSlug = escapeHtml(normalizedSlug);
   sendEmail({
     from: "Hiretivo <noreply@hiretivo.com>",
     to: adminEmail,
     subject: `New verification submission: ${legalName} (@${githubUsername})`,
     html: `<p>New engineer verification submitted.</p>
-      <p><strong>Name:</strong> ${legalName}<br>
-      <strong>GitHub:</strong> <a href="${githubUrl}">${githubUrl}</a><br>
-      <strong>Slug:</strong> hiretivo.com/e/${normalizedSlug}</p>
+      <p><strong>Name:</strong> ${safeLegalName}<br>
+      <strong>GitHub:</strong> <a href="${safeGithubUrl}">${safeGithubUrl}</a><br>
+      <strong>Slug:</strong> hiretivo.com/e/${safeSlug}</p>
+      <p><strong>GitHub username:</strong> @${safeGithubUsername}</p>
       <p><a href="${appUrl}/admin/verification">Review in admin queue</a></p>`,
   }).catch((error) => {
     console.error("[engineer verification] Admin email failed:", error);
