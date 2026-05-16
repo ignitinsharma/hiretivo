@@ -192,6 +192,7 @@ export async function GET() {
       jobId: true,
       status: true,
       createdAt: true,
+      source: true,
       job: {
         select: {
           title: true,
@@ -254,6 +255,7 @@ export async function GET() {
       skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
       description: application.job.description ? stripHtml(application.job.description) : null,
       applicantCount: application.job._count.applications,
+      source: application.source ?? 'SEEKER_APPLIED',
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
     })),

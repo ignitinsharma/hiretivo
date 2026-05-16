@@ -17,6 +17,7 @@ interface ApplicationApiItem {
   companySize: string | null;
   companyFundingType: string | null;
   skills: string[];
+  source?: string;
   status: SeekerApplicationItem['status'];
   appliedAt: string;
 }
@@ -39,6 +40,7 @@ export const applicationService = {
       companySize: application.companySize,
       companyFundingType: application.companyFundingType,
       skills: application.skills,
+      source: application.source,
       appliedAt: new Date(application.appliedAt).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
