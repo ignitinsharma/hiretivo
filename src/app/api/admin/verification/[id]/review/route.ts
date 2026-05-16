@@ -28,10 +28,34 @@ const REJECTION_REASON_KEYS = REJECTION_REASONS.map((reason) => reason.key) as [
   ...RejectionReasonKey[],
 ];
 
+/** Shared aiSummary field for LOCKED audit trail shape (from 12-CONTEXT.md) */
+const aiSummarySchema = z
+  .object({
+    model: z.string(),
+    promptVersion: z.string(),
+    inputSnapshot: z.object({
+      repos: z.number(),
+      languages: z.array(z.string()),
+      lastCommit: z.string(),
+      starCount: z.number(),
+    }),
+    output: z.object({
+      recommendation: z.enum(["APPROVE", "REJECT"]),
+      confidence: z.number().min(0).max(1),
+      scoreSuggestion: z.number().int().min(0).max(100),
+      reasons: z.array(z.string()),
+      summary: z.string(),
+    }),
+    overrideReason: z.string().max(500).optional(),
+  })
+  .optional();
+
 const reviewSchema = z.discriminatedUnion("decision", [
   z.object({
     decision: z.literal("APPROVED"),
     score: z.number().int().min(0).max(100),
+    overrideReason: z.string().max(500).optional(),
+    aiSummary: aiSummarySchema,
   }),
   z.object({
     decision: z.literal("REJECTED"),
@@ -40,6 +64,8 @@ const reviewSchema = z.discriminatedUnion("decision", [
       .min(1, "Select at least one rejection reason"),
     customNote: z.string().trim().max(1000).optional(),
     reapplyDays: z.union([z.literal(30), z.literal(60), z.literal(90)]),
+    overrideReason: z.string().max(500).optional(),
+    aiSummary: aiSummarySchema,
   }),
 ]);
 
@@ -140,6 +166,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           reviewedBy: adminEmail,
           status: VerificationStatus.VERIFIED,
           scoreGiven: parsed.data.score,
+          aiSummary: parsed.data.aiSummary ?? undefined,
         },
       }),
     ]);
@@ -185,6 +212,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
             customNote,
             reapplyDays: parsed.data.reapplyDays,
           },
+          aiSummary: parsed.data.aiSummary ?? undefined,
         },
       }),
     ]);

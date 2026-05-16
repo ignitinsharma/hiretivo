@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { VerificationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { AdminReviewPanel } from "@/modules/admin-verification/components/AdminReviewPanel";
+import { VerificationReviewRightColumn } from "./VerificationReviewRightColumn";
 
 export const revalidate = 0;
 
@@ -34,6 +34,7 @@ function formatDate(value: Date | string | null): string {
 /*
  * AdminVerificationDetailPage
  * Displays the full engineer profile and opens pending submissions for review.
+ * Triggers AI GitHub scan on mount. Pre-fills review form with AI recommendation.
  */
 export default async function AdminVerificationDetailPage({
   params,
@@ -93,6 +94,7 @@ export default async function AdminVerificationDetailPage({
           notes: true,
           createdAt: true,
           reviewedBy: true,
+          aiSummary: true,
         },
       },
     },
@@ -115,6 +117,22 @@ export default async function AdminVerificationDetailPage({
     engineer.verificationStatus === VerificationStatus.PENDING ||
     engineer.verificationStatus === VerificationStatus.IN_REVIEW;
 
+  // Check if the latest review already has an aiSummary (re-opened case)
+  const latestReview = engineer.verificationReviews[0] ?? null;
+  const existingAiSummary = latestReview?.aiSummary as {
+    model: string;
+    promptVersion: string;
+    inputSnapshot: object;
+    output: {
+      recommendation: "APPROVE" | "REJECT";
+      confidence: number;
+      scoreSuggestion: number;
+      reasons: string[];
+      summary: string;
+    };
+    overrideReason?: string;
+  } | null;
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-5">
@@ -132,7 +150,8 @@ export default async function AdminVerificationDetailPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_2fr] lg:gap-8">
+        {/* Left column — Engineer profile card */}
         <div className="space-y-4">
           <section className="rounded-xl border border-brand-border bg-white p-6">
             <h1 className="text-2xl font-bold leading-tight tracking-tight text-brand-foreground">
@@ -306,11 +325,14 @@ export default async function AdminVerificationDetailPage({
           </section>
         </div>
 
+        {/* Right column — AI recommendation banner + review form */}
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <AdminReviewPanel
+          <VerificationReviewRightColumn
             engineerId={engineer.id}
+            reviewId={latestReview?.id ?? ""}
             canReview={canReview}
             currentStatus={engineer.verificationStatus}
+            existingAiSummary={existingAiSummary}
           />
         </aside>
       </div>
