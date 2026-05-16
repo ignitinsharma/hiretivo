@@ -1,3 +1,54 @@
+/*
+ * Talent pool type definitions.
+ * LockedEngineer: base card data (no PII).
+ * UnlockedEngineer: LockedEngineer + PII fields after unlock.
+ * TalentFilters: query params for talent pool browse.
+ */
+
+export interface LockedEngineer {
+  id: string;
+  firstName: string;
+  lastInitial: string;
+  hiretivoScore: number;
+  role: string;
+  yearsExperience: number;
+  skills: string[];
+  salaryMinUsd: number;
+  salaryMaxUsd: number;
+  timezoneOverlapHours: number;
+  availableFrom: string | null;
+  isUnlocked: boolean;
+  isSaved: boolean;
+}
+
+export interface UnlockedEngineer extends LockedEngineer {
+  fullName: string;
+  email: string;
+  githubUrl: string | null;
+  linkedinUrl: string | null;
+  resumeUrl: string | null;
+}
+
+export type TalentEngineer = LockedEngineer | UnlockedEngineer;
+
+export function isUnlocked(eng: TalentEngineer): eng is UnlockedEngineer {
+  return eng.isUnlocked && "fullName" in eng;
+}
+
+export interface TalentFilters {
+  skills?: string;        // comma-separated
+  role?: string;
+  salaryMax?: number;
+  timezoneOverlapMin?: number;
+  availableBefore?: string;
+}
+
+export interface SavedEngineerItem extends LockedEngineer {
+  savedAt?: string;
+}
+
+/* ─── Legacy types (kept for backward compat) ─── */
+
 export interface TalentListItem {
   id: string;
   name: string | null;
