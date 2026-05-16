@@ -107,7 +107,12 @@ Plans:
   3. FeedbackRequest generated only when Application.status=HIRED + 90 days elapsed + by job-owning recruiter.
   4. Hiretivo Score auto-recalcs: scoreGiven×0.85 + (avgRating/5×100)×0.15 using VerificationReview.scoreGiven.
   5. Admin can override AI recommendation; override logged in VerificationReview.aiSummary for EU AI Act audit trail.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — AI GitHub scan API + GITHUB_ANALYSIS_PROMPT + admin review UI with AI pre-fill and override logging
+- [ ] 12-02-PLAN.md — FeedbackRequest cron + /feedback/[token] form + POST /api/feedback/employer + score recalc
+- [ ] 12-03-PLAN.md — Recruiter pipeline kanban at /recruiter/pipeline (6 columns, click-to-move)
 
 ## Progress
 
@@ -125,4 +130,4 @@ Plans:
 | 9. Verification System (Pivot v2) | 0/TBD | Not started | - |
 | 10. Talent Pool & Public Profiles (Pivot v2) | 0/TBD | Not started | - |
 | 11. Job Match & Notifications (Pivot v2) | 0/3 | Not started | - |
-| 12. AI Review & Feedback (Pivot v2) | 0/TBD | Not started | - |
+| 12. AI Review & Feedback (Pivot v2) | 0/3 | Not started | - |
