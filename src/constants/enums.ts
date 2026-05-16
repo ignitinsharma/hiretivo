@@ -120,13 +120,7 @@ export const PLAN_TIER_VALUES = [
   PlanTier.SCALE,
 ] as const;
 
-export const RECRUITER_PAID_FEATURE_VALUES = [
-  "talent_pool",
-  "interview_scheduling",
-  "ai_candidate_summaries",
-] as const;
-
-export type RecruiterPaidFeature = (typeof RECRUITER_PAID_FEATURE_VALUES)[number];
+/** @deprecated Superseded by canAccessTalentPool/getUnlockQuota in plan-access.ts. Use plan-level checks instead of feature-level checks. */
 
 export enum InterviewStatus {
   SCHEDULED = "SCHEDULED",

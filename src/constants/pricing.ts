@@ -1,20 +1,5 @@
 import { CurrencyCode, PlanTier } from "@/constants/enums";
 
-/*
- * PLAN_TIERS
- * Pivot v2 four-tier pricing for recruiter plans.
- * unlocks: number of engineer profile unlocks per billing period (null = unlimited).
- * activeJobs: max concurrent open jobs (null = unlimited).
- */
-export const PLAN_TIERS = {
-  FREE: { name: "Free", price: 0, unlocks: 0, activeJobs: 0 },
-  STARTER: { name: "Starter", price: 199, unlocks: 10, activeJobs: 2 },
-  GROWTH: { name: "Growth", price: 399, unlocks: 30, activeJobs: null },
-  SCALE: { name: "Scale", price: 799, unlocks: null, activeJobs: null },
-} as const;
-
-export type PlanTierKey = keyof typeof PLAN_TIERS;
-
 export type PricingCurrency = CurrencyCode.INR | CurrencyCode.USD;
 
 interface PricePoint {
@@ -46,7 +31,7 @@ function annual(monthly: number): PricePoint {
 export const PRICING_CONFIG: PricingTier[] = [
   {
     id: PlanTier.FREE,
-    name: PLAN_TIERS.FREE.name,
+    name: "Free",
     description: "Browse applicants after posting is enabled. Upgrade for verified talent access.",
     cta: "Get started",
     highlighted: false,
@@ -56,7 +41,7 @@ export const PRICING_CONFIG: PricingTier[] = [
   },
   {
     id: PlanTier.STARTER,
-    name: PLAN_TIERS.STARTER.name,
+    name: "Starter",
     description: "Start sourcing verified engineers with a focused monthly unlock quota.",
     cta: "Upgrade to Starter",
     highlighted: true,
@@ -66,7 +51,7 @@ export const PRICING_CONFIG: PricingTier[] = [
   },
   {
     id: PlanTier.GROWTH,
-    name: PLAN_TIERS.GROWTH.name,
+    name: "Growth",
     description: "Scale recruiter workflows with more unlocks and unlimited active jobs.",
     cta: "Upgrade to Growth",
     highlighted: false,
@@ -76,7 +61,7 @@ export const PRICING_CONFIG: PricingTier[] = [
   },
   {
     id: PlanTier.SCALE,
-    name: PLAN_TIERS.SCALE.name,
+    name: "Scale",
     description: "Unlimited unlocks for teams hiring continuously.",
     cta: "Upgrade to Scale",
     highlighted: false,
@@ -90,3 +75,84 @@ export const CURRENCY_SYMBOL: Record<PricingCurrency, string> = {
   USD: "$",
   INR: "₹",
 };
+
+/*
+ * PLAN_TIERS
+ * Canonical pricing tier config for the Hiretivo talent marketplace.
+ * FREE: 0 unlocks, 0 jobs. STARTER: 10 unlocks/mo, 2 active jobs, $199/mo.
+ * GROWTH: 30 unlocks/mo, unlimited jobs, $399/mo.
+ * SCALE: unlimited unlocks, unlimited jobs, $799/mo.
+ */
+export const PLAN_TIERS = {
+  FREE: {
+    id: "FREE",
+    name: "Free",
+    price: 0,
+    annualPrice: 0,
+    unlocks: 0,
+    activeJobs: 0,
+    description: "Explore the platform at no cost.",
+    highlighted: false,
+    features: [
+      "Browse talent pool (blurred)",
+      "0 profile unlocks",
+      "0 active job posts",
+      "Basic dashboard",
+    ],
+  },
+  STARTER: {
+    id: "STARTER",
+    name: "Starter",
+    price: 199,
+    annualPrice: 166, // ~17% off
+    unlocks: 10,
+    activeJobs: 2,
+    description: "Hire your first remote engineer.",
+    highlighted: false,
+    features: [
+      "10 profile unlocks/mo",
+      "2 active job posts",
+      "Email engineers directly",
+      "Schedule interviews",
+      "Save engineers",
+    ],
+  },
+  GROWTH: {
+    id: "GROWTH",
+    name: "Growth",
+    price: 399,
+    annualPrice: 331,
+    unlocks: 30,
+    activeJobs: null, // unlimited
+    description: "Scale your hiring pipeline.",
+    highlighted: true,
+    features: [
+      "30 profile unlocks/mo",
+      "Unlimited active jobs",
+      "Email engineers directly",
+      "Schedule interviews",
+      "Save engineers",
+      "Priority support",
+    ],
+  },
+  SCALE: {
+    id: "SCALE",
+    name: "Scale",
+    price: 799,
+    annualPrice: 663,
+    unlocks: null, // unlimited
+    activeJobs: null, // unlimited
+    description: "Unlimited hiring for fast-growing teams.",
+    highlighted: false,
+    features: [
+      "Unlimited profile unlocks",
+      "Unlimited active jobs",
+      "Email engineers directly",
+      "Schedule interviews",
+      "Save engineers",
+      "Dedicated account manager",
+    ],
+  },
+} as const;
+
+export type PlanTierId = keyof typeof PLAN_TIERS;
