@@ -1,59 +1,72 @@
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { HeroSearch } from "@/components/shared/HeroSearch";
-import { HOMEPAGE_DISPLAY_STATS } from "@/config/home-page";
 
 /*
  * HeroSection
- * Renders the main hero section with search functionality and popular tags.
- * Static component with no props required.
+ * Dual-audience hero for talent marketplace homepage.
+ * Left: recruiter CTA "Hire verified Indian engineers in 7 days"
+ * Right: engineer CTA "Get a Hiretivo Verified ✓ badge"
  */
 export function HeroSection() {
   return (
-    <section
-      className="overflow-hidden px-4 pb-16 pt-20 grid-bg"
-      data-purpose="hero-section"
-    >
-      <div className="max-w-4xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-50 rounded-full mb-8">
-          <span className="text-black text-sm font-bold tracking-wide">
-            ✦ {HOMEPAGE_DISPLAY_STATS.heroRemoteJobs} remote jobs available
-          </span>
-        </div>
-        <h1 className="text-foreground mb-6 text-3xl font-bold leading-tight sm:text-5xl md:text-7xl">
-          <span className="text-brand-primary">Find remote work</span>{" "}
-          <br />
-          <span className="text-black italic">that fits your life</span>
-        </h1>
-        <p className="text-muted-foreground mx-auto mb-12 max-w-2xl text-lg md:text-2xl">
-          Find your first remote job that fits your lifestyle. Thousands of
-          remote-first companies hiring now. No commute required.
-        </p>
-        <div
-          className="relative max-w-2xl mx-auto mb-8"
-          data-purpose="hero-search"
-        >
-          <HeroSearch />
-        </div>
-        <div
-          className="flex flex-wrap justify-center gap-3 text-sm"
-          data-purpose="popular-tags"
-        >
-          <span className="text-muted-foreground">Popular:</span>
-          <Link className="text-black font-medium hover:underline" href="#">
-            React Developer
-          </Link>
-          <span className="text-gray-300">•</span>
-          <Link className="text-black font-medium hover:underline" href="#">
-            Product Designer
-          </Link>
-          <span className="text-gray-300">•</span>
-          <Link className="text-black font-medium hover:underline" href="#">
-            Sales Lead
-          </Link>
-          <span className="text-gray-300">•</span>
-          <Link className="text-black font-medium hover:underline" href="#">
-            Content Writer
-          </Link>
+    <section className="bg-white px-4 py-16 md:px-8 md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Recruiter side */}
+          <div className="flex flex-col gap-5">
+            <span className="inline-block rounded-full border border-brand-border bg-brand-surface px-3 py-1 text-xs font-medium uppercase tracking-wider text-brand-foreground-secondary">
+              For US/EU Startups
+            </span>
+            <h1 className="font-bold text-4xl leading-tight tracking-tight text-brand-foreground md:text-5xl">
+              Hire verified Indian engineers in 7 days
+            </h1>
+            <p className="text-base text-brand-foreground-muted leading-relaxed">
+              Browse pre-vetted engineers with Hiretivo Score, real USD salary
+              expectations, and 4–8h US/EU timezone overlap. Unlock contact
+              details and hire fast.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="primary" asChild>
+                <Link href="/auth/signup?role=recruiter">
+                  Browse Engineers &rarr;
+                </Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link href="/pricing">See Pricing</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Engineer side */}
+          <div className="flex flex-col gap-5 rounded-xl border border-brand-border bg-brand-surface p-6 lg:p-8">
+            <span className="inline-block rounded-full border border-brand-border bg-white px-3 py-1 text-xs font-medium uppercase tracking-wider text-brand-foreground-secondary">
+              For Indian Engineers
+            </span>
+            <h2 className="font-bold text-3xl leading-tight tracking-tight text-brand-foreground md:text-4xl">
+              Get a Hiretivo Verified &check; badge
+            </h2>
+            <p className="text-base text-brand-foreground-muted leading-relaxed">
+              Submit your GitHub, projects, and video intro. Our team reviews
+              and gives you a Hiretivo Score. Get discovered by US/EU startups
+              paying USD salaries.
+            </p>
+            <Button variant="secondary" className="self-start" asChild>
+              <Link href="/auth/signup?role=seeker">
+                Apply for Verification &rarr;
+              </Link>
+            </Button>
+            <ul className="flex flex-col gap-2 text-sm text-brand-foreground-muted">
+              {[
+                "No resume black holes",
+                "USD salaries, remote-first",
+                "48-hour review turnaround",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="text-brand-success">&check;</span> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
