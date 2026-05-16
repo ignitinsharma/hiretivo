@@ -65,19 +65,19 @@
 
 - [ ] **PIVS-01**: Schema clean slate — remove BoostedJob, DismissedJob, SavedJob models; replace PlanTier PRO/ENTERPRISE with STARTER/GROWTH/SCALE; add VerificationStatus, ApplicationSource, ContractType enums.
 - [ ] **PIVS-02**: Add all new Prisma models: VerificationReview, EngineerUnlock, EmployerFeedback, SavedEngineer, BlockedRecruiter, FeedbackRequest; add new fields to User, SeekerProfile, Job, Application per PIVOT.md §4.
-- [ ] **PIVS-03**: Onboarding Phase A Step 4 captures USD salary min/max, timezone overlap hours (0–16), and availableFrom date; persists to User model via saveStep4 server action.
-- [ ] **PIVS-04**: Engineer can complete Phase B verification flow: Step 1 GitHub URL (with scan spinner + all edge-case states), Step 2 bio + top 3 projects, Step 3 video URL (optional), Step 4 profile slug picker (real-time uniqueness check, reserved words blocked).
-- [ ] **PIVS-05**: On verification submit: verificationStatus=PENDING, profileSlug reserved, admin email sent, engineer sees "Under review — 48hrs" confirmation.
+- [x] **PIVS-03**: Onboarding Phase A Step 4 captures USD salary min/max, timezone overlap hours (0–16), and availableFrom date; persists to User model via saveStep4 server action.
+- [x] **PIVS-04**: Engineer can complete Phase B verification flow: Step 1 GitHub URL (with scan spinner + all edge-case states), Step 2 bio + top 3 projects, Step 3 video URL (optional), Step 4 profile slug picker (real-time uniqueness check, reserved words blocked).
+- [x] **PIVS-05**: On verification submit: verificationStatus=PENDING, profileSlug reserved, admin email sent, engineer sees "Under review — 48hrs" confirmation.
 - [x] **PIVS-06**: Admin queue at `/admin/verification` shows PENDING/IN_REVIEW submissions with FIFO order; IN_REVIEW items stale after 2hrs auto-revert to PENDING via cron + lazy check on queue load.
 - [x] **PIVS-07**: Admin approve flow: enter score (0–100), click Send → verificationStatus=VERIFIED, hiretivoScore=scoreGiven, approval email sent with [Make Profile Public →] CTA.
 - [x] **PIVS-08**: Admin reject flow: multi-select rejection reasons (15 predefined), optional note, select reapply window (30/60/90 days) → verificationStatus=REJECTED, reapplyAfter set, rejection email sent.
 - [ ] **PIVS-09**: Engineer dashboard shows correct status card for all 5 VerificationStatus states (NOT_SUBMITTED, PENDING, IN_REVIEW, VERIFIED×2, REJECTED) including countdown for REJECTED reapplyAfter.
 - [ ] **PIVS-10**: Apply button on job listings replaced with role-specific CTAs based on verificationStatus: VERIFIED=Apply, UNVERIFIED/REJECTED="Get Verified to Apply →", PENDING/IN_REVIEW=disabled "Verification in progress".
-- [ ] **PIVS-11**: GDPR/DPDP minimum: "Request account deletion" button in settings → email admin; "Download my data" → JSON export of profile/applications/unlock log; AI decision notice in verification status card.
+- [x] **PIVS-11**: GDPR/DPDP minimum: "Request account deletion" button in settings → email admin; "Download my data" → JSON export of profile/applications/unlock log; AI decision notice in verification status card.
 - [ ] **PIVS-12**: Legacy cleanup — delete boost, early-access, admin-jobs files; disable/delete seeker-digest cron; remove company pages; remove PRO/ENTERPRISE references from billing constants.
 - [x] **PIVS-13**: All new API routes rate-limited per CLAUDE.md rules (auth 10/min, write 5/min, read 30/min).
-- [ ] **PIVS-14**: `/api/engineer/check-slug` GET endpoint with debounce-friendly design; reserved words list enforced server-side; returns `{ available: boolean, suggestion?: string }`.
-- [ ] **PIVS-15**: profilePublic consent flow: after VERIFIED email, engineer clicks [Make Profile Public →] → profilePublic=true, profilePublicConsentAt=now(); consent modal shows required disclosure text from PIVOT.md §15.
+- [x] **PIVS-14**: `/api/engineer/check-slug` GET endpoint with debounce-friendly design; reserved words list enforced server-side; returns `{ available: boolean, suggestion?: string }`.
+- [x] **PIVS-15**: profilePublic consent flow: after VERIFIED email, engineer clicks [Make Profile Public →] → profilePublic=true, profilePublicConsentAt=now(); consent modal shows required disclosure text from PIVOT.md §15.
 
 ### Phase 10: Talent Pool & Public Profiles (PIVT)
 

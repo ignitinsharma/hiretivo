@@ -65,7 +65,7 @@ Plans:
 
 Plans:
 - [x] 09-01-PLAN.md — Schema clean slate (remove BoostedJob/SavedJob/DismissedJob, update PlanTier, add 3 new enums + 6 new models + new fields), update TS enums/pricing/billing constants, delete legacy files, disable seeker-digest
-- [ ] 09-02-PLAN.md — Onboarding Step 4 (USD salary/timezone/availableFrom) + all 5 engineer API routes (verification GET+POST, check-slug, github-scan stub, public-consent, data-export)
+- [x] 09-02-PLAN.md — Onboarding Step 4 (USD salary/timezone/availableFrom) + all 5 engineer API routes (verification GET+POST, check-slug, github-scan stub, public-consent, data-export)
 - [x] 09-03-PLAN.md — All 3 admin verification API routes (queue, detail/IN_REVIEW, approve/reject) + stale cron + email templates (approval + rejection) + middleware route protection
 - [ ] 09-04-PLAN.md — Phase B verification multi-step UI (/seeker/verification) + engineer dashboard VerificationStatusCard (all 5 states) + ProfilePublicConsentModal
 - [ ] 09-05-PLAN.md — Admin verification queue page + admin review page (/admin/verification/[id]) + ApplyButton gate update + GDPR settings buttons
