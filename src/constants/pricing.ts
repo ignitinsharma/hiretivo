@@ -1,4 +1,19 @@
-import { CurrencyCode, PricingTierId } from "@/constants/enums";
+import { CurrencyCode, PlanTier } from "@/constants/enums";
+
+/*
+ * PLAN_TIERS
+ * Pivot v2 four-tier pricing for recruiter plans.
+ * unlocks: number of engineer profile unlocks per billing period (null = unlimited).
+ * activeJobs: max concurrent open jobs (null = unlimited).
+ */
+export const PLAN_TIERS = {
+  FREE: { name: "Free", price: 0, unlocks: 0, activeJobs: 0 },
+  STARTER: { name: "Starter", price: 199, unlocks: 10, activeJobs: 2 },
+  GROWTH: { name: "Growth", price: 399, unlocks: 30, activeJobs: null },
+  SCALE: { name: "Scale", price: 799, unlocks: null, activeJobs: null },
+} as const;
+
+export type PlanTierKey = keyof typeof PLAN_TIERS;
 
 export type PricingCurrency = CurrencyCode.INR | CurrencyCode.USD;
 
@@ -9,69 +24,64 @@ interface PricePoint {
 }
 
 export interface PricingTier {
-  id: PricingTierId | "custom";
+  id: PlanTier;
   name: string;
   description: string;
   cta: string;
   highlighted: boolean;
-  isCustom: boolean;
   features: string[];
-  USD: PricePoint | null;
+  USD: PricePoint;
   INR: PricePoint | null;
+}
+
+function annual(monthly: number): PricePoint {
+  const annualTotal = Math.round(monthly * 12 * 0.8);
+  return {
+    monthly,
+    annualTotal,
+    annualSavings: monthly * 12 - annualTotal,
+  };
 }
 
 export const PRICING_CONFIG: PricingTier[] = [
   {
-    id: PricingTierId.FREE,
-    name: "Free",
-    description: "Trial offer — post up to 4 jobs and use AI features for free.",
+    id: PlanTier.FREE,
+    name: PLAN_TIERS.FREE.name,
+    description: "Browse applicants after posting is enabled. Upgrade for verified talent access.",
     cta: "Get started",
     highlighted: false,
-    isCustom: false,
-    features: [
-      "4 active job posts",
-      "Unlimited applicant views",
-      "AI candidate summaries",
-      "Interview scheduling",
-      "Basic skill matching",
-      "Email support",
-    ],
-    USD: { monthly: 0, annualTotal: 0, annualSavings: 0 },
-    INR: { monthly: 0, annualTotal: 0, annualSavings: 0 },
+    features: ["Public job browsing", "Skills-first profiles", "Upgrade when ready"],
+    USD: annual(0),
+    INR: annual(0),
   },
   {
-    id: PricingTierId.PRO,
-    name: "Pro",
-    description: "Advanced hiring tools for growing recruiter teams.",
-    cta: "Upgrade to Pro",
+    id: PlanTier.STARTER,
+    name: PLAN_TIERS.STARTER.name,
+    description: "Start sourcing verified engineers with a focused monthly unlock quota.",
+    cta: "Upgrade to Starter",
     highlighted: true,
-    isCustom: false,
-    features: [
-      "10 active job posts",
-      "Unlimited applicant views",
-      "Talent pool access",
-      "Interview scheduling",
-      "AI candidate summaries",
-      "More features coming soon",
-    ],
-    USD: { monthly: 149, annualTotal: 1426, annualSavings: 362 },
-    INR: { monthly: 7999, annualTotal: 71986, annualSavings: 24002 },
+    features: ["10 engineer unlocks", "2 active jobs", "Verified-only applicant quality"],
+    USD: annual(199),
+    INR: null,
   },
   {
-    id: "custom",
-    name: "Custom",
-    description: "Flexible hiring workflows for teams with custom needs.",
-    cta: "Contact sales",
+    id: PlanTier.GROWTH,
+    name: PLAN_TIERS.GROWTH.name,
+    description: "Scale recruiter workflows with more unlocks and unlimited active jobs.",
+    cta: "Upgrade to Growth",
     highlighted: false,
-    isCustom: true,
-    features: [
-      "Everything in Pro",
-      "Custom contract terms",
-      "Dedicated onboarding",
-      "SLA options",
-      "Priority support",
-    ],
-    USD: null,
+    features: ["30 engineer unlocks", "Unlimited active jobs", "Talent pool access"],
+    USD: annual(399),
+    INR: null,
+  },
+  {
+    id: PlanTier.SCALE,
+    name: PLAN_TIERS.SCALE.name,
+    description: "Unlimited unlocks for teams hiring continuously.",
+    cta: "Upgrade to Scale",
+    highlighted: false,
+    features: ["Unlimited engineer unlocks", "Unlimited active jobs", "Priority hiring workflows"],
+    USD: annual(799),
     INR: null,
   },
 ];

@@ -13,11 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  validateSeekerStep2,
-  YEARS_OPTIONS,
-} from "@/lib/validations/seeker-onboarding.schema";
-import type { YearsOfExperience } from "@/lib/validations/seeker-onboarding.schema";
+import { validateSeekerStep2 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep2 } from "@/app/actions/onboarding/seeker";
 import { SkillLevel } from "@/constants/enums";
@@ -214,29 +210,18 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
               <label className="text-sm font-medium text-foreground">
                 Years of experience
               </label>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {YEARS_OPTIONS.map((option) => {
-                  const isSelected = step2.yearsOfExperience === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setYearsOfExperience(option.value as YearsOfExperience);
-                        setErrors([]);
-                      }}
-                      className={cn(
-                        "flex items-center justify-center p-3 rounded-lg border-2 transition-all text-sm font-medium",
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary/50 text-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <Input
+                type="number"
+                min={0}
+                max={50}
+                placeholder="e.g. 4"
+                value={step2.yearsOfExperience ?? ""}
+                onChange={(event) => {
+                  const value = Number.parseInt(event.target.value, 10);
+                  setYearsOfExperience(Number.isNaN(value) ? null : value);
+                  setErrors([]);
+                }}
+              />
             </div>
 
             <div className="space-y-3">

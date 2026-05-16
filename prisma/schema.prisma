@@ -59,8 +59,9 @@ enum WorkType {
 
 enum PlanTier {
   FREE
-  PRO
-  ENTERPRISE
+  STARTER
+  GROWTH
+  SCALE
 }
 
 enum SubStatus {
@@ -74,6 +75,25 @@ enum InterviewStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum ApplicationSource {
+  SEEKER_APPLIED
+  RECRUITER_INITIATED
+}
+
+enum ContractType {
+  FULL_TIME
+  CONTRACT
+  PART_TIME
 }
 
 model User {
@@ -108,10 +128,25 @@ model User {
 
   clickEvents ClickEvent[]
 
-  boostedJobs BoostedJob[] @relation("BoostedJobs")
-  savedJobs            SavedJob[]
-  dismissedJobs        DismissedJob[]
   subscription         Subscription?
+  verificationStatus    VerificationStatus @default(NOT_SUBMITTED)
+  hiretivoScore         Int?
+  scoreUpdatedAt        DateTime?
+  timezoneOverlapHours  Int?
+  availableFrom         DateTime?
+  reapplyAfter          DateTime?
+  profileSlug           String? @unique
+  hiddenUntil           DateTime?
+
+  verificationReviews   VerificationReview[]
+  unlocksGiven          EngineerUnlock[]   @relation("RecruiterUnlocks")
+  unlocksReceived       EngineerUnlock[]   @relation("EngineerUnlocks")
+  feedbackReceived      EmployerFeedback[] @relation("FeedbackReceived")
+  feedbackGiven         EmployerFeedback[] @relation("FeedbackGiven")
+  savedByRecruiters     SavedEngineer[]    @relation("SavedEngineer")
+  savedEngineers        SavedEngineer[]    @relation("SavedByRecruiter")
+  blockedRecruiters     BlockedRecruiter[]
+  feedbackRequests      FeedbackRequest[]  @relation("FeedbackRequests")
 }
 
 model Account {
@@ -177,6 +212,19 @@ model SeekerProfile {
   twitterUrl      String?
 
   digestEnabled Boolean @default(false)
+  githubUsername          String?
+  githubScore             Int?
+  githubAnalysis          Json?
+  githubScannedAt         DateTime?
+  verificationNotes       String?  @db.Text
+  verificationReviewedAt  DateTime?
+  verificationReviewedBy  String?
+  videoIntroUrl           String?
+  topProjects             Json?
+  salaryMinUsd            Int?
+  salaryMaxUsd            Int?
+  profilePublic           Boolean @default(false)
+  profilePublicConsentAt  DateTime?
 
   skills          SeekerSkill[]
   jobMatches      JobMatch[]
@@ -251,8 +299,13 @@ model Job {
   salaryMax Int?
   currency  String?
 
-  experienceLevel String?
-  category        String?
+  minYearsExperience Int?
+  category           String?
+  salaryMinUsd          Int?
+  salaryMaxUsd          Int?
+  timezoneOverlapHours  Int?
+  contractType          ContractType?
+  isRemoteOnly          Boolean @default(true)
 
   externalApplyUrl String?
 
@@ -273,9 +326,6 @@ model Job {
   applications  Application[]
   jobMatches    JobMatch[]
   clickEvents   ClickEvent[]
-  boostedJob    BoostedJob?
-  savedBy       SavedJob[]
-  dismissedBy   DismissedJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -323,6 +373,7 @@ model Application {
   seekerId String
 
   status      AppStatus @default(APPLIED)
+  source      ApplicationSource @default(SEEKER_APPLIED)
   matchScore  Int
 
   coverLetter String? @db.Text
@@ -395,23 +446,6 @@ model EarlyAccessEmail {
   createdAt DateTime @default(now())
 }
 
-model BoostedJob {
-  id          String   @id @default(cuid())
-  jobId       String   @unique
-  recruiterId String
-  paymentId   String?
-  startsAt    DateTime @default(now())
-  expiresAt   DateTime
-
-  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  recruiter User @relation("BoostedJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([recruiterId])
-}
-
 model Subscription {
   id                 String    @id @default(cuid())
   dodoSubscriptionId String    @unique
@@ -427,34 +461,6 @@ model Subscription {
 
   @@index([userId])
   @@index([dodoSubscriptionId])
-}
-
-model SavedJob {
-  id        String   @id @default(cuid())
-  userId    String
-  jobId     String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, jobId])
-  @@index([userId])
-  @@index([jobId])
-}
-
-model DismissedJob {
-  id        String   @id @default(cuid())
-  userId    String
-  jobId     String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, jobId])
-  @@index([userId])
-  @@index([jobId])
 }
 
 model WorkExperience {
@@ -475,6 +481,89 @@ model WorkExperience {
   updatedAt DateTime @updatedAt
 
   @@index([seekerProfileId])
+}
+
+model VerificationReview {
+  id           String             @id @default(cuid())
+  userId       String
+  reviewedBy   String?
+  status       VerificationStatus
+  scoreGiven   Int?
+  notes        Json?
+  aiSummary    Json?
+  createdAt    DateTime           @default(now())
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model EngineerUnlock {
+  id           String   @id @default(cuid())
+  recruiterId  String
+  engineerId   String
+  source       String
+  unlockedAt   DateTime @default(now())
+  recruiter    User     @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
+  engineer     User     @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, engineerId])
+  @@index([recruiterId])
+  @@index([recruiterId, unlockedAt])
+}
+
+model EmployerFeedback {
+  id                String   @id @default(cuid())
+  engineerId        String
+  recruiterId       String
+  jobId             String?
+  feedbackRequestId String   @unique
+  rating            Int
+  comment           String?  @db.Text
+  createdAt         DateTime @default(now())
+  engineer          User     @relation("FeedbackReceived", fields: [engineerId], references: [id], onDelete: Cascade)
+  recruiter         User     @relation("FeedbackGiven", fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@index([engineerId])
+}
+
+model SavedEngineer {
+  id           String   @id @default(cuid())
+  recruiterId  String
+  engineerId   String
+  createdAt    DateTime @default(now())
+  recruiter    User     @relation("SavedByRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
+  engineer     User     @relation("SavedEngineer", fields: [engineerId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, engineerId])
+  @@index([recruiterId])
+}
+
+model BlockedRecruiter {
+  id              String   @id @default(cuid())
+  engineerId      String
+  recruiterDomain String
+  createdAt       DateTime @default(now())
+  engineer        User     @relation(fields: [engineerId], references: [id], onDelete: Cascade)
+
+  @@unique([engineerId, recruiterDomain])
+  @@index([engineerId])
+}
+
+model FeedbackRequest {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  engineerId  String
+  recruiterId String
+  jobId       String?
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  engineer    User      @relation("FeedbackRequests", fields: [engineerId], references: [id], onDelete: Cascade)
+
+  @@index([engineerId])
+  @@index([tokenHash])
 }
 
 model Education {

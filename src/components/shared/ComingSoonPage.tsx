@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Rocket, Check, Linkedin, Twitter, Instagram } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { earlyAccessSchema, type EarlyAccessInput } from '@/lib/validations/early-access.schema';
-import { earlyAccessService } from '@/services/early-access.service';
 
 const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/company/hiretivo/',
@@ -62,7 +61,6 @@ function FeatureCard({ icon, title, description, variant }: FeatureCardProps) {
 
 export function ComingSoonPage() {
   const [isSuccess, setIsSuccess] = useState(false);
-  const [apiError, setApiError] = useState('');
 
   const {
     register,
@@ -74,14 +72,8 @@ export function ComingSoonPage() {
   });
 
   const onSubmit = async (data: EarlyAccessInput) => {
-    setApiError('');
-
-    try {
-      await earlyAccessService.joinWaitlist(data);
-      setIsSuccess(true);
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Something went wrong. Please try again.');
-    }
+    window.location.href = `mailto:admin@hiretivo.com?subject=Early access request&body=${encodeURIComponent(data.email)}`;
+    setIsSuccess(true);
   };
 
   return (
@@ -152,9 +144,6 @@ export function ComingSoonPage() {
                   {isSubmitting ? 'Submitting...' : 'Get Early Access'}
                 </button>
               </form>
-            )}
-            {apiError && (
-              <p className="text-red-500 text-sm text-center">{apiError}</p>
             )}
             <p className="text-sm text-muted-foreground">Join 2,000+ companies waiting for smarter hiring.</p>
           </div>

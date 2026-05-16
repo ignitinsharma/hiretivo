@@ -119,7 +119,7 @@ export default async function JobDescriptionPage({
     salaryMin: job.salaryMin,
     salaryMax: job.salaryMax,
     currency: job.currency,
-    experienceLevel: job.experienceLevel,
+    minYearsExperience: job.minYearsExperience,
     applyType: job.applyType,
     externalApplyUrl: job.externalApplyUrl,
     companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',

@@ -7,8 +7,6 @@ import type {
   Step3Data,
   Step4Data,
   SeekerSituation,
-  ExperienceLevel,
-  YearsOfExperience,
   JobType,
   JobCategory,
   Currency,
@@ -42,10 +40,9 @@ interface SeekerOnboardingState {
   setUserName: (name: string) => void;
 
   setSituation: (situation: SeekerSituation) => void;
-  setExperienceLevel: (level: ExperienceLevel) => void;
 
   setPrimaryRole: (role: string) => void;
-  setYearsOfExperience: (years: YearsOfExperience) => void;
+  setYearsOfExperience: (years: number | null) => void;
   setSkills: (skills: string[]) => void;
   addSkill: (skill: string) => void;
   removeSkill: (skill: string) => void;
@@ -64,7 +61,6 @@ interface SeekerOnboardingState {
 
 const initialStep1Data: Step1Data = {
   situation: null,
-  experienceLevel: null,
 };
 
 const initialStep2Data: Step2Data = {
@@ -132,10 +128,6 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
 
       setSituation: (situation) => set((state) => ({
         step1: { ...state.step1, situation },
-      })),
-
-      setExperienceLevel: (level) => set((state) => ({
-        step1: { ...state.step1, experienceLevel: level },
       })),
 
       setPrimaryRole: (role) => set((state) => ({

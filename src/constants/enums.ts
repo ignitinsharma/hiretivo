@@ -108,11 +108,17 @@ export const WORK_TYPE_VALUES = [WorkType.REMOTE, WorkType.HYBRID, WorkType.ONSI
 
 export enum PlanTier {
   FREE = "FREE",
-  PRO = "PRO",
-  ENTERPRISE = "ENTERPRISE",
+  STARTER = "STARTER",
+  GROWTH = "GROWTH",
+  SCALE = "SCALE",
 }
 
-export const PLAN_TIER_VALUES = [PlanTier.FREE, PlanTier.PRO, PlanTier.ENTERPRISE] as const;
+export const PLAN_TIER_VALUES = [
+  PlanTier.FREE,
+  PlanTier.STARTER,
+  PlanTier.GROWTH,
+  PlanTier.SCALE,
+] as const;
 
 export const RECRUITER_PAID_FEATURE_VALUES = [
   "talent_pool",
@@ -171,11 +177,6 @@ export enum BillingPeriod {
 
 export const BILLING_PERIOD_VALUES = [BillingPeriod.MONTHLY, BillingPeriod.ANNUAL] as const;
 
-export enum PricingTierId {
-  FREE = "free",
-  PRO = "pro",
-}
-
 export enum AiMessageRole {
   SYSTEM = "system",
   USER = "user",
@@ -197,6 +198,33 @@ export enum SubscriptionStatus {
   ACTIVE = "ACTIVE",
   PAST_DUE = "PAST_DUE",
   CANCELED = "CANCELED",
+}
+
+export enum VerificationStatus {
+  NOT_SUBMITTED = "NOT_SUBMITTED",
+  PENDING = "PENDING",
+  IN_REVIEW = "IN_REVIEW",
+  VERIFIED = "VERIFIED",
+  REJECTED = "REJECTED",
+}
+
+export const VERIFICATION_STATUS_VALUES = [
+  VerificationStatus.NOT_SUBMITTED,
+  VerificationStatus.PENDING,
+  VerificationStatus.IN_REVIEW,
+  VerificationStatus.VERIFIED,
+  VerificationStatus.REJECTED,
+] as const;
+
+export enum ApplicationSource {
+  SEEKER_APPLIED = "SEEKER_APPLIED",
+  RECRUITER_INITIATED = "RECRUITER_INITIATED",
+}
+
+export enum ContractType {
+  FULL_TIME = "FULL_TIME",
+  CONTRACT = "CONTRACT",
+  PART_TIME = "PART_TIME",
 }
 
 export enum PositionType {

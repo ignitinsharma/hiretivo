@@ -79,7 +79,7 @@ export function AdminJobPreview({ values }: Props) {
     postedAt: "Just now",
     jobType: values.jobType || undefined,
     workType: values.workType || null,
-    experienceLevel: values.experienceLevel || null,
+    minYearsExperience: null,
     companyIndustry: values.companyIndustry || null,
     companySize: values.companySize || null,
     companyFundingType: values.companyFunding || null,

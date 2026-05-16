@@ -56,7 +56,10 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
     },
     {
       icon: Clock,
-      label: application.experienceLevel,
+      label:
+        application.minYearsExperience != null
+          ? `${application.minYearsExperience}+ years`
+          : null,
     },
   ].filter((fact): fact is { icon: typeof MapPin; label: string } =>
     hasText(fact.label),

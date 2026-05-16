@@ -4,18 +4,7 @@ export type SeekerSituation =
   | 'EXPLORING_OPTIONS' 
   | 'STUDENT_FRESH_GRAD';
 
-export type ExperienceLevel = 
-  | 'ENTRY' 
-  | 'JUNIOR' 
-  | 'MID' 
-  | 'SENIOR';
-
-export type YearsOfExperience = 
-  | 'LESS_THAN_1' 
-  | '1_TO_3' 
-  | '3_TO_5' 
-  | '5_TO_10' 
-  | 'MORE_THAN_10';
+export type YearsOfExperience = number;
 
 export type JobType =
   | OnboardingJobType.FULL_TIME
@@ -57,12 +46,11 @@ export interface ResumeFile {
 
 export interface Step1Data {
   situation: SeekerSituation | null;
-  experienceLevel: ExperienceLevel | null;
 }
 
 export interface Step2Data {
   primaryRole: string;
-  yearsOfExperience: YearsOfExperience | null;
+  yearsOfExperience: number | null;
   skills: string[];
 }
 

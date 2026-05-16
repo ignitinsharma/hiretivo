@@ -47,15 +47,7 @@ function getBioExcerpt(bio: string | null | undefined): string | null {
  * Returns true when the plan is allowed by billing access rules.
  */
 function isPaidPlan(plan: string | null | undefined): boolean {
-  if (plan === PlanTier.PRO) {
-    return canAccessRecruiterPaidFeature(PlanTier.PRO);
-  }
-
-  if (plan === PlanTier.ENTERPRISE) {
-    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
-  }
-
-  return canAccessRecruiterPaidFeature(PlanTier.FREE);
+  return canAccessRecruiterPaidFeature(plan);
 }
 
 /*

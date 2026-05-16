@@ -11,7 +11,7 @@ export interface SeekerApplicationItem {
   salaryRange?: string;
   jobType?: string;
   workType?: string | null;
-  experienceLevel?: string | null;
+  minYearsExperience?: number | null;
   companyIndustry?: string | null;
   companySize?: string | null;
   companyFundingType?: string | null;

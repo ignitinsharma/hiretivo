@@ -149,7 +149,7 @@ export async function createJobFromOnboarding(data: {
         salaryMin: parsed.data.salaryMin,
         salaryMax: parsed.data.salaryMax,
         currency: CurrencyCode.USD,
-        experienceLevel: parsed.data.experienceLevel,
+        minYearsExperience: parsed.data.minYearsExperience,
         category: parsed.data.category,
       },
     });

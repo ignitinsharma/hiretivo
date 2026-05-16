@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getDodoProductId, DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
-import { CurrencyCode, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { CurrencyCode, PlanTier, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -44,17 +44,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { planId, period, currency } = parsed.data;
-  const productId = getDodoProductId(period, currency);
+  const productId = getDodoProductId(planId, period, currency);
   if (!productId) {
     return NextResponse.json(
       { error: "Selected plan is not available" },
-      { status: 400 },
-    );
-  }
-
-  if (planId !== PricingTierId.PRO) {
-    return NextResponse.json(
-      { error: "Selected plan is not available for self-serve checkout" },
       { status: 400 },
     );
   }
@@ -93,7 +86,7 @@ export async function POST(req: NextRequest) {
     return_url: `${appUrl}/pricing/success`,
     metadata: {
       userId: session.user.id,
-      plan: DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO,
+      plan: DODO_PRODUCT_TO_PLAN[productId] ?? planId,
     },
   });
 

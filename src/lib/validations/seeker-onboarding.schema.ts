@@ -3,7 +3,6 @@ import { CurrencyCode, OnboardingJobType, SEEKER_CURRENCY_VALUES, SEEKER_ONBOARD
 
 export type {
   SeekerSituation,
-  ExperienceLevel,
   YearsOfExperience,
   JobType,
   JobCategory,
@@ -21,7 +20,6 @@ export type {
 
 export const step1Schema = z.object({
   situation: z.enum(['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD']).optional(),
-  experienceLevel: z.enum(['ENTRY', 'JUNIOR', 'MID', 'SENIOR']).optional(),
 });
 
 export const salaryRangeSchema = z.object({
@@ -40,7 +38,7 @@ export const salaryRangeSchema = z.object({
 
 export const step2Schema = z.object({
   primaryRole: z.string().min(1, 'Primary role is required'),
-  yearsOfExperience: z.enum(['LESS_THAN_1', '1_TO_3', '3_TO_5', '5_TO_10', 'MORE_THAN_10']).optional(),
+  yearsOfExperience: z.number().int().min(0).max(50).optional(),
   skills: z.array(z.string()),
 });
 
@@ -81,9 +79,6 @@ export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors:
   if (!data.situation) {
     errors.push("Please select your current situation");
   }
-  if (!data.experienceLevel) {
-    errors.push("Please select your experience level");
-  }
   return { valid: errors.length === 0, errors };
 }
 
@@ -92,8 +87,8 @@ export function validateSeekerStep2(data: Step2Input): { valid: boolean; errors:
   if (!data.primaryRole?.trim()) {
     errors.push("Primary role is required");
   }
-  if (!data.yearsOfExperience) {
-    errors.push("Please select years of experience");
+  if (typeof data.yearsOfExperience !== "number" || data.yearsOfExperience < 0) {
+    errors.push("Please enter years of experience");
   }
   if (!data.skills || data.skills.length === 0) {
     errors.push("At least one skill is required");
@@ -126,14 +121,6 @@ export const SUGGESTED_SKILLS = [
   'Tailwind',
   'Docker',
   'GraphQL',
-] as const;
-
-export const YEARS_OPTIONS = [
-  { value: 'LESS_THAN_1', label: '< 1 yr' },
-  { value: '1_TO_3', label: '1–3 yrs' },
-  { value: '3_TO_5', label: '3–5 yrs' },
-  { value: '5_TO_10', label: '5–10 yrs' },
-  { value: 'MORE_THAN_10', label: '10+ yrs' },
 ] as const;
 
 export const JOB_CATEGORIES = [

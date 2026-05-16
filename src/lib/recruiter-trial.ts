@@ -9,8 +9,8 @@ export function isRecruiterTrialActive(): boolean {
 export function getRecruiterJobLimit(
   plan: PlanTier | string | null | undefined,
 ): number | null {
-  if (plan === PlanTier.ENTERPRISE) return null;
-  if (plan === PlanTier.PRO) return 10;
+  if (plan === PlanTier.SCALE || plan === PlanTier.GROWTH) return null;
+  if (plan === PlanTier.STARTER) return 2;
   if (isRecruiterTrialActive()) return 4;
-  return 1;
+  return 0;
 }

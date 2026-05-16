@@ -12,7 +12,7 @@ interface ApplicationApiItem {
   salaryRange: string;
   jobType: string;
   workType: string | null;
-  experienceLevel: string | null;
+  minYearsExperience: number | null;
   companyIndustry: string | null;
   companySize: string | null;
   companyFundingType: string | null;
@@ -34,7 +34,7 @@ export const applicationService = {
       salaryRange: application.salaryRange,
       jobType: application.jobType,
       workType: application.workType,
-      experienceLevel: application.experienceLevel,
+      minYearsExperience: application.minYearsExperience,
       companyIndustry: application.companyIndustry,
       companySize: application.companySize,
       companyFundingType: application.companyFundingType,

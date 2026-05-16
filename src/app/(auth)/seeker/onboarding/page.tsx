@@ -12,11 +12,9 @@ import type { SeekerOnboardingStep } from "@/modules/seeker-onboarding/types/see
 import type {
   Availability,
   Currency,
-  ExperienceLevel,
   JobCategory,
   JobType,
   SeekerSituation,
-  YearsOfExperience,
 } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
 
 export default async function SeekerOnboardingPage() {
@@ -43,6 +41,7 @@ export default async function SeekerOnboardingPage() {
           salaryMax: true,
           currency: true,
           availability: true,
+          yearsExperience: true,
           resumeKey: true,
           skills: { select: { skill: { select: { name: true } } } },
         },
@@ -76,14 +75,10 @@ export default async function SeekerOnboardingPage() {
           userName: user?.name?.split(" ")[0] ?? "there",
           step1: {
             situation: profile?.situation as SeekerSituation | null | undefined,
-            experienceLevel: draft.seeker?.experienceLevel as ExperienceLevel | null | undefined,
           },
           step2: {
             primaryRole: profile?.primaryRole ?? "",
-            yearsOfExperience: draft.seeker?.yearsOfExperience as
-              | YearsOfExperience
-              | null
-              | undefined,
+            yearsOfExperience: profile?.yearsExperience ?? null,
             skills: profile?.skills.map(({ skill }) => skill.name) ?? [],
           },
           step3: {

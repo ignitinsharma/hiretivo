@@ -12,7 +12,20 @@ import {
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
-import type { FakeJob } from "@/constants/fake-jobs";
+
+export interface FakeJob {
+  id: string;
+  title: string;
+  companyName: string;
+  companyLogo: string;
+  workType: string;
+  jobType: string | null;
+  category: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  currency: string | null;
+  isNew: boolean;
+}
 
 function formatSalaryRange(
   min: number | null,

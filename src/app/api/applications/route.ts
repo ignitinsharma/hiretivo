@@ -174,7 +174,7 @@ export async function GET() {
           currency: true,
           jobType: true,
           workType: true,
-          experienceLevel: true,
+          minYearsExperience: true,
           skills: {
             select: {
               skill: { select: { name: true } },
@@ -218,7 +218,7 @@ export async function GET() {
       ),
       jobType: application.job.jobType,
       workType: application.job.workType,
-      experienceLevel: application.job.experienceLevel,
+      minYearsExperience: application.job.minYearsExperience,
       companyIndustry: application.job.recruiter.recruiterProfile?.industry ?? null,
       companySize: application.job.recruiter.recruiterProfile?.companySize ?? null,
       companyFundingType:

@@ -47,7 +47,7 @@ interface JobFormValues {
   title: string;
   category: string;
   jobType: string;
-  experienceLevel: string;
+  minYearsExperience: string;
   salaryMin: string;
   salaryMax: string;
   currency: string;
@@ -282,7 +282,7 @@ export function PostJobModal() {
       title: "",
       category: "",
       jobType: "",
-      experienceLevel: "",
+      minYearsExperience: "",
       salaryMin: "",
       salaryMax: "",
       currency: CurrencyCode.USD,
@@ -341,7 +341,8 @@ export function PostJobModal() {
         jobType: j.jobType
           ? (FORM_VALUE_BY_JOB_TYPE[j.jobType as JobType] ?? "")
           : "",
-        experienceLevel: j.experienceLevel || "",
+        minYearsExperience:
+          j.minYearsExperience != null ? String(j.minYearsExperience) : "",
         salaryMin: j.salaryMin != null ? String(j.salaryMin) : "",
         salaryMax: j.salaryMax != null ? String(j.salaryMax) : "",
         currency: j.currency ?? CurrencyCode.USD,
@@ -359,7 +360,7 @@ export function PostJobModal() {
         title: "",
         category: "",
         jobType: "",
-        experienceLevel: "",
+        minYearsExperience: "",
         salaryMin: "",
         salaryMax: "",
         currency: CurrencyCode.USD,
@@ -400,7 +401,9 @@ export function PostJobModal() {
           ? data.externalApplyUrl
           : undefined,
       workType,
-      experienceLevel: data.experienceLevel,
+      minYearsExperience: data.minYearsExperience
+        ? Number.parseInt(data.minYearsExperience, 10)
+        : undefined,
       category: data.category,
       salaryMin,
       salaryMax,
@@ -460,9 +463,9 @@ export function PostJobModal() {
     postedAt: "Preview",
     jobType: watch("jobType"),
     workType,
-    experienceLevel: watch("experienceLevel")
-      ? toTitleCase(watch("experienceLevel"))
-      : "Not Specified",
+    minYearsExperience: watch("minYearsExperience")
+      ? Number.parseInt(watch("minYearsExperience"), 10)
+      : null,
     companyIndustry: watch("category") ? toTitleCase(watch("category")) : "General",
     description: watch("description") ? watch("description") : null,
   };
@@ -642,38 +645,14 @@ export function PostJobModal() {
             </div>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Experience Level <span className="text-red-500">*</span>
+                Min. years experience
               </Label>
-              <Controller
-                control={control}
-                name="experienceLevel"
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <>
-                    <Select
-                      value={field.value}
-                      onValueChange={(v) => {
-                        field.onChange(v);
-                      }}
-                    >
-                      <SelectTrigger
-                        className={inputErrorClass(!!errors.experienceLevel)}
-                      >
-                        <SelectValue placeholder="Select Level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="entry">Entry Level</SelectItem>
-                        <SelectItem value="mid">Mid-level</SelectItem>
-                        <SelectItem value="senior">Senior</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.experienceLevel && (
-                      <p className="text-xs text-red-500 mt-1">
-                        Experience level is required
-                      </p>
-                    )}
-                  </>
-                )}
+              <Input
+                type="number"
+                min={0}
+                max={50}
+                placeholder="e.g. 3"
+                {...register("minYearsExperience")}
               />
             </div>
           </div>

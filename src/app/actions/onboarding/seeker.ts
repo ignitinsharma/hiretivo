@@ -20,7 +20,6 @@ type CompleteSeekerOnboardingResult =
 // --- Step 1: Situation ---
 export async function saveStep1(data: {
   situation: string;
-  experienceLevel: string;
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
@@ -53,9 +52,6 @@ export async function saveStep1(data: {
       where: { id: session.user.id },
       data: {
         onboardingStep: nextProgressStep(user?.onboardingStep, 2),
-        onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
-          seeker: { experienceLevel: parsed.data.experienceLevel },
-        }),
       },
     }),
   ]);
@@ -66,7 +62,7 @@ export async function saveStep1(data: {
 // --- Step 2: Primary Role + Years + Skills ---
 export async function saveStep2(data: {
   primaryRole: string;
-  yearsOfExperience: string | null;
+  yearsOfExperience: number | null;
   skills: { skillId: string; level: string }[];
 }): Promise<ActionResult> {
   const session = await auth();
@@ -88,8 +84,15 @@ export async function saveStep2(data: {
 
     const profile = await tx.seekerProfile.upsert({
       where: { userId: session.user.id },
-      create: { userId: session.user.id, primaryRole: parsed.data.primaryRole },
-      update: { primaryRole: parsed.data.primaryRole },
+      create: {
+        userId: session.user.id,
+        primaryRole: parsed.data.primaryRole,
+        yearsExperience: parsed.data.yearsOfExperience,
+      },
+      update: {
+        primaryRole: parsed.data.primaryRole,
+        yearsExperience: parsed.data.yearsOfExperience,
+      },
       select: { id: true },
     });
 
@@ -111,9 +114,6 @@ export async function saveStep2(data: {
       where: { id: session.user.id },
       data: {
         onboardingStep: nextProgressStep(user?.onboardingStep, 3),
-        onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
-          seeker: { yearsOfExperience: parsed.data.yearsOfExperience },
-        }),
       },
     });
   });

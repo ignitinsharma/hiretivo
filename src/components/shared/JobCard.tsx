@@ -73,7 +73,13 @@ export function JobCard({
   const facts = [
     { icon: MapPin, label: formatEnumLabel(job.workType) ?? job.location },
     { icon: BriefcaseBusiness, label: formatEnumLabel(job.jobType) },
-    { icon: Clock, label: job.experienceLevel },
+    {
+      icon: Clock,
+      label:
+        job.minYearsExperience != null
+          ? `${job.minYearsExperience}+ years`
+          : null,
+    },
     { icon: Users, label: formatApplicantCount(job.applicantCount ?? 0) },
   ].filter((fact): fact is { icon: typeof MapPin; label: string } =>
     hasText(fact.label),

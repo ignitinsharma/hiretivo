@@ -1,15 +1,54 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { FAKE_JOBS, getDailyRotatingJobs } from "@/constants/fake-jobs";
-import { FakeJobCard } from "@/components/shared/FakeJobCard";
+import { FakeJobCard, type FakeJob } from "@/components/shared/FakeJobCard";
+
+const FEATURED_JOBS: FakeJob[] = [
+  {
+    id: "remote-fullstack",
+    title: "Senior Full-Stack Engineer",
+    companyName: "Hiretivo Labs",
+    companyLogo: "https://logo.clearbit.com/vercel.com",
+    workType: "Remote",
+    jobType: "Full-time",
+    category: "Engineering",
+    salaryMin: 120000,
+    salaryMax: 180000,
+    currency: "USD",
+    isNew: true,
+  },
+  {
+    id: "platform-engineer",
+    title: "Platform Engineer",
+    companyName: "Northstar Cloud",
+    companyLogo: "https://logo.clearbit.com/cloudflare.com",
+    workType: "Remote",
+    jobType: "Full-time",
+    category: "Infrastructure",
+    salaryMin: 110000,
+    salaryMax: 165000,
+    currency: "USD",
+    isNew: false,
+  },
+  {
+    id: "frontend-product",
+    title: "Frontend Product Engineer",
+    companyName: "SignalWorks",
+    companyLogo: "https://logo.clearbit.com/linear.app",
+    workType: "Remote",
+    jobType: "Contract",
+    category: "Product",
+    salaryMin: 90000,
+    salaryMax: 140000,
+    currency: "USD",
+    isNew: true,
+  },
+];
 
 /*
  * FeaturedJobsSection
  * Renders the homepage demo jobs grid with a daily rotating fake job batch.
  */
 export function FeaturedJobsSection() {
-  const jobs = getDailyRotatingJobs(FAKE_JOBS, 6);
-
   return (
     <section
       className="bg-brand-surface py-20 md:py-24"
@@ -39,7 +78,7 @@ export function FeaturedJobsSection() {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobs.map((job) => (
+          {FEATURED_JOBS.map((job) => (
             <FakeJobCard key={job.id} job={job} />
           ))}
         </div>

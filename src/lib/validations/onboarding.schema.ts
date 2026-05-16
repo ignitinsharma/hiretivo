@@ -5,12 +5,11 @@ import { WorkType, SkillLevel, JobType } from "@/constants/enums";
 
 export const step1Schema = z.object({
   situation: z.string().trim().min(1, "Situation is required").max(500, "Situation must be under 500 characters"),
-  experienceLevel: z.string().trim().max(100, "Experience level must be under 100 characters"),
 });
 
 export const step2Schema = z.object({
   primaryRole: z.string().trim().min(1, "Primary role is required").max(100, "Primary role must be under 100 characters"),
-  yearsOfExperience: z.string().nullable(),
+  yearsOfExperience: z.number().int().min(0).max(50).nullable(),
   skills: z.array(
     z.object({
       skillId: z.string().min(1, "Skill ID is required"),
@@ -46,7 +45,7 @@ export const createJobFromOnboardingSchema = z.object({
   title: z.string().trim().min(1, "Job title is required").max(200, "Job title must be under 200 characters"),
   description: z.string().trim().min(50, "Job description must be at least 50 characters").max(10000, "Job description must be under 10,000 characters"),
   jobType: z.nativeEnum(JobType),
-  experienceLevel: z.string().max(100).nullable(),
+  minYearsExperience: z.number().int().min(0).nullable(),
   category: z.string().max(100).nullable(),
   salaryMin: z.number().min(0).nullable(),
   salaryMax: z.number().min(0).nullable(),

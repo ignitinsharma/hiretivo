@@ -43,12 +43,17 @@ export async function POST(req: NextRequest) {
   }
 
   const canAccessInterviewScheduling = (plan: string | null | undefined): boolean => {
-  return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE || isRecruiterTrialActive();
+  return (
+    plan === PlanTier.STARTER ||
+    plan === PlanTier.GROWTH ||
+    plan === PlanTier.SCALE ||
+    isRecruiterTrialActive()
+  );
 };
 
   if (!canAccessInterviewScheduling(recruiter.plan)) {
     return NextResponse.json(
-      { error: "Interview scheduling requires Pro plan. Upgrade to unlock." },
+      { error: "Interview scheduling requires a paid recruiter plan. Upgrade to unlock." },
       { status: 403 },
     );
   }

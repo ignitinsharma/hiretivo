@@ -136,13 +136,13 @@ export async function POST(req: NextRequest) {
       const planName =
         currentPlan === PlanTier.FREE && jobLimit > 1
           ? 'Free trial'
-          : currentPlan === PlanTier.PRO
-            ? 'Pro'
+          : currentPlan === PlanTier.STARTER
+            ? 'Starter'
             : 'Free';
       const nextStep =
-        currentPlan === PlanTier.PRO
-          ? 'Contact sales for Enterprise.'
-          : 'Upgrade to Pro for more.';
+        currentPlan === PlanTier.STARTER
+          ? 'Upgrade to Growth for unlimited active jobs.'
+          : 'Upgrade to Starter for more.';
 
       return NextResponse.json(
         {
