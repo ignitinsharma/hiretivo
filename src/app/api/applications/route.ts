@@ -60,16 +60,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const engineerStatus = await prisma.user.findUnique({
+  const engineer = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { verificationStatus: true },
   });
-  if (engineerStatus?.verificationStatus !== VerificationStatus.VERIFIED) {
+  if (engineer?.verificationStatus !== VerificationStatus.VERIFIED) {
     return NextResponse.json(
       {
-        error: "Verification required",
-        code: "NOT_VERIFIED",
-        redirectTo: "/seeker/verification",
+        error: "Verification required to apply",
+        code: "VERIFICATION_REQUIRED",
+        verificationStatus: engineer?.verificationStatus ?? "NOT_SUBMITTED",
       },
       { status: 403 },
     );
@@ -91,8 +91,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { jobId, coverLetter } = parsed.data;
-  const resumeGateMessage =
-    "Upload your resume in Settings before applying. Go to /seeker/settings to continue.";
 
   const job = await prisma.job.findFirst({
     where: { id: jobId, status: JobStatus.OPEN },
@@ -121,11 +119,8 @@ export async function POST(req: NextRequest) {
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, resumeKey: true },
+    select: { id: true },
   });
-  if (!seekerProfile?.resumeKey) {
-    return NextResponse.json({ error: resumeGateMessage }, { status: 400 });
-  }
 
   let matchScore = 0;
   if (seekerProfile) {
@@ -148,6 +143,23 @@ export async function POST(req: NextRequest) {
       coverLetter: coverLetter ?? null,
       matchScore,
     },
+  });
+
+  // Auto-create EngineerUnlock so job recruiter can see full engineer PII (PIVM-03)
+  // source='application_auto' — does NOT deduct unlock quota
+  await prisma.engineerUnlock.upsert({
+    where: {
+      recruiterId_engineerId: {
+        recruiterId: job.recruiterId,
+        engineerId: session.user.id,
+      },
+    },
+    create: {
+      recruiterId: job.recruiterId,
+      engineerId: session.user.id,
+      source: "application_auto",
+    },
+    update: {}, // idempotent — no change if unlock already exists
   });
 
   return NextResponse.json(application, { status: 201 });
