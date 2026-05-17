@@ -13,13 +13,16 @@ export type {
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
 export const step1Schema = z.object({
-  situation: z.enum(['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD']).optional(),
+  situation: z.enum(
+    ['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD'],
+    { required_error: "Please select your current situation" },
+  ),
 });
 
 export const step2Schema = z.object({
   primaryRole: z.string().min(1, 'Primary role is required'),
   yearsOfExperience: z.number().int().min(0).max(50).optional(),
-  skills: z.array(z.string()),
+  skills: z.array(z.string()).min(1, 'At least one skill is required'),
 });
 
 export const resumeFileSchema = z.object({
@@ -35,17 +38,12 @@ export const step3Schema = z.object({
 });
 
 export const step4Schema = z.object({
-  targetSalaryMin: z.number().int().min(1000).max(1000000).nullable(),
-  targetSalaryMax: z.number().int().min(1000).max(1000000).nullable(),
-  timezoneOverlapHours: z.number().int().min(0).max(16).nullable(),
-  availableFrom: z.string().min(1).nullable(),
+  targetSalaryMin: z.number({ required_error: "Please enter minimum target salary", invalid_type_error: "Please enter minimum target salary" }).int().min(1000).max(1000000),
+  targetSalaryMax: z.number({ required_error: "Please enter maximum target salary", invalid_type_error: "Please enter maximum target salary" }).int().min(1000).max(1000000),
+  timezoneOverlapHours: z.number({ required_error: "Please enter timezone overlap hours", invalid_type_error: "Please enter timezone overlap hours" }).int().min(0).max(16),
+  availableFrom: z.string({ required_error: "Please select availability date" }).min(1),
 }).refine(
-  (data) => {
-    if (data.targetSalaryMin !== null && data.targetSalaryMax !== null) {
-      return data.targetSalaryMin <= data.targetSalaryMax;
-    }
-    return true;
-  },
+  (data) => data.targetSalaryMin <= data.targetSalaryMax,
   { message: "Maximum salary must be greater than or equal to minimum salary" },
 );
 
@@ -61,52 +59,6 @@ export type Step2Input = z.infer<typeof step2Schema>;
 export type Step3Input = z.infer<typeof step3Schema>;
 export type Step4Input = z.infer<typeof step4Schema>;
 export type SeekerOnboardingInput = z.infer<typeof seekerOnboardingSchema>;
-
-export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  if (!data.situation) {
-    errors.push("Please select your current situation");
-  }
-  return { valid: errors.length === 0, errors };
-}
-
-export function validateSeekerStep2(data: Step2Input): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  if (!data.primaryRole?.trim()) {
-    errors.push("Primary role is required");
-  }
-  if (typeof data.yearsOfExperience !== "number" || data.yearsOfExperience < 0) {
-    errors.push("Please enter years of experience");
-  }
-  if (!data.skills || data.skills.length === 0) {
-    errors.push("At least one skill is required");
-  }
-  return { valid: errors.length === 0, errors };
-}
-
-export function validateSeekerStep4(data: Step4Input): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  if (typeof data.targetSalaryMin !== "number") {
-    errors.push("Please enter minimum target salary");
-  }
-  if (typeof data.targetSalaryMax !== "number") {
-    errors.push("Please enter maximum target salary");
-  }
-  if (
-    typeof data.targetSalaryMin === "number" &&
-    typeof data.targetSalaryMax === "number" &&
-    data.targetSalaryMax < data.targetSalaryMin
-  ) {
-    errors.push("Maximum salary must be greater than or equal to minimum salary");
-  }
-  if (typeof data.timezoneOverlapHours !== "number") {
-    errors.push("Please enter timezone overlap hours");
-  }
-  if (!data.availableFrom) {
-    errors.push("Please select availability date");
-  }
-  return { valid: errors.length === 0, errors };
-}
 
 export const SUGGESTED_SKILLS = [
   'TypeScript',

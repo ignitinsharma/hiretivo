@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { validateSeekerStep2 } from "@/lib/validations/seeker-onboarding.schema";
+import { step2Schema } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep2 } from "@/app/actions/onboarding/seeker";
 import { SkillLevel } from "@/constants/enums";
@@ -61,14 +61,14 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
 
   const handleContinue = async () => {
     if (isSaving) return;
-    const validation = validateSeekerStep2({
+    const parsed = step2Schema.safeParse({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience ?? undefined,
       skills: step2.skills,
     });
 
-    if (!validation.valid) {
-      setErrors(validation.errors);
+    if (!parsed.success) {
+      setErrors(parsed.error.issues.map((i) => i.message));
       return;
     }
 

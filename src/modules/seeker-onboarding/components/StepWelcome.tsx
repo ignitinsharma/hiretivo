@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   SITUATION_OPTIONS,
-  validateSeekerStep1,
+  step1Schema,
 } from "@/lib/validations/seeker-onboarding.schema";
 import type { SeekerSituation } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
@@ -26,12 +26,12 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
 
   const handleContinue = async () => {
     if (isSaving) return;
-    const validation = validateSeekerStep1({
+    const parsed = step1Schema.safeParse({
       situation: step1.situation ?? undefined,
     });
 
-    if (!validation.valid) {
-      setErrors(validation.errors);
+    if (!parsed.success) {
+      setErrors(parsed.error.issues.map((i) => i.message));
       return;
     }
 

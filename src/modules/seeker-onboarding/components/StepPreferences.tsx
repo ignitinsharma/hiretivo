@@ -5,7 +5,7 @@ import { ArrowRight, ArrowLeft, Target } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { validateSeekerStep4 } from "@/lib/validations/seeker-onboarding.schema";
+import { step4Schema } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep4 } from "@/app/actions/onboarding/seeker";
 
@@ -27,15 +27,15 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
 
   const handleContinue = async () => {
     if (isSaving) return;
-    const validation = validateSeekerStep4({
+    const parsed = step4Schema.safeParse({
       targetSalaryMin: step4.targetSalaryMin,
       targetSalaryMax: step4.targetSalaryMax,
       timezoneOverlapHours: step4.timezoneOverlapHours,
       availableFrom: step4.availableFrom,
     });
 
-    if (!validation.valid) {
-      setErrors(validation.errors);
+    if (!parsed.success) {
+      setErrors(parsed.error.issues.map((i) => i.message));
       return;
     }
 
