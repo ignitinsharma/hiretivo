@@ -217,9 +217,6 @@ export async function skipSeekerResumeOnboarding(): Promise<ActionResult> {
   if (session.user.role !== UserRole.SEEKER) {
     return { success: false, error: "Forbidden" };
   }
-  if (session.user.role !== UserRole.SEEKER) {
-    return { success: false, error: "Forbidden" };
-  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
