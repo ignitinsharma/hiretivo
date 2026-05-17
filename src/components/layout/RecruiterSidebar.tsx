@@ -13,6 +13,7 @@ import { signOut } from "next-auth/react";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
 import { apiClient } from "@/lib/axios";
+import { useUIStore } from "@/store/use-ui-store";
 import {
   Tooltip,
   TooltipContent,
@@ -212,7 +213,6 @@ function RecruiterSidebarInner({
                   variant="primary"
                   className="transition-transform duration-200 hover:scale-105"
                   onClick={() => {
-                    const { useUIStore } = require("@/store/use-ui-store");
                     useUIStore.getState().openPostJobModal();
                   }}
                 >
@@ -228,7 +228,6 @@ function RecruiterSidebarInner({
               variant="primary"
               className="w-full py-3 px-4"
               onClick={() => {
-                const { useUIStore } = require("@/store/use-ui-store");
                 useUIStore.getState().openPostJobModal();
               }}
             >
