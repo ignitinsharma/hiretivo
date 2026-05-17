@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
+  ApplicationSource,
   ApplicationStatus,
   CurrencyCode,
   JobStatus,
@@ -257,7 +258,7 @@ export async function GET() {
       skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
       description: application.job.description ? stripHtml(application.job.description) : null,
       applicantCount: application.job._count.applications,
-      source: application.source ?? 'SEEKER_APPLIED',
+      source: application.source ?? ApplicationSource.SEEKER_APPLIED,
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
     })),

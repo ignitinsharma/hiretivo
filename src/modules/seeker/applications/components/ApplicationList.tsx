@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { applicationService } from "@/services/application.service"
 import { ApplicationCard } from "./ApplicationCard"
 import { ApplicationListSkeleton } from "./ApplicationListSkeleton"
+import { ApplicationSource } from "@/constants/enums"
 import type { SeekerApplicationItem } from "../types/application.types"
 
 /*
@@ -33,8 +34,8 @@ export function ApplicationList() {
     )
   }
 
-  const myApplications = applications.filter(a => a.source !== 'RECRUITER_INITIATED')
-  const recruiterInvites = applications.filter(a => a.source === 'RECRUITER_INITIATED')
+  const myApplications = applications.filter(a => a.source !== ApplicationSource.RECRUITER_INITIATED)
+  const recruiterInvites = applications.filter(a => a.source === ApplicationSource.RECRUITER_INITIATED)
 
   return (
     <div>
