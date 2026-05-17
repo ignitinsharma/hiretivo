@@ -8,8 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 /*
  * GET /api/recruiter/talent/[id]
- * Returns single engineer detail in locked or unlocked shape.
- * Locked: firstName/lastInitial + metadata. Unlocked: adds fullName/email/github/linkedin/resumeUrl.
+ * Returns full TalentDetail shape for the profile dialog.
+ * Locked: sensitive fields (email, links, resumeUrl) are nulled out.
+ * Unlocked: full profile with contact info and links.
  * Returns 404 if engineer not VERIFIED+profilePublic or hiddenUntil active.
  */
 export async function GET(
@@ -47,22 +48,60 @@ export async function GET(
       id: true,
       name: true,
       email: true,
+      image: true,
       hiretivoScore: true,
       timezoneOverlapHours: true,
       availableFrom: true,
       seekerProfile: {
         select: {
-          primaryRole: true,
+          headline: true,
+          bio: true,
+          location: true,
           yearsExperience: true,
+          primaryRole: true,
+          workPreference: true,
+          situation: true,
+          availability: true,
+          salaryMin: true,
+          salaryMax: true,
+          currency: true,
           salaryMinUsd: true,
           salaryMaxUsd: true,
-          githubUrl: true,
-          linkedinUrl: true,
           resumeKey: true,
+          websiteUrl: true,
+          linkedinUrl: true,
+          githubUrl: true,
+          twitterUrl: true,
           skills: {
             select: {
+              level: true,
               skill: { select: { name: true } },
             },
+            orderBy: { skill: { name: "asc" } },
+          },
+          workExperiences: {
+            select: {
+              id: true,
+              company: true,
+              title: true,
+              startDate: true,
+              endDate: true,
+              isCurrent: true,
+              description: true,
+              positionType: true,
+              skills: true,
+            },
+            orderBy: { startDate: "desc" },
+          },
+          educations: {
+            select: {
+              id: true,
+              institution: true,
+              graduationDate: true,
+              degree: true,
+              major: true,
+            },
+            orderBy: { graduationDate: "desc" },
           },
         },
       },
@@ -91,41 +130,70 @@ export async function GET(
   ]);
 
   const profile = engineer.seekerProfile;
-  const nameParts = (engineer.name ?? "").split(" ");
-  const firstName = nameParts[0] ?? "";
-  const lastInitial =
-    nameParts.length > 1
-      ? (nameParts[nameParts.length - 1]?.[0] ?? "")
-      : "";
 
-  const base = {
+  // Build the full TalentDetail-compatible shape
+  const detail = {
     id: engineer.id,
-    firstName,
-    lastInitial,
+    name: engineer.name,
+    email: unlock ? engineer.email : null,
+    image: engineer.image,
+    headline: profile?.headline ?? null,
+    bio: profile?.bio ?? null,
+    location: profile?.location ?? null,
+    yearsExperience: profile?.yearsExperience ?? null,
+    primaryRole: profile?.primaryRole ?? null,
+    availability: profile?.availability ?? null,
+    resumeKey: !!profile?.resumeKey,
+    resumeUrl:
+      unlock && profile?.resumeKey
+        ? resolveLogoUrl(profile.resumeKey)
+        : null,
+    skills:
+      profile?.skills.map((s) => ({
+        name: s.skill.name,
+        category: "",
+        level: s.level,
+      })) ?? [],
+    links: {
+      websiteUrl: unlock ? (profile?.websiteUrl ?? null) : null,
+      linkedinUrl: unlock ? (profile?.linkedinUrl ?? null) : null,
+      githubUrl: unlock ? (profile?.githubUrl ?? null) : null,
+      twitterUrl: unlock ? (profile?.twitterUrl ?? null) : null,
+    },
+    workExperiences:
+      profile?.workExperiences.map((we) => ({
+        id: we.id,
+        company: we.company,
+        title: we.title,
+        startDate: we.startDate,
+        endDate: we.endDate,
+        isCurrent: we.isCurrent,
+        description: we.description,
+        positionType: we.positionType,
+        skills: we.skills,
+      })) ?? [],
+    educations:
+      profile?.educations.map((e) => ({
+        id: e.id,
+        institution: e.institution,
+        graduationDate: e.graduationDate,
+        degree: e.degree,
+        major: e.major,
+      })) ?? [],
+    profile: {
+      workPreference: profile?.workPreference ?? null,
+      situation: profile?.situation ?? null,
+      salaryMin: profile?.salaryMin ?? null,
+      salaryMax: profile?.salaryMax ?? null,
+      currency: profile?.currency ?? null,
+    },
+    // Keep backward-compatible fields for existing consumers
     hiretivoScore: engineer.hiretivoScore ?? 0,
-    role: profile?.primaryRole ?? "",
-    yearsExperience: profile?.yearsExperience ?? 0,
-    skills: profile?.skills.map((s) => s.skill.name) ?? [],
-    salaryMinUsd: profile?.salaryMinUsd ?? 0,
-    salaryMaxUsd: profile?.salaryMaxUsd ?? 0,
     timezoneOverlapHours: engineer.timezoneOverlapHours ?? 0,
     availableFrom: engineer.availableFrom?.toISOString() ?? null,
     isUnlocked: !!unlock,
     isSaved: !!savedRecord,
   };
 
-  if (!unlock) return NextResponse.json({ data: base });
-
-  return NextResponse.json({
-    data: {
-      ...base,
-      fullName: engineer.name ?? "",
-      email: engineer.email ?? "",
-      githubUrl: profile?.githubUrl ?? null,
-      linkedinUrl: profile?.linkedinUrl ?? null,
-      resumeUrl: profile?.resumeKey
-        ? resolveLogoUrl(profile.resumeKey)
-        : null,
-    },
-  });
+  return NextResponse.json({ data: detail });
 }
