@@ -54,7 +54,7 @@ export async function sendPasswordResetEmail(email: string): Promise<void> {
         <h2>Reset your password</h2>
         <p>Click the link below to choose a new password. This link expires in ${RESET_EXPIRY_MINUTES} minutes.</p>
         <p>
-          <a href="${url}" style="display:inline-block;padding:12px 24px;background:#5952e5;color:white;border-radius:9999px;text-decoration:none;font-weight:600;">Reset password</a>
+          <a href="${url}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">Reset password</a>
         </p>
         <p style="color:#888;font-size:14px;">If you didn't request this, you can safely ignore this email.</p>
       </div>
