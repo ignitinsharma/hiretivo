@@ -6,7 +6,7 @@ import { computeWeightedJobMatch } from '@/lib/match'
 import { sendJobMatchNotification } from '@/lib/email/job-match-notification'
 import { format } from 'date-fns'
 
-const CRON_SECRET = process.env.CRON_SECRET ?? 'local-dev-secret'
+const CRON_SECRET = process.env.CRON_SECRET
 const MATCH_THRESHOLD = 60
 
 /*
@@ -17,6 +17,11 @@ const MATCH_THRESHOLD = 60
  * Schedule: daily at 09:00 UTC (vercel.json)
  */
 export async function GET(req: NextRequest) {
+  if (!CRON_SECRET) {
+    console.error('[job-match-notif] CRON_SECRET not configured — endpoint disabled')
+    return new NextResponse('Server configuration error', { status: 500 })
+  }
+
   const authHeader = req.headers.get('authorization')
   if (authHeader !== `Bearer ${CRON_SECRET}`) {
     return new NextResponse('Unauthorized', { status: 401 })
