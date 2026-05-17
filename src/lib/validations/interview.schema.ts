@@ -38,7 +38,7 @@ export const RescheduleInterviewSchema = ScheduleInterviewBaseSchema.omit({
 
 export const RecruiterProfileSettingsSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  companyName: z.string().min(1, "Company name is required").max(100),
+  companyName: z.string().min(1, "Company name is required").max(100).optional(),
   bio: z.string().max(500).optional(),
   companySize: z.string().max(50).optional(),
   industry: z.string().max(100).optional(),

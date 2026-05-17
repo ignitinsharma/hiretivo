@@ -89,7 +89,6 @@ export function RecruiterProfileSection({
       <div className="grid gap-4 md:grid-cols-2">
         <Input placeholder="Name" {...form.register("name")} disabled={!isEditing || isSaving} />
         <Input className="bg-slate-50" value={settings.email} readOnly />
-        <Input className="hidden" {...form.register("companyName")} />
       </div>
     </form>
   );
