@@ -17,11 +17,7 @@ import { formatApplicantCount } from "@/lib/jobs/format-applicant-count";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
 
 const formatDetail = (str: string) =>
-  str
-    .replace(/_/g, " ")
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  str.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 interface JobCardProps {
   job: JobListItem;
