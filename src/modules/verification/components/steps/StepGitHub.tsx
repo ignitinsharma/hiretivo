@@ -40,13 +40,13 @@ export function StepGitHub({ value, onChange, onNext }: StepGitHubProps) {
     setPublicRepoCount(null);
 
     try {
-      const response = await fetch("/api/engineer/github-scan", {
+      const response = await fetch("/api/github/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ githubUrl }),
       });
       const result = (await response.json()) as {
-        status?: "success" | "private" | "not_found" | "timeout";
+        status?: "success" | "private" | "not_found" | "error";
         publicRepoCount?: number;
       };
 
