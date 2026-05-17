@@ -31,7 +31,9 @@ function formatSalaryRange(
         ? "£"
         : cur === CurrencyCode.EUR
           ? "€"
-          : "";
+          : cur === CurrencyCode.INR
+            ? "₹"
+            : "";
   if (!min && !max) return "Not specified";
   const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : "";
   const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : "";
