@@ -62,8 +62,8 @@ export async function GET(req: NextRequest) {
       seekerProfile: {
         select: {
           yearsExperience: true,
-          salaryMin: true,
-          salaryMax: true,
+          salaryMinUsd: true,
+          salaryMaxUsd: true,
           skills: { select: { skill: { select: { name: true } } } },
         },
       },
@@ -94,8 +94,8 @@ export async function GET(req: NextRequest) {
         matchScore: computeWeightedJobMatch({
           engineerSkills,
           jobRequiredSkills: job.skills.map(s => s.skill.name),
-          engineerSalaryMin: engineer.seekerProfile?.salaryMin ?? null,
-          engineerSalaryMax: engineer.seekerProfile?.salaryMax ?? null,
+          engineerSalaryMin: engineer.seekerProfile?.salaryMinUsd ?? null,
+          engineerSalaryMax: engineer.seekerProfile?.salaryMaxUsd ?? null,
           jobSalaryMin: job.salaryMin ?? null,
           jobSalaryMax: job.salaryMax ?? null,
           engineerYearsExp: engineer.seekerProfile?.yearsExperience ?? null,
