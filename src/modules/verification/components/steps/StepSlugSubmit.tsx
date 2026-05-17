@@ -120,7 +120,7 @@ export function StepSlugSubmit({
     formData.githubUrl.trim().startsWith("https://github.com/") &&
     formData.legalName.trim().length >= 2 &&
     formData.bio.trim().split(/\s+/).filter(Boolean).length >= 100 &&
-    formData.topProjects.some(
+    formData.topProjects.every(
       (project) =>
         project.name.trim() &&
         project.description.trim() &&
