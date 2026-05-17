@@ -1,5 +1,14 @@
 import { resend } from '@/lib/resend'
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export interface JobMatchItem {
   id: string
   title: string
@@ -32,8 +41,8 @@ export async function sendJobMatchNotification(
       (j) =>
         `<tr>
           <td style="padding:12px 0;border-bottom:1px solid #e5e7eb">
-            <a href="https://hiretivo.com/jobs/${j.id}" style="font-weight:600;color:#0a0a0a;text-decoration:none">${j.title}</a>
-            <span style="color:#6b7280"> at ${j.companyName}</span>
+            <a href="https://hiretivo.com/jobs/${escapeHtml(j.id)}" style="font-weight:600;color:#0a0a0a;text-decoration:none">${escapeHtml(j.title)}</a>
+            <span style="color:#6b7280"> at ${escapeHtml(j.companyName)}</span>
           </td>
           <td style="padding:12px 0;border-bottom:1px solid #e5e7eb;text-align:right">
             <span style="background:#7560ff;color:#fff;font-size:12px;font-weight:600;padding:2px 10px;border-radius:9999px">${j.matchScore}% match</span>
