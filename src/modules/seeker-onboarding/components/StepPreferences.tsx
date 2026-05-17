@@ -76,13 +76,13 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
     <div className="w-full max-w-2xl mx-auto">
       <div className="space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
-            <Target className="w-6 h-6 text-primary" />
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-primary/10 mb-4">
+            <Target className="w-6 h-6 text-brand-primary" />
           </div>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-2xl font-semibold text-brand-foreground">
             What are you looking for?
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-brand-foreground-muted">
             We&apos;ll only show you jobs that match.
           </p>
         </div>
