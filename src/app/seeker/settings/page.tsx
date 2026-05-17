@@ -132,8 +132,8 @@ export default function SeekerSettingsPage() {
   return (
     <>
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-slate-900">Profile Settings</h1>
-        <p className="text-slate-500 mt-1">
+        <h1 className="text-3xl font-bold text-brand-foreground">Profile Settings</h1>
+        <p className="text-brand-foreground-muted mt-1">
           Manage your profile details and account security.
         </p>
       </div>
