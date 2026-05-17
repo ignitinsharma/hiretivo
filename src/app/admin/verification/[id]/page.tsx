@@ -22,7 +22,9 @@ function getProjectSummaries(value: unknown): ProjectSummary[] {
   if (!Array.isArray(value)) return [];
 
   return value.filter((project): project is ProjectSummary => {
-    return typeof project === "object" && project !== null;
+    if (typeof project !== "object" || project === null) return false;
+    const p = project as Record<string, unknown>;
+    return typeof p.name === "string" || typeof p.description === "string" || typeof p.url === "string";
   });
 }
 
