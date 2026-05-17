@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import type { CreateApplicationInput } from '@/lib/validations/application';
 import type { SeekerApplicationItem } from '@/modules/seeker/applications/types/application.types';
+import { format } from 'date-fns';
 
 interface ApplicationApiItem {
   id: string;
@@ -41,10 +42,7 @@ export const applicationService = {
       companyFundingType: application.companyFundingType,
       skills: application.skills,
       source: application.source,
-      appliedAt: new Date(application.appliedAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }),
+      appliedAt: format(new Date(application.appliedAt), 'MMM d, yyyy'),
     }));
   },
 };
