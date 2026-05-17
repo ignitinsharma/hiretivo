@@ -134,7 +134,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       { status: 409 },
     );
   }
-  if (engineer.verificationStatus !== VerificationStatus.IN_REVIEW) {
+  if (engineer.verificationStatus === VerificationStatus.PENDING) {
+    await prisma.user.update({
+      where: { id: params.id },
+      data: { verificationStatus: VerificationStatus.IN_REVIEW },
+    });
+  } else if (engineer.verificationStatus !== VerificationStatus.IN_REVIEW) {
     return NextResponse.json(
       { error: "Engineer is not IN_REVIEW and cannot be reviewed" },
       { status: 409 },

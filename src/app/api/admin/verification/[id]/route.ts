@@ -115,13 +115,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
   const alreadyInReview = engineer.verificationStatus === VerificationStatus.IN_REVIEW;
 
-  if (engineer.verificationStatus === VerificationStatus.PENDING) {
-    await prisma.user.update({
-      where: { id: params.id },
-      data: { verificationStatus: VerificationStatus.IN_REVIEW },
-    });
-  }
-
   return NextResponse.json({
     engineer:
       engineer.verificationStatus === VerificationStatus.PENDING

@@ -105,13 +105,6 @@ export default async function AdminVerificationDetailPage({
   const alreadyInReview =
     engineer.verificationStatus === VerificationStatus.IN_REVIEW;
 
-  if (engineer.verificationStatus === VerificationStatus.PENDING) {
-    await prisma.user.update({
-      where: { id: params.id },
-      data: { verificationStatus: VerificationStatus.IN_REVIEW },
-    });
-  }
-
   const projects = getProjectSummaries(engineer.seekerProfile?.topProjects);
   const canReview =
     engineer.verificationStatus === VerificationStatus.PENDING ||
