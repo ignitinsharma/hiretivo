@@ -14,6 +14,15 @@ const ratelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(10, "1 m"),
 });
 
+function canAccessInterviewScheduling(plan: string | null | undefined): boolean {
+  return (
+    plan === PlanTier.STARTER ||
+    plan === PlanTier.GROWTH ||
+    plan === PlanTier.SCALE ||
+    isRecruiterTrialActive()
+  );
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -41,15 +50,6 @@ export async function POST(req: NextRequest) {
   if (!recruiter) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
-
-  const canAccessInterviewScheduling = (plan: string | null | undefined): boolean => {
-  return (
-    plan === PlanTier.STARTER ||
-    plan === PlanTier.GROWTH ||
-    plan === PlanTier.SCALE ||
-    isRecruiterTrialActive()
-  );
-};
 
   if (!canAccessInterviewScheduling(recruiter.plan)) {
     return NextResponse.json(
