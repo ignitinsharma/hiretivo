@@ -116,6 +116,53 @@ Plans:
 - [x] 12-02-PLAN.md — FeedbackRequest cron + /feedback/[token] form + POST /api/feedback/employer + score recalc
 - [x] 12-03-PLAN.md — Recruiter pipeline kanban at /recruiter/pipeline (6 columns, click-to-move)
 
+## v1.1 — Trust & Conversion
+
+- [ ] **Phase 13: Real-time Availability Signal** - Engineer seeking status toggle (Actively Looking / Open to Offers / Not Looking); colored dot on talent pool cards; recruiter filter; stops wasted outreach.
+- [ ] **Phase 14: Recruiter Analytics Dashboard** - Hiring funnel metrics tab on /recruiter/pipeline (Unlocked→Responded→Interviewed→Hired); conversion %, avg days per stage, credits used vs quota; drives FREE→paid upgrades.
+- [ ] **Phase 15: Company Verification** - Domain-email auto-verification (Level 1) + LinkedIn URL + work email admin review (Level 2); "Verified Company ✓" badge on job cards and detail page; fixes trust asymmetry.
+
+### Phase 13: Real-time Availability Signal
+**Goal**: Engineers set a seeking status visible to recruiters on talent pool cards, filtering, and public profiles — stopping wasted recruiter outreach on passive candidates.
+**Depends on**: Phase 10 (talent pool cards, /api/recruiter/talent route), Phase 9 (User model, engineer settings)
+**Requirements**: [AVAIL-01, AVAIL-02, AVAIL-03, AVAIL-04, AVAIL-05]
+**Branch**: feat/pivot-2.0
+**Success Criteria** (what must be TRUE):
+  1. `SeekingStatus` enum (ACTIVELY_LOOKING, OPEN_TO_OFFERS, NOT_LOOKING) added to Prisma schema and `User` model with default OPEN_TO_OFFERS; migration applied.
+  2. Engineer settings page has a 3-state toggle (colored: green/yellow/gray) that persists seekingStatus via PATCH /api/seeker/settings.
+  3. Talent pool cards show colored availability dot (green=actively, yellow=open, gray=not looking) next to engineer name.
+  4. Talent pool page has filter (All / Actively Looking / Open to Offers) that passes seekingStatus query param to /api/recruiter/talent; NOT_LOOKING engineers still appear (unlike hiddenUntil) but can be filtered out.
+  5. Public engineer profile /e/[slug] displays availability status label below name.
+**Plans**: TBD
+
+### Phase 14: Recruiter Analytics Dashboard
+**Goal**: Add a hiring funnel analytics tab to /recruiter/pipeline so recruiters see ROI (credits spent → hires) and are motivated to upgrade from FREE to paid plans.
+**Depends on**: Phase 12 (pipeline kanban at /recruiter/pipeline), Phase 10 (EngineerUnlock model), Phase 11 (Application model with source/status)
+**Requirements**: [ANLT-01, ANLT-02, ANLT-03, ANLT-04, ANLT-05]
+**Branch**: feat/pivot-2.0
+**Success Criteria** (what must be TRUE):
+  1. /recruiter/pipeline has two tabs: "Pipeline" (existing kanban) and "Analytics" (new).
+  2. Analytics tab shows funnel: Unlocked → Applied/Invited → Interviewing → Offered → Hired — with count and conversion % at each stage.
+  3. Analytics tab shows avg days per stage (computed from Application status transition timestamps).
+  4. Analytics tab shows credits used (EngineerUnlock count in billing period) vs quota remaining (from plan tier).
+  5. Analytics tab shows top 5 skills across unlocked engineers (to guide job requirements).
+  6. All data fetched via GET /api/recruiter/analytics (new route); rate-limited with dataFetchRateLimiter (30/min); no new schema required.
+**Plans**: TBD
+
+### Phase 15: Company Verification
+**Goal**: Fix the trust asymmetry where engineers are hard-verified but any recruiter can post jobs with a Gmail. Show "Verified Company ✓" badge on job cards and detail pages so engineers trust the posting.
+**Depends on**: Phase 8 (RecruiterProfile model, recruiter settings), Phase 9 (admin panel foundation)
+**Requirements**: [CMPV-01, CMPV-02, CMPV-03, CMPV-04, CMPV-05, CMPV-06]
+**Branch**: feat/pivot-2.0
+**Success Criteria** (what must be TRUE):
+  1. RecruiterProfile schema extended with: companyVerified Boolean @default(false), companyVerifiedAt DateTime?, companyLinkedInUrl String?, companyWorkEmail String?; migration applied.
+  2. Level 1 auto-verification: POST /api/recruiter/verify-company checks if recruiter email domain matches companyWebsite domain (e.g. nitin@stripe.com + stripe.com) → sets companyVerified=true immediately.
+  3. Level 2 manual verification: if email is freemail (Gmail/Yahoo/Hotmail/Outlook/Proton) → recruiter prompted to submit companyLinkedInUrl + companyWorkEmail → admin review queue.
+  4. Recruiter settings page has a "Company Verification" section showing current status + Level 1 auto-check result + Level 2 submission form (if applicable).
+  5. Job cards (JobCard.tsx), job detail page (/jobs/[id]), and talent pool recruiter info show "Verified Company ✓" green badge or "Unverified" gray badge.
+  6. Admin panel has a pending company verifications list at /admin/companies where admin can approve/reject Level 2 submissions.
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -133,3 +180,6 @@ Plans:
 | 10. Talent Pool & Public Profiles (Pivot v2) | 5/5 | Complete    | 2026-05-16 |
 | 11. Job Match & Notifications (Pivot v2) | 3/3 | Complete    | 2026-05-16 |
 | 12. AI Review & Feedback (Pivot v2) | 3/3 | Complete    | 2026-05-16 |
+| 13. Real-time Availability Signal (v1.1) | 0/TBD | Not started | - |
+| 14. Recruiter Analytics Dashboard (v1.1) | 0/TBD | Not started | - |
+| 15. Company Verification (v1.1) | 0/TBD | Not started | - |

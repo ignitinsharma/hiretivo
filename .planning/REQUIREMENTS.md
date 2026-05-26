@@ -108,6 +108,34 @@
 - [ ] **PIVAI-04**: Hiretivo Score recalc on feedback submit: newScore = VerificationReview.scoreGiven×0.85 + (avgRating/5×100)×0.15.
 - [ ] **PIVAI-05**: Admin override of AI recommendation logged in VerificationReview.aiSummary.overrideReason (EU AI Act audit trail).
 
+## v1.1 Requirements — Trust & Conversion
+
+### Phase 13: Real-time Availability Signal (AVAIL)
+
+- [ ] **AVAIL-01**: `SeekingStatus` enum (ACTIVELY_LOOKING, OPEN_TO_OFFERS, NOT_LOOKING) added to Prisma schema; `User.seekingStatus` field defaults to OPEN_TO_OFFERS; migration applied to Neon.
+- [ ] **AVAIL-02**: Engineer settings page has a 3-state seeking status toggle with colored indicators (green=Actively Looking, yellow=Open to Offers, gray=Not Looking); persists via PATCH /api/seeker/settings.
+- [ ] **AVAIL-03**: Talent pool cards show a colored availability dot and status label next to engineer name; sourced from User.seekingStatus.
+- [ ] **AVAIL-04**: Talent pool page (/recruiter/talent) has a filter UI (All / Actively Looking / Open to Offers) that passes `seekingStatus` query param to GET /api/recruiter/talent; NOT_LOOKING engineers still appear unless filtered out (unlike hiddenUntil which removes them entirely).
+- [ ] **AVAIL-05**: Public engineer profile /e/[slug] displays availability status label below name when profilePublic=true.
+
+### Phase 14: Recruiter Analytics Dashboard (ANLT)
+
+- [ ] **ANLT-01**: /recruiter/pipeline has two tabs: "Pipeline" (existing kanban, unchanged) and "Analytics" (new tab).
+- [ ] **ANLT-02**: Analytics tab shows hiring funnel: Unlocked → Applied/Invited → Interviewing → Offered → Hired — with count and conversion % at each stage; data from Application + EngineerUnlock tables.
+- [ ] **ANLT-03**: Analytics tab shows average days per stage (Application status transition timestamps); displays as a horizontal bar or table.
+- [ ] **ANLT-04**: Analytics tab shows credits used in current billing period (EngineerUnlock count) vs quota remaining (derived from PlanTier).
+- [ ] **ANLT-05**: Analytics tab shows top 5 skills across all unlocked engineers (to inform job requirement decisions).
+- [ ] **ANLT-06**: GET /api/recruiter/analytics route returns all analytics data in one call; rate-limited with dataFetchRateLimiter (30/min); no new Prisma schema required.
+
+### Phase 15: Company Verification (CMPV)
+
+- [ ] **CMPV-01**: RecruiterProfile Prisma model extended with: `companyVerified Boolean @default(false)`, `companyVerifiedAt DateTime?`, `companyLinkedInUrl String?`, `companyWorkEmail String?`; migration applied.
+- [ ] **CMPV-02**: POST /api/recruiter/verify-company implements Level 1 auto-verification: if recruiter email domain matches companyWebsite domain → companyVerified=true, companyVerifiedAt=now() immediately.
+- [ ] **CMPV-03**: Level 2 manual flow: if recruiter email is freemail (Gmail/Yahoo/Hotmail/Outlook/ProtonMail) → store companyLinkedInUrl + companyWorkEmail → queue for admin review (companyVerified stays false until admin approves).
+- [ ] **CMPV-04**: Recruiter settings page has a "Company Verification" section: shows current verification status badge, runs Level 1 check on submit, shows Level 2 form if applicable.
+- [ ] **CMPV-05**: JobCard component, job detail page (/jobs/[id]), and talent pool recruiter context show "Verified Company ✓" green badge (companyVerified=true) or "Unverified" gray badge (companyVerified=false).
+- [ ] **CMPV-06**: Admin panel has /admin/companies page listing pending Level 2 verifications; admin can approve (sets companyVerified=true + companyVerifiedAt) or reject (sends email to recruiter).
+
 ## v2 Requirements
 
 ### Notifications
