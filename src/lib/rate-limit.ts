@@ -43,7 +43,7 @@ export const dataFetchRateLimiter = createRateLimiter("data-fetch", 30, "1 m");
 export const searchRateLimiter = createRateLimiter("search", 20, "1 m");
 
 /** Authenticated write endpoints such as save, dismiss, update, cancel. */
-export const writeRateLimiter = createRateLimiter("write", 10, "1 m");
+export const writeRateLimiter = createRateLimiter("write", 5, "1 m");
 
 /** Public signup/registration-style endpoints. */
 export const registerRateLimiter = createRateLimiter("register", 10, "1 m");
