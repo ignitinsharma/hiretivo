@@ -5,6 +5,8 @@
  * TalentFilters: query params for talent pool browse.
  */
 
+import type { SeekingStatus } from "@/constants/enums";
+
 export interface LockedEngineer {
   id: string;
   firstName: string;
@@ -17,6 +19,7 @@ export interface LockedEngineer {
   salaryMaxUsd: number;
   timezoneOverlapHours: number;
   availableFrom: string | null;
+  seekingStatus: SeekingStatus;
   isUnlocked: boolean;
   isSaved: boolean;
 }
@@ -41,6 +44,7 @@ export interface TalentFilters {
   salaryMax?: number;
   timezoneOverlapMin?: number;
   availableBefore?: string;
+  seekingStatus?: SeekingStatus;
 }
 
 export interface SavedEngineerItem extends LockedEngineer {
