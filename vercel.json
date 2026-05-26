@@ -20,14 +20,6 @@
     {
       "path": "/api/cron/stale-jobs",
       "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/cron/job-match-notification",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/feedback-requests",
-      "schedule": "0 8 * * *"
     }
   ]
 }

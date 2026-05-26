@@ -1,7 +1,6 @@
 import { apiClient } from '@/lib/axios';
 import type { CreateApplicationInput } from '@/lib/validations/application';
 import type { SeekerApplicationItem } from '@/modules/seeker/applications/types/application.types';
-import { format } from 'date-fns';
 
 interface ApplicationApiItem {
   id: string;
@@ -13,12 +12,11 @@ interface ApplicationApiItem {
   salaryRange: string;
   jobType: string;
   workType: string | null;
-  minYearsExperience: number | null;
+  experienceLevel: string | null;
   companyIndustry: string | null;
   companySize: string | null;
   companyFundingType: string | null;
   skills: string[];
-  source?: string;
   status: SeekerApplicationItem['status'];
   appliedAt: string;
 }
@@ -36,13 +34,15 @@ export const applicationService = {
       salaryRange: application.salaryRange,
       jobType: application.jobType,
       workType: application.workType,
-      minYearsExperience: application.minYearsExperience,
+      experienceLevel: application.experienceLevel,
       companyIndustry: application.companyIndustry,
       companySize: application.companySize,
       companyFundingType: application.companyFundingType,
       skills: application.skills,
-      source: application.source,
-      appliedAt: format(new Date(application.appliedAt), 'MMM d, yyyy'),
+      appliedAt: new Date(application.appliedAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
     }));
   },
 };

@@ -33,7 +33,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // 4. Plan gate — FREE plan cannot access AI features (bypass during trial or for admin)
   if (!admin && session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
-      { error: 'AI skill suggestions require a paid plan.' },
+      { error: 'AI skill suggestions require a PRO or ENTERPRISE plan.' },
       { status: 403 },
     );
   }

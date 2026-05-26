@@ -18,10 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import {
-  EducationInputSchema,
-  type EducationInput,
-} from "@/lib/validations/seeker.schema";
+import { EducationInputSchema, type EducationInput } from "@/lib/validations/seeker.schema";
 import { seekerService } from "@/services/seeker.service";
 import type { EducationItem } from "@/services/seeker.service";
 import { useSeekerSettingsData } from "@/modules/seeker/settings/components/PersonalInfoSection";
@@ -49,12 +46,7 @@ interface EducationFormProps {
  * Inline form for adding or editing a single education entry.
  * Validates using EducationInputSchema via React Hook Form + Zod.
  */
-function EducationForm({
-  initialValues,
-  onSave,
-  onCancel,
-  isSaving,
-}: EducationFormProps) {
+function EducationForm({ initialValues, onSave, onCancel, isSaving }: EducationFormProps) {
   const form = useForm<EducationInput>({
     resolver: zodResolver(EducationInputSchema),
     defaultValues: initialValues ?? {
@@ -72,18 +64,14 @@ function EducationForm({
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1.5 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">
-            Institution
-          </label>
+          <label className="text-sm font-semibold text-slate-700">Institution</label>
           <Input
             {...form.register("institution")}
             placeholder="MIT"
             aria-invalid={!!form.formState.errors.institution}
           />
           {form.formState.errors.institution && (
-            <p className="text-xs text-red-500">
-              {form.formState.errors.institution.message}
-            </p>
+            <p className="text-xs text-red-500">{form.formState.errors.institution.message}</p>
           )}
         </div>
 
@@ -107,9 +95,7 @@ function EducationForm({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-700">
-            Major / Field of Study
-          </label>
+          <label className="text-sm font-semibold text-slate-700">Major / Field of Study</label>
           <Input {...form.register("major")} placeholder="Computer Science" />
         </div>
 
@@ -194,10 +180,7 @@ export function EducationSection() {
   });
 
   /** Normalises an EducationInput (with optional fields) into an EducationItem shape. */
-  const toEducationItem = (
-    id: string,
-    data: EducationInput,
-  ): EducationItem => ({
+  const toEducationItem = (id: string, data: EducationInput): EducationItem => ({
     id,
     institution: data.institution,
     graduationDate: data.graduationDate ?? null,
@@ -217,9 +200,7 @@ export function EducationSection() {
 
   /** Updates an existing education entry by id and triggers a save. */
   const handleEdit = (id: string, data: EducationInput): void => {
-    const newEntries = entries.map((e) =>
-      e.id === id ? { ...e, ...data } : e,
-    );
+    const newEntries = entries.map((e) => (e.id === id ? { ...e, ...data } : e));
     setEntries(newEntries);
     saveMutation.mutate(newEntries);
   };
@@ -232,16 +213,11 @@ export function EducationSection() {
   };
 
   return (
-    <section
-      id="education"
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white"
-    >
+    <section id="education" className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Education</h3>
-          <p className="text-sm text-slate-500">
-            Share your academic background.
-          </p>
+          <p className="text-sm text-slate-500">Share your academic background.</p>
         </div>
         <Button
           type="button"
@@ -315,14 +291,12 @@ export function EducationSection() {
                         disabled={saveMutation.isPending}
                         aria-label={`Remove ${entry.institution}`}
                       >
-                        <Trash2
-                          className="h-4 w-4 text-red-500"
-                          aria-hidden="true"
-                        />
+                        <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
                 )}
+                <Separator className="mt-4" />
               </div>
             ))}
 

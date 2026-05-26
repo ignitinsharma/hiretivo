@@ -1,35 +1,76 @@
-/*
- * TALENT_MARKETPLACE_STATS
- * Marketing proof numbers for the Hiretivo talent marketplace homepage.
- * Updated for Pivot v2: engineer-first, US/EU startup positioning.
- */
-export const TALENT_MARKETPLACE_STATS = {
-  verifiedEngineers: "500+",
-  avgTimeToHire: "7 days",
-  avgHiretivoScore: "78/100",
-  usEuStartups: "120+",
+import type { LucideIcon } from "lucide-react";
+import {
+  Code2,
+  Palette,
+  PackageCheck,
+  Megaphone,
+  TrendingUp,
+  Headphones,
+} from "lucide-react";
+
+export const HOMEPAGE_DISPLAY_STATS = {
+  heroRemoteJobs: "300+",
+  activeJobs: "300+",
+  companiesHiring: "120+",
+  jobSeekers: "10k+",
 } as const;
 
-export const THREE_PILLARS = [
+export interface CategoryShowcaseItem {
+  title: string;
+  count: string;
+  roles: string;
+  salary: string;
+  skills: string[];
+  icon: LucideIcon;
+}
+
+export const CATEGORY_SHOWCASE: CategoryShowcaseItem[] = [
   {
-    id: "verified",
-    title: "Verified Before You See Them",
-    description:
-      "Every engineer passes GitHub review, live code assessment, and identity check before joining. You see Hiretivo Score — not resumes.",
-    icon: "shield-check",
+    title: "Engineering",
+    count: "1,240 roles",
+    roles: "Frontend, Backend, Full-stack",
+    salary: "$120k - $210k",
+    skills: ["React", "Node.js", "AI"],
+    icon: Code2,
   },
   {
-    id: "transparent",
-    title: "Salary Transparency Both Ways",
-    description:
-      "Engineers post real USD salary expectations. You post real budget. No negotiation theater — just fit or no fit.",
-    icon: "dollar-sign",
+    title: "Design",
+    count: "450 roles",
+    roles: "Product, Brand, UX systems",
+    salary: "$90k - $165k",
+    skills: ["Figma", "UX", "SaaS"],
+    icon: Palette,
   },
   {
-    id: "india-first",
-    title: "India-First Identity",
-    description:
-      "Engineers stay in India. You get GMT+5:30 engineers who overlap 4–8h with your US/EU working hours. No relocation, no visa.",
-    icon: "map-pin",
+    title: "Product",
+    count: "380 roles",
+    roles: "Growth, Platform, AI products",
+    salary: "$130k - $220k",
+    skills: ["Roadmaps", "Data", "Remote"],
+    icon: PackageCheck,
   },
-] as const;
+  {
+    title: "Marketing",
+    count: "320 roles",
+    roles: "Lifecycle, SEO, Demand gen",
+    salary: "$85k - $150k",
+    skills: ["SEO", "CRM", "B2B"],
+    icon: Megaphone,
+  },
+  {
+    title: "Sales",
+    count: "215 roles",
+    roles: "AE, SDR, Partnerships",
+    salary: "$100k - $180k",
+    skills: ["Pipeline", "SaaS", "Outbound"],
+    icon: TrendingUp,
+  },
+  {
+    title: "Customer Support",
+    count: "190 roles",
+    roles: "Success, Support, Operations",
+    salary: "$70k - $130k",
+    skills: ["CS", "Ops", "Async"],
+    icon: Headphones,
+  },
+];

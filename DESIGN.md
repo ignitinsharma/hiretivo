@@ -22,7 +22,7 @@ Hiretivo is a skills-based remote job portal with a clean, professional aestheti
 - **Primary Purple** (`#7560ff`): Primary CTA buttons, focus rings, active states
 - **Primary Dark** (`#5a47d9`): Hover state for primary buttons
 - **White** (`#ffffff`): Background, button text on purple
-- **Light Gray** (`#f8f8f8`): Subtle background sections, surfaces
+- **Light Gray** (`#f9fafb`): Subtle background sections, surfaces
 - **Border Gray** (`#e5e7eb`): All borders, dividers, secondary buttons
 
 ### Text Colors
@@ -40,7 +40,7 @@ Hiretivo is a skills-based remote job portal with a clean, professional aestheti
 ### Surfaces
 
 - **Background** (`#ffffff`): Page background, card backgrounds
-- **Surface** (`#f8f8f8`): Light background sections
+- **Surface** (`#f9fafb`): Light background sections, hover states
 - **Surface Hover** (`#f3f4f6`): Hover state for surfaces
 - **Grid Line** (`rgba(0,0,0,0.04)`): Hero grid pattern lines
 
@@ -232,7 +232,7 @@ White bg:                   bg-white
 Muted text:                 text-[#6b7280]
 Secondary text:             text-[#9ca3af]
 Border:                     border-[#e5e7eb]
-Surface bg:                 bg-[#f8f8f8]
+Surface bg:                 bg-[#f9fafb]
 Surface hover:              bg-[#f3f4f6]
 ```
 
@@ -333,7 +333,7 @@ background-size: 64px 64px;
 - Secondary button: White with gray border
 - Body text: Gray (`#6b7280`)
 - Borders: Light gray (`#e5e7eb`)
-- Surface: Light gray (`#f8f8f8`)
+- Surface: Light gray (`#f9fafb`)
 
 ### Example Component Prompts
 

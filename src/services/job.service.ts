@@ -44,7 +44,7 @@ export interface JobMutationPayload {
   applyType: ApplyType;
   externalApplyUrl?: string;
   workType?: WorkType;
-  minYearsExperience?: number;
+  experienceLevel?: string;
   category?: string;
   salaryMin?: number | null;
   salaryMax?: number | null;

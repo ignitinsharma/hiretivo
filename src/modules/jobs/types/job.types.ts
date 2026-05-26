@@ -11,7 +11,7 @@ export interface JobListItem {
   postedAt?: string;
   jobType?: string;
   workType?: string | null;
-  minYearsExperience?: number | null;
+  experienceLevel?: string | null;
   companyIndustry?: string | null;
   companySize?: string | null;
   companyFundingType?: string | null;
@@ -51,7 +51,7 @@ export interface JobDetailResponse {
     salaryMin: number | null;
     salaryMax: number | null;
     currency: string | null;
-    minYearsExperience: number | null;
+    experienceLevel: string | null;
     category: string | null;
     applyType: string;
     externalApplyUrl: string | null;

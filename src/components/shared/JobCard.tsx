@@ -10,22 +10,21 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
-import { ApplyButton } from "@/modules/jobs/components/ApplyButton";
-import { UserRole, VerificationStatus } from "@/constants/enums";
 import { cn } from "@/lib/utils";
 import { formatApplicantCount } from "@/lib/jobs/format-applicant-count";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
 
 const formatDetail = (str: string) =>
-  str.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  str
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 
 interface JobCardProps {
   job: JobListItem;
   isSaved?: boolean;
   onApply?: () => void;
-  onLoginRequired?: () => void;
-  verificationStatus?: VerificationStatus | null;
-  userRole?: UserRole | string | null;
   onToggleSave?: () => void;
   onNotInterested?: () => void;
   isDismissing?: boolean;
@@ -51,9 +50,6 @@ export function JobCard({
   job,
   isSaved = false,
   onApply,
-  onLoginRequired,
-  verificationStatus = null,
-  userRole = null,
   onToggleSave,
   onNotInterested,
   isDismissing = false,
@@ -77,13 +73,7 @@ export function JobCard({
   const facts = [
     { icon: MapPin, label: formatEnumLabel(job.workType) ?? job.location },
     { icon: BriefcaseBusiness, label: formatEnumLabel(job.jobType) },
-    {
-      icon: Clock,
-      label:
-        job.minYearsExperience != null
-          ? `${job.minYearsExperience}+ years`
-          : null,
-    },
+    { icon: Clock, label: job.experienceLevel },
     { icon: Users, label: formatApplicantCount(job.applicantCount ?? 0) },
   ].filter((fact): fact is { icon: typeof MapPin; label: string } =>
     hasText(fact.label),
@@ -105,7 +95,7 @@ export function JobCard({
     <SeekerJobBaseCard
       className={cn(isCompact && "p-4")}
       jobHref={`/jobs/${job.id}`}
-      companyHref={null}
+      companyHref={job.companyId ? `/companies/${job.companyId}` : null}
       title={job.title}
       companyName={job.companyName}
       companyLogoUrl={job.companyLogoUrl}
@@ -163,20 +153,14 @@ export function JobCard({
                 Not interested
               </Button>
             )}
-            {onApply || onLoginRequired ? (
-              <ApplyButton
-                jobId={job.id}
-                verificationStatus={verificationStatus}
-                userRole={userRole}
-                onApply={onApply ?? (() => undefined)}
-                onLoginRequired={onLoginRequired ?? (() => undefined)}
-                className="h-9 px-3 text-xs"
-              />
-            ) : (
-              <Button variant="primary" size="sm" disabled>
-                Apply Now
-              </Button>
-            )}
+            <Button
+              onClick={onApply}
+              variant="primary"
+              size="sm"
+              disabled={!onApply}
+            >
+              Apply Now
+            </Button>
           </div>
         )
       }

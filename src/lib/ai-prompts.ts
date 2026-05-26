@@ -4,8 +4,6 @@
  * Routes import from here — never inline prompts in route handlers.
  */
 
-import type { VerificationRubricScores } from "@/lib/verification/rubric";
-
 // ---------------------------------------------------------------------------
 // Candidate Summary (INT-01)
 // ---------------------------------------------------------------------------
@@ -223,105 +221,5 @@ Example output format: ["TypeScript","React","Node.js","PostgreSQL","REST APIs",
 
 export const SKILL_SUGGEST_CONFIG = {
   max_tokens: 200,
-  temperature: 0.1,
-} as const;
-
-// ---------------------------------------------------------------------------
-// GitHub Analysis (Phase 12 — Admin AI Review)
-// ---------------------------------------------------------------------------
-
-/*
- * GITHUB_ANALYSIS_PROMPT
- * Prompt template for Claude Haiku to analyze a GitHub profile.
- * {GITHUB_DATA} is replaced with an inputSnapshot of typed GitHub fields.
- * No raw repo descriptions are sent to the AI (prompt injection guard).
- */
-export const GITHUB_ANALYSIS_PROMPT = `
-You are reviewing a GitHub profile for a software engineer applying for verification on Hiretivo, a talent marketplace for Indian engineers targeting US/EU startups.
-
-Analyze the following GitHub data and provide:
-1. A recommendation: APPROVE or REJECT
-2. Confidence: 0.0–1.0
-3. A score suggestion: 0–100 (quality of the engineer's work)
-4. Relevant rejection reasons from the predefined list (only if recommending REJECT)
-5. A brief summary for the admin
-
-GitHub data:
-{GITHUB_DATA}
-
-Respond in JSON:
-{
-  "recommendation": "APPROVE" | "REJECT",
-  "confidence": 0.0-1.0,
-  "scoreSuggestion": 0-100,
-  "reasons": string[],
-  "summary": string
-}
-`
-
-export interface GithubAnalysisOutput {
-  recommendation: 'APPROVE' | 'REJECT'
-  confidence: number
-  scoreSuggestion: number
-  reasons: string[]
-  summary: string
-  rubricScores?: VerificationRubricScores
-  strengthLevel?: 'WEAK' | 'PROMISING' | 'STRONG' | 'EXCEPTIONAL'
-  strengths?: string[]
-  gaps?: string[]
-}
-
-export const GITHUB_ANALYSIS_CONFIG = {
-  max_tokens: 400,
-  temperature: 0.1,
-} as const
-
-// ---------------------------------------------------------------------------
-// Full Verification AI Review (Admin-only)
-// ---------------------------------------------------------------------------
-
-export const VERIFICATION_AI_REVIEW_PROMPT = `
-You are assisting a Hiretivo admin with verification of a software engineer profile.
-The final decision and final score are made manually by the admin. Your output is only a private review draft.
-
-Evaluate the sanitized evidence snapshot:
-{PROFILE_EVIDENCE}
-
-Use this 100-point rubric:
-- github: 0-30 for GitHub/code evidence, including coding platform evidence
-- projects: 0-25 for practical project quality and clarity
-- workHistory: 0-20 for relevant work history and seniority
-- profile: 0-15 for profile completeness and clarity
-- trust: 0-10 for trust signals, consistency, video/social evidence
-
-Rules:
-- Do not claim you visited links. Only use the fields in the snapshot.
-- Coding profile links and stats strengthen the github/code evidence category; do not create a new category.
-- Be conservative when evidence is thin or self-reported.
-- Recommend REJECT when the profile lacks enough concrete code/project/work evidence.
-- Keep reasons aligned with Hiretivo rejection reason keys when possible.
-
-Respond only in JSON:
-{
-  "recommendation": "APPROVE" | "REJECT",
-  "confidence": 0.0-1.0,
-  "scoreSuggestion": 0-100,
-  "rubricScores": {
-    "github": 0-30,
-    "projects": 0-25,
-    "workHistory": 0-20,
-    "profile": 0-15,
-    "trust": 0-10
-  },
-  "strengthLevel": "WEAK" | "PROMISING" | "STRONG" | "EXCEPTIONAL",
-  "summary": "brief admin-facing summary",
-  "strengths": ["specific strength"],
-  "gaps": ["specific gap"],
-  "reasons": ["rejection_reason_key"]
-}
-`;
-
-export const VERIFICATION_AI_REVIEW_CONFIG = {
-  max_tokens: 900,
   temperature: 0.1,
 } as const;

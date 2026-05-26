@@ -42,16 +42,15 @@ export function SkillsTagInput({
     staleTime: 5 * 60 * 1000,
   });
 
-  const suggestions =
-    inputValue.trim().length > 0
-      ? allSkills
-          .filter(
-            (s) =>
-              s.name.toLowerCase().includes(inputValue.toLowerCase()) &&
-              !hasSkill(value, s.name),
-          )
-          .slice(0, 8)
-      : [];
+  const suggestions = inputValue.trim().length > 0
+    ? allSkills
+        .filter(
+          (s) =>
+            s.name.toLowerCase().includes(inputValue.toLowerCase()) &&
+            !hasSkill(value, s.name),
+        )
+        .slice(0, 8)
+    : [];
 
   const addSkillByName = (name: string) => {
     const trimmed = name.trim();
@@ -145,9 +144,7 @@ export function SkillsTagInput({
               <Plus className="mr-2 h-3 w-3 text-slate-400" />
               {skill.name}
               {skill.category && (
-                <span className="ml-auto text-xs text-slate-400">
-                  {skill.category}
-                </span>
+                <span className="ml-auto text-xs text-slate-400">{skill.category}</span>
               )}
             </button>
           ))}

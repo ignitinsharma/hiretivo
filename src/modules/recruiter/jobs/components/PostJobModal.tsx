@@ -47,7 +47,7 @@ interface JobFormValues {
   title: string;
   category: string;
   jobType: string;
-  minYearsExperience: string;
+  experienceLevel: string;
   salaryMin: string;
   salaryMax: string;
   currency: string;
@@ -282,7 +282,7 @@ export function PostJobModal() {
       title: "",
       category: "",
       jobType: "",
-      minYearsExperience: "",
+      experienceLevel: "",
       salaryMin: "",
       salaryMax: "",
       currency: CurrencyCode.USD,
@@ -341,8 +341,7 @@ export function PostJobModal() {
         jobType: j.jobType
           ? (FORM_VALUE_BY_JOB_TYPE[j.jobType as JobType] ?? "")
           : "",
-        minYearsExperience:
-          j.minYearsExperience != null ? String(j.minYearsExperience) : "",
+        experienceLevel: j.experienceLevel || "",
         salaryMin: j.salaryMin != null ? String(j.salaryMin) : "",
         salaryMax: j.salaryMax != null ? String(j.salaryMax) : "",
         currency: j.currency ?? CurrencyCode.USD,
@@ -360,7 +359,7 @@ export function PostJobModal() {
         title: "",
         category: "",
         jobType: "",
-        minYearsExperience: "",
+        experienceLevel: "",
         salaryMin: "",
         salaryMax: "",
         currency: CurrencyCode.USD,
@@ -401,9 +400,7 @@ export function PostJobModal() {
           ? data.externalApplyUrl
           : undefined,
       workType,
-      minYearsExperience: data.minYearsExperience
-        ? Number.parseInt(data.minYearsExperience, 10)
-        : undefined,
+      experienceLevel: data.experienceLevel,
       category: data.category,
       salaryMin,
       salaryMax,
@@ -463,9 +460,9 @@ export function PostJobModal() {
     postedAt: "Preview",
     jobType: watch("jobType"),
     workType,
-    minYearsExperience: watch("minYearsExperience")
-      ? Number.parseInt(watch("minYearsExperience"), 10)
-      : null,
+    experienceLevel: watch("experienceLevel")
+      ? toTitleCase(watch("experienceLevel"))
+      : "Not Specified",
     companyIndustry: watch("category") ? toTitleCase(watch("category")) : "General",
     description: watch("description") ? watch("description") : null,
   };
@@ -500,7 +497,7 @@ export function PostJobModal() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="h-10 bg-muted rounded-lg animate-pulse"
+                className="h-10 bg-slate-100 rounded-lg animate-pulse"
               />
             ))}
           </div>
@@ -645,14 +642,38 @@ export function PostJobModal() {
             </div>
             <div>
               <Label className="block text-sm font-semibold text-slate-700 mb-2">
-                Min. years experience
+                Experience Level <span className="text-red-500">*</span>
               </Label>
-              <Input
-                type="number"
-                min={0}
-                max={50}
-                placeholder="e.g. 3"
-                {...register("minYearsExperience")}
+              <Controller
+                control={control}
+                name="experienceLevel"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                      }}
+                    >
+                      <SelectTrigger
+                        className={inputErrorClass(!!errors.experienceLevel)}
+                      >
+                        <SelectValue placeholder="Select Level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="entry">Entry Level</SelectItem>
+                        <SelectItem value="mid">Mid-level</SelectItem>
+                        <SelectItem value="senior">Senior</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.experienceLevel && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Experience level is required
+                      </p>
+                    )}
+                  </>
+                )}
               />
             </div>
           </div>

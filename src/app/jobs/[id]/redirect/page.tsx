@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { ApplyType, JobStatus } from "@/constants/enums";
 import { appendHiretivoAttributionParams } from "@/lib/url/utm";
 import { ExternalApplyConfirmationDialog } from "@/components/shared/ExternalApplyConfirmationDialog";
-import { RedirectCountdown } from "./RedirectCountdown";
 
 interface ExternalRedirectionPageProps {
   params: { id: string };
@@ -88,7 +87,17 @@ export default async function ExternalRedirectionPage({
             </Button>
           </div>
 
-          {trackedUrl && <RedirectCountdown targetUrl={trackedUrl} />}
+          <div className="mt-10">
+            <div className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-3">
+              Redirecting in <span>5</span> seconds
+            </div>
+            <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+              <div
+                className="bg-primary h-full origin-left"
+                style={{ width: "100%" }}
+              />
+            </div>
+          </div>
         </section>
 
         <footer className="mt-8 text-center">

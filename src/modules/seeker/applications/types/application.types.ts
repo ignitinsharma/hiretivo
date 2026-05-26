@@ -11,13 +11,12 @@ export interface SeekerApplicationItem {
   salaryRange?: string;
   jobType?: string;
   workType?: string | null;
-  minYearsExperience?: number | null;
+  experienceLevel?: string | null;
   companyIndustry?: string | null;
   companySize?: string | null;
   companyFundingType?: string | null;
   skills?: string[];
   description?: string | null;
-  source?: string;
   status: ApplicationStatus;
   appliedAt: string;
 }

@@ -1,8 +1,15 @@
 import { z } from 'zod';
+import { CurrencyCode, OnboardingJobType, SEEKER_CURRENCY_VALUES, SEEKER_ONBOARDING_JOB_TYPE_VALUES } from '@/constants/enums';
 
 export type {
   SeekerSituation,
+  ExperienceLevel,
   YearsOfExperience,
+  JobType,
+  JobCategory,
+  Currency,
+  Availability,
+  SalaryRange,
   ResumeFile,
   Step1Data,
   Step2Data,
@@ -13,16 +20,28 @@ export type {
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
 export const step1Schema = z.object({
-  situation: z.enum(
-    ['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD'],
-    { message: "Please select your current situation" },
-  ),
+  situation: z.enum(['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD']).optional(),
+  experienceLevel: z.enum(['ENTRY', 'JUNIOR', 'MID', 'SENIOR']).optional(),
 });
+
+export const salaryRangeSchema = z.object({
+  min: z.number().nullable(),
+  max: z.number().nullable(),
+  currency: z.enum(SEEKER_CURRENCY_VALUES),
+}).refine(
+  (data) => {
+    if (data.min !== null && data.max !== null) {
+      return data.min <= data.max;
+    }
+    return true;
+  },
+  { message: 'Minimum salary cannot be greater than maximum salary' }
+);
 
 export const step2Schema = z.object({
   primaryRole: z.string().min(1, 'Primary role is required'),
-  yearsOfExperience: z.number().int().min(0).max(50).optional(),
-  skills: z.array(z.string()).min(1, 'At least one skill is required'),
+  yearsOfExperience: z.enum(['LESS_THAN_1', '1_TO_3', '3_TO_5', '5_TO_10', 'MORE_THAN_10']).optional(),
+  skills: z.array(z.string()),
 });
 
 export const resumeFileSchema = z.object({
@@ -38,14 +57,11 @@ export const step3Schema = z.object({
 });
 
 export const step4Schema = z.object({
-  targetSalaryMin: z.number({ message: "Please enter minimum target salary" }).int().min(1000).max(1000000),
-  targetSalaryMax: z.number({ message: "Please enter maximum target salary" }).int().min(1000).max(1000000),
-  timezoneOverlapHours: z.number({ message: "Select your live meeting availability" }).int().min(0).max(16),
-  availableFrom: z.string({ message: "Please select availability date" }).min(1),
-}).refine(
-  (data) => data.targetSalaryMin <= data.targetSalaryMax,
-  { message: "Maximum salary must be greater than or equal to minimum salary" },
-);
+  jobType: z.enum(SEEKER_ONBOARDING_JOB_TYPE_VALUES).optional(),
+  category: z.enum(['ENGINEERING', 'DESIGN', 'MARKETING', 'SALES', 'DEVOPS', 'PRODUCT', 'DATA', 'SUPPORT', 'OTHER']).optional(),
+  salaryRange: salaryRangeSchema,
+  availability: z.enum(['IMMEDIATELY', 'TWO_WEEKS', 'ONE_MONTH_PLUS']).optional(),
+});
 
 export const seekerOnboardingSchema = z.object({
   step1: step1Schema,
@@ -60,6 +76,45 @@ export type Step3Input = z.infer<typeof step3Schema>;
 export type Step4Input = z.infer<typeof step4Schema>;
 export type SeekerOnboardingInput = z.infer<typeof seekerOnboardingSchema>;
 
+export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!data.situation) {
+    errors.push("Please select your current situation");
+  }
+  if (!data.experienceLevel) {
+    errors.push("Please select your experience level");
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+export function validateSeekerStep2(data: Step2Input): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!data.primaryRole?.trim()) {
+    errors.push("Primary role is required");
+  }
+  if (!data.yearsOfExperience) {
+    errors.push("Please select years of experience");
+  }
+  if (!data.skills || data.skills.length === 0) {
+    errors.push("At least one skill is required");
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+export function validateSeekerStep4(data: Step4Input): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!data.jobType) {
+    errors.push("Please select job type");
+  }
+  if (!data.category) {
+    errors.push("Please select category");
+  }
+  if (!data.availability) {
+    errors.push("Please select availability");
+  }
+  return { valid: errors.length === 0, errors };
+}
+
 export const SUGGESTED_SKILLS = [
   'TypeScript',
   'Python',
@@ -71,6 +126,44 @@ export const SUGGESTED_SKILLS = [
   'Tailwind',
   'Docker',
   'GraphQL',
+] as const;
+
+export const YEARS_OPTIONS = [
+  { value: 'LESS_THAN_1', label: '< 1 yr' },
+  { value: '1_TO_3', label: '1–3 yrs' },
+  { value: '3_TO_5', label: '3–5 yrs' },
+  { value: '5_TO_10', label: '5–10 yrs' },
+  { value: 'MORE_THAN_10', label: '10+ yrs' },
+] as const;
+
+export const JOB_CATEGORIES = [
+  { value: 'ENGINEERING', label: 'Engineering' },
+  { value: 'DESIGN', label: 'Design' },
+  { value: 'MARKETING', label: 'Marketing' },
+  { value: 'SALES', label: 'Sales' },
+  { value: 'DEVOPS', label: 'DevOps' },
+  { value: 'PRODUCT', label: 'Product' },
+  { value: 'DATA', label: 'Data' },
+  { value: 'SUPPORT', label: 'Support' },
+  { value: 'OTHER', label: 'Other' },
+] as const;
+
+export const JOB_TYPES = [
+  { value: OnboardingJobType.FULL_TIME, label: 'Full-time', icon: 'work' },
+  { value: OnboardingJobType.CONTRACT, label: 'Contract', icon: 'sync' },
+  { value: OnboardingJobType.BOTH, label: 'Both', icon: 'bolt' },
+] as const;
+
+export const AVAILABILITY_OPTIONS = [
+  { value: 'IMMEDIATELY', label: 'Immediately' },
+  { value: 'TWO_WEEKS', label: '2 weeks notice' },
+  { value: 'ONE_MONTH_PLUS', label: '1 month+' },
+] as const;
+
+export const CURRENCIES = [
+  { value: CurrencyCode.USD, label: 'USD' },
+  { value: CurrencyCode.EUR, label: 'EUR' },
+  { value: CurrencyCode.GBP, label: 'GBP' },
 ] as const;
 
 export const SITUATION_OPTIONS = [
@@ -98,4 +191,11 @@ export const SITUATION_OPTIONS = [
     description: 'Starting my career',
     icon: '🎓'
   },
+] as const;
+
+export const EXPERIENCE_LEVELS = [
+  { value: 'ENTRY', label: 'Entry (0–1yr)' },
+  { value: 'JUNIOR', label: 'Junior (1–3yr)' },
+  { value: 'MID', label: 'Mid (3–6yr)' },
+  { value: 'SENIOR', label: 'Senior (6yr+)' },
 ] as const;

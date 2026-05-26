@@ -8,7 +8,6 @@ import type { SeekerApplicationItem } from "../types/application.types";
 
 interface ApplicationCardProps {
   application: SeekerApplicationItem;
-  isInvite?: boolean;
 }
 
 function formatEnumLabel(value?: string | null): string | null {
@@ -37,7 +36,7 @@ function formatDetail(str: string): string {
     .join(" ");
 }
 
-export function ApplicationCard({ application, isInvite }: ApplicationCardProps) {
+export function ApplicationCard({ application }: ApplicationCardProps) {
   const companyDetails = [
     application.companyIndustry,
     application.companyFundingType,
@@ -57,10 +56,7 @@ export function ApplicationCard({ application, isInvite }: ApplicationCardProps)
     },
     {
       icon: Clock,
-      label:
-        application.minYearsExperience != null
-          ? `${application.minYearsExperience}+ years`
-          : null,
+      label: application.experienceLevel,
     },
   ].filter((fact): fact is { icon: typeof MapPin; label: string } =>
     hasText(fact.label),
@@ -74,22 +70,15 @@ export function ApplicationCard({ application, isInvite }: ApplicationCardProps)
   return (
     <SeekerJobBaseCard
       jobHref={`/jobs/${application.jobId}`}
-      companyHref={null}
+      companyHref={application.companyId ? `/companies/${application.companyId}` : null}
       title={application.jobTitle}
       companyName={application.companyName}
       companyLogoUrl={application.companyLogoUrl}
       companyDetails={companyDetails}
       metaBadge={
-        <div className="flex items-center gap-2">
-          {isInvite && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 border border-brand-primary/20 px-2.5 py-1 text-xs font-medium text-brand-primary">
-              Invited by recruiter
-            </span>
-          )}
-          <span className="shrink-0 text-sm font-medium text-brand-foreground-secondary">
-            {isInvite ? 'Invited' : 'Applied'} {application.appliedAt}
-          </span>
-        </div>
+        <span className="shrink-0 text-sm font-medium text-brand-foreground-secondary">
+          Applied {application.appliedAt}
+        </span>
       }
       facts={facts}
       skills={skills}

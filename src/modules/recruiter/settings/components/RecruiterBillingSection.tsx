@@ -61,7 +61,7 @@ export function RecruiterBillingSection({
       <div className="mt-2 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-2xl font-semibold leading-snug tracking-tight text-brand-foreground">
-            {currentPlan}
+            {currentPlan === PlanTier.ENTERPRISE ? "Enterprise" : currentPlan}
           </h3>
           <p className="mt-1 text-sm font-medium text-brand-foreground-muted">
             {currentPlan === PlanTier.FREE
@@ -93,9 +93,7 @@ export function RecruiterBillingSection({
             </Button>
           )}
 
-          {(currentPlan === PlanTier.STARTER ||
-            currentPlan === PlanTier.GROWTH ||
-            currentPlan === PlanTier.SCALE) && (
+          {currentPlan === PlanTier.PRO && (
             <>
               <Button
                 type="button"
@@ -108,9 +106,15 @@ export function RecruiterBillingSection({
                 Manage billing
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/pricing">Explore plans</Link>
+                <Link href="/pricing">Explore higher plans</Link>
               </Button>
             </>
+          )}
+
+          {currentPlan === PlanTier.ENTERPRISE && (
+            <Button asChild variant="primary">
+              <Link href="/contact">Contact sales</Link>
+            </Button>
           )}
         </div>
       </div>

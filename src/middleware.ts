@@ -24,17 +24,9 @@ export default auth((req) => {
     }
   }
 
-  if (pathname.startsWith('/seeker/verification')) {
-    if (!req.auth?.user?.id) {
-      const loginUrl = new URL('/auth/seeker/login', req.url);
-      loginUrl.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ['/admin/:path*', '/seeker/verification/:path*'],
+  matcher: ['/admin/:path*'],
 };
