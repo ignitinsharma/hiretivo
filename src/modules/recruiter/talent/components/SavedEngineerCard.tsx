@@ -48,7 +48,7 @@ export function SavedEngineerCard({ engineer }: SavedEngineerCardProps) {
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-foreground-muted">
         <span>{engineer.yearsExperience} yrs exp</span>
         <span>${engineer.salaryMinUsd.toLocaleString()}–${engineer.salaryMaxUsd.toLocaleString()} /yr</span>
-        <span>{engineer.timezoneOverlapHours}h overlap</span>
+        <span>{engineer.timezoneOverlapHours}h live overlap</span>
       </div>
 
       {/* Unlocked PII */}

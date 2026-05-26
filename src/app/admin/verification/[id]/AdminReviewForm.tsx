@@ -10,6 +10,11 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { REJECTION_REASONS } from "@/constants/verification-reasons";
 import type { GithubAnalysisOutput } from "@/lib/ai-prompts";
+import {
+  calculateVerificationRubricTotal,
+  createRubricFromAiScore,
+  VERIFICATION_RUBRIC,
+} from "@/lib/verification/rubric";
 
 /*
  * AdminReviewForm
@@ -34,6 +39,7 @@ const reviewFormSchema = z
   .object({
     decision: z.enum(["APPROVED", "REJECTED"]),
     scoreGiven: z.number().int().min(0).max(100),
+    rubricScores: z.record(z.string(), z.number().int().min(0).max(30)),
     reasons: z.array(z.string()),
     notes: z.string().max(2000).optional(),
     overrideReason: z.string().max(500).optional(),
@@ -46,9 +52,27 @@ const reviewFormSchema = z
       return true;
     },
     { message: "Select at least one rejection reason", path: ["reasons"] },
+  )
+  .refine(
+    (data) => {
+      if (data.decision !== "REJECTED" || !data.reasons.includes("other")) {
+        return true;
+      }
+      return Boolean(data.notes?.trim());
+    },
+    { message: "Custom note is required when Other is selected", path: ["notes"] },
   );
 
 type ReviewFormValues = z.infer<typeof reviewFormSchema>;
+
+function getRubricDefaults(aiOutput: GithubAnalysisOutput | null) {
+  return aiOutput?.rubricScores ?? createRubricFromAiScore(aiOutput?.scoreSuggestion);
+}
+
+function getDecisionDefault(aiOutput: GithubAnalysisOutput | null): "APPROVED" | "REJECTED" {
+  if (!aiOutput) return "APPROVED";
+  return aiOutput.recommendation === "APPROVE" ? "APPROVED" : "REJECTED";
+}
 
 export function AdminReviewForm({
   engineerId,
@@ -64,12 +88,9 @@ export function AdminReviewForm({
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),
     defaultValues: {
-      decision: aiOutput
-        ? aiOutput.recommendation === "APPROVE"
-          ? "APPROVED"
-          : "REJECTED"
-        : undefined,
-      scoreGiven: aiOutput?.scoreSuggestion ?? undefined,
+      decision: getDecisionDefault(aiOutput),
+      scoreGiven: aiOutput?.scoreSuggestion ?? 0,
+      rubricScores: getRubricDefaults(aiOutput),
       reasons: aiOutput?.reasons ?? [],
       notes: "",
       overrideReason: "",
@@ -77,6 +98,8 @@ export function AdminReviewForm({
   });
 
   const watchedDecision = form.watch("decision");
+  const watchedRubricScores = form.watch("rubricScores");
+  const rubricTotal = calculateVerificationRubricTotal(watchedRubricScores);
 
   // Show override input when admin changes the AI-recommended decision
   useEffect(() => {
@@ -88,11 +111,18 @@ export function AdminReviewForm({
   // Set initial AI decision on mount
   useEffect(() => {
     if (aiOutput) {
-      const mapped =
-        aiOutput.recommendation === "APPROVE" ? "APPROVED" : "REJECTED";
+      const mapped = getDecisionDefault(aiOutput);
       setInitialDecision(mapped);
+      form.reset({
+        decision: mapped,
+        scoreGiven: aiOutput.scoreSuggestion,
+        rubricScores: getRubricDefaults(aiOutput),
+        reasons: aiOutput.reasons,
+        notes: "",
+        overrideReason: "",
+      });
     }
-  }, [aiOutput]);
+  }, [aiOutput, form]);
 
   async function onSubmit(data: ReviewFormValues) {
     setIsSubmitting(true);
@@ -100,7 +130,8 @@ export function AdminReviewForm({
     try {
       const body: Record<string, unknown> = {
         decision: data.decision,
-        score: data.decision === "APPROVED" ? data.scoreGiven : undefined,
+        score: data.decision === "APPROVED" ? rubricTotal : undefined,
+        rubricScores: data.rubricScores,
         reasons:
           data.decision === "REJECTED" ? data.reasons : undefined,
         customNote: data.notes?.trim() || undefined,
@@ -124,6 +155,10 @@ export function AdminReviewForm({
             scoreSuggestion: aiOutput.scoreSuggestion,
             reasons: aiOutput.reasons,
             summary: aiOutput.summary,
+            rubricScores: data.rubricScores,
+            strengthLevel: aiOutput.strengthLevel,
+            strengths: aiOutput.strengths,
+            gaps: aiOutput.gaps,
           },
           overrideReason: showOverrideInput
             ? data.overrideReason?.trim() || undefined
@@ -231,11 +266,57 @@ export function AdminReviewForm({
           placeholder="72"
           className="h-10 w-full rounded-lg border border-brand-border px-3 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
         />
+        <p className="mt-1 text-xs text-brand-foreground-muted">
+          Final score is calculated from the editable rubric below: {rubricTotal}/100.
+        </p>
         {form.formState.errors.scoreGiven && (
           <p className="mt-1 text-xs text-brand-danger">
             {form.formState.errors.scoreGiven.message}
           </p>
         )}
+      </div>
+
+      <div className="mb-4 rounded-xl border border-brand-border bg-brand-surface p-4">
+        <div className="mb-3">
+          <p className="text-sm font-semibold text-brand-foreground">
+            100-point rubric
+          </p>
+          <p className="text-xs text-brand-foreground-muted">
+            AI pre-fills these when available. If AI fails, score manually here.
+          </p>
+        </div>
+        <div className="space-y-3">
+          {VERIFICATION_RUBRIC.map((item) => (
+            <label
+              key={item.key}
+              className="grid gap-1 text-sm text-brand-foreground sm:grid-cols-[1fr_88px]"
+            >
+              <span>
+                {item.label}{" "}
+                <span className="text-brand-foreground-muted">/{item.max}</span>
+              </span>
+              <input
+                type="number"
+                min={0}
+                max={item.max}
+                {...form.register(`rubricScores.${item.key}` as const, {
+                  valueAsNumber: true,
+                  onChange: () => {
+                    window.setTimeout(() => {
+                      form.setValue(
+                        "scoreGiven",
+                        calculateVerificationRubricTotal(
+                          form.getValues("rubricScores"),
+                        ),
+                      );
+                    }, 0);
+                  },
+                })}
+                className="h-9 rounded-lg border border-brand-border bg-white px-3 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+              />
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Rejection reasons (visible only when REJECTED) */}
@@ -278,6 +359,11 @@ export function AdminReviewForm({
               {form.formState.errors.reasons.message}
             </p>
           )}
+          {form.watch("reasons").includes("other") && (
+            <p className="mt-2 text-xs text-brand-foreground-muted">
+              Add the custom explanation in notes. It is required for Other.
+            </p>
+          )}
         </div>
       )}
 
@@ -292,7 +378,11 @@ export function AdminReviewForm({
         <textarea
           id="review-notes"
           rows={3}
-          placeholder="Additional notes for this review"
+          placeholder={
+            form.watch("reasons").includes("other")
+              ? "Custom note required for Other"
+              : "Additional notes for this review"
+          }
           className="w-full resize-none rounded-lg border border-brand-border px-3 py-2 text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
           {...form.register("notes")}
         />

@@ -40,9 +40,9 @@ const PIPELINE_COLUMNS = [
 function ColumnSkeleton() {
   return (
     <div className="flex-shrink-0 w-72 lg:flex-1 lg:min-w-[11rem] flex flex-col gap-3">
-      <div className="rounded-lg bg-gray-100 h-8 w-full animate-pulse" />
+      <div className="rounded-lg bg-muted h-8 w-full animate-pulse" />
       {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="rounded-xl bg-gray-100 h-28 animate-pulse" />
+        <div key={i} className="rounded-xl bg-muted h-28 animate-pulse" />
       ))}
     </div>
   );

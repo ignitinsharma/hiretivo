@@ -67,7 +67,7 @@ export default function HowPage() {
           </div>
         </section>
 
-        <section className="py-24 bg-slate-50">
+        <section className="py-24 bg-muted">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-5/12">
@@ -140,7 +140,7 @@ export default function HowPage() {
                 <Card className="border-slate-200 p-6">
                   <CardContent className="p-0">
                     <div className="space-y-4">
-                      <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex items-center gap-3 p-4 bg-muted rounded-xl border border-slate-200">
                         <div className="w-12 h-12 rounded-full bg-brand-primary flex items-center justify-center text-white font-bold">
                           S
                         </div>
@@ -159,7 +159,7 @@ export default function HowPage() {
                       </div>
 
                       <div className="space-y-3">
-                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                        <div className="p-3 rounded-lg bg-muted border border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Check className="w-4 h-4 text-black" />
                             <span className="text-xs font-bold text-foreground">
@@ -170,7 +170,7 @@ export default function HowPage() {
                             MATCH
                           </span>
                         </div>
-                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                        <div className="p-3 rounded-lg bg-muted border border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Check className="w-4 h-4 text-black" />
                             <span className="text-xs font-bold text-foreground">
@@ -181,7 +181,7 @@ export default function HowPage() {
                             MATCH
                           </span>
                         </div>
-                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                        <div className="p-3 rounded-lg bg-muted border border-gray-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Check className="w-4 h-4 text-black" />
                             <span className="text-xs font-bold text-foreground">
@@ -348,7 +348,7 @@ export default function HowPage() {
           </div>
         </section>
 
-        <section className="py-24 bg-gray-100">
+        <section className="py-24 bg-muted">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="bg-white rounded-xl p-8 md:p-16 flex flex-col md:flex-row items-center gap-12">
               <div className="md:w-1/2">

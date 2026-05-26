@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { step4Schema } from "@/lib/validations/seeker-onboarding.schema";
+import { cn } from "@/lib/utils";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep4 } from "@/app/actions/onboarding/seeker";
 
@@ -13,6 +14,29 @@ interface StepPreferencesProps {
   onNext: () => void;
   onBack: () => void;
 }
+
+const MEETING_AVAILABILITY_OPTIONS = [
+  {
+    value: 2,
+    label: "Mostly async",
+    description: "0-2 hours per day",
+  },
+  {
+    value: 4,
+    label: "Some overlap",
+    description: "4 hours per day",
+  },
+  {
+    value: 6,
+    label: "Strong overlap",
+    description: "6 hours per day",
+  },
+  {
+    value: 8,
+    label: "Very flexible",
+    description: "8+ hours per day",
+  },
+] as const;
 
 export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
   const {
@@ -65,8 +89,8 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
       return "Please enter minimum target salary";
     if (errors.includes("Please enter maximum target salary"))
       return "Please enter maximum target salary";
-    if (errors.includes("Please enter timezone overlap hours"))
-      return "Please enter timezone overlap hours";
+    if (errors.includes("Select your live meeting availability"))
+      return "Select your live meeting availability";
     if (errors.includes("Please select availability date"))
       return "Please select availability date";
     return errors[0] ?? null;
@@ -142,20 +166,45 @@ export function StepPreferences({ onNext, onBack }: StepPreferencesProps) {
 
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
-                Timezone overlap hours
+                Live meeting availability
               </label>
-              <Input
-                type="number"
-                min={0}
-                max={16}
-                placeholder="e.g. 4"
-                value={step4.timezoneOverlapHours ?? ""}
-                onChange={(e) => {
-                  const value = Number.parseInt(e.target.value, 10);
-                  setTimezoneOverlapHours(Number.isNaN(value) ? null : value);
-                  setErrors([]);
-                }}
-              />
+              <p className="text-sm leading-relaxed text-brand-foreground-muted">
+                How much live meeting time can you reliably offer on a normal
+                workday? You do not need to calculate country-by-country
+                timezone differences. Recruiters use this as a rough
+                availability signal; exact interview times are scheduled later.
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {MEETING_AVAILABILITY_OPTIONS.map((option) => {
+                  const isSelected = step4.timezoneOverlapHours === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => {
+                        setTimezoneOverlapHours(option.value);
+                        setErrors([]);
+                      }}
+                      className={cn(
+                        "rounded-lg border bg-white p-4 text-left transition-colors",
+                        "focus:outline-none focus:ring-2 focus:ring-brand-primary/20",
+                        isSelected
+                          ? "border-brand-primary bg-brand-primary/5"
+                          : "border-brand-border hover:bg-brand-surface",
+                      )}
+                    >
+                      <span className="block text-sm font-semibold text-brand-foreground">
+                        {option.label}
+                      </span>
+                      <span className="mt-1 block text-sm text-brand-foreground-muted">
+                        {option.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-3">

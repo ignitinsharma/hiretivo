@@ -52,6 +52,8 @@ export async function GET() {
           salaryMinUsd: true,
           salaryMaxUsd: true,
           githubUsername: true,
+          githubUrl: true,
+          codingProfiles: true,
           videoIntroUrl: true,
           topProjects: true,
           profilePublic: true,

@@ -500,7 +500,7 @@ export function PostJobModal() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="h-10 bg-slate-100 rounded-lg animate-pulse"
+                className="h-10 bg-muted rounded-lg animate-pulse"
               />
             ))}
           </div>

@@ -17,8 +17,6 @@ export default async function SeekerDashboardPage() {
           verificationStatus: true,
           hiretivoScore: true,
           reapplyAfter: true,
-          profileSlug: true,
-          seekerProfile: { select: { profilePublic: true } },
           verificationReviews: {
             orderBy: { createdAt: "desc" },
             take: 1,
@@ -54,8 +52,6 @@ export default async function SeekerDashboardPage() {
           }
           hiretivoScore={verification?.hiretivoScore ?? null}
           reapplyAfter={verification?.reapplyAfter ?? null}
-          profileSlug={verification?.profileSlug ?? null}
-          profilePublic={verification?.seekerProfile?.profilePublic ?? false}
           lastReview={verification?.verificationReviews[0] ?? null}
         />
       </div>

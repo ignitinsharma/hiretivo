@@ -7,7 +7,7 @@ import {
   GITHUB_ANALYSIS_PROMPT,
   type GithubAnalysisOutput,
 } from "@/lib/ai-prompts";
-import { openrouter } from "@/lib/openrouter";
+import { getAIModel, openrouter } from "@/lib/openrouter";
 import { prisma } from "@/lib/prisma";
 import {
   createRateLimiter,
@@ -19,7 +19,7 @@ import { isAdminSession } from "@/lib/admin/is-admin";
  * POST /api/engineer/github-scan
  * Scans a GitHub profile for an engineer applying for verification.
  * Called by the admin review page on open. Returns AI recommendation,
- * confidence, scoreSuggestion, reasons, and summary from Claude Haiku.
+ * confidence, scoreSuggestion, reasons, and summary from the configured AI model.
  * Rate limited: 5 req/min per IP (admin-only, low volume).
  * Auth: admin session required (ADMIN_EMAIL check).
  * Body: { engineerId: string }
@@ -172,9 +172,11 @@ export async function POST(req: NextRequest) {
       JSON.stringify(inputSnapshot, null, 2),
     );
 
-    // Call Claude Haiku via OpenRouter
+    const model = getAIModel();
+
+    // Call the configured OpenAI-compatible provider/model
     const completion = await openrouter.chat.completions.create({
-      model: "anthropic/claude-haiku-3",
+      model,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
       max_tokens: GITHUB_ANALYSIS_CONFIG.max_tokens,
@@ -212,7 +214,7 @@ export async function POST(req: NextRequest) {
 
     // Build LOCKED aiSummary shape
     const aiSummary: AiSummaryShape = {
-      model: "claude-haiku-3",
+      model,
       promptVersion: "1.0.0",
       inputSnapshot,
       output: parsedOutput,

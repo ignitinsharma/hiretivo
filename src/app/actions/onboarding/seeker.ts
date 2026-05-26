@@ -14,7 +14,7 @@ import { step1Schema, step2Schema, step4Schema } from "@/lib/validations/onboard
 type ActionResult = { success: true } | { success: false; error: string };
 type MissingSeekerOnboardingStep = 1 | 2 | 4;
 type CompleteSeekerOnboardingResult =
-  | { success: true; redirectTo: "/seeker/settings" }
+  | { success: true; redirectTo: "/seeker/verification" }
   | { success: false; error: string; missingStep: MissingSeekerOnboardingStep };
 
 // --- Step 1: Situation ---
@@ -341,7 +341,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     user: { onboardingCompleted: true, onboardingStep: null },
   });
 
-  return { success: true, redirectTo: "/seeker/settings" };
+  return { success: true, redirectTo: "/seeker/verification" };
 }
 
 // --- Profile Completeness (per D-09: computed on read, not stored) ---

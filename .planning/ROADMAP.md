@@ -23,9 +23,9 @@ Hiretivo is pivoting from a generic skills-based job board to a **verified India
 ## Pivot v2 — Verified Talent Marketplace
 
 - [ ] **Phase 9: Verification System** - Clean-slate schema (remove old models, add new enums/models), engineer verification flow (Phase B), admin review queue, engineer dashboard status, apply gate, onboarding Step 4 USD salary/timezone/availability, legacy cleanup.
-- [ ] **Phase 10: Talent Pool & Public Profiles** - Public engineer profile `/e/[slug]`, talent pool browse with blur/unlock/quota UI, recruiter saved engineers, homepage rebuild, pricing page rebuild (FREE/STARTER/GROWTH/SCALE), nav update, billing plan access rewrite.
-- [ ] **Phase 11: Job Match & Notifications** - Weighted job match formula (skills 50%/salary 20%/experience 15%/timezone 10%/availability 5%), VERIFIED-only apply gate, job match notifications cron replacing seeker-digest, RECRUITER_INITIATED application flow.
-- [ ] **Phase 12: AI Review & Feedback** - AI GitHub analysis (Claude Haiku via OpenRouter) on admin open, employer feedback form `/feedback/[token]`, FeedbackRequest model, Hiretivo Score auto-recalc after feedback, pipeline kanban view.
+- [x] **Phase 10: Talent Pool & Public Profiles** - Public engineer profile `/e/[slug]`, talent pool browse with blur/unlock/quota UI, recruiter saved engineers, homepage rebuild, pricing page rebuild (FREE/STARTER/GROWTH/SCALE), nav update, billing plan access rewrite. (completed 2026-05-16)
+- [x] **Phase 11: Job Match & Notifications** - Weighted job match formula (skills 50%/salary 20%/experience 15%/timezone 10%/availability 5%), VERIFIED-only apply gate, job match notifications cron replacing seeker-digest, RECRUITER_INITIATED application flow. (completed 2026-05-16)
+- [x] **Phase 12: AI Review & Feedback** - AI GitHub analysis (Claude Haiku via OpenRouter) on admin open, employer feedback form `/feedback/[token]`, FeedbackRequest model, Hiretivo Score auto-recalc after feedback, pipeline kanban view. (completed 2026-05-16)
 
 ## Phase Details
 
@@ -67,8 +67,8 @@ Plans:
 - [x] 09-01-PLAN.md — Schema clean slate (remove BoostedJob/SavedJob/DismissedJob, update PlanTier, add 3 new enums + 6 new models + new fields), update TS enums/pricing/billing constants, delete legacy files, disable seeker-digest
 - [x] 09-02-PLAN.md — Onboarding Step 4 (USD salary/timezone/availableFrom) + all 5 engineer API routes (verification GET+POST, check-slug, github-scan stub, public-consent, data-export)
 - [x] 09-03-PLAN.md — All 3 admin verification API routes (queue, detail/IN_REVIEW, approve/reject) + stale cron + email templates (approval + rejection) + middleware route protection
-- [ ] 09-04-PLAN.md — Phase B verification multi-step UI (/seeker/verification) + engineer dashboard VerificationStatusCard (all 5 states) + ProfilePublicConsentModal
-- [ ] 09-05-PLAN.md — Admin verification queue page + admin review page (/admin/verification/[id]) + ApplyButton gate update + GDPR settings buttons
+- [x] 09-04-PLAN.md — Phase B verification multi-step UI (/seeker/verification) + engineer dashboard VerificationStatusCard (all 5 states) + ProfilePublicConsentModal
+- [x] 09-05-PLAN.md — Admin verification queue page + admin review page (/admin/verification/[id]) + ApplyButton gate update + GDPR settings buttons
 
 ### Phase 10: Talent Pool & Public Profiles
 **Goal**: Recruiters can browse verified engineers (blurred), unlock profiles using quota, save engineers, and schedule interviews. Public engineer profiles live at `/e/[slug]`. Homepage, pricing, and nav rebuilt for talent marketplace positioning.
@@ -112,9 +112,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — AI GitHub scan API + GITHUB_ANALYSIS_PROMPT + admin review UI with AI pre-fill and override logging
-- [ ] 12-02-PLAN.md — FeedbackRequest cron + /feedback/[token] form + POST /api/feedback/employer + score recalc
-- [ ] 12-03-PLAN.md — Recruiter pipeline kanban at /recruiter/pipeline (6 columns, click-to-move)
+- [x] 12-01-PLAN.md — AI GitHub scan API + GITHUB_ANALYSIS_PROMPT + admin review UI with AI pre-fill and override logging
+- [x] 12-02-PLAN.md — FeedbackRequest cron + /feedback/[token] form + POST /api/feedback/employer + score recalc
+- [x] 12-03-PLAN.md — Recruiter pipeline kanban at /recruiter/pipeline (6 columns, click-to-move)
 
 ## Progress
 
@@ -130,6 +130,6 @@ Plans:
 | 7. Polish | 0/TBD | Not started | - |
 | 8. Paid Workflows & Account Completion | 5/5 | Complete | 2026-04-26 |
 | 9. Verification System (Pivot v2) | 0/5 | Not started | - |
-| 10. Talent Pool & Public Profiles (Pivot v2) | 0/TBD | Not started | - |
-| 11. Job Match & Notifications (Pivot v2) | 0/TBD | Not started | - |
-| 12. AI Review & Feedback (Pivot v2) | 0/3 | Not started | - |
+| 10. Talent Pool & Public Profiles (Pivot v2) | 5/5 | Complete    | 2026-05-16 |
+| 11. Job Match & Notifications (Pivot v2) | 3/3 | Complete    | 2026-05-16 |
+| 12. AI Review & Feedback (Pivot v2) | 3/3 | Complete    | 2026-05-16 |

@@ -24,7 +24,7 @@ const FIX_INSTRUCTIONS: Record<RejectionReasonKey, string> = {
   skills_mismatch:
     "Ensure your listed skills match the languages/frameworks in your GitHub repos.",
   bio_missing:
-    "Write a bio of at least 100 words describing your background and what you build.",
+    "Write a clear 20-150 character bio describing your background and what you build.",
   no_work_experience: "Add your work history in Settings > Profile > Work Experience.",
   no_projects: "Describe your top 3 projects with name, what they do, and a link.",
   no_real_project: "Include at least one project used by real users or deployed to production.",
@@ -39,6 +39,7 @@ const FIX_INSTRUCTIONS: Record<RejectionReasonKey, string> = {
     "Build more production experience. We recommend reapplying after 2+ years of professional work.",
   unprofessional_content:
     "Remove or update linked content that could distract from your professional profile.",
+  other: "Review the custom note from the verification team and update your profile before reapplying.",
 };
 
 const REJECTION_REASON_LABELS = new Map(

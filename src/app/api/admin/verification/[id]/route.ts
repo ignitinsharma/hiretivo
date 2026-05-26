@@ -71,6 +71,8 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
           githubScore: true,
           githubAnalysis: true,
           githubScannedAt: true,
+          githubUrl: true,
+          codingProfiles: true,
           videoIntroUrl: true,
           topProjects: true,
           salaryMinUsd: true,

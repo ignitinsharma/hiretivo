@@ -85,7 +85,7 @@ export function AuthLayout({
 
           <div className="space-y-8">{children}</div>
 
-          <div className="mt-20 flex flex-wrap justify-center gap-8">
+          <div className="mt-5 flex flex-wrap justify-center gap-8">
             <Link
               href="/privacy"
               className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"

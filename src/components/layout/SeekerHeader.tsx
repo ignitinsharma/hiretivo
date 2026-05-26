@@ -12,10 +12,12 @@ import {
   User,
   Briefcase,
   Send,
+  Bookmark,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { SEEKER_NAV_ITEMS } from "@/constants/nav";
+import { useProfile } from "@/hooks/use-profile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,14 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-/** Returns the user's initials (up to 2 chars) from their display name. */
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "U";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 /** Nav items to show — only Jobs and Applied Jobs per D-18. */
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
@@ -40,23 +34,15 @@ const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   briefcase: Briefcase,
   send: Send,
+  bookmark: Bookmark,
 };
-
-function getAvatarUrl(image: string | null | undefined): string | null {
-  if (!image) return null;
-  if (image.startsWith('http://') || image.startsWith('https://')) return image;
-  return `/api/logo?key=${encodeURIComponent(image)}`;
-}
 
 export function SeekerHeader() {
   const pathname = usePathname();
-  const { data: session } = useSession();
-
-  const initials = getInitials(session?.user?.name);
-  const avatarUrl = getAvatarUrl(session?.user?.image);
+  const { initials, avatarUrl, name: userName } = useProfile();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
+    <header className="sticky top-0 z-50 w-full bg-white px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/seeker/dashboard" className="flex items-center">
           <Logo />
@@ -98,7 +84,13 @@ export function SeekerHeader() {
               >
                 <div className="w-9 h-9 rounded-full bg-primary/10 border-2 border-primary/20 overflow-hidden flex items-center justify-center text-primary font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-primary">
                   {avatarUrl ? (
-                    <Image src={avatarUrl} alt={initials} width={36} height={36} className="h-full w-full object-cover" />
+                    <Image
+                      src={avatarUrl}
+                      alt={initials}
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     initials
                   )}
@@ -107,11 +99,11 @@ export function SeekerHeader() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              {session?.user?.name && (
+              {userName && (
                 <>
                   <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-slate-500">
                     <User className="w-3.5 h-3.5" />
-                    <span className="truncate">{session.user.name}</span>
+                    <span className="truncate">{userName}</span>
                   </div>
                   <DropdownMenuSeparator />
                 </>

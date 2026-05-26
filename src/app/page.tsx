@@ -15,7 +15,7 @@ const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 export const metadata = generatePageMetadata({
   title: "Hire Verified Indian Engineers | Hiretivo",
   description:
-    "Browse pre-vetted Indian engineers for US/EU startups. Hiretivo Score, real USD salary expectations, and 4–8h timezone overlap.",
+    "Browse pre-vetted Indian engineers for US/EU startups. Hiretivo Score, real USD salary expectations, and 4-8h live overlap.",
 });
 
 /*

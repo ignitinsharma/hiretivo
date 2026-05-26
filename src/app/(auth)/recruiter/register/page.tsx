@@ -65,7 +65,9 @@ const RecruiterSignupLeft = (
             <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-primary/40"></div>
             <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-primary/60"></div>
           </div>
-          <span className="text-xs text-slate-500">2,400+ candidates ready</span>
+          <span className="text-xs text-slate-500">
+            2,400+ candidates ready
+          </span>
         </div>
       </div>
 
@@ -88,7 +90,8 @@ function RecruiterRegisterContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [roleMismatch, setRoleMismatch] = React.useState(false);
-  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
+  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] =
+    React.useState(false);
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
@@ -105,9 +108,12 @@ function RecruiterRegisterContent() {
       next.delete("authError");
       next.delete("accountRole");
       const query = next.toString();
-      router.replace(query ? `/recruiter/register?${query}` : "/recruiter/register", {
-        scroll: false,
-      });
+      router.replace(
+        query ? `/recruiter/register?${query}` : "/recruiter/register",
+        {
+          scroll: false,
+        },
+      );
     };
 
     const handleMismatch = async () => {
@@ -126,7 +132,12 @@ function RecruiterRegisterContent() {
   }, [hasOAuthRoleMismatch, status, searchParams, router]);
 
   React.useEffect(() => {
-    if (status === "authenticated" && session?.user && !hasOAuthRoleMismatch && !isHandlingOAuthMismatch) {
+    if (
+      status === "authenticated" &&
+      session?.user &&
+      !hasOAuthRoleMismatch &&
+      !isHandlingOAuthMismatch
+    ) {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
@@ -386,7 +397,7 @@ function RecruiterRegisterContent() {
           </Button>
         </form>
 
-        <footer className="pt-4 text-center">
+        <footer className=" text-center">
           <p className="text-slate-600 font-medium">
             Already have an account?
             <Link

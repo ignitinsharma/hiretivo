@@ -1,14 +1,11 @@
 "use client";
 
 import { differenceInCalendarDays, format, isAfter } from "date-fns";
-import { Check, Copy, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { VerificationStatus } from "@/constants/enums";
-import { ProfilePublicConsentModal } from "./ProfilePublicConsentModal";
 
 interface LastReview {
   status: string;
@@ -21,8 +18,6 @@ interface VerificationStatusCardProps {
   verificationStatus: VerificationStatus;
   hiretivoScore: number | null;
   reapplyAfter: Date | string | null;
-  profileSlug: string | null;
-  profilePublic: boolean;
   lastReview: LastReview | null;
 }
 
@@ -60,20 +55,8 @@ export function VerificationStatusCard({
   verificationStatus,
   hiretivoScore,
   reapplyAfter,
-  profileSlug,
-  profilePublic,
   lastReview,
 }: VerificationStatusCardProps) {
-  const [isConsentOpen, setIsConsentOpen] = useState(false);
-  const [isProfilePublic, setIsProfilePublic] = useState(profilePublic);
-  const publicUrl = profileSlug ? `hiretivo.com/e/${profileSlug}` : null;
-
-  function copyProfileUrl() {
-    if (!publicUrl) return;
-    void navigator.clipboard.writeText(`https://${publicUrl}`);
-    toast.success("Profile URL copied.");
-  }
-
   if (verificationStatus === VerificationStatus.NOT_SUBMITTED) {
     return (
       <section className="rounded-xl border border-brand-border bg-white p-6">
@@ -135,73 +118,11 @@ export function VerificationStatusCard({
         <p className="mt-2 text-sm text-brand-foreground-muted">
           Score: {hiretivoScore ?? lastReview?.scoreGiven ?? 0}/100
         </p>
+        <p className="mt-3 text-sm leading-relaxed text-brand-foreground-muted">
+          You are eligible for recruiter discovery in the Talent Pool. Recruiters
+          on paid plans can unlock your contact details.
+        </p>
         <AiReviewNotice />
-
-        {isProfilePublic ? (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm font-medium text-brand-success">
-              Profile live - visible to recruiters
-            </p>
-            {publicUrl && (
-              <div className="rounded-lg border border-brand-border bg-brand-surface p-3">
-                <p className="break-all text-sm font-medium text-brand-foreground">
-                  {publicUrl}
-                </p>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="mt-3"
-                  onClick={copyProfileUrl}
-                >
-                  <Copy className="h-4 w-4" aria-hidden="true" />
-                  Copy
-                </Button>
-              </div>
-            )}
-            <div className="flex flex-col gap-2 sm:flex-row">
-              {profileSlug && (
-                <Button asChild variant="primary" className="flex-1">
-                  <Link href={`/e/${profileSlug}`}>View My Profile</Link>
-                </Button>
-              )}
-              <Button type="button" variant="secondary" disabled className="flex-1">
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-                Hide Profile
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm font-medium text-brand-foreground-muted">
-              Profile not public yet
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                type="button"
-                variant="primary"
-                className="flex-1"
-                onClick={() => setIsConsentOpen(true)}
-              >
-                Make Profile Public
-              </Button>
-              {profileSlug && (
-                <Button asChild variant="secondary" className="flex-1">
-                  <Link href={`/e/${profileSlug}`}>
-                    <Eye className="h-4 w-4" aria-hidden="true" />
-                    View Preview
-                  </Link>
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
-        <ProfilePublicConsentModal
-          isOpen={isConsentOpen}
-          onConfirmed={() => setIsProfilePublic(true)}
-          onOpenChange={setIsConsentOpen}
-        />
       </section>
     );
   }

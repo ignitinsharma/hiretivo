@@ -15,7 +15,7 @@ export type {
 export const step1Schema = z.object({
   situation: z.enum(
     ['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD'],
-    { required_error: "Please select your current situation" },
+    { message: "Please select your current situation" },
   ),
 });
 
@@ -38,10 +38,10 @@ export const step3Schema = z.object({
 });
 
 export const step4Schema = z.object({
-  targetSalaryMin: z.number({ required_error: "Please enter minimum target salary", invalid_type_error: "Please enter minimum target salary" }).int().min(1000).max(1000000),
-  targetSalaryMax: z.number({ required_error: "Please enter maximum target salary", invalid_type_error: "Please enter maximum target salary" }).int().min(1000).max(1000000),
-  timezoneOverlapHours: z.number({ required_error: "Please enter timezone overlap hours", invalid_type_error: "Please enter timezone overlap hours" }).int().min(0).max(16),
-  availableFrom: z.string({ required_error: "Please select availability date" }).min(1),
+  targetSalaryMin: z.number({ message: "Please enter minimum target salary" }).int().min(1000).max(1000000),
+  targetSalaryMax: z.number({ message: "Please enter maximum target salary" }).int().min(1000).max(1000000),
+  timezoneOverlapHours: z.number({ message: "Select your live meeting availability" }).int().min(0).max(16),
+  availableFrom: z.string({ message: "Please select availability date" }).min(1),
 }).refine(
   (data) => data.targetSalaryMin <= data.targetSalaryMax,
   { message: "Maximum salary must be greater than or equal to minimum salary" },

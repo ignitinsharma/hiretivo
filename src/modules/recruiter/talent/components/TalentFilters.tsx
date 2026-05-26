@@ -53,7 +53,7 @@ export function TalentFilters({ filters, onChange }: TalentFiltersProps) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium uppercase tracking-wider text-brand-foreground-secondary">Min Overlap (hours)</label>
+        <label className="text-xs font-medium uppercase tracking-wider text-brand-foreground-secondary">Min Live Overlap</label>
         <input
           type="number"
           min={0} max={16}

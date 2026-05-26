@@ -29,7 +29,7 @@ export function HowItWorksSection() {
     {
       n: "1",
       title: "Submit GitHub + bio",
-      desc: "Share your GitHub, top 3 projects, and a short bio.",
+      desc: "Complete your profile, GitHub, work history, and practical projects.",
     },
     {
       n: "2",
@@ -38,8 +38,8 @@ export function HowItWorksSection() {
     },
     {
       n: "3",
-      title: "Go live",
-      desc: "Make your profile public — US/EU startups start finding you.",
+      title: "Join discovery",
+      desc: "Verified engineers become eligible for recruiter Talent Pool discovery.",
     },
     {
       n: "4",

@@ -1,12 +1,27 @@
-import { format } from "date-fns";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { VerificationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
+import { getVerificationReadiness } from "@/lib/verification/readiness";
+import { SeekerBioCard } from "./SeekerBioCard";
+import { SeekerCodingProfilesCard } from "./SeekerCodingProfilesCard";
+import { SeekerGitHubCard } from "./SeekerGitHubCard";
+import { SeekerProfileHero } from "./SeekerProfileHero";
+import { SeekerProjectsCard } from "./SeekerProjectsCard";
+import { SeekerReadinessCard } from "./SeekerReadinessCard";
+import { SeekerSkillsCard } from "./SeekerSkillsCard";
+import { SeekerWorkHistoryCard } from "./SeekerWorkHistoryCard";
 import { VerificationReviewRightColumn } from "./VerificationReviewRightColumn";
 
 export const revalidate = 0;
+
+/*
+ * AdminVerificationDetailPage
+ * Full engineer profile review page for admin verification.
+ * Layout: full-width profile hero, 2-column content bubble grid, then review form.
+ * Content is split evenly between columns to avoid the old single-column scroll issue.
+ */
 
 interface AdminVerificationDetailPageProps {
   params: { id: string };
@@ -15,6 +30,8 @@ interface AdminVerificationDetailPageProps {
 interface ProjectSummary {
   name?: string;
   description?: string;
+  sourceUrl?: string;
+  liveUrl?: string;
   url?: string;
 }
 
@@ -24,20 +41,15 @@ function getProjectSummaries(value: unknown): ProjectSummary[] {
   return value.filter((project): project is ProjectSummary => {
     if (typeof project !== "object" || project === null) return false;
     const p = project as Record<string, unknown>;
-    return typeof p.name === "string" || typeof p.description === "string" || typeof p.url === "string";
+    return (
+      typeof p.name === "string" ||
+      typeof p.description === "string" ||
+      typeof p.sourceUrl === "string" ||
+      typeof p.url === "string"
+    );
   });
 }
 
-function formatDate(value: Date | string | null): string {
-  if (!value) return "Not provided";
-  return format(new Date(value), "MMM d, yyyy");
-}
-
-/*
- * AdminVerificationDetailPage
- * Displays the full engineer profile and opens pending submissions for review.
- * Triggers AI GitHub scan on mount. Pre-fills review form with AI recommendation.
- */
 export default async function AdminVerificationDetailPage({
   params,
 }: AdminVerificationDetailPageProps) {
@@ -47,12 +59,13 @@ export default async function AdminVerificationDetailPage({
       id: true,
       name: true,
       email: true,
+      image: true,
+      timezone: true,
       createdAt: true,
       updatedAt: true,
       verificationStatus: true,
       hiretivoScore: true,
       reapplyAfter: true,
-      profileSlug: true,
       timezoneOverlapHours: true,
       availableFrom: true,
       seekerProfile: {
@@ -65,6 +78,9 @@ export default async function AdminVerificationDetailPage({
           githubUsername: true,
           githubScore: true,
           githubAnalysis: true,
+          githubScannedAt: true,
+          githubUrl: true,
+          codingProfiles: true,
           videoIntroUrl: true,
           topProjects: true,
           salaryMinUsd: true,
@@ -108,6 +124,7 @@ export default async function AdminVerificationDetailPage({
     engineer.verificationStatus === VerificationStatus.IN_REVIEW;
 
   const projects = getProjectSummaries(engineer.seekerProfile?.topProjects);
+  const readiness = getVerificationReadiness(engineer);
   const canReview =
     engineer.verificationStatus === VerificationStatus.PENDING ||
     engineer.verificationStatus === VerificationStatus.IN_REVIEW;
@@ -129,199 +146,77 @@ export default async function AdminVerificationDetailPage({
   } | null;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <div className="mb-5">
-        <Link
-          href="/admin/verification"
-          className="text-sm font-medium text-brand-primary hover:underline"
-        >
-          Back to queue
-        </Link>
-      </div>
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      {/* Back link */}
+      <Link
+        href="/admin/verification"
+        className="text-sm font-medium text-brand-primary hover:underline"
+      >
+        &larr; Back to queue
+      </Link>
 
+      {/* In-review warning */}
       {alreadyInReview && (
-        <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+        <div className="mt-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
           Another admin may already have this submission open.
         </div>
       )}
 
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_2fr] lg:gap-8">
-        {/* Left column — Engineer profile card */}
-        <div className="space-y-4">
-          <section className="rounded-xl border border-brand-border bg-white p-6">
-            <h1 className="text-2xl font-bold leading-tight tracking-tight text-brand-foreground">
-              {engineer.name ?? "Unnamed engineer"}
-            </h1>
-            <p className="mt-1 text-sm text-brand-foreground-muted">
-              {engineer.email ?? "No email"}
-            </p>
-            {engineer.seekerProfile?.headline && (
-              <p className="mt-3 text-base text-brand-foreground">
-                {engineer.seekerProfile.headline}
-              </p>
-            )}
-            {engineer.seekerProfile?.primaryRole && (
-              <p className="mt-1 text-sm text-brand-foreground-muted">
-                {engineer.seekerProfile.primaryRole}
-              </p>
-            )}
+      {/* Profile Hero — full width */}
+      <div className="mt-6">
+        <SeekerProfileHero
+          name={engineer.name}
+          email={engineer.email}
+          headline={engineer.seekerProfile?.headline ?? null}
+          primaryRole={engineer.seekerProfile?.primaryRole ?? null}
+          location={engineer.seekerProfile?.location ?? null}
+          yearsExperience={engineer.seekerProfile?.yearsExperience ?? null}
+          timezoneOverlapHours={engineer.timezoneOverlapHours ?? null}
+          salaryMinUsd={engineer.seekerProfile?.salaryMinUsd ?? null}
+          salaryMaxUsd={engineer.seekerProfile?.salaryMaxUsd ?? null}
+          availableFrom={engineer.availableFrom ?? null}
+          githubUsername={engineer.seekerProfile?.githubUsername ?? null}
+          videoIntroUrl={engineer.seekerProfile?.videoIntroUrl ?? null}
+          verificationStatus={engineer.verificationStatus}
+        />
+      </div>
 
-            <div className="mt-4 flex flex-wrap gap-3 text-xs text-brand-foreground-muted">
-              {engineer.seekerProfile?.yearsExperience != null && (
-                <span>{engineer.seekerProfile.yearsExperience}+ years</span>
-              )}
-              {engineer.timezoneOverlapHours != null && (
-                <span>{engineer.timezoneOverlapHours}h timezone overlap</span>
-              )}
-              {engineer.availableFrom && (
-                <span>Available {formatDate(engineer.availableFrom)}</span>
-              )}
-              {engineer.seekerProfile?.salaryMinUsd &&
-                engineer.seekerProfile.salaryMaxUsd && (
-                  <span>
-                    ${Math.round(engineer.seekerProfile.salaryMinUsd / 1000)}k -
-                    ${Math.round(engineer.seekerProfile.salaryMaxUsd / 1000)}k
-                  </span>
-                )}
-            </div>
-
-            <div className="mt-4 flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap">
-              {engineer.seekerProfile?.githubUsername && (
-                <a
-                  href={`https://github.com/${engineer.seekerProfile.githubUsername}`}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="font-medium text-brand-primary hover:underline"
-                >
-                  GitHub profile
-                </a>
-              )}
-              {engineer.seekerProfile?.videoIntroUrl && (
-                <a
-                  href={engineer.seekerProfile.videoIntroUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="font-medium text-brand-primary hover:underline"
-                >
-                  Video intro
-                </a>
-              )}
-              {engineer.profileSlug && (
-                <Link
-                  href={`/e/${engineer.profileSlug}`}
-                  className="font-medium text-brand-primary hover:underline"
-                >
-                  Profile slug
-                </Link>
-              )}
-            </div>
-          </section>
-
-          {engineer.seekerProfile?.bio && (
-            <section className="rounded-xl border border-brand-border bg-white p-6">
-              <h2 className="mb-3 text-lg font-semibold text-brand-foreground">
-                Bio
-              </h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-brand-foreground-muted">
-                {engineer.seekerProfile.bio}
-              </p>
-            </section>
-          )}
-
-          <section className="rounded-xl border border-brand-border bg-white p-6">
-            <h2 className="mb-3 text-lg font-semibold text-brand-foreground">
-              Projects
-            </h2>
-            {projects.length > 0 ? (
-              <div className="space-y-4">
-                {projects.map((project, index) => (
-                  <div
-                    key={`${project.name ?? "project"}-${index}`}
-                    className="border-b border-brand-border pb-4 last:border-b-0 last:pb-0"
-                  >
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="font-medium text-brand-foreground">
-                        {project.name ?? "Untitled project"}
-                      </p>
-                      {project.url && (
-                        <a
-                          href={project.url}
-                          target="_blank"
-                          rel="noopener noreferrer nofollow"
-                          className="text-sm font-medium text-brand-primary hover:underline"
-                        >
-                          View project
-                        </a>
-                      )}
-                    </div>
-                    {project.description && (
-                      <p className="mt-1 text-sm text-brand-foreground-muted">
-                        {project.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-brand-foreground-muted">
-                No projects submitted.
-              </p>
-            )}
-          </section>
-
-          <section className="rounded-xl border border-brand-border bg-white p-6">
-            <h2 className="mb-3 text-lg font-semibold text-brand-foreground">
-              Skills
-            </h2>
-            {engineer.seekerProfile?.skills.length ? (
-              <div className="flex flex-wrap gap-2">
-                {engineer.seekerProfile.skills.map((skill) => (
-                  <span
-                    key={`${skill.skill.name}-${skill.level}`}
-                    className="rounded-full border border-brand-border bg-brand-surface px-3 py-1 text-xs font-medium text-brand-foreground"
-                  >
-                    {skill.skill.name} - {skill.level}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-brand-foreground-muted">
-                No skills submitted.
-              </p>
-            )}
-          </section>
-
-          <section className="rounded-xl border border-brand-border bg-white p-6">
-            <h2 className="mb-3 text-lg font-semibold text-brand-foreground">
-              Work History
-            </h2>
-            {engineer.seekerProfile?.workExperiences.length ? (
-              <div className="space-y-3">
-                {engineer.seekerProfile.workExperiences.map((work) => (
-                  <div
-                    key={`${work.company}-${work.title}-${work.startDate}`}
-                    className="text-sm"
-                  >
-                    <p className="font-medium text-brand-foreground">
-                      {work.title} at {work.company}
-                    </p>
-                    <p className="text-brand-foreground-muted">
-                      {formatDate(work.startDate)} -{" "}
-                      {work.isCurrent ? "Present" : formatDate(work.endDate)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-brand-foreground-muted">
-                No work history submitted.
-              </p>
-            )}
-          </section>
+      {/* Content bubbles — 2-column grid */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* Left column: Bio, Work History, Readiness */}
+        <div className="space-y-6">
+          <SeekerBioCard bio={engineer.seekerProfile?.bio ?? null} />
+          <SeekerWorkHistoryCard
+            experiences={engineer.seekerProfile?.workExperiences ?? null}
+          />
+          <SeekerReadinessCard
+            completedFields={readiness.completedFields}
+            missingFields={readiness.missingFields}
+            totalFields={
+              readiness.completedFields.length + readiness.missingFields.length
+            }
+          />
         </div>
 
-        {/* Right column — AI recommendation banner + review form */}
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        {/* Right column: Skills, Projects, GitHub Analysis */}
+        <div className="space-y-6">
+          <SeekerSkillsCard skills={engineer.seekerProfile?.skills ?? null} />
+          <SeekerProjectsCard projects={projects} />
+          <SeekerGitHubCard
+            username={engineer.seekerProfile?.githubUsername ?? null}
+            score={engineer.seekerProfile?.githubScore ?? null}
+            analysis={engineer.seekerProfile?.githubAnalysis ?? null}
+            scannedAt={engineer.seekerProfile?.githubScannedAt ?? null}
+          />
+          <SeekerCodingProfilesCard
+            codingProfiles={engineer.seekerProfile?.codingProfiles ?? null}
+          />
+        </div>
+      </div>
+
+      {/* Review section — below content for decision-making */}
+      <div className="mt-8">
+        <div className="mx-auto max-w-2xl">
           <VerificationReviewRightColumn
             engineerId={engineer.id}
             reviewId={latestReview?.id ?? ""}
@@ -329,7 +224,7 @@ export default async function AdminVerificationDetailPage({
             currentStatus={engineer.verificationStatus}
             existingAiSummary={existingAiSummary}
           />
-        </aside>
+        </div>
       </div>
     </main>
   );

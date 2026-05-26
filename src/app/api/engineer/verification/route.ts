@@ -7,33 +7,11 @@ import { UserRole, VerificationStatus } from "@/constants/enums";
 import { applyRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/resend";
-
-const RESERVED_SLUGS = new Set([
-  "admin",
-  "api",
-  "pricing",
-  "jobs",
-  "engineers",
-  "recruiter",
-  "seeker",
-  "login",
-  "signup",
-  "dashboard",
-  "health",
-  "feedback",
-  "e",
-  "app",
-  "www",
-  "support",
-  "help",
-  "about",
-  "blog",
-  "terms",
-  "privacy",
-  "careers",
-  "hire",
-  "hiretivo",
-]);
+import {
+  CodingProfilesSchema,
+  normalizeCodingProfiles,
+} from "@/lib/verification/coding-profiles";
+import { getVerificationReadiness } from "@/lib/verification/readiness";
 
 function escapeHtml(value: string): string {
   return value
@@ -44,35 +22,12 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-const projectSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  description: z.string().trim().min(1).max(500),
-  url: z.string().url().startsWith("https://"),
-});
-
 const verificationSubmitSchema = z.object({
   githubUrl: z
     .string()
     .regex(/^https:\/\/github\.com\/.+/, "Must be a valid GitHub profile URL"),
-  legalName: z.string().trim().min(2).max(100),
-  bio: z
-    .string()
-    .trim()
-    .max(5000)
-    .refine(
-      (value) => value.split(/\s+/).filter(Boolean).length >= 100,
-      "Bio must be at least 100 words",
-    ),
-  topProjects: z.array(projectSchema).min(1).max(3),
+  codingProfiles: CodingProfilesSchema.optional(),
   videoIntroUrl: z.string().url().startsWith("https://").optional().nullable(),
-  profileSlug: z
-    .string()
-    .min(3)
-    .max(30)
-    .regex(
-      /^[a-z0-9][a-z0-9-]*[a-z0-9]$/,
-      "Slug must be lowercase alphanumeric with hyphens; no leading/trailing hyphens",
-    ),
 });
 
 /*
@@ -101,6 +56,9 @@ export async function GET() {
       hiretivoScore: true,
       reapplyAfter: true,
       profileSlug: true,
+      name: true,
+      image: true,
+      timezone: true,
       verificationReviews: {
         orderBy: { createdAt: "desc" },
         take: 1,
@@ -115,6 +73,16 @@ export async function GET() {
         select: {
           profilePublic: true,
           profilePublicConsentAt: true,
+          bio: true,
+          primaryRole: true,
+          yearsExperience: true,
+          salaryMin: true,
+          salaryMax: true,
+          currency: true,
+          availability: true,
+          topProjects: true,
+          skills: { select: { id: true } },
+          workExperiences: { select: { id: true } },
         },
       },
     },
@@ -131,6 +99,7 @@ export async function GET() {
     profileSlug: user.profileSlug,
     profilePublic: user.seekerProfile?.profilePublic ?? false,
     profilePublicConsentAt: user.seekerProfile?.profilePublicConsentAt ?? null,
+    readiness: getVerificationReadiness(user),
     lastReview: user.verificationReviews[0] ?? null,
   });
 }
@@ -170,20 +139,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { githubUrl, legalName, bio, topProjects, videoIntroUrl, profileSlug } =
-    parsed.data;
-  const normalizedSlug = profileSlug.toLowerCase();
-
-  if (RESERVED_SLUGS.has(normalizedSlug)) {
-    return NextResponse.json(
-      { error: "That slug is reserved. Please choose a different one." },
-      { status: 400 },
-    );
-  }
+  const { githubUrl, videoIntroUrl } = parsed.data;
+  const codingProfiles = normalizeCodingProfiles(parsed.data.codingProfiles);
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { verificationStatus: true, reapplyAfter: true },
+    select: {
+      name: true,
+      image: true,
+      timezone: true,
+      verificationStatus: true,
+      reapplyAfter: true,
+      seekerProfile: {
+        select: {
+          bio: true,
+          primaryRole: true,
+          yearsExperience: true,
+          salaryMin: true,
+          salaryMax: true,
+          currency: true,
+          availability: true,
+          topProjects: true,
+          codingProfiles: true,
+          skills: { select: { id: true } },
+          workExperiences: { select: { id: true } },
+        },
+      },
+    },
   });
   if (!user) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -206,12 +188,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const slugTaken = await prisma.user.findFirst({
-    where: { profileSlug: normalizedSlug, NOT: { id: session.user.id } },
-    select: { id: true },
-  });
-  if (slugTaken) {
-    return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+  const readiness = getVerificationReadiness(user);
+  if (!readiness.isReady) {
+    return NextResponse.json(
+      {
+        error: "Complete your profile before submitting for verification.",
+        readiness,
+      },
+      { status: 400 },
+    );
   }
 
   const githubUsername = githubUrl
@@ -222,9 +207,7 @@ export async function POST(req: NextRequest) {
     prisma.user.update({
       where: { id: session.user.id },
       data: {
-        name: legalName,
         verificationStatus: VerificationStatus.PENDING,
-        profileSlug: normalizedSlug,
         reapplyAfter: null,
       },
     }),
@@ -232,16 +215,16 @@ export async function POST(req: NextRequest) {
       where: { userId: session.user.id },
       create: {
         userId: session.user.id,
-        bio,
         githubUsername,
+        githubUrl,
+        codingProfiles,
         videoIntroUrl: videoIntroUrl ?? null,
-        topProjects,
       },
       update: {
-        bio,
         githubUsername,
+        githubUrl,
+        codingProfiles,
         videoIntroUrl: videoIntroUrl ?? null,
-        topProjects,
         verificationNotes: null,
         verificationReviewedAt: null,
         verificationReviewedBy: null,
@@ -257,18 +240,16 @@ export async function POST(req: NextRequest) {
 
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@hiretivo.com";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://hiretivo.com";
-  const safeLegalName = escapeHtml(legalName);
+  const safeLegalName = escapeHtml(user.name ?? "Engineer");
   const safeGithubUsername = escapeHtml(githubUsername);
   const safeGithubUrl = escapeHtml(githubUrl);
-  const safeSlug = escapeHtml(normalizedSlug);
   sendEmail({
     from: "Hiretivo <noreply@hiretivo.com>",
     to: adminEmail,
-    subject: `New verification submission: ${legalName} (@${githubUsername})`,
+    subject: `New verification submission: ${user.name ?? "Engineer"} (@${githubUsername})`,
     html: `<p>New engineer verification submitted.</p>
       <p><strong>Name:</strong> ${safeLegalName}<br>
-      <strong>GitHub:</strong> <a href="${safeGithubUrl}">${safeGithubUrl}</a><br>
-      <strong>Slug:</strong> hiretivo.com/e/${safeSlug}</p>
+      <strong>GitHub:</strong> <a href="${safeGithubUrl}">${safeGithubUrl}</a></p>
       <p><strong>GitHub username:</strong> @${safeGithubUsername}</p>
       <p><a href="${appUrl}/admin/verification">Review in admin queue</a></p>`,
   }).catch((error) => {

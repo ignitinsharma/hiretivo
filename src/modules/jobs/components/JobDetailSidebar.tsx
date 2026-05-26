@@ -66,7 +66,7 @@ export function JobDetailSidebar({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div className="bg-muted p-3 rounded-xl border border-slate-200">
             <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
               Posted
             </p>
@@ -76,7 +76,7 @@ export function JobDetailSidebar({
                 : "Recently"}
             </p>
           </div>
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div className="bg-muted p-3 rounded-xl border border-slate-200">
             <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
               Company
             </p>

@@ -3,6 +3,7 @@ import {
   User,
   Shield,
   Link,
+  Code2,
   Briefcase,
   GraduationCap,
   Database,
@@ -11,6 +12,7 @@ import {
 const NAV_ITEMS = [
   { href: "#account", label: "Account", icon: User },
   { href: "#social", label: "Social Profiles", icon: Link },
+  { href: "#coding-profiles", label: "Coding Profiles", icon: Code2 },
   { href: "#experience", label: "Work Experience", icon: Briefcase },
   { href: "#education", label: "Education", icon: GraduationCap },
   { href: "#security", label: "Password & Security", icon: Shield },

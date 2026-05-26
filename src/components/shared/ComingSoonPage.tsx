@@ -77,7 +77,7 @@ export function ComingSoonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans antialiased">
+    <div className="min-h-screen bg-muted font-sans antialiased">
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gray-50/50 blur-[120px]" />
         <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-gray-50/80 blur-[100px]" />

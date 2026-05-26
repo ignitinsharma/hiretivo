@@ -9,7 +9,7 @@ interface OnboardingShellProps {
 export function OnboardingShell({ children }: OnboardingShellProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
+      <header className="sticky top-0 z-50 w-full bg-white px-6 py-3">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <LogoLink href="/" />
           <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-slate-200 text-sm text-muted-foreground">

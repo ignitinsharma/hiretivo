@@ -25,7 +25,7 @@ export const step3Schema = z.object({
 export const step4Schema = z.object({
   targetSalaryMin: z.number().int().min(1000, "Minimum salary must be at least $1,000").max(1000000, "Maximum salary seems too high"),
   targetSalaryMax: z.number().int().min(1000, "Maximum salary must be at least $1,000").max(1000000, "Maximum salary seems too high"),
-  timezoneOverlapHours: z.number().int().min(0, "Overlap hours must be 0-16").max(16, "Overlap hours must be 0-16"),
+  timezoneOverlapHours: z.number().int().min(0, "Live meeting availability must be 0-16 hours").max(16, "Live meeting availability must be 0-16 hours"),
   availableFrom: z.string().min(1, "Availability date is required"),
 }).refine((data) => data.targetSalaryMax >= data.targetSalaryMin, {
   message: "Maximum salary must be >= minimum salary",

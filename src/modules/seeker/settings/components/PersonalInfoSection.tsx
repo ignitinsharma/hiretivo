@@ -22,6 +22,8 @@ import {
 } from "@/lib/validations/seeker.schema";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerSettingsData } from "@/services/seeker.service";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { AVAILABILITY_OPTIONS } from "@/lib/availability";
 
 const YEARS_OPTIONS = [
   { value: '0', label: '< 1 Year' },
@@ -44,20 +46,9 @@ const SITUATION_OPTIONS = [
   { value: 'STUDENT_FRESH_GRAD', label: 'Student / Fresh grad' },
 ] as const;
 
-const AVAILABILITY_OPTIONS = [
-  { value: 'IMMEDIATELY', label: 'Immediately' },
-  { value: 'TWO_WEEKS', label: '2 weeks notice' },
-  { value: 'ONE_MONTH_PLUS', label: '1 month+' },
-] as const;
-
 function getSituationLabel(value: string | undefined | null): string {
   if (!value) return 'Not set';
   return SITUATION_OPTIONS.find((o) => o.value === value)?.label ?? value;
-}
-
-function getAvailabilityLabel(value: string | undefined | null): string {
-  if (!value) return 'Not set';
-  return AVAILABILITY_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
 function getProfileFormValues(
@@ -81,6 +72,7 @@ function getProfileFormValues(
 export function PersonalInfoSection() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const { data: verificationStatus, isLoading: isVerificationLoading } = useEmailVerificationStatus();
 
   const { data: settingsData, isLoading, isError } = useQuery<{ data: SeekerSettingsData }>({
     queryKey: ["seeker-settings"],
@@ -190,10 +182,18 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-slate-700">Email Address</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <div className="relative">
-                  <Input value={profile?.email ?? ""} readOnly className="bg-slate-50 text-slate-500 pr-24" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-black bg-gray-100 px-2 py-0.5 rounded">
-                    Verified
-                  </span>
+                  <Input value={profile?.email ?? ""} readOnly className="bg-muted text-slate-500 pr-24" />
+                  {isVerificationLoading ? (
+                    <Skeleton className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-16 rounded" />
+                  ) : verificationStatus?.isVerified ? (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                      Verify
+                    </span>
+                  )}
                 </div>
               )}
             </div>

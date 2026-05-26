@@ -63,7 +63,7 @@ function ResetPasswordContent() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-muted px-4 py-12">
       <section className="w-full max-w-md space-y-8">
         <div className="space-y-3">
           <h1 className="font-bold text-4xl leading-tight text-foreground">
@@ -76,7 +76,7 @@ function ResetPasswordContent() {
 
         {!token || !email ? (
           <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-8">
-            <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
+            <p className="rounded-xl bg-muted p-4 text-sm font-semibold leading-6 text-foreground">
               This reset link is invalid or has expired. Please request a new
               one.
             </p>

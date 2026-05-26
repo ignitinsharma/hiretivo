@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 /*
  * GET /api/recruiter/talent
- * Returns paginated talent pool list of VERIFIED+public engineers with locked/unlocked card shape.
+ * Returns paginated talent pool list of VERIFIED engineers with locked/unlocked card shape.
  * Locked cards show firstName/lastInitial + metadata. Unlocked cards add fullName/email/github/linkedin/resumeUrl.
  * FREE plan returns 403 with UPGRADE_REQUIRED. Filters apply to all plans.
  * Cursor-based pagination with hiretivoScore desc ordering (or in-memory best_match sort).
@@ -107,7 +107,6 @@ export async function GET(req: NextRequest) {
     verificationStatus: "VERIFIED",
     seekerProfile: {
       is: {
-        profilePublic: true,
         ...(role ? { primaryRole: { contains: role, mode: "insensitive" } } : {}),
         ...(salaryMax !== undefined ? { salaryMinUsd: { lte: salaryMax } } : {}),
         ...(skillsArr.length > 0
@@ -164,7 +163,6 @@ export async function GET(req: NextRequest) {
           yearsExperience: true,
           salaryMinUsd: true,
           salaryMaxUsd: true,
-          profilePublic: true,
           githubUrl: true,
           linkedinUrl: true,
           resumeKey: true,

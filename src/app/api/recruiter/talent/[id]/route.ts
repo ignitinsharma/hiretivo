@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
  * Returns full TalentDetail shape for the profile dialog.
  * Locked: sensitive fields (email, links, resumeUrl) are nulled out.
  * Unlocked: full profile with contact info and links.
- * Returns 404 if engineer not VERIFIED+profilePublic or hiddenUntil active.
+ * Returns 404 if engineer not VERIFIED or hiddenUntil active.
  */
 export async function GET(
   req: NextRequest,
@@ -39,7 +39,6 @@ export async function GET(
       id: params.id,
       role: "SEEKER",
       verificationStatus: "VERIFIED",
-      seekerProfile: { is: { profilePublic: true } },
       AND: [
         { OR: [{ hiddenUntil: null }, { hiddenUntil: { lt: new Date() } }] },
       ],

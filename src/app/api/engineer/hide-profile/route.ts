@@ -16,7 +16,7 @@ const HideProfileSchema = z.object({
  * Sets or clears hiddenUntil on the engineer's User record.
  * hide=true: sets hiddenUntil = until ?? addDays(now, 30).
  * hide=false: clears hiddenUntil = null.
- * Effect is immediate — profile disappears from talent pool and /e/[slug] returns 404.
+ * Effect is immediate - profile disappears from Talent Pool discovery.
  */
 export async function POST(req: NextRequest) {
   const session = await auth();

@@ -68,7 +68,7 @@ export function EngineerCard({ engineer, isFreePlan, quotaExhausted, quotaResetA
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-foreground-muted">
           <span>{engineer.yearsExperience} yrs exp</span>
           <span>${engineer.salaryMinUsd.toLocaleString()}–${engineer.salaryMaxUsd.toLocaleString()} /yr</span>
-          <span>{engineer.timezoneOverlapHours}h overlap</span>
+          <span>{engineer.timezoneOverlapHours}h live overlap</span>
           {engineer.availableFrom && <span>Available {format(new Date(engineer.availableFrom), "MMM d")}</span>}
         </div>
 

@@ -15,7 +15,7 @@ const STEPS = [
   {
     icon: BadgeCheck,
     title: "Get Verified",
-    description: "Blue ✓ badge live. Hiretivo Score assigned.",
+    description: "Hiretivo Score assigned by admin review.",
   },
   {
     icon: Globe,

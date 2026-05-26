@@ -55,7 +55,7 @@ export function VerificationReviewRightColumn({
   existingAiSummary,
 }: VerificationReviewRightColumnProps) {
   const [bannerStatus, setBannerStatus] = useState<BannerStatus>(
-    existingAiSummary ? "idle" : "loading",
+    existingAiSummary ? "ok" : "loading",
   );
   const [aiOutput, setAiOutput] = useState<GithubAnalysisOutput | null>(
     existingAiSummary?.output ?? null,
@@ -76,7 +76,7 @@ export function VerificationReviewRightColumn({
 
   useEffect(() => {
     // If aiSummary already exists, skip the scan
-    if (existingAiSummary) return;
+    if (existingAiSummary || !canReview) return;
 
     let cancelled = false;
 
@@ -84,10 +84,9 @@ export function VerificationReviewRightColumn({
       setBannerStatus("loading");
 
       try {
-        const response = await fetch("/api/engineer/github-scan", {
+        const response = await fetch(`/api/admin/verification/${engineerId}/ai-review`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ engineerId }),
         });
 
         const result = (await response.json()) as AiScanResponse;
@@ -121,7 +120,7 @@ export function VerificationReviewRightColumn({
     return () => {
       cancelled = true;
     };
-  }, [engineerId, existingAiSummary]);
+  }, [canReview, engineerId, existingAiSummary]);
 
   if (!canReview) {
     return (
@@ -142,7 +141,11 @@ export function VerificationReviewRightColumn({
       <AiRecommendationBanner
         recommendation={aiOutput?.recommendation ?? null}
         confidence={aiOutput?.confidence ?? null}
+        scoreSuggestion={aiOutput?.scoreSuggestion ?? null}
+        strengthLevel={aiOutput?.strengthLevel ?? null}
         summary={aiOutput?.summary ?? null}
+        strengths={aiOutput?.strengths ?? []}
+        gaps={aiOutput?.gaps ?? []}
         status={bannerStatus}
       />
       <AdminReviewForm

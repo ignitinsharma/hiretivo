@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 
+import { getRateLimitIp, publicReadRateLimiter } from "@/lib/rate-limit";
+
 /*
  * POST /api/github/check
  * Lightweight GitHub profile check — verifies a GitHub URL exists and counts
@@ -10,6 +12,15 @@ import { NextRequest } from "next/server";
  */
 
 export async function POST(req: NextRequest) {
+  const ip = getRateLimitIp(req);
+  const { success } = await publicReadRateLimiter.limit(ip);
+  if (!success) {
+    return Response.json(
+      { status: "error", publicRepoCount: 0 },
+      { status: 429 },
+    );
+  }
+
   let body: { githubUrl?: string };
   try {
     body = (await req.json()) as { githubUrl?: string };

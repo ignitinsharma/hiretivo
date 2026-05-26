@@ -12,7 +12,9 @@ import { SkillsSection } from '@/modules/seeker/settings/components/SkillsSectio
 import { ResumeSection } from '@/modules/seeker/settings/components/ResumeSection';
 import { AvatarSection } from '@/modules/seeker/settings/components/AvatarSection';
 import { SocialProfilesSection } from '@/modules/seeker/settings/components/SocialProfilesSection';
+import { CodingProfilesSection } from '@/modules/seeker/settings/components/CodingProfilesSection';
 import { WorkExperienceSection } from '@/modules/seeker/settings/components/WorkExperienceSection';
+import { ProjectsSection } from '@/modules/seeker/settings/components/ProjectsSection';
 import { EducationSection } from '@/modules/seeker/settings/components/EducationSection';
 import { HideProfileToggle } from '@/modules/seeker/settings/components/HideProfileToggle';
 import { WhoViewedMeSection } from '@/modules/seeker/settings/components/WhoViewedMeSection';
@@ -104,8 +106,10 @@ function SeekerSettingsPanels() {
       <AvatarSection name={settings?.name} image={settings?.image} />
       <PersonalInfoSection />
       <SocialProfilesSection />
+      <CodingProfilesSection />
       <SkillsSection settings={settings} isLoading={isLoading} />
       <WorkExperienceSection />
+      <ProjectsSection />
       <EducationSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />

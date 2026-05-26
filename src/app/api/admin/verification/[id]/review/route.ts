@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addDays } from "date-fns";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { VerificationStatus } from "@/constants/enums";
 import {
@@ -11,6 +12,7 @@ import { sendApprovalEmail } from "@/lib/emails/verification-approval";
 import { sendRejectionEmail } from "@/lib/emails/verification-rejection";
 import { prisma } from "@/lib/prisma";
 import { verificationWriteRateLimiter } from "@/lib/rate-limit";
+import { calculateVerificationRubricTotal } from "@/lib/verification/rubric";
 
 interface RouteContext {
   params: { id: string };
@@ -28,46 +30,71 @@ const REJECTION_REASON_KEYS = REJECTION_REASONS.map((reason) => reason.key) as [
   ...RejectionReasonKey[],
 ];
 
+const rubricScoresSchema = z.object({
+  github: z.number().int().min(0).max(30),
+  projects: z.number().int().min(0).max(25),
+  workHistory: z.number().int().min(0).max(20),
+  profile: z.number().int().min(0).max(15),
+  trust: z.number().int().min(0).max(10),
+});
+
 /** Shared aiSummary field for LOCKED audit trail shape (from 12-CONTEXT.md) */
 const aiSummarySchema = z
   .object({
     model: z.string(),
     promptVersion: z.string(),
-    inputSnapshot: z.object({
-      repos: z.number(),
-      languages: z.array(z.string()),
-      lastCommit: z.string(),
-      starCount: z.number(),
-    }),
+    inputSnapshot: z.unknown(),
     output: z.object({
       recommendation: z.enum(["APPROVE", "REJECT"]),
       confidence: z.number().min(0).max(1),
       scoreSuggestion: z.number().int().min(0).max(100),
       reasons: z.array(z.string()),
       summary: z.string(),
+      rubricScores: rubricScoresSchema.optional(),
+      strengthLevel: z
+        .enum(["WEAK", "PROMISING", "STRONG", "EXCEPTIONAL"])
+        .optional(),
+      strengths: z.array(z.string()).optional(),
+      gaps: z.array(z.string()).optional(),
     }),
     overrideReason: z.string().max(500).optional(),
   })
   .optional();
 
-const reviewSchema = z.discriminatedUnion("decision", [
-  z.object({
-    decision: z.literal("APPROVED"),
-    score: z.number().int().min(0).max(100),
-    overrideReason: z.string().max(500).optional(),
-    aiSummary: aiSummarySchema,
-  }),
-  z.object({
-    decision: z.literal("REJECTED"),
-    reasons: z
-      .array(z.enum(REJECTION_REASON_KEYS))
-      .min(1, "Select at least one rejection reason"),
-    customNote: z.string().trim().max(1000).optional(),
-    reapplyDays: z.union([z.literal(30), z.literal(60), z.literal(90)]),
-    overrideReason: z.string().max(500).optional(),
-    aiSummary: aiSummarySchema,
-  }),
-]);
+const reviewSchema = z
+  .discriminatedUnion("decision", [
+    z.object({
+      decision: z.literal("APPROVED"),
+      score: z.number().int().min(0).max(100),
+      rubricScores: rubricScoresSchema.optional(),
+      overrideReason: z.string().max(500).optional(),
+      aiSummary: aiSummarySchema,
+    }),
+    z.object({
+      decision: z.literal("REJECTED"),
+      reasons: z
+        .array(z.enum(REJECTION_REASON_KEYS))
+        .min(1, "Select at least one rejection reason"),
+      customNote: z.string().trim().max(1000).optional(),
+      reapplyDays: z.union([z.literal(30), z.literal(60), z.literal(90)]),
+      rubricScores: rubricScoresSchema.optional(),
+      overrideReason: z.string().max(500).optional(),
+      aiSummary: aiSummarySchema,
+    }),
+  ])
+  .superRefine((data, ctx) => {
+    if (
+      data.decision === "REJECTED" &&
+      data.reasons.includes("other") &&
+      !data.customNote?.trim()
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Custom note is required when Other is selected",
+        path: ["customNote"],
+      });
+    }
+  });
 
 /*
  * requireAdmin
@@ -122,7 +149,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       name: true,
       email: true,
       verificationStatus: true,
-      profileSlug: true,
     },
   });
   if (!engineer) {
@@ -147,14 +173,21 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   }
 
   const adminEmail = session.user.email;
+  const aiSummaryJson = parsed.data.aiSummary
+    ? (JSON.parse(JSON.stringify(parsed.data.aiSummary)) as Prisma.InputJsonValue)
+    : undefined;
 
   if (parsed.data.decision === "APPROVED") {
+    const finalScore = parsed.data.rubricScores
+      ? calculateVerificationRubricTotal(parsed.data.rubricScores)
+      : parsed.data.score;
+
     await prisma.$transaction([
       prisma.user.update({
         where: { id: params.id },
         data: {
           verificationStatus: VerificationStatus.VERIFIED,
-          hiretivoScore: parsed.data.score,
+          hiretivoScore: finalScore,
           scoreUpdatedAt: new Date(),
         },
       }),
@@ -170,8 +203,11 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           userId: params.id,
           reviewedBy: adminEmail,
           status: VerificationStatus.VERIFIED,
-          scoreGiven: parsed.data.score,
-          aiSummary: parsed.data.aiSummary ?? undefined,
+          scoreGiven: finalScore,
+          notes: parsed.data.rubricScores
+            ? { rubricScores: parsed.data.rubricScores }
+            : undefined,
+          aiSummary: aiSummaryJson,
         },
       }),
     ]);
@@ -179,8 +215,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     await sendApprovalEmail({
       to: engineer.email,
       name: engineer.name ?? "Engineer",
-      score: parsed.data.score,
-      profileSlug: engineer.profileSlug ?? "",
+      score: finalScore,
     }).catch((error: unknown) => {
       console.error("[verification review] Approval email failed", {
         engineerId: engineer.id,
@@ -216,8 +251,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
             reasons: parsed.data.reasons,
             customNote,
             reapplyDays: parsed.data.reapplyDays,
+            rubricScores: parsed.data.rubricScores,
+            rubricTotal: parsed.data.rubricScores
+              ? calculateVerificationRubricTotal(parsed.data.rubricScores)
+              : undefined,
           },
-          aiSummary: parsed.data.aiSummary ?? undefined,
+          aiSummary: aiSummaryJson,
         },
       }),
     ]);

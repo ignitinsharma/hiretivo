@@ -1,6 +1,6 @@
 /*
  * REJECTION_REASONS
- * 15 predefined admin rejection reasons for engineer verification.
+ * Predefined admin rejection reasons for engineer verification.
  * keys are stored in VerificationReview.notes.reasons[]; labels shown in admin UI.
  */
 export const REJECTION_REASONS = [
@@ -9,7 +9,7 @@ export const REJECTION_REASONS = [
   { key: "inactive_github", label: "No commits in last 6 months (inactive)" },
   { key: "no_production_code", label: "Projects don't show production-level code" },
   { key: "skills_mismatch", label: "Skills claimed don't match GitHub repos" },
-  { key: "bio_missing", label: "Bio missing or too short (<100 words)" },
+  { key: "bio_missing", label: "Bio missing or outside 20-150 characters" },
   { key: "no_work_experience", label: "Work experience not added" },
   { key: "no_projects", label: "Top projects not described" },
   { key: "no_real_project", label: "No real-world/production project (only practice)" },
@@ -19,6 +19,7 @@ export const REJECTION_REASONS = [
   { key: "incomplete_profile", label: "Profile feels incomplete - needs more detail" },
   { key: "too_junior", label: "Less than 2 years experience - reapply when more senior" },
   { key: "unprofessional_content", label: "Profile or linked content includes unprofessional material" },
+  { key: "other", label: "Other" },
 ] as const;
 
 export type RejectionReasonKey = (typeof REJECTION_REASONS)[number]["key"];

@@ -93,13 +93,12 @@ export async function POST(
     });
   }
 
-  // 3. Verify engineer exists and is VERIFIED+public
+  // 3. Verify engineer exists, is VERIFIED, and is not hidden.
   const engineer = await prisma.user.findFirst({
     where: {
       id: params.id,
       role: "SEEKER",
       verificationStatus: "VERIFIED",
-      seekerProfile: { is: { profilePublic: true } },
       AND: [
         { OR: [{ hiddenUntil: null }, { hiddenUntil: { lt: new Date() } }] },
       ],

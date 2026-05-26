@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 ">
+    <main className="flex min-h-screen items-center justify-center bg-muted px-4 py-12 ">
       <section className="mx-auto w-full max-w-md rounded-xl border border-gray-200 bg-white p-8">
         <div className="mb-8 space-y-3">
           <h1 className="font-bold text-4xl leading-tight text-foreground ">
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div className="space-y-6">
-            <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
+            <p className="rounded-xl bg-muted p-4 text-sm font-semibold leading-6 text-foreground">
               If an account exists for that email, a reset link is on the way.
               Check your inbox.
             </p>

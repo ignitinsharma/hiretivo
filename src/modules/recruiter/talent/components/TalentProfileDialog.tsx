@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useFetchTalentDetail } from "@/modules/recruiter/talent/queries/use-fetch-talent";
 import { formatProfileLabel } from "@/modules/recruiter/talent/utils/format-profile-label";
+import { formatAvailabilityLabel } from "@/lib/availability";
 import type {
   TalentDetail,
   TalentEducation,
@@ -74,16 +75,7 @@ const SOCIAL_LINKS: SocialLinkConfig[] = [
   { key: "twitterUrl", label: "Twitter", Icon: Twitter },
 ];
 
-/**
- * Formats availability or notice period values for display.
- */
-function formatAvailability(value: string | null): string {
-  if (!value) {
-    return "Availability not specified";
-  }
 
-  return formatProfileLabel(value);
-}
 
 /**
  * Formats the seeker experience value for compact display.
@@ -189,7 +181,7 @@ function TalentProfileSkeleton(): ReactElement {
  */
 function TalentProfileHeader({ talent }: { talent: TalentDetail }): ReactElement {
   const visibleLinks = getVisibleLinks(talent.links);
-  const statusLabel = formatAvailability(talent.availability);
+  const statusLabel = formatAvailabilityLabel(talent.availability);
 
   return (
     <DialogHeader className="shrink-0 border-b border-brand-border px-6 py-5 text-left">

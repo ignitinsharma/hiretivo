@@ -9,7 +9,7 @@ import type { TalentEngineer, TalentFilters } from "../types/talent.types";
  * Infinite query for recruiter talent pool. Cursor-paginated.
  * staleTime: 30s (dynamic data — unlocks/saves change frequently).
  */
-export function useTalentPool(filters: TalentFilters) {
+export function useTalentPool(filters: TalentFilters, enabled = true) {
   const params = new URLSearchParams();
   if (filters.skills) params.set("skills", filters.skills);
   if (filters.role) params.set("role", filters.role);
@@ -29,6 +29,7 @@ export function useTalentPool(filters: TalentFilters) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
+    enabled,
   });
 }
 

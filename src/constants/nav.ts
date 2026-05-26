@@ -6,6 +6,8 @@ import {
   UserSearch,
   Settings,
   User,
+  Bookmark,
+  Send,
 } from "lucide-react";
 
 export interface NavItem {
@@ -22,6 +24,7 @@ export interface NavItem {
  * Sidebar nav for authenticated recruiters in the pivot v2 talent marketplace.
  */
 export const RECRUITER_NAV_ITEMS: NavItem[] = [
+  { label: "Dashboard", href: "/recruiter/dashboard", icon: LayoutDashboard },
   { label: "Talent Pool", href: "/recruiter/talent", icon: UserSearch },
   { label: "My Jobs", href: "/recruiter/jobs", icon: Briefcase },
   { label: "Applications", href: "/recruiter/applications", icon: Users },
@@ -40,8 +43,8 @@ export interface SeekerNavItem {
  */
 export const SEEKER_NAV_ITEMS: SeekerNavItem[] = [
   { label: "Dashboard", href: "/seeker/dashboard", iconName: "layout-dashboard" },
-  { label: "My Profile", href: "/seeker/settings/profile", iconName: "user" },
-  { label: "Jobs", href: "/seeker/jobs", iconName: "briefcase" },
+  { label: "Saved Jobs", href: "/seeker/saved-jobs", iconName: "bookmark" },
+  { label: "Applied", href: "/seeker/applications", iconName: "send" },
   { label: "Settings", href: "/seeker/settings", iconName: "settings" },
 ];
 

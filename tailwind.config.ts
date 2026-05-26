@@ -62,7 +62,7 @@ const config = {
           "foreground-muted": '#6b7280',
           "foreground-secondary": '#9ca3af',
           /* Surfaces */
-          surface: '#f9fafb',
+          surface: '#f8f8f8',
           "surface-hover": '#f3f4f6',
           /* Borders */
           border: '#e5e7eb',

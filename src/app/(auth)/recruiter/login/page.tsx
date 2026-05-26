@@ -75,19 +75,19 @@ const RecruiterLoginLeft = (
             <span className="px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-bold rounded-full">12</span>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted border border-slate-100">
               <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary text-xs font-bold">JD</div>
               <div className="flex-1">
                 <div className="h-2.5 w-20 bg-slate-200 rounded-full mb-1.5"></div>
-                <div className="h-2 w-14 bg-slate-100 rounded-full"></div>
+                <div className="h-2 w-14 bg-muted rounded-full"></div>
               </div>
               <span className="text-[10px] font-bold text-brand-primary">98%</span>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted border border-slate-100">
               <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary text-xs font-bold">SK</div>
               <div className="flex-1">
                 <div className="h-2.5 w-24 bg-slate-200 rounded-full mb-1.5"></div>
-                <div className="h-2 w-16 bg-slate-100 rounded-full"></div>
+                <div className="h-2 w-16 bg-muted rounded-full"></div>
               </div>
               <span className="text-[10px] font-bold text-brand-primary">94%</span>
             </div>
