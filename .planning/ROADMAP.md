@@ -143,11 +143,16 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. /recruiter/pipeline has two tabs: "Pipeline" (existing kanban) and "Analytics" (new).
   2. Analytics tab shows funnel: Unlocked → Applied/Invited → Interviewing → Offered → Hired — with count and conversion % at each stage.
-  3. Analytics tab shows avg days per stage (computed from Application status transition timestamps).
+  3. ~~Analytics tab shows avg days per stage~~ — DROPPED per D-03 (no per-stage timestamps in Application model; no ApplicationStatusHistory added).
   4. Analytics tab shows credits used (EngineerUnlock count in billing period) vs quota remaining (from plan tier).
   5. Analytics tab shows top 5 skills across unlocked engineers (to guide job requirements).
   6. All data fetched via GET /api/recruiter/analytics (new route); rate-limited with dataFetchRateLimiter (30/min); no new schema required.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Restore plan-access.ts (fix PRO/ENTERPRISE → STARTER/GROWTH/SCALE), restore 5 deleted pipeline files, add Pipeline+Analytics tab container
+- [ ] 14-02-PLAN.md — Analytics types + GET /api/recruiter/analytics route (funnel groupBy, credits/quota, top 5 skills) + TanStack Query hook
+- [ ] 14-03-PLAN.md — AnalyticsTab UI (funnel cards, credits, top skills, FREE-plan lock overlay) wired into pipeline page
 
 ### Phase 15: Company Verification
 **Goal**: Fix the trust asymmetry where engineers are hard-verified but any recruiter can post jobs with a Gmail. Show "Verified Company ✓" badge on job cards and detail pages so engineers trust the posting.
