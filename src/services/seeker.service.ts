@@ -1,7 +1,9 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
+import type { CodingProfileInput } from '@/lib/verification/coding-profiles';
 import type { JobListItem } from '@/modules/jobs/types/job.types';
 import type { SeekerDashboardData, SeekerInterview } from '@/modules/seeker/dashboard/types/dashboard.types';
+import type { SeekingStatus } from '@/constants/enums';
 
 interface DataResponse<T> {
   data: T;
@@ -27,6 +29,13 @@ export interface EducationItem {
   major: string | null;
 }
 
+export interface SeekerProjectItem {
+  name: string;
+  description: string;
+  sourceUrl: string;
+  liveUrl: string | null;
+}
+
 export interface SeekerFeedResponse {
   jobs: JobListItem[];
   nextCursor: string | null;
@@ -38,6 +47,7 @@ export interface SeekerSettingsData {
   name: string;
   email: string;
   image: string | null;
+  timezone: string | null;
   headline: string;
   bio: string;
   location: string;
@@ -48,12 +58,16 @@ export interface SeekerSettingsData {
   currency: string;
   availability: string;
   resumeKey: string | null;
+  hiddenUntil: string | null;
+  seekingStatus: SeekingStatus | null;
   skills: Array<{ id: string; name: string; slug: string }>;
   websiteUrl: string | null;
   linkedinUrl: string | null;
   githubUrl: string | null;
   twitterUrl: string | null;
+  codingProfiles: CodingProfileInput[];
   yearsExperience: number | null;
+  topProjects: SeekerProjectItem[];
   workExperiences: WorkExperienceItem[];
   educations: EducationItem[];
 }
