@@ -7,6 +7,29 @@ import { isUnlocked, type TalentEngineer } from "../types/talent.types";
 import { useUnlockEngineer, useSaveEngineer } from "../queries/use-talent-pool";
 import { UpgradeModal } from "./UpgradeModal";
 import { format } from "date-fns";
+import { SeekingStatus } from "@/constants/enums";
+
+/*
+ * SEEKING_STATUS_DOT_CLASS
+ * Maps SeekingStatus enum to its tailwind background color class.
+ * Colors per CONTEXT.md decision 3: green/yellow/gray for active/open/not-looking.
+ */
+const SEEKING_STATUS_DOT_CLASS: Record<SeekingStatus, string> = {
+  [SeekingStatus.ACTIVELY_LOOKING]: "bg-brand-success",
+  [SeekingStatus.OPEN_TO_OFFERS]: "bg-yellow-400",
+  [SeekingStatus.NOT_LOOKING]: "bg-brand-foreground-secondary",
+};
+
+/*
+ * SEEKING_STATUS_LABEL
+ * Maps SeekingStatus enum to its short user-facing label used in the dot's
+ * aria-label and title attribute for accessibility.
+ */
+const SEEKING_STATUS_LABEL: Record<SeekingStatus, string> = {
+  [SeekingStatus.ACTIVELY_LOOKING]: "Actively Looking",
+  [SeekingStatus.OPEN_TO_OFFERS]: "Open to Offers",
+  [SeekingStatus.NOT_LOOKING]: "Not Looking",
+};
 
 interface EngineerCardProps {
   engineer: TalentEngineer;
@@ -49,6 +72,11 @@ export function EngineerCard({ engineer, isFreePlan, quotaExhausted, quotaResetA
         <div className="flex items-start justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${SEEKING_STATUS_DOT_CLASS[engineer.seekingStatus]}`}
+                aria-label={`Seeking status: ${SEEKING_STATUS_LABEL[engineer.seekingStatus]}`}
+                title={SEEKING_STATUS_LABEL[engineer.seekingStatus]}
+              />
               <h3 className="font-semibold text-brand-foreground">
                 {unlocked ? engineer.fullName : `${engineer.firstName} ${engineer.lastInitial}.`}
               </h3>
