@@ -16,6 +16,7 @@ export function useTalentPool(filters: TalentFilters, enabled = true) {
   if (filters.salaryMax) params.set("salaryMax", String(filters.salaryMax));
   if (filters.timezoneOverlapMin) params.set("timezoneOverlapMin", String(filters.timezoneOverlapMin));
   if (filters.availableBefore) params.set("availableBefore", filters.availableBefore);
+  if (filters.seekingStatus) params.set("seekingStatus", filters.seekingStatus);
 
   return useInfiniteQuery({
     queryKey: ["talent-pool", filters],
