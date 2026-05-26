@@ -4,6 +4,7 @@ import { useState } from "react";
 import { EngineerCard } from "./EngineerCard";
 import { TalentFilters } from "./TalentFilters";
 import { QuotaDisplay } from "./QuotaDisplay";
+import { SeekingStatusFilter } from "./SeekingStatusFilter";
 import { Button } from "@/components/ui/button";
 import { PLAN_TIERS } from "@/constants/pricing";
 import { useTalentPool } from "../queries/use-talent-pool";
@@ -43,6 +44,11 @@ export function TalentPoolClient({ isFreePlan, totalQuota, usedQuota, quotaReset
           />
         )}
       </div>
+
+      <SeekingStatusFilter
+        value={filters.seekingStatus}
+        onChange={(next) => setFilters((prev) => ({ ...prev, seekingStatus: next }))}
+      />
 
       <TalentFilters filters={filters} onChange={setFilters} />
 
