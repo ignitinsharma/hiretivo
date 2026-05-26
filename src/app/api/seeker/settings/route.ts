@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 import type { Prisma } from "@prisma/client";
 
-const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
+const settingsRateLimiter = createRateLimiter("seeker-settings", 5, "1 m");
 
 interface SkillCandidate {
   id: string;
