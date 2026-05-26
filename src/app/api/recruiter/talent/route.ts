@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { JobStatus, PlanTier, UserRole } from "@/constants/enums";
+import { JobStatus, PlanTier, UserRole, SeekingStatus, SEEKING_STATUS_VALUES } from "@/constants/enums";
 import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import {
   computeBestJobMatchForEngineer,
@@ -55,6 +55,10 @@ export async function GET(req: NextRequest) {
   const cursor = url.searchParams.get("cursor")?.trim() ?? "";
   const limitRaw = url.searchParams.get("limit")?.trim() ?? "";
   const sortByRaw = url.searchParams.get("sortBy")?.trim() ?? "";
+  const seekingStatusRaw = url.searchParams.get("seekingStatus")?.trim() ?? "";
+  const seekingStatus = (SEEKING_STATUS_VALUES as readonly string[]).includes(seekingStatusRaw)
+    ? (seekingStatusRaw as SeekingStatus)
+    : null;
 
   const skillsArr = skillsRaw
     ? skillsRaw.split(",").map((s) => s.trim()).filter(Boolean)
@@ -124,6 +128,7 @@ export async function GET(req: NextRequest) {
     ...(availableBefore
       ? { availableFrom: { lte: new Date(availableBefore) } }
       : {}),
+    ...(seekingStatus !== null ? { seekingStatus } : {}),
     AND: [
       {
         OR: [
@@ -157,6 +162,7 @@ export async function GET(req: NextRequest) {
       hiretivoScore: true,
       timezoneOverlapHours: true,
       availableFrom: true,
+      seekingStatus: true,
       seekerProfile: {
         select: {
           primaryRole: true,
@@ -233,6 +239,7 @@ export async function GET(req: NextRequest) {
       hasJobsToMatch: hasOpenJobs,
       isUnlocked,
       isSaved: savedSet.has(eng.id),
+      seekingStatus: eng.seekingStatus,
     };
 
     if (!isUnlocked) return base;
