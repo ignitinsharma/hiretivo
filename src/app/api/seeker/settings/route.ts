@@ -4,6 +4,7 @@ import { SkillLevel, UserRole } from "@/constants/enums";
 import { invalidateSeekerCache } from "@/lib/match";
 import { resolveLogoUrl } from "@/lib/r2";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
+import { normalizeCodingProfiles } from "@/lib/verification/coding-profiles";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 import type { Prisma } from "@prisma/client";
@@ -233,6 +234,9 @@ export async function GET() {
       name: true,
       email: true,
       image: true,
+      timezone: true,
+      hiddenUntil: true,
+      seekingStatus: true,
       seekerProfile: {
         select: {
           headline: true,
@@ -249,7 +253,9 @@ export async function GET() {
           linkedinUrl: true,
           githubUrl: true,
           twitterUrl: true,
+          codingProfiles: true,
           yearsExperience: true,
+          topProjects: true,
           workExperiences: {
             orderBy: { createdAt: 'asc' as const },
           },
@@ -280,6 +286,7 @@ export async function GET() {
       ...userFields,
       image: resolveLogoUrl(image),
       ...profileFields,
+      codingProfiles: normalizeCodingProfiles(profileFields.codingProfiles),
       skills: skills.map((s) => s.skill),
       workExperiences,
       educations,
@@ -333,7 +340,12 @@ export async function PATCH(req: NextRequest) {
   const transactionOperations: Prisma.PrismaPromise<unknown>[] = [
     prisma.user.update({
       where: { id: session.user.id },
-      data: { name },
+      data: {
+        name,
+        ...(parsed.data.seekingStatus !== undefined
+          ? { seekingStatus: parsed.data.seekingStatus }
+          : {}),
+      },
     }),
     prisma.seekerProfile.update({
       where: { userId: session.user.id },
@@ -351,7 +363,20 @@ export async function PATCH(req: NextRequest) {
         linkedinUrl: profileData.linkedinUrl !== undefined ? (profileData.linkedinUrl || null) : undefined,
         githubUrl: profileData.githubUrl !== undefined ? (profileData.githubUrl || null) : undefined,
         twitterUrl: profileData.twitterUrl !== undefined ? (profileData.twitterUrl || null) : undefined,
-        yearsExperience: profileData.yearsExperience !== undefined ? profileData.yearsExperience : undefined,
+        codingProfiles:
+          profileData.codingProfiles !== undefined
+            ? normalizeCodingProfiles(profileData.codingProfiles)
+            : undefined,
+      yearsExperience: profileData.yearsExperience !== undefined ? profileData.yearsExperience : undefined,
+        topProjects:
+          profileData.topProjects !== undefined
+            ? profileData.topProjects.map((project) => ({
+                name: project.name,
+                description: project.description,
+                sourceUrl: project.sourceUrl,
+                liveUrl: project.liveUrl || null,
+              }))
+            : undefined,
       },
     }),
   ];
