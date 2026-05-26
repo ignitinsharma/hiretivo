@@ -1,6 +1,7 @@
 ---
 phase: 09-verification-system
 reviewed: 2026-05-17T12:00:00Z
+re-verified: 2026-05-26
 depth: standard
 files_reviewed: 42
 files_reviewed_list:
@@ -57,7 +58,16 @@ findings:
   warning: 6
   info: 3
   total: 11
-status: issues_found
+status: passed
+score: 15/15 must-haves verified
+overrides_applied: 0
+gaps: []
+gap_resolution_notes:
+  PIVS-08: "Rejection reasons count now 16 (was 14). Fixed during Phase 10-12 work."
+  PIVS-10: "ApplyButton wired in JobDetailHeader, JobDetailSidebar, JobCard, SavedJobsList, RecommendedJobsList. Job detail page fetches User.verificationStatus and passes to both components. Fixed during Phase 10-12 work."
+  PIVS-11: "AiReviewNotice component present in VerificationStatusCard, renders in PENDING/VERIFIED/REJECTED states. Fixed during Phase 10-12 work."
+  PIVS-12: "admin-job.service.ts, AdminJobList.tsx, src/app/companies/, src/app/api/admin/companies/ all deleted. src/modules/companies/ empty folder deleted 2026-05-26. No /companies/ route links remain."
+  PIVS-13: "writeRateLimiter changed from 10 to 5 req/min in src/lib/rate-limit.ts 2026-05-26. Now matches CLAUDE.md 5 req/min write-op requirement."
 ---
 
 # Phase 09: Code Review Report — Verification System
