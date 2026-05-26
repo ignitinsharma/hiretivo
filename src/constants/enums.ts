@@ -230,3 +230,15 @@ export const POSITION_TYPE_VALUES = [
   PositionType.TECHNICAL,
   PositionType.NON_TECHNICAL,
 ] as const;
+
+export enum SeekingStatus {
+  ACTIVELY_LOOKING = "ACTIVELY_LOOKING",
+  OPEN_TO_OFFERS = "OPEN_TO_OFFERS",
+  NOT_LOOKING = "NOT_LOOKING",
+}
+
+export const SEEKING_STATUS_VALUES = [
+  SeekingStatus.ACTIVELY_LOOKING,
+  SeekingStatus.OPEN_TO_OFFERS,
+  SeekingStatus.NOT_LOOKING,
+] as const;
