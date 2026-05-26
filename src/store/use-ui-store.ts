@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import { PAID_FEATURE_COPY } from '@/lib/billing/plan-access';
 
-import type { RecruiterPaidFeature } from '@/constants/enums';
+import type { RecruiterPaidFeature } from '@/lib/billing/plan-access';
 
 interface UIState {
   isLoginModalOpen: boolean;
