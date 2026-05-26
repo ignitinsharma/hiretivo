@@ -13,6 +13,7 @@ import { auth } from "@/auth";
 import { PlanTier } from "@/constants/enums";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PipelineBoard } from "./PipelineBoard";
+import { AnalyticsTab } from "./AnalyticsTab";
 
 export default async function PipelinePage() {
   const session = await auth();
@@ -51,10 +52,7 @@ export default async function PipelinePage() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          {/* PLACEHOLDER: Plan 03 replaces this with <AnalyticsTab isFreePlan={isFreePlan} /> */}
-          <div className="rounded-xl border border-brand-border bg-white p-8 text-center text-brand-foreground-muted">
-            Analytics coming in this phase.
-          </div>
+          <AnalyticsTab isFreePlan={isFreePlan} />
         </TabsContent>
       </Tabs>
     </div>
