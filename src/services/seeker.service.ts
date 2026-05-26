@@ -3,6 +3,7 @@ import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { CodingProfileInput } from '@/lib/verification/coding-profiles';
 import type { JobListItem } from '@/modules/jobs/types/job.types';
 import type { SeekerDashboardData, SeekerInterview } from '@/modules/seeker/dashboard/types/dashboard.types';
+import type { SeekingStatus } from '@/constants/enums';
 
 interface DataResponse<T> {
   data: T;
@@ -58,6 +59,7 @@ export interface SeekerSettingsData {
   availability: string;
   resumeKey: string | null;
   hiddenUntil: string | null;
+  seekingStatus: SeekingStatus | null;
   skills: Array<{ id: string; name: string; slug: string }>;
   websiteUrl: string | null;
   linkedinUrl: string | null;
