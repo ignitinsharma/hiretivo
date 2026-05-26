@@ -1,18 +1,18 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
-import { LifeBuoy, Plus, LogOut, PanelLeft, Lock } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { LifeBuoy, Plus, LogOut, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { signOut } from "next-auth/react";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
-import { useUIStore } from "@/store/use-ui-store";
-import { useProfile } from "@/hooks/use-profile";
+import { apiClient } from "@/lib/axios";
 import {
   Tooltip,
   TooltipContent,
@@ -88,19 +88,44 @@ function RecruiterSidebarInner({
   toggle: () => void;
 }) {
   const pathname = usePathname();
-  const {
-    name: userName,
-    initials,
-    avatarUrl,
-    plan,
-  } = useProfile();
-
-  const currentPlan = plan ?? PlanTier.FREE;
-  const planLabel = currentPlan;
+  const { data: session } = useSession();
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const currentPlan = session?.user?.plan ?? PlanTier.FREE;
+  const planLabel =
+    currentPlan === PlanTier.ENTERPRISE ? "Enterprise" : currentPlan;
   const isPaidPlan =
-    currentPlan === PlanTier.STARTER ||
-    currentPlan === PlanTier.GROWTH ||
-    currentPlan === PlanTier.SCALE;
+    currentPlan === PlanTier.PRO || currentPlan === PlanTier.ENTERPRISE;
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const { data } = await apiClient.get<{
+          data: { logo: string | null; companyName: string };
+        }>("/recruiter/settings");
+        if (data?.data?.logo) {
+          setCompanyLogo(data.data.logo);
+        }
+      } catch {}
+    }
+    fetchSettings();
+  }, []);
+
+  const userName = session?.user?.name ?? "Recruiter";
+  const initials =
+    userName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "R";
+
+  const avatarUrl =
+    companyLogo ??
+    (session?.user?.image
+      ? session.user.image.startsWith("http")
+        ? session.user.image
+        : `/api/logo?key=${encodeURIComponent(session.user.image)}`
+      : null);
   const sidebarTooltipClasses =
     "rounded-lg border border-brand-border bg-white text-[#0a0a0a] shadow-none font-medium";
 
@@ -136,7 +161,7 @@ function RecruiterSidebarInner({
                       : "border-brand-border bg-brand-surface text-brand-foreground-muted",
                   )}
                 >
-                  {planLabel}
+                  {planLabel === "Enterprise" ? "Ente." : planLabel}
                 </span>
               </Link>
               <SidebarToggle />
@@ -186,6 +211,7 @@ function RecruiterSidebarInner({
                   variant="primary"
                   className="transition-transform duration-200 hover:scale-105"
                   onClick={() => {
+                    const { useUIStore } = require("@/store/use-ui-store");
                     useUIStore.getState().openPostJobModal();
                   }}
                 >
@@ -201,6 +227,7 @@ function RecruiterSidebarInner({
               variant="primary"
               className="w-full py-3 px-4"
               onClick={() => {
+                const { useUIStore } = require("@/store/use-ui-store");
                 useUIStore.getState().openPostJobModal();
               }}
             >
@@ -215,8 +242,6 @@ function RecruiterSidebarInner({
           {RECRUITER_NAV_ITEMS.map((item, index) => {
             const isActive =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const isTalentPoolLocked =
-              item.href === "/recruiter/talent" && !isPaidPlan;
 
             const showSeparator = index === 4;
 
@@ -240,9 +265,6 @@ function RecruiterSidebarInner({
                         <div className="flex items-center gap-0">
                           <item.icon className="w-5 h-5 shrink-0" />
                         </div>
-                        {isTalentPoolLocked && (
-                          <Lock className="absolute right-0.5 top-0.5 h-3.5 w-3.5 text-brand-foreground-secondary" />
-                        )}
                         {item.badge && (
                           <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-brand-primary text-[8px] font-semibold flex items-center justify-center rounded-full text-white border border-white">
                             {item.badge}
@@ -271,9 +293,6 @@ function RecruiterSidebarInner({
                       <item.icon className="w-5 h-5 shrink-0" />
                       <span>{item.label}</span>
                     </div>
-                    {isTalentPoolLocked && (
-                      <Lock className="h-4 w-4 text-brand-foreground-secondary" />
-                    )}
                     {item.badge && (
                       <span
                         className={cn(

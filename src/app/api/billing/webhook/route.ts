@@ -12,8 +12,9 @@ import type {
 } from "dodopayments/resources/webhooks/webhooks";
 import type { Subscription } from "dodopayments/resources/subscriptions";
 import type { Payment } from "dodopayments/resources/payments";
-import { JobStatus, PlanTier } from "@/constants/enums";
+import { PlanTier } from "@/constants/enums";
 import { DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
+import { BOOST_DURATION_MS } from "@/constants/boost";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -35,7 +36,7 @@ function mapStatus(status: string): "ACTIVE" | "CANCELED" | "PAST_DUE" {
 }
 
 function getPlanForProduct(productId: string): PlanTier {
-  return DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.STARTER;
+  return DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO;
 }
 
 function getSubscriptionUserId(sub: Subscription): string | null {
@@ -184,9 +185,6 @@ async function handleSubscriptionCancelled(sub: Subscription): Promise<void> {
       data: { plan: PlanTier.FREE },
     }),
   ]);
-
-  // Auto-draft excess jobs for the NEW (FREE) plan limit
-  await handleJobDowngrade(userId, PlanTier.FREE);
 }
 
 // payment.failed — grace period, do not downgrade until subscription.cancelled fires
@@ -202,31 +200,34 @@ async function handlePaymentFailed(payment: Payment): Promise<void> {
   });
 }
 
-/*
- * handleJobDowngrade
- * When a recruiter's plan is downgraded, auto-drafts excess OPEN jobs
- * beyond the new plan's job posting limit. Most-recently-created jobs
- * are kept OPEN; oldest excess jobs become DRAFT.
- */
-async function handleJobDowngrade(userId: string, newPlan: PlanTier): Promise<void> {
-  const { getJobPostingLimit } = await import("@/lib/billing/plan-access");
-  const newQuota = getJobPostingLimit(newPlan);
-  if (newQuota === null) return; // unlimited — nothing to draft
+// INT-03: Activate a BoostedJob record on successful one-time boost payment.
+// Upsert is idempotent — replaying the same event resets expiresAt to same value (T-13-14).
+async function handleBoostPaymentSucceeded(
+  data: PaymentSucceededWebhookEvent['data'],
+): Promise<void> {
+  const meta = data.metadata as Record<string, string> | undefined;
+  if (!meta?.userId || !meta?.jobId || meta?.type !== 'boost') return;
 
-  const openJobs = await prisma.job.findMany({
-    where: { recruiterId: userId, status: JobStatus.OPEN },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
+  const { userId, jobId } = meta;
+  const startsAt = new Date();
+  const expiresAt = new Date(startsAt.getTime() + BOOST_DURATION_MS);
+
+  await prisma.boostedJob.upsert({
+    where: { jobId },
+    create: {
+      jobId,
+      recruiterId: userId,
+      paymentId: data.payment_id,
+      startsAt,
+      expiresAt,
+    },
+    update: {
+      recruiterId: userId,
+      paymentId: data.payment_id,
+      startsAt,
+      expiresAt,
+    },
   });
-
-  const excess = openJobs.slice(newQuota);
-  if (excess.length === 0) return;
-
-  await prisma.job.updateMany({
-    where: { id: { in: excess.map((j) => j.id) } },
-    data: { status: JobStatus.DRAFT },
-  });
-  console.info(`[billing] Downgrade: auto-drafted ${excess.length} excess jobs for user ${userId}`);
 }
 
 export async function POST(req: NextRequest) {
@@ -300,7 +301,9 @@ export async function POST(req: NextRequest) {
         await handlePaymentFailed((event as PaymentFailedWebhookEvent).data);
         break;
       case "payment.succeeded":
-        console.info("payment.succeeded received without subscription handling");
+        await handleBoostPaymentSucceeded(
+          (event as PaymentSucceededWebhookEvent).data,
+        );
         break;
       default:
         console.info(`Unhandled DodoPayments webhook event: ${event.type}`);

@@ -77,7 +77,7 @@ const SeekerLoginLeft = (
           </div>
           <span className="text-[10px] font-medium text-slate-400">Now</span>
         </div>
-        <div className="bg-muted p-4 rounded-xl border border-slate-100">
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
           <h4 className="font-bold text-sm text-slate-900 mb-1">
             Frontend Developer at Acme Inc
           </h4>

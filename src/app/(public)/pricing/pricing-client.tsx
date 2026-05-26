@@ -4,20 +4,473 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
-import { Check, CircleCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { BillingPeriod, CurrencyCode, PlanTier, UserRole } from "@/constants/enums";
+import { CircleCheck } from "lucide-react";
+import Link from "next/link";
 import {
-  CURRENCY_SYMBOL,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  BillingPeriod,
+  CurrencyCode,
+  PricingTierId,
+  UserRole,
+  PlanTier,
+} from "@/constants/enums";
+import { useUIStore } from "@/store/use-ui-store";
+import { billingService } from "@/services/billing.service";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import {
   PRICING_CONFIG,
+  CURRENCY_SYMBOL,
   type PricingCurrency,
   type PricingTier,
 } from "@/constants/pricing";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
-import { cn } from "@/lib/utils";
-import { billingService } from "@/services/billing.service";
-import { useUIStore } from "@/store/use-ui-store";
+import type { CheckoutRequestInput } from "@/lib/validations/checkout.schema";
+
+// ─── Table cell class constants (CLAUDE.md §15.2) ───────────────────────────
+
+const TD_BASE = "py-6 px-4 text-sm";
+const CELL_LABEL = cn(TD_BASE, "font-semibold text-slate-700");
+const CELL_MUTED = cn(TD_BASE, "text-slate-400");
+const CELL_BODY = cn(TD_BASE, "text-slate-600");
+const CELL_PRO = cn(TD_BASE, "font-bold text-black bg-gray-100/50");
+const CELL_CHECK_GREEN = cn(TD_BASE, "text-black font-bold");
+const CELL_PRO_CHECK = cn(TD_BASE, "font-bold text-black bg-gray-100/50");
+
+// ─── Feature comparison data (CLAUDE.md §15.4) ──────────────────────────────
+
+type PlanValue = string | boolean | null;
+
+interface FeatureRow {
+  feature: string;
+  free: PlanValue;
+  pro: PlanValue;
+  custom: PlanValue;
+}
+
+const FEATURE_ROWS: FeatureRow[] = [
+  { feature: "Active Jobs", free: "4 (trial) / 1", pro: "10", custom: "Custom" },
+  {
+    feature: "Applicant Views",
+    free: "Unlimited",
+    pro: "Unlimited",
+    custom: "Custom",
+  },
+  {
+    feature: "AI Candidate Summaries",
+    free: "Trial",
+    pro: true,
+    custom: true,
+  },
+  {
+    feature: "AI Skill Suggestions",
+    free: "Trial",
+    pro: true,
+    custom: true,
+  },
+  {
+    feature: "AI Job Description Generator",
+    free: "Trial",
+    pro: true,
+    custom: true,
+  },
+  {
+    feature: "Interview Scheduling",
+    free: "Trial",
+    pro: true,
+    custom: true,
+  },
+  { feature: "Talent Pool", free: null, pro: true, custom: true },
+  { feature: "Basic Skill Matching", free: true, pro: true, custom: true },
+  { feature: "Email Support", free: true, pro: true, custom: true },
+];
+
+// ─── FAQ data (CLAUDE.md §15.4) ─────────────────────────────────────────────
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    question: "Can I change plans later?",
+    answer:
+      "Yes. Recruiters can upgrade to Pro from the pricing page. If you are already on Pro, the pricing CTA opens billing management so you can manage your subscription.",
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer:
+      "Checkout is handled securely through our billing provider. Available payment methods are shown during checkout based on your region and selected currency.",
+  },
+  {
+    question: "Is there a free trial for PRO?",
+    answer:
+      "The Free plan includes a trial-style offer with up to 4 active job posts and access to core AI hiring features. Pro unlocks the full paid recruiter workflow.",
+  },
+  {
+    question: "What happens to my listings if I downgrade?",
+    answer:
+      "Your existing listings remain tied to your recruiter account, but Free plan limits apply after downgrade. You can manage billing from the pricing page when signed in on Pro.",
+  },
+];
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+interface FeatureCellProps {
+  value: PlanValue;
+  isPro?: boolean;
+}
+
+function FeatureCell({ value, isPro = false }: FeatureCellProps) {
+  if (value === null) {
+    return <td className={isPro ? CELL_PRO : CELL_MUTED}>—</td>;
+  }
+  if (value === true) {
+    return <td className={isPro ? CELL_PRO_CHECK : CELL_CHECK_GREEN}>✓</td>;
+  }
+  return <td className={isPro ? CELL_PRO : CELL_BODY}>{value}</td>;
+}
+
+interface PricingCardProps {
+  tier: PricingTier;
+  currency: PricingCurrency;
+  isAnnual: boolean;
+  userPlan?: PlanTier;
+  onCtaClick: (tierId: string) => void;
+  isPending?: boolean;
+}
+
+function PricingCardFeatureList({
+  features,
+  highlighted,
+}: {
+  features: string[];
+  highlighted: boolean;
+}) {
+  return (
+    <ul className="space-y-3 mb-8 grow">
+      {features.map((feature) => (
+        <li key={feature} className="flex items-start gap-2">
+          <CircleCheck
+            className={cn(
+              "mt-0.5 shrink-0",
+              highlighted ? "fill-primary" : "fill-primary text-white",
+            )}
+            size={16}
+            strokeWidth={2.5}
+            aria-hidden
+          />
+          <span
+            className={cn(
+              "text-xs",
+              highlighted ? "text-gray-50" : "text-slate-700",
+            )}
+          >
+            {feature}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PricingCard({
+  tier,
+  currency,
+  isAnnual,
+  userPlan,
+  onCtaClick,
+  isPending = false,
+}: PricingCardProps) {
+  const sym = CURRENCY_SYMBOL[currency];
+  const prices = tier[currency];
+  const isHighlighted = tier.highlighted === true;
+  const isCustom = tier.isCustom === true;
+  const isCurrentPlan =
+    (userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO) ||
+    (userPlan === PlanTier.ENTERPRISE && isCustom);
+
+  const displayedCtaText =
+    userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO
+      ? "Manage billing"
+      : tier.cta;
+  const priceFormatter = new Intl.NumberFormat(
+    currency === CurrencyCode.INR ? "en-IN" : "en-US",
+    { maximumFractionDigits: 0 },
+  );
+
+  const displayedPrice = (() => {
+    if (!prices) return null;
+    return isAnnual ? prices.annualTotal : prices.monthly;
+  })();
+
+  const annualSavings = prices && isAnnual ? prices.annualSavings : null;
+  const annualTotal = prices && isAnnual ? prices.annualTotal : null;
+  const billingSuffix = isAnnual ? "/yr" : "/mo";
+
+  return (
+    <div
+      className={cn(
+        "p-6 rounded-xl flex flex-col h-full text-left relative",
+        isHighlighted
+          ? "bg-brand-primary border-2 border-brand-primary  transform lg:scale-105 z-10 text-white"
+          : "bg-white border border-gray-200 ",
+      )}
+    >
+      {isHighlighted && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-extrabold px-4 py-1 rounded-full uppercase  whitespace-nowrap">
+          Most Popular
+        </div>
+      )}
+      {isCurrentPlan && (
+        <div
+          className={cn(
+            "absolute right-4 top-4 rounded-lg border px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
+            isHighlighted
+              ? "border-white/30 bg-white/10 text-white"
+              : "border-brand-border bg-brand-surface text-brand-foreground",
+          )}
+        >
+          Current plan
+        </div>
+      )}
+
+      <div className="mb-6">
+        <h3
+          className={cn(
+            "text-[10px] font-bold uppercase tracking-wider mb-2",
+            isHighlighted ? "text-gray-100" : "text-slate-900",
+          )}
+        >
+          {tier.name}
+        </h3>
+        <p
+          className={cn(
+            "text-xs mb-4 min-h-8",
+            isHighlighted ? "text-gray-100" : "text-slate-500",
+          )}
+        >
+          {tier.description}
+        </p>
+
+        {isCustom ? (
+          <>
+            <div className="flex items-baseline gap-1 min-h-12">
+              <span className="text-4xl font-extrabold text-slate-900">
+                Custom
+              </span>
+            </div>
+            <p className="mt-2 text-slate-400 text-[10px]">
+              Pricing available after consultation
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-1">
+              <span
+                className={cn(
+                  "text-4xl font-extrabold",
+                  isHighlighted ? "text-white" : "text-slate-900",
+                )}
+              >
+                {sym}
+                {displayedPrice === null
+                  ? ""
+                  : priceFormatter.format(displayedPrice)}
+              </span>
+              {tier.id !== PricingTierId.FREE && (
+                <span
+                  className={cn(
+                    "text-sm ml-1",
+                    isHighlighted ? "text-gray-200" : "text-slate-500",
+                  )}
+                >
+                  {billingSuffix}
+                </span>
+              )}
+            </div>
+            {tier.id === PricingTierId.FREE && (
+              <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
+            )}
+            {tier.id !== PricingTierId.FREE &&
+              currency === CurrencyCode.INR && (
+                <p
+                  className={cn(
+                    "mt-1 text-[10px] font-bold",
+                    isHighlighted ? "text-white" : "text-slate-400",
+                  )}
+                >
+                  GST included
+                </p>
+              )}
+          </>
+        )}
+      </div>
+
+      {!isCustom && tier.id !== PricingTierId.FREE && (
+        <div
+          className={cn(
+            "p-2.5 rounded-lg mb-6 text-center",
+            isHighlighted ? "bg-white/10" : "bg-gray-50",
+          )}
+        >
+          {isAnnual && annualSavings !== null && annualTotal !== null ? (
+            <p
+              className={cn(
+                "text-[10px] font-bold",
+                isHighlighted ? "text-white" : "text-black",
+              )}
+            >
+              Save {sym}
+              {priceFormatter.format(annualSavings)}/yr · {sym}
+              {priceFormatter.format(annualTotal)} billed annually
+            </p>
+          ) : (
+            <p
+              className={cn(
+                "text-[10px] font-bold",
+                isHighlighted ? "text-white" : "text-slate-600",
+              )}
+            >
+              Billed monthly
+            </p>
+          )}
+        </div>
+      )}
+
+      {tier.id === PricingTierId.FREE && (
+        <div className="h-px bg-slate-100 mb-6" />
+      )}
+
+      {isCustom && <div className="h-px bg-slate-100 mb-6" />}
+
+      <PricingCardFeatureList
+        features={tier.features}
+        highlighted={isHighlighted}
+      />
+
+      {isCustom ? (
+        <Link href="/contact" className="w-full mt-auto">
+          <Button variant="default" size="lg" className="w-full">
+            {tier.cta}
+          </Button>
+        </Link>
+      ) : (
+        <Button
+          variant={isHighlighted ? "primary" : "secondary"}
+          size="lg"
+          className="w-full mt-auto"
+          loading={isPending}
+          loadingText={
+            isCurrentPlan ? "Opening billing..." : "Opening checkout..."
+          }
+          onClick={() => onCtaClick(tier.id)}
+        >
+          {displayedCtaText}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function PricingCompareTable(_props: { isAnnual: boolean }) {
+  // isAnnual reserved for future dynamic feature cells
+  return (
+    <section className="py-24 px-6 overflow-x-auto border-t border-slate-100">
+      <div className="max-w-5xl mx-auto">
+        <h2 className="text-3xl font-extrabold text-center text-slate-900 mb-16">
+          Compare features
+        </h2>
+        <div className="min-w-[600px]">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left border-b border-slate-200">
+                <th
+                  className={cn(
+                    TD_BASE,
+                    "font-bold text-slate-500 uppercase tracking-wider",
+                  )}
+                >
+                  Feature
+                </th>
+                <th className={cn(TD_BASE, "font-bold text-slate-900")}>
+                  Free
+                </th>
+                <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>PRO</th>
+                <th className={cn(TD_BASE, "font-bold text-slate-900")}>
+                  Custom
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {FEATURE_ROWS.map((row, idx) => (
+                <tr
+                  key={row.feature}
+                  className={
+                    idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""
+                  }
+                >
+                  <td className={CELL_LABEL}>{row.feature}</td>
+                  <FeatureCell value={row.free} />
+                  <FeatureCell value={row.pro} isPro />
+                  <FeatureCell value={row.custom} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PricingFaqSection() {
+  return (
+    <section className="py-24 px-6 bg-slate-50">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-4xl font-extrabold text-center text-slate-900 mb-16">
+          Frequently asked questions
+        </h2>
+        <Accordion type="single" collapsible className="space-y-4">
+          {FAQ_ITEMS.map((item) => (
+            <AccordionItem
+              key={item.question}
+              value={item.question}
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+            >
+              <AccordionTrigger className="px-6 py-6 text-left text-lg font-bold text-slate-900 hover:no-underline hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-slate-500 [&[data-state=open]>svg]:text-brand-primary">
+                {item.question}
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-6 text-base leading-relaxed text-brand-foreground-muted">
+                {item.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+        <div className="mt-16 text-center">
+          <p className="text-slate-500">
+            Still have questions?{" "}
+            <Link
+              className="text-black font-bold hover:underline decoration-2"
+              href="/contact"
+            >
+              Chat with our support team
+            </Link>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 interface PricingClientProps {
   currency: PricingCurrency;
@@ -25,7 +478,9 @@ interface PricingClientProps {
 
 function getBrowserCurrencyFallback(): PricingCurrency {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const languages = navigator.languages.length > 0 ? navigator.languages : [navigator.language];
+  const languages = navigator.languages.length > 0
+    ? navigator.languages
+    : [navigator.language];
 
   if (
     timeZone === "Asia/Kolkata" ||
@@ -38,118 +493,23 @@ function getBrowserCurrencyFallback(): PricingCurrency {
   return CurrencyCode.USD;
 }
 
-function PricingCard({
-  tier,
-  currency,
-  isAnnual,
-  userPlan,
-  onCtaClick,
-  isPending,
-}: {
-  tier: PricingTier;
-  currency: PricingCurrency;
-  isAnnual: boolean;
-  userPlan?: PlanTier;
-  onCtaClick: (tierId: PlanTier) => void;
-  isPending: boolean;
-}) {
-  const prices = tier[currency] ?? tier.USD;
-  const price = isAnnual ? prices.annualTotal : prices.monthly;
-  const formatter = new Intl.NumberFormat(currency === CurrencyCode.INR ? "en-IN" : "en-US", {
-    maximumFractionDigits: 0,
-  });
-  const isCurrentPlan = userPlan === tier.id;
+async function createCheckoutSession(
+  body?: CheckoutRequestInput,
+): Promise<string> {
+  return billingService.createCheckoutSession(body);
+}
 
-  return (
-    <article
-      className={cn(
-        "flex h-full flex-col rounded-xl border p-6 text-left",
-        tier.highlighted
-          ? "border-brand-primary bg-brand-primary text-brand-primary-foreground"
-          : "border-brand-border bg-white text-brand-foreground",
-      )}
-    >
-      <div className="mb-6">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-xl font-semibold leading-snug tracking-tight">{tier.name}</h3>
-          {isCurrentPlan && (
-            <span
-              className={cn(
-                "rounded-lg border px-2.5 py-1 text-xs font-medium",
-                tier.highlighted
-                  ? "border-white/30 text-white"
-                  : "border-brand-border text-brand-foreground-muted",
-              )}
-            >
-              Current
-            </span>
-          )}
-        </div>
-        <p
-          className={cn(
-            "mt-2 min-h-12 text-sm leading-relaxed",
-            tier.highlighted ? "text-white/85" : "text-brand-foreground-muted",
-          )}
-        >
-          {tier.description}
-        </p>
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-bold tracking-tight">
-            {CURRENCY_SYMBOL[currency]}
-            {formatter.format(price)}
-          </span>
-          {tier.id !== PlanTier.FREE && (
-            <span className={cn("text-sm", tier.highlighted ? "text-white/80" : "text-brand-foreground-muted")}>
-              /{isAnnual ? "yr" : "mo"}
-            </span>
-          )}
-        </div>
-        {tier.id === PlanTier.FREE ? (
-          <p className={cn("mt-2 text-xs", tier.highlighted ? "text-white/80" : "text-brand-foreground-muted")}>
-            Forever free
-          </p>
-        ) : (
-          <p className={cn("mt-2 text-xs", tier.highlighted ? "text-white/80" : "text-brand-foreground-muted")}>
-            {isAnnual ? "20% annual savings" : "Billed monthly"}
-          </p>
-        )}
-      </div>
-
-      <ul className="mb-8 flex grow flex-col gap-3">
-        {tier.features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2 text-sm">
-            <CircleCheck className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-
-      <Button
-        variant={tier.highlighted ? "secondary" : "primary"}
-        size="lg"
-        className="mt-auto w-full"
-        loading={isPending}
-        loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
-        onClick={() => onCtaClick(tier.id)}
-      >
-        {isCurrentPlan && tier.id !== PlanTier.FREE ? "Manage billing" : tier.cta}
-      </Button>
-    </article>
-  );
+async function createPortalSession(): Promise<string> {
+  return billingService.createPortalSession();
 }
 
 export function PricingClient({ currency }: PricingClientProps) {
   const [isAnnual, setIsAnnual] = useState(false);
-  const [activeCurrency, setActiveCurrency] = useState<PricingCurrency>(currency);
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE>(
-    PlanTier.STARTER,
-  );
-  const router = useRouter();
+  const [activeCurrency, setActiveCurrency] =
+    useState<PricingCurrency>(currency);
   const { data: session } = useSession();
-  const { openEmailVerificationModal, openLoginModal } = useUIStore();
+  const router = useRouter();
+  const { openLoginModal, openEmailVerificationModal } = useUIStore();
   const { data: verificationStatus } = useEmailVerificationStatus();
 
   useEffect(() => {
@@ -159,10 +519,11 @@ export function PricingClient({ currency }: PricingClientProps) {
     });
   }, []);
 
+  const userPlan = session?.user?.plan as PlanTier | undefined;
   const checkoutMutation = useMutation({
-    mutationFn: (planId: PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE) =>
-      billingService.createCheckoutSession({
-        planId,
+    mutationFn: () =>
+      createCheckoutSession({
+        planId: PricingTierId.PRO,
         period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
         currency: activeCurrency,
       }),
@@ -175,7 +536,7 @@ export function PricingClient({ currency }: PricingClientProps) {
   });
 
   const portalMutation = useMutation({
-    mutationFn: billingService.createPortalSession,
+    mutationFn: createPortalSession,
     onSuccess: (url) => {
       window.location.href = url;
     },
@@ -184,124 +545,113 @@ export function PricingClient({ currency }: PricingClientProps) {
     },
   });
 
-  function handleCtaClick(tierId: PlanTier) {
-    if (tierId === PlanTier.FREE) {
+  function handleCtaClick(tierId: string) {
+    if (tierId === PricingTierId.FREE) {
       router.push("/register");
       return;
     }
 
-    if (!session?.user) {
-      openLoginModal();
-      return;
-    }
+    if (tierId === PricingTierId.PRO) {
+      if (!session?.user) {
+        openLoginModal();
+        return;
+      }
+      if (session.user.role === UserRole.SEEKER) {
+        toast.error("This plan is for recruiters only");
+        return;
+      }
 
-    if (session.user.role === UserRole.SEEKER) {
-      toast.error("This plan is for recruiters only");
-      return;
-    }
+      if (session.user.plan === PlanTier.PRO) {
+        portalMutation.mutate();
+        return;
+      }
 
-    if (session.user.plan === tierId) {
-      portalMutation.mutate();
-      return;
-    }
+      if (verificationStatus?.requiresVerification) {
+        openEmailVerificationModal();
+        return;
+      }
 
-    if (verificationStatus?.requiresVerification) {
-      openEmailVerificationModal();
+      checkoutMutation.mutate();
       return;
-    }
-
-    if (tierId === PlanTier.STARTER || tierId === PlanTier.GROWTH || tierId === PlanTier.SCALE) {
-      setSelectedPlan(tierId);
-      checkoutMutation.mutate(tierId);
     }
   }
 
   return (
     <>
-      <section className="px-6 py-20 text-center md:py-24">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
-            Pricing that scales with verified hiring
+      {/* Hero + Toggle + Cards */}
+      <section className="py-24 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight mb-6">
+            Pricing that scales with your hiring
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-brand-foreground-muted md:text-lg">
-            Choose the recruiter plan that matches your hiring volume.
+          <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
+            Choose the plan that fits your team&apos;s needs. Join 5,000+
+            remote-first companies.
           </p>
 
-          <div className="mt-10 inline-flex rounded-xl border border-brand-border bg-brand-surface p-1">
-            <button
-              type="button"
-              className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium",
-                !isAnnual ? "bg-white text-brand-foreground" : "text-brand-foreground-muted",
-              )}
-              onClick={() => setIsAnnual(false)}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium",
-                isAnnual ? "bg-white text-brand-foreground" : "text-brand-foreground-muted",
-              )}
-              onClick={() => setIsAnnual(true)}
-            >
-              Annual
-            </button>
+          {/* Monthly / Annual toggle */}
+          <div className="flex items-center justify-center mb-16 relative z-30">
+            <div className="bg-slate-100 p-1.5 rounded-xl flex items-center shadow-inner border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setIsAnnual(false)}
+                aria-pressed={!isAnnual}
+                className={cn(
+                  "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+                  !isAnnual
+                    ? "bg-white text-slate-900 "
+                    : "text-slate-500 hover:text-slate-800",
+                )}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAnnual(true)}
+                aria-pressed={isAnnual}
+                className={cn(
+                  "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+                  isAnnual
+                    ? "bg-white text-slate-900 "
+                    : "text-slate-500 hover:text-slate-800",
+                )}
+              >
+                Annual
+                <span className="bg-primary text-white text-[10px] px-2 py-1 rounded-full uppercase font-extrabold tracking-wider pointer-events-none">
+                  Save 20% yearly
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* 3-card grid */}
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch px-4 relative z-0">
           {PRICING_CONFIG.map((tier) => (
             <PricingCard
               key={tier.id}
               tier={tier}
               currency={activeCurrency}
               isAnnual={isAnnual}
-              userPlan={session?.user?.plan as PlanTier | undefined}
+              userPlan={userPlan}
+              onCtaClick={handleCtaClick}
               isPending={
-                tier.id === selectedPlan &&
+                tier.id === PricingTierId.PRO &&
                 (checkoutMutation.isPending || portalMutation.isPending)
               }
-              onCtaClick={handleCtaClick}
             />
           ))}
         </div>
 
-        <div className="mx-auto mt-16 max-w-4xl overflow-x-auto">
-          <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-brand-border">
-                <th className="px-4 py-4 font-semibold text-brand-foreground">Feature</th>
-                <th className="px-4 py-4 font-semibold text-brand-foreground">Free</th>
-                <th className="px-4 py-4 font-semibold text-brand-foreground">Starter</th>
-                <th className="px-4 py-4 font-semibold text-brand-foreground">Growth</th>
-                <th className="px-4 py-4 font-semibold text-brand-foreground">Scale</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-brand-border">
-              {[
-                ["Active jobs", "0", "2", "Unlimited", "Unlimited"],
-                ["Engineer unlocks", "0", "10", "30", "Unlimited"],
-                ["Verified talent pool", false, true, true, true],
-                ["Interview scheduling", false, true, true, true],
-              ].map(([feature, free, starter, growth, scale]) => (
-                <tr key={String(feature)}>
-                  {[feature, free, starter, growth, scale].map((value, index) => (
-                    <td key={`${feature}-${index}`} className="px-4 py-4 text-brand-foreground-muted">
-                      {typeof value === "boolean" ? (
-                        value ? <Check className="h-4 w-4 text-brand-primary" /> : "-"
-                      ) : (
-                        value
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {activeCurrency === CurrencyCode.INR && (
+          <p className="mt-6 text-xs text-slate-400 text-center">
+            All prices include 18% GST. No extra charges at checkout.
+          </p>
+        )}
       </section>
+
+      <PricingCompareTable isAnnual={isAnnual} />
+      <PricingFaqSection />
     </>
   );
 }

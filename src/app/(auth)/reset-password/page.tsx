@@ -63,26 +63,26 @@ function ResetPasswordContent() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12">
       <section className="w-full max-w-md space-y-8">
         <div className="space-y-3">
-          <h1 className="font-bold text-4xl leading-tight text-foreground">
+          <h1 className="font-display text-4xl font-extrabold leading-tight text-foreground">
             Reset password
           </h1>
-          <p className="text-lg font-semibold leading-[1.44] tracking-[-0.108px] text-brand-foreground-muted">
+          <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745]">
             Choose a new password for your Hiretivo account.
           </p>
         </div>
 
         {!token || !email ? (
           <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-8">
-            <p className="rounded-xl bg-muted p-4 text-sm font-semibold leading-6 text-foreground">
+            <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
               This reset link is invalid or has expired. Please request a new
               one.
             </p>
             <Button
               asChild
-              className="w-full rounded-lg bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+              className="w-full rounded-full bg-brand-primary font-semibold text-white transition-transform hover:scale-105 active:scale-95"
             >
               <Link href="/forgot-password">Request new link</Link>
             </Button>
@@ -92,7 +92,7 @@ function ResetPasswordContent() {
             <div className="space-y-2">
               <Label
                 htmlFor="newPassword"
-                className="text-sm font-bold text-brand-foreground"
+                className="text-sm font-bold text-slate-900"
               >
                 New password
               </Label>
@@ -100,7 +100,7 @@ function ResetPasswordContent() {
                 id="newPassword"
                 autoComplete="new-password"
                 placeholder="Enter your new password"
-                className="w-full h-14 px-5 bg-white border border-brand-border rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-brand-foreground"
+                className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
                 error={!!form.formState.errors.newPassword}
                 {...form.register("newPassword")}
               />
@@ -114,7 +114,7 @@ function ResetPasswordContent() {
             <div className="space-y-2">
               <Label
                 htmlFor="confirmPassword"
-                className="text-sm font-bold text-brand-foreground"
+                className="text-sm font-bold text-slate-900"
               >
                 Confirm password
               </Label>
@@ -122,7 +122,7 @@ function ResetPasswordContent() {
                 id="confirmPassword"
                 autoComplete="new-password"
                 placeholder="Confirm your new password"
-                className="w-full h-14 px-5 bg-white border border-brand-border rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-brand-foreground"
+                className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
                 error={!!form.formState.errors.confirmPassword}
                 {...form.register("confirmPassword")}
               />
@@ -137,7 +137,7 @@ function ResetPasswordContent() {
               type="submit"
               variant={"primary"}
               disabled={form.formState.isSubmitting}
-              className="w-full h-14 rounded-lg bg-brand-primary text-white font-bold text-lg hover:bg-brand-primary-dark transition-all duration-200 transform active:scale-[0.99]"
+              className="w-full h-14 rounded-xl bg-brand-primary text-white font-bold text-lg hover:bg-brand-primary-dark transition-all duration-200 transform active:scale-[0.99]"
             >
               {form.formState.isSubmitting ? (
                 <>

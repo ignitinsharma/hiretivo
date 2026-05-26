@@ -120,7 +120,7 @@ export function JobAnalyticsTab({ jobId }: JobAnalyticsTabProps) {
         </div>
         <div className={cn(CARD_BASE, 'mt-6 h-56 animate-pulse')}>
           <div className="h-3 w-32 bg-slate-200 rounded mb-4" />
-          <div className="h-40 bg-muted rounded" />
+          <div className="h-40 bg-slate-100 rounded" />
         </div>
       </div>
     );

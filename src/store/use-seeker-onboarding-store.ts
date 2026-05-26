@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { CurrencyCode } from '@/constants/enums';
 import type {
   SeekerOnboardingStep,
   Step1Data,
@@ -6,6 +7,12 @@ import type {
   Step3Data,
   Step4Data,
   SeekerSituation,
+  ExperienceLevel,
+  YearsOfExperience,
+  JobType,
+  JobCategory,
+  Currency,
+  Availability,
   ResumeFile,
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
@@ -35,18 +42,21 @@ interface SeekerOnboardingState {
   setUserName: (name: string) => void;
 
   setSituation: (situation: SeekerSituation) => void;
+  setExperienceLevel: (level: ExperienceLevel) => void;
 
   setPrimaryRole: (role: string) => void;
-  setYearsOfExperience: (years: number | null) => void;
+  setYearsOfExperience: (years: YearsOfExperience) => void;
   setSkills: (skills: string[]) => void;
   addSkill: (skill: string) => void;
   removeSkill: (skill: string) => void;
 
   setResume: (resume: ResumeFile | null) => void;
 
-  setTargetSalaryRange: (min: number | null, max: number | null) => void;
-  setTimezoneOverlapHours: (hours: number | null) => void;
-  setAvailableFrom: (date: string | null) => void;
+  setJobType: (type: JobType) => void;
+  setCategory: (category: JobCategory) => void;
+  setSalaryRange: (min: number | null, max: number | null) => void;
+  setCurrency: (currency: Currency) => void;
+  setAvailability: (availability: Availability) => void;
 
   completeOnboarding: () => void;
   resetOnboarding: () => void;
@@ -54,6 +64,7 @@ interface SeekerOnboardingState {
 
 const initialStep1Data: Step1Data = {
   situation: null,
+  experienceLevel: null,
 };
 
 const initialStep2Data: Step2Data = {
@@ -67,10 +78,10 @@ const initialStep3Data: Step3Data = {
 };
 
 const initialStep4Data: Step4Data = {
-  targetSalaryMin: null,
-  targetSalaryMax: null,
-  timezoneOverlapHours: null,
-  availableFrom: null,
+  jobType: null,
+  category: null,
+  salaryRange: { min: null, max: null, currency: CurrencyCode.USD },
+  availability: null,
 };
 
 export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
@@ -91,7 +102,14 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
         step1: { ...initialStep1Data, ...data.step1 },
         step2: { ...initialStep2Data, ...data.step2 },
         step3: { ...initialStep3Data, ...data.step3 },
-        step4: { ...initialStep4Data, ...data.step4 },
+        step4: {
+          ...initialStep4Data,
+          ...data.step4,
+          salaryRange: {
+            ...initialStep4Data.salaryRange,
+            ...data.step4?.salaryRange,
+          },
+        },
       }),
 
       setCurrentStep: (step) => set({ currentStep: step }),
@@ -114,6 +132,10 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
 
       setSituation: (situation) => set((state) => ({
         step1: { ...state.step1, situation },
+      })),
+
+      setExperienceLevel: (level) => set((state) => ({
+        step1: { ...state.step1, experienceLevel: level },
       })),
 
       setPrimaryRole: (role) => set((state) => ({
@@ -146,23 +168,30 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
         step3: { ...state.step3, resume },
       })),
 
-      setTargetSalaryRange: (min, max) => set((state) => ({
+      setJobType: (type) => set((state) => ({
+        step4: { ...state.step4, jobType: type },
+      })),
+
+      setCategory: (category) => set((state) => ({
+        step4: { ...state.step4, category },
+      })),
+
+      setSalaryRange: (min, max) => set((state) => ({
         step4: {
           ...state.step4,
-          targetSalaryMin: min,
-          targetSalaryMax: max,
+          salaryRange: { ...state.step4.salaryRange, min, max },
         },
       })),
 
-      setTimezoneOverlapHours: (hours) => set((state) => ({
+      setCurrency: (currency) => set((state) => ({
         step4: {
           ...state.step4,
-          timezoneOverlapHours: hours,
+          salaryRange: { ...state.step4.salaryRange, currency },
         },
       })),
 
-      setAvailableFrom: (date) => set((state) => ({
-        step4: { ...state.step4, availableFrom: date },
+      setAvailability: (availability) => set((state) => ({
+        step4: { ...state.step4, availability },
       })),
 
       completeOnboarding: () => set({ isCompleted: true }),

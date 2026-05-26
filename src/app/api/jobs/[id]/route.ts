@@ -96,7 +96,7 @@ export async function GET(
       salaryMin: job.salaryMin,
       salaryMax: job.salaryMax,
       currency: job.currency,
-      minYearsExperience: job.minYearsExperience,
+      experienceLevel: job.experienceLevel,
       category: job.category,
       applyType: job.applyType,
       externalApplyUrl: job.externalApplyUrl,

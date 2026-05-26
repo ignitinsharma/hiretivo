@@ -75,7 +75,7 @@ const SeekerSignupLeft = (
           </div>
           <span className="text-[10px] font-medium text-slate-400">2m ago</span>
         </div>
-        <div className="bg-muted p-4 rounded-xl flex items-center gap-4 border border-slate-100">
+        <div className="bg-slate-50 p-4 rounded-xl flex items-center gap-4 border border-slate-100">
           <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-600">
             S
           </div>
@@ -103,8 +103,7 @@ function SeekerRegisterContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [roleMismatch, setRoleMismatch] = React.useState(false);
-  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] =
-    React.useState(false);
+  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
@@ -142,12 +141,7 @@ function SeekerRegisterContent() {
   }, [hasOAuthRoleMismatch, status, searchParams, router]);
 
   React.useEffect(() => {
-    if (
-      status === "authenticated" &&
-      session?.user &&
-      !hasOAuthRoleMismatch &&
-      !isHandlingOAuthMismatch
-    ) {
+    if (status === "authenticated" && session?.user && !hasOAuthRoleMismatch && !isHandlingOAuthMismatch) {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
@@ -299,8 +293,7 @@ function SeekerRegisterContent() {
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-sm leading-relaxed">
                     <p>
-                      Use the email where you&apos;ll receive interview
-                      shortlists, application updates, and messages from HR.
+                      Use the email where you&apos;ll receive interview shortlists, application updates, and messages from HR.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -393,7 +386,7 @@ function SeekerRegisterContent() {
           </Button>
         </form>
 
-        <footer className=" text-center">
+        <footer className="pt-4 text-center">
           <p className="text-slate-600 font-medium">
             Already have an account?
             <Link

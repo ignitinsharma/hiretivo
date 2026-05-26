@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
-      { error: "Interview scheduling requires a paid plan. Upgrade to unlock." },
+      { error: "Interview scheduling requires Pro plan. Upgrade to unlock." },
       { status: 403 },
     );
   }

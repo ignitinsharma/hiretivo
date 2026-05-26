@@ -11,7 +11,7 @@ import { AdminShell } from "@/modules/admin/components/AdminShell";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!isAdminSession(session)) {
-    redirect("/auth/recruiter/login?next=/admin/verification");
+    redirect("/auth/recruiter/login?next=/admin/jobs");
   }
   return <AdminShell>{children}</AdminShell>;
 }

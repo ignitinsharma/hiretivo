@@ -32,7 +32,7 @@ const baseJobSchema = z.object({
       { message: "Apply URL must use http or https" }
     )
     .optional(),
-  minYearsExperience: z.number().int().min(0).optional(),
+  experienceLevel: z.string().trim().max(50).optional(),
   category: z.string().trim().max(100).optional(),
   skills: z.array(jobSkillSchema).min(1),
 });

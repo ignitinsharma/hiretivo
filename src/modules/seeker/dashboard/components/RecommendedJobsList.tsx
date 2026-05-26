@@ -7,30 +7,20 @@ import { toast } from "sonner";
 
 import { JobCard } from "@/components/shared/JobCard";
 import { Card } from "@/components/ui/card";
-import { UserRole, VerificationStatus } from "@/constants/enums";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
 
-async function getEngineerVerificationStatus(): Promise<VerificationStatus> {
-  const response = await fetch("/api/engineer/verification");
-  if (!response.ok) return VerificationStatus.NOT_SUBMITTED;
-  const data = (await response.json()) as { verificationStatus?: VerificationStatus };
-  return data.verificationStatus ?? VerificationStatus.NOT_SUBMITTED;
-}
-
 export function RecommendedJobsList() {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
   const queryClient = useQueryClient();
   const [dismissingJobId, setDismissingJobId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["seeker-feed"],
     queryFn: seekerService.getFeed,
-  });
-  const { data: verificationStatus = VerificationStatus.NOT_SUBMITTED } = useQuery({
-    queryKey: ["engineer-verification-status"],
-    queryFn: getEngineerVerificationStatus,
   });
 
   const dismissMutation = useMutation({
@@ -77,6 +67,11 @@ export function RecommendedJobsList() {
     applyType?: string,
     externalApplyUrl?: string | null,
   ) => {
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
+
     openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
   };
 
@@ -162,8 +157,6 @@ export function RecommendedJobsList() {
                   job.externalApplyUrl,
                 )
               }
-              verificationStatus={verificationStatus}
-              userRole={UserRole.SEEKER}
             />
           ))}
         </div>

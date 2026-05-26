@@ -24,13 +24,6 @@ export const authPostRateLimiter = createRateLimiter("auth-post", 10, "1 m");
 /** POST apply / upload style limits — reuse with distinct ids in routes */
 export const applyRateLimiter = createRateLimiter("job-apply", 5, "1 m");
 
-/** Engineer verification writes: submit, consent, and admin review actions. */
-export const verificationWriteRateLimiter = createRateLimiter(
-  "verification-write",
-  5,
-  "1 m"
-);
-
 export const uploadRateLimiter = createRateLimiter("upload", 20, "1 m");
 
 /** Public read endpoints such as job detail, logos, and skills. */
@@ -43,7 +36,7 @@ export const dataFetchRateLimiter = createRateLimiter("data-fetch", 30, "1 m");
 export const searchRateLimiter = createRateLimiter("search", 20, "1 m");
 
 /** Authenticated write endpoints such as save, dismiss, update, cancel. */
-export const writeRateLimiter = createRateLimiter("write", 5, "1 m");
+export const writeRateLimiter = createRateLimiter("write", 10, "1 m");
 
 /** Public signup/registration-style endpoints. */
 export const registerRateLimiter = createRateLimiter("register", 10, "1 m");

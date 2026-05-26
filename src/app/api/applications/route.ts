@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
-  ApplicationSource,
   ApplicationStatus,
   CurrencyCode,
   JobStatus,
   UserRole,
-  VerificationStatus,
 } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
@@ -32,9 +30,7 @@ function formatSalaryRange(
         ? "£"
         : cur === CurrencyCode.EUR
           ? "€"
-          : cur === CurrencyCode.INR
-            ? "₹"
-            : "";
+          : "";
   if (!min && !max) return "Not specified";
   const minStr = min ? `${symbol}${Math.round(min / 1000)}k` : "";
   const maxStr = max ? `${symbol}${Math.round(max / 1000)}k` : "";
@@ -63,21 +59,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const engineer = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { verificationStatus: true },
-  });
-  if (engineer?.verificationStatus !== VerificationStatus.VERIFIED) {
-    return NextResponse.json(
-      {
-        error: "Verification required to apply",
-        code: "VERIFICATION_REQUIRED",
-        verificationStatus: engineer?.verificationStatus ?? "NOT_SUBMITTED",
-      },
-      { status: 403 },
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -94,6 +75,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { jobId, coverLetter } = parsed.data;
+  const resumeGateMessage =
+    "Upload your resume in Settings before applying. Go to /seeker/settings to continue.";
 
   const job = await prisma.job.findFirst({
     where: { id: jobId, status: JobStatus.OPEN },
@@ -122,8 +105,11 @@ export async function POST(req: NextRequest) {
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
-    select: { id: true },
+    select: { id: true, resumeKey: true },
   });
+  if (!seekerProfile?.resumeKey) {
+    return NextResponse.json({ error: resumeGateMessage }, { status: 400 });
+  }
 
   let matchScore = 0;
   if (seekerProfile) {
@@ -146,23 +132,6 @@ export async function POST(req: NextRequest) {
       coverLetter: coverLetter ?? null,
       matchScore,
     },
-  });
-
-  // Auto-create EngineerUnlock so job recruiter can see full engineer PII (PIVM-03)
-  // source='application_auto' — does NOT deduct unlock quota
-  await prisma.engineerUnlock.upsert({
-    where: {
-      recruiterId_engineerId: {
-        recruiterId: job.recruiterId,
-        engineerId: session.user.id,
-      },
-    },
-    create: {
-      recruiterId: job.recruiterId,
-      engineerId: session.user.id,
-      source: "application_auto",
-    },
-    update: {}, // idempotent — no change if unlock already exists
   });
 
   return NextResponse.json(application, { status: 201 });
@@ -195,7 +164,6 @@ export async function GET() {
       jobId: true,
       status: true,
       createdAt: true,
-      source: true,
       job: {
         select: {
           title: true,
@@ -206,7 +174,7 @@ export async function GET() {
           currency: true,
           jobType: true,
           workType: true,
-          minYearsExperience: true,
+          experienceLevel: true,
           skills: {
             select: {
               skill: { select: { name: true } },
@@ -250,7 +218,7 @@ export async function GET() {
       ),
       jobType: application.job.jobType,
       workType: application.job.workType,
-      minYearsExperience: application.job.minYearsExperience,
+      experienceLevel: application.job.experienceLevel,
       companyIndustry: application.job.recruiter.recruiterProfile?.industry ?? null,
       companySize: application.job.recruiter.recruiterProfile?.companySize ?? null,
       companyFundingType:
@@ -258,7 +226,6 @@ export async function GET() {
       skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
       description: application.job.description ? stripHtml(application.job.description) : null,
       applicantCount: application.job._count.applications,
-      source: application.source ?? ApplicationSource.SEEKER_APPLIED,
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
     })),

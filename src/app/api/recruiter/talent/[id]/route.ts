@@ -1,84 +1,110 @@
 import { auth } from "@/auth";
-import { UserRole } from "@/constants/enums";
-import { canAccessTalentPool } from "@/lib/billing/plan-access";
+import { PlanTier, UserRole } from "@/constants/enums";
+import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
-import { resolveLogoUrl } from "@/lib/r2";
-import { dataFetchRateLimiter, getRateLimitIp } from "@/lib/rate-limit";
-import { NextRequest, NextResponse } from "next/server";
+import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
+import { dataFetchRateLimiter } from "@/lib/rate-limit";
+import { NextResponse } from "next/server";
+
+interface TalentDetailRouteContext {
+  params: {
+    id: string;
+  };
+}
+
+/*
+ * isPaidPlan
+ * Checks whether a recruiter plan can view full talent profile details.
+ * Returns true when billing access rules allow the feature.
+ */
+function isPaidPlan(plan: string | null | undefined): boolean {
+  if (plan === PlanTier.PRO) {
+    return canAccessRecruiterPaidFeature(PlanTier.PRO);
+  }
+
+  if (plan === PlanTier.ENTERPRISE) {
+    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
+  }
+
+  return canAccessRecruiterPaidFeature(PlanTier.FREE);
+}
+
+/*
+ * resolveResumeUrl
+ * Creates a temporary browser URL for a private resume file.
+ * Returns null when no key exists or signing fails.
+ */
+async function resolveResumeUrl(resumeKey: string | null): Promise<string | null> {
+  if (!resumeKey) {
+    return null;
+  }
+
+  try {
+    return await getSignedFileUrl(resumeKey);
+  } catch {
+    return null;
+  }
+}
 
 /*
  * GET /api/recruiter/talent/[id]
- * Returns full TalentDetail shape for the profile dialog.
- * Locked: sensitive fields (email, links, resumeUrl) are nulled out.
- * Unlocked: full profile with contact info and links.
- * Returns 404 if engineer not VERIFIED or hiddenUntil active.
+ * Returns the complete Talent Pool profile for paid recruiters.
+ * Responds with profile detail or auth/plan/not-found/rate-limit errors.
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
   const session = await auth();
-  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
-  if (session.user.role !== UserRole.RECRUITER)
-    return new Response("Forbidden", { status: 403 });
+  if (!session?.user?.id) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
-  const ip = getRateLimitIp(req);
-  const { success } = await dataFetchRateLimiter.limit(ip);
-  if (!success) return new Response("Too Many Requests", { status: 429 });
+  if (session.user.role !== UserRole.RECRUITER) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return new Response("Too Many Requests", { status: 429 });
+  }
 
   const recruiter = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { plan: true },
   });
-  if (!canAccessTalentPool(recruiter?.plan)) {
-    return NextResponse.json({ code: "UPGRADE_REQUIRED" }, { status: 403 });
+
+  if (!isPaidPlan(recruiter?.plan)) {
+    return new Response("Forbidden", { status: 403 });
   }
 
-  const engineer = await prisma.user.findFirst({
+  const seeker = await prisma.user.findFirst({
     where: {
       id: params.id,
       role: "SEEKER",
-      verificationStatus: "VERIFIED",
-      AND: [
-        { OR: [{ hiddenUntil: null }, { hiddenUntil: { lt: new Date() } }] },
-      ],
     },
     select: {
       id: true,
       name: true,
       email: true,
       image: true,
-      hiretivoScore: true,
-      timezoneOverlapHours: true,
-      availableFrom: true,
       seekerProfile: {
         select: {
           headline: true,
           bio: true,
           location: true,
           yearsExperience: true,
-          primaryRole: true,
           workPreference: true,
           situation: true,
-          availability: true,
+          primaryRole: true,
           salaryMin: true,
           salaryMax: true,
           currency: true,
-          salaryMinUsd: true,
-          salaryMaxUsd: true,
+          availability: true,
           resumeKey: true,
           websiteUrl: true,
           linkedinUrl: true,
           githubUrl: true,
           twitterUrl: true,
-          skills: {
-            select: {
-              level: true,
-              skill: { select: { name: true } },
-            },
-            orderBy: { skill: { name: "asc" } },
-          },
           workExperiences: {
+            orderBy: [{ isCurrent: "desc" }, { updatedAt: "desc" }],
             select: {
               id: true,
               company: true,
@@ -90,9 +116,9 @@ export async function GET(
               positionType: true,
               skills: true,
             },
-            orderBy: { startDate: "desc" },
           },
           educations: {
+            orderBy: { updatedAt: "desc" },
             select: {
               id: true,
               institution: true,
@@ -100,99 +126,60 @@ export async function GET(
               degree: true,
               major: true,
             },
-            orderBy: { graduationDate: "desc" },
+          },
+          skills: {
+            select: {
+              level: true,
+              skill: { select: { name: true, category: true } },
+            },
+            orderBy: { skill: { name: "asc" } },
           },
         },
       },
     },
   });
 
-  if (!engineer) return new Response("Not Found", { status: 404 });
+  if (!seeker?.seekerProfile) {
+    return new Response("Not found", { status: 404 });
+  }
 
-  const [unlock, savedRecord] = await Promise.all([
-    prisma.engineerUnlock.findUnique({
-      where: {
-        recruiterId_engineerId: {
-          recruiterId: session.user.id,
-          engineerId: params.id,
-        },
+  const profile = seeker.seekerProfile;
+  const resumeUrl = await resolveResumeUrl(profile.resumeKey);
+
+  return NextResponse.json({
+    data: {
+      id: seeker.id,
+      name: seeker.name,
+      email: seeker.email,
+      image: resolveLogoUrl(seeker.image),
+      headline: profile.headline,
+      bio: profile.bio,
+      location: profile.location,
+      yearsExperience: profile.yearsExperience,
+      primaryRole: profile.primaryRole,
+      availability: profile.availability,
+      resumeKey: Boolean(profile.resumeKey),
+      resumeUrl,
+      skills: profile.skills.map((item) => ({
+        name: item.skill.name,
+        category: item.skill.category,
+        level: item.level,
+      })),
+      links: {
+        websiteUrl: profile.websiteUrl,
+        linkedinUrl: profile.linkedinUrl,
+        githubUrl: profile.githubUrl,
+        twitterUrl: profile.twitterUrl,
       },
-    }),
-    prisma.savedEngineer.findUnique({
-      where: {
-        recruiterId_engineerId: {
-          recruiterId: session.user.id,
-          engineerId: params.id,
-        },
+      workExperiences: profile.workExperiences,
+      educations: profile.educations,
+      profile: {
+        workPreference: profile.workPreference,
+        situation: profile.situation,
+        salaryMin: profile.salaryMin,
+        salaryMax: profile.salaryMax,
+        currency: profile.currency,
       },
-    }),
-  ]);
-
-  const profile = engineer.seekerProfile;
-
-  // Build the full TalentDetail-compatible shape
-  const detail = {
-    id: engineer.id,
-    name: engineer.name,
-    email: unlock ? engineer.email : null,
-    image: engineer.image,
-    headline: profile?.headline ?? null,
-    bio: profile?.bio ?? null,
-    location: profile?.location ?? null,
-    yearsExperience: profile?.yearsExperience ?? null,
-    primaryRole: profile?.primaryRole ?? null,
-    availability: profile?.availability ?? null,
-    resumeKey: !!profile?.resumeKey,
-    resumeUrl:
-      unlock && profile?.resumeKey
-        ? resolveLogoUrl(profile.resumeKey)
-        : null,
-    skills:
-      profile?.skills.map((s) => ({
-        name: s.skill.name,
-        category: "",
-        level: s.level,
-      })) ?? [],
-    links: {
-      websiteUrl: unlock ? (profile?.websiteUrl ?? null) : null,
-      linkedinUrl: unlock ? (profile?.linkedinUrl ?? null) : null,
-      githubUrl: unlock ? (profile?.githubUrl ?? null) : null,
-      twitterUrl: unlock ? (profile?.twitterUrl ?? null) : null,
     },
-    workExperiences:
-      profile?.workExperiences.map((we) => ({
-        id: we.id,
-        company: we.company,
-        title: we.title,
-        startDate: we.startDate,
-        endDate: we.endDate,
-        isCurrent: we.isCurrent,
-        description: we.description,
-        positionType: we.positionType,
-        skills: we.skills,
-      })) ?? [],
-    educations:
-      profile?.educations.map((e) => ({
-        id: e.id,
-        institution: e.institution,
-        graduationDate: e.graduationDate,
-        degree: e.degree,
-        major: e.major,
-      })) ?? [],
-    profile: {
-      workPreference: profile?.workPreference ?? null,
-      situation: profile?.situation ?? null,
-      salaryMin: profile?.salaryMin ?? null,
-      salaryMax: profile?.salaryMax ?? null,
-      currency: profile?.currency ?? null,
-    },
-    // Keep backward-compatible fields for existing consumers
-    hiretivoScore: engineer.hiretivoScore ?? 0,
-    timezoneOverlapHours: engineer.timezoneOverlapHours ?? 0,
-    availableFrom: engineer.availableFrom?.toISOString() ?? null,
-    isUnlocked: !!unlock,
-    isSaved: !!savedRecord,
-  };
-
-  return NextResponse.json({ data: detail });
+  });
 }

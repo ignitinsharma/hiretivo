@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   SITUATION_OPTIONS,
-  step1Schema,
+  EXPERIENCE_LEVELS,
+  validateSeekerStep1,
 } from "@/lib/validations/seeker-onboarding.schema";
-import type { SeekerSituation } from "@/lib/validations/seeker-onboarding.schema";
+import type {
+  SeekerSituation,
+  ExperienceLevel,
+} from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep1 } from "@/app/actions/onboarding/seeker";
 
@@ -19,19 +23,20 @@ interface StepWelcomeProps {
 }
 
 export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
-  const { step1, userName, setSituation } =
+  const { step1, userName, setSituation, setExperienceLevel } =
     useSeekerOnboardingStore();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleContinue = async () => {
     if (isSaving) return;
-    const parsed = step1Schema.safeParse({
+    const validation = validateSeekerStep1({
       situation: step1.situation ?? undefined,
+      experienceLevel: step1.experienceLevel ?? undefined,
     });
 
-    if (!parsed.success) {
-      setErrors(parsed.error.issues.map((i) => i.message));
+    if (!validation.valid) {
+      setErrors(validation.errors);
       return;
     }
 
@@ -41,6 +46,7 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
     setIsSaving(true);
     const result = await saveStep1({
       situation: step1.situation!,
+      experienceLevel: step1.experienceLevel!,
     });
     setIsSaving(false);
 
@@ -56,6 +62,8 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
   const getErrorMessage = () => {
     if (errors.includes("Please select your current situation"))
       return "Please select your current situation";
+    if (errors.includes("Please select your experience level"))
+      return "Please select your experience level";
     return errors[0] ?? null;
   };
 
@@ -134,6 +142,35 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
                         {option.description}
                       </p>
                     </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-base font-medium text-foreground block">
+              What&apos;s your experience level?
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {EXPERIENCE_LEVELS.map((option) => {
+                const isSelected = step1.experienceLevel === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setExperienceLevel(option.value as ExperienceLevel);
+                      setErrors([]);
+                    }}
+                    className={cn(
+                      "flex items-center justify-center p-4 rounded-lg border-2 transition-all text-sm font-medium",
+                      isSelected
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border hover:border-primary/50 text-foreground",
+                    )}
+                  >
+                    {option.label}
                   </button>
                 );
               })}

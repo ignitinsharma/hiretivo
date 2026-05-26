@@ -41,4 +41,9 @@ export const billingService = {
     const { data } = await apiClient.post<DataResponse<BillingSessionData>>('/billing/portal');
     return getBillingUrl(data);
   },
+
+  createBoostCheckoutSession: async (jobId: string): Promise<string> => {
+    const { data } = await apiClient.post<DataResponse<BillingSessionData>>('/billing/boost-checkout', { jobId });
+    return getBillingUrl(data);
+  },
 };

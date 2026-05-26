@@ -106,6 +106,12 @@ export async function GET(req: NextRequest) {
   });
   const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
 
+  const dismissedRows = await prisma.dismissedJob.findMany({
+    where: { userId: session.user.id },
+    select: { jobId: true },
+  });
+  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
+
   // Fetch job data for all matched jobs (needed for filtering + exclusions)
   const jobIds = matches.map((m) => m.jobId);
   const jobs = await prisma.job.findMany({
@@ -129,12 +135,34 @@ export async function GET(req: NextRequest) {
   // Apply filters and exclude already-applied/dismissed jobs before cursor slicing.
   let filteredMatches = matches.filter((m) => {
     if (appliedJobIds.has(m.jobId)) return false;
+    if (dismissedJobIds.has(m.jobId)) return false;
     const job = jobMap.get(m.jobId);
     if (!job) return false;
     if (jobType && job.jobType !== jobType) return false;
     if (workType && job.workType !== workType) return false;
     return true;
   });
+
+  // INT-03: Prepend boosted jobs that are active and within the seeker's matched set.
+  // Boosted jobs only pin for skill-matched seekers — non-matched jobs are excluded by
+  // filteredMatches already, so we only check BoostedJob within the current filtered set.
+  if (filteredMatches.length > 0) {
+    const now = new Date();
+    const filteredJobIds = filteredMatches.map((m) => m.jobId);
+    const activeBoosted = await prisma.boostedJob.findMany({
+      where: {
+        jobId: { in: filteredJobIds },
+        expiresAt: { gt: now },
+      },
+      select: { jobId: true },
+    });
+    if (activeBoosted.length > 0) {
+      const boostedJobIdSet = new Set(activeBoosted.map((b) => b.jobId));
+      const boostedMatches = filteredMatches.filter((m) => boostedJobIdSet.has(m.jobId));
+      const regularMatches = filteredMatches.filter((m) => !boostedJobIdSet.has(m.jobId));
+      filteredMatches = [...boostedMatches, ...regularMatches];
+    }
+  }
 
   // Cursor pagination
   if (cursor) {
@@ -207,7 +235,7 @@ export async function GET(req: NextRequest) {
     postedAt: string;
     jobType: string;
     workType: string | null;
-    minYearsExperience: number | null;
+    experienceLevel: string | null;
     companyIndustry: string | null;
     companySize: string | null;
     companyFundingType: string | null;
@@ -262,7 +290,7 @@ export async function GET(req: NextRequest) {
       postedAt: formatPostedAt(job.publishedAt),
       jobType: job.jobType,
       workType: job.workType,
-      minYearsExperience: job.minYearsExperience,
+      experienceLevel: job.experienceLevel,
       companyIndustry: company.companyIndustry,
       companySize: company.companySize,
       companyFundingType: company.companyFundingType,

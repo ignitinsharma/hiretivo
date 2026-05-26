@@ -21,7 +21,7 @@ export function AiInsightsCard({ state }: AiInsightsCardProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-amber-800">
-              AI Candidate Insights require a paid plan
+              AI Candidate Insights require a Pro plan
             </p>
             <a
               href="/recruiter/settings?tab=billing"

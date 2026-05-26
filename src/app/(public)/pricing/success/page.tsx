@@ -32,9 +32,7 @@ function PricingSuccessContent() {
       try {
         const payload = await billingService.getSubscriptionStatus();
         const isActive =
-          payload.plan === PlanTier.STARTER ||
-          payload.plan === PlanTier.GROWTH ||
-          payload.plan === PlanTier.SCALE ||
+          payload.plan === PlanTier.PRO ||
           payload.subscription?.status === "ACTIVE";
 
         if (isActive) {
@@ -42,7 +40,7 @@ function PricingSuccessContent() {
 
           void update({
             user: {
-              plan: payload.plan ?? PlanTier.STARTER,
+              plan: payload.plan ?? PlanTier.PRO,
             },
           }).catch(() => {
             // Billing status is already persisted in the database. Session
@@ -77,12 +75,12 @@ function PricingSuccessContent() {
 
   const title =
     state === "success"
-      ? "Your paid plan is active!"
+      ? "You're now on the PRO plan!"
       : state === "timeout"
         ? "Your payment was processed"
         : state === "error"
           ? "Payment received, verification is delayed"
-          : "Setting up your paid plan...";
+          : "Setting up your PRO plan...";
 
   const message =
     state === "success"

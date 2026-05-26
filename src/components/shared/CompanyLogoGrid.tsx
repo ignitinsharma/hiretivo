@@ -1,23 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const COMPANIES = [
-  "Vercel",
-  "Linear",
-  "Cloudflare",
-  "Stripe",
-  "GitHub",
-  "Notion",
-  "Figma",
-  "Rippling",
-  "Atlassian",
-  "Datadog",
-];
-
-function getCompanyLogoUrl(name: string): string {
-  return `https://logo.clearbit.com/${name.toLowerCase().replace(/\s+/g, "")}.com`;
-}
+import { FAKE_COMPANIES, getCompanyLogoUrl } from "@/constants/fake-jobs";
 
 interface CompanyLogoGridProps {
   className?: string;
@@ -46,6 +30,8 @@ function CompanyLogoCell({ name }: { name: string }) {
 }
 
 export function CompanyLogoGrid({ className }: CompanyLogoGridProps) {
+  const companies = FAKE_COMPANIES.slice(0, 100);
+
   return (
     <section className={className} data-purpose="trusted-companies">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -53,7 +39,7 @@ export function CompanyLogoGrid({ className }: CompanyLogoGridProps) {
           Trusted by teams at
         </p>
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10">
-          {COMPANIES.map((name) => (
+          {companies.map((name) => (
             <CompanyLogoCell key={name} name={name} />
           ))}
         </div>

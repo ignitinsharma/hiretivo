@@ -4,15 +4,15 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import { Lock } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
 
-import { UserRole, VerificationStatus } from "@/constants/enums";
+import { UserRole } from "@/constants/enums";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SaveJobButton } from "@/modules/jobs/components/SaveJobButton";
-import { ApplyButton } from "@/modules/jobs/components/ApplyButton";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 
 interface RecommendedJob {
   id: string;
@@ -40,7 +40,6 @@ interface JobDetailSidebarProps {
   }> | null;
   isAuth: boolean;
   userRole: string | null;
-  engineerVerificationStatus: VerificationStatus | null;
   recommendedJobs: RecommendedJob[];
 }
 
@@ -50,10 +49,10 @@ export function JobDetailSidebar({
   matchBreakdown,
   isAuth,
   userRole,
-  engineerVerificationStatus,
   recommendedJobs,
 }: JobDetailSidebarProps) {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
 
   return (
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
@@ -66,7 +65,7 @@ export function JobDetailSidebar({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-muted p-3 rounded-xl border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
             <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
               Posted
             </p>
@@ -76,7 +75,7 @@ export function JobDetailSidebar({
                 : "Recently"}
             </p>
           </div>
-          <div className="bg-muted p-3 rounded-xl border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
             <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
               Company
             </p>
@@ -85,11 +84,11 @@ export function JobDetailSidebar({
         </div>
 
         <div className="space-y-3">
-          <ApplyButton
-            jobId={job.id}
-            verificationStatus={isAuth ? engineerVerificationStatus : null}
-            userRole={userRole}
-            onApply={() =>
+          <Button
+            onClick={() =>
+              verificationStatus?.requiresVerification
+                ? openEmailVerificationModal()
+                :
               openApplyModal(
                 job.id,
                 job.title,
@@ -98,17 +97,12 @@ export function JobDetailSidebar({
                 job.externalApplyUrl,
               )
             }
-            onLoginRequired={() =>
-              openApplyModal(
-                job.id,
-                job.title,
-                job.companyName,
-                job.applyType,
-                job.externalApplyUrl,
-              )
-            }
+            variant="primary"
             className="w-full py-3"
-          />
+          >
+            Apply Now
+            <ArrowRight className="w-4 h-4" />
+          </Button>
           <SaveJobButton
             jobId={job.id}
             isAuth={isAuth}

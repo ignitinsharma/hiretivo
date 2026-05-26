@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const PUBLIC_MOBILE_NAV_ITEMS = [
-  { href: "/recruiter/register", label: "I'm hiring" },
-  { href: "/recruiter/login", label: "Founder sign in" },
-  { href: "/seeker/register", label: "Join as Engineer" },
-  { href: "/seeker/login", label: "Engineer sign in" },
+  { href: "/recruiter/register", label: "I'm a recruiter" },
+  { href: "/recruiter/login", label: "Recruiter sign in" },
+  { href: "/seeker/register", label: "Sign up" },
+  { href: "/seeker/login", label: "Seeker sign in" },
 ] as const;
 
 /*

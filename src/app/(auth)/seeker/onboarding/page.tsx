@@ -4,9 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
 import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { SeekerOnboardingContainer } from "@/modules/seeker-onboarding";
-import { resolveSeekerOnboardingStep } from "@/lib/onboarding/progress";
+import {
+  parseOnboardingDraft,
+  resolveSeekerOnboardingStep,
+} from "@/lib/onboarding/progress";
 import type { SeekerOnboardingStep } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
-import type { SeekerSituation } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
+import type {
+  Availability,
+  Currency,
+  ExperienceLevel,
+  JobCategory,
+  JobType,
+  SeekerSituation,
+  YearsOfExperience,
+} from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
 
 export default async function SeekerOnboardingPage() {
   const session = await auth();
@@ -22,16 +33,16 @@ export default async function SeekerOnboardingPage() {
     select: {
       onboardingCompleted: true,
       onboardingStep: true,
+      onboardingDraft: true,
       name: true,
-      timezoneOverlapHours: true,
-      availableFrom: true,
       seekerProfile: {
         select: {
           situation: true,
           primaryRole: true,
-          salaryMinUsd: true,
-          salaryMaxUsd: true,
-          yearsExperience: true,
+          salaryMin: true,
+          salaryMax: true,
+          currency: true,
+          availability: true,
           resumeKey: true,
           skills: { select: { skill: { select: { name: true } } } },
         },
@@ -43,13 +54,14 @@ export default async function SeekerOnboardingPage() {
   }
 
   const profile = user?.seekerProfile;
+  const draft = parseOnboardingDraft(user?.onboardingDraft);
   const initialStep: SeekerOnboardingStep = resolveSeekerOnboardingStep(
     user?.onboardingStep,
     profile
       ? {
           situation: profile.situation,
           primaryRole: profile.primaryRole,
-          salaryMinUsd: profile.salaryMinUsd,
+          availability: profile.availability,
           skillsCount: profile.skills.length,
         }
       : null,
@@ -64,10 +76,14 @@ export default async function SeekerOnboardingPage() {
           userName: user?.name?.split(" ")[0] ?? "there",
           step1: {
             situation: profile?.situation as SeekerSituation | null | undefined,
+            experienceLevel: draft.seeker?.experienceLevel as ExperienceLevel | null | undefined,
           },
           step2: {
             primaryRole: profile?.primaryRole ?? "",
-            yearsOfExperience: profile?.yearsExperience ?? null,
+            yearsOfExperience: draft.seeker?.yearsOfExperience as
+              | YearsOfExperience
+              | null
+              | undefined,
             skills: profile?.skills.map(({ skill }) => skill.name) ?? [],
           },
           step3: {
@@ -83,12 +99,14 @@ export default async function SeekerOnboardingPage() {
               : null,
           },
           step4: {
-            targetSalaryMin: profile?.salaryMinUsd ?? null,
-            targetSalaryMax: profile?.salaryMaxUsd ?? null,
-            timezoneOverlapHours: user?.timezoneOverlapHours ?? null,
-            availableFrom: user?.availableFrom
-              ? user.availableFrom.toISOString().slice(0, 10)
-              : null,
+            jobType: draft.seeker?.jobType as JobType | null | undefined,
+            category: draft.seeker?.category as JobCategory | null | undefined,
+            salaryRange: {
+              min: profile?.salaryMin ?? null,
+              max: profile?.salaryMax ?? null,
+              currency: (profile?.currency ?? "USD") as Currency,
+            },
+            availability: profile?.availability as Availability | null | undefined,
           },
         }}
       />

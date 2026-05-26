@@ -13,7 +13,7 @@ export default function RecruiterLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-slate-50">
       <AuthGuard
         requiredRole={UserRole.RECRUITER}
         loginPath="/recruiter/login"

@@ -8,9 +8,8 @@ import { JobCard } from "@/components/shared/JobCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserRole, VerificationStatus } from "@/constants/enums";
+import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import { useUIStore } from "@/store/use-ui-store";
-import { useQuery } from "@tanstack/react-query";
 
 import { useSavedJobs, useUnsaveJob } from "../queries/use-saved-jobs";
 
@@ -19,20 +18,10 @@ const SKELETON_ITEMS = Array.from(
   (_, index) => `saved-job-${index}`,
 );
 
-async function getEngineerVerificationStatus(): Promise<VerificationStatus> {
-  const response = await fetch("/api/engineer/verification");
-  if (!response.ok) return VerificationStatus.NOT_SUBMITTED;
-  const data = (await response.json()) as { verificationStatus?: VerificationStatus };
-  return data.verificationStatus ?? VerificationStatus.NOT_SUBMITTED;
-}
-
 export function SavedJobsList() {
-  const { openApplyModal } = useUIStore();
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
   const { data: savedJobs, isLoading, isError } = useSavedJobs();
-  const { data: verificationStatus = VerificationStatus.NOT_SUBMITTED } = useQuery({
-    queryKey: ["engineer-verification-status"],
-    queryFn: getEngineerVerificationStatus,
-  });
   const unsaveMutation = useUnsaveJob();
 
   const handleRemove = (jobId: string): void => {
@@ -116,6 +105,10 @@ export function SavedJobsList() {
               savedJob.application || savedJob.job.isClosed
                 ? undefined
                 : () => {
+                    if (verificationStatus?.requiresVerification) {
+                      openEmailVerificationModal();
+                      return;
+                    }
                     openApplyModal(
                       savedJob.job.id,
                       savedJob.job.title,
@@ -125,8 +118,6 @@ export function SavedJobsList() {
                     );
                   }
             }
-            verificationStatus={verificationStatus}
-            userRole={UserRole.SEEKER}
             onToggleSave={() => handleRemove(savedJob.job.id)}
           />
         ))}

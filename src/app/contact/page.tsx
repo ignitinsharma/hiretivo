@@ -31,9 +31,8 @@ export default function ContactPage() {
   const { data: session, status } = useSession();
   const isPaidUser =
     status === "authenticated" &&
-    (session?.user?.plan === PlanTier.STARTER ||
-      session?.user?.plan === PlanTier.GROWTH ||
-      session?.user?.plan === PlanTier.SCALE);
+    (session?.user?.plan === PlanTier.PRO ||
+      session?.user?.plan === PlanTier.ENTERPRISE);
 
   const [mode, setMode] = useState<ContactRequestType>(
     ContactRequestType.CONTACT,
@@ -52,7 +51,7 @@ export default function ContactPage() {
         ? "Share your context and a preferred time to connect."
         : status === "unauthenticated"
         ? "Sign in to book a call with our team."
-        : "Upgrade to a paid recruiter plan to book a call with our team.",
+        : "Upgrade to PRO to book a call with our team.",
       locked: !isPaidUser,
     },
     {
@@ -106,7 +105,7 @@ export default function ContactPage() {
       toast.error(
         status === "unauthenticated"
           ? "Please sign in to book a call."
-          : "Book a call is available for paid recruiter plans only.",
+          : "Book a call is available for PRO and Enterprise plans only.",
       );
       return;
     }
@@ -145,7 +144,7 @@ export default function ContactPage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-muted p-6">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <h2 className="text-lg font-semibold text-brand-foreground">
               What happens next
             </h2>

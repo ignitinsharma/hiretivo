@@ -5,9 +5,10 @@ import { ChevronRight, Globe2, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
-import { CurrencyCode, VerificationStatus, WorkType } from '@/constants/enums';
+import { Button } from '@/components/ui/button';
+import { CurrencyCode, WorkType } from '@/constants/enums';
 import { SaveJobButton } from '@/modules/jobs/components/SaveJobButton';
-import { ApplyButton } from '@/modules/jobs/components/ApplyButton';
+import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
 import { formatApplicantCount } from '@/lib/jobs/format-applicant-count';
 
 interface JobData {
@@ -30,7 +31,6 @@ interface JobDetailHeaderProps {
   job: JobData;
   isAuth: boolean;
   userRole: string | null;
-  engineerVerificationStatus: VerificationStatus | null;
 }
 
 function formatSalary(min: number | null, max: number | null, currency: string | null): string {
@@ -43,13 +43,9 @@ function formatSalary(min: number | null, max: number | null, currency: string |
   return minStr || maxStr;
 }
 
-export function JobDetailHeader({
-  job,
-  isAuth,
-  userRole,
-  engineerVerificationStatus,
-}: JobDetailHeaderProps) {
-  const { openApplyModal } = useUIStore();
+export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps) {
+  const { openApplyModal, openEmailVerificationModal } = useUIStore();
+  const { data: verificationStatus } = useEmailVerificationStatus();
 
   return (
     <>
@@ -81,7 +77,16 @@ export function JobDetailHeader({
               {job.title}
             </h1>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 text-base">
-              <span className="font-semibold text-slate-900">{job.companyName}</span>
+              {job.companyId ? (
+                <Link
+                  href={`/companies/${job.companyId}`}
+                  className="font-semibold text-slate-900 transition-colors hover:text-primary"
+                >
+                  {job.companyName}
+                </Link>
+              ) : (
+                <span className="font-semibold text-slate-900">{job.companyName}</span>
+              )}
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
               <span>{job.jobType.replace('_', ' ')}</span>
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
@@ -110,18 +115,19 @@ export function JobDetailHeader({
             userRole={userRole}
             className="px-6 py-3"
           />
-          <ApplyButton
-            jobId={job.id}
-            verificationStatus={isAuth ? engineerVerificationStatus : null}
-            userRole={userRole}
-            onApply={() =>
-              openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)
-            }
-            onLoginRequired={() =>
-              openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)
-            }
+          <Button
+            onClick={() => {
+              if (verificationStatus?.requiresVerification) {
+                openEmailVerificationModal();
+                return;
+              }
+              openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl);
+            }}
+            variant="primary"
             className="px-8 py-3"
-          />
+          >
+            Apply Now
+          </Button>
         </div>
       </div>
     </>

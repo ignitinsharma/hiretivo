@@ -1,8 +1,11 @@
+import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JobAnalyticsTab } from '@/modules/recruiter/jobs/components/JobAnalyticsTab';
+import { BoostJobButton } from '@/modules/recruiter/jobs/components/BoostJobButton';
+import { BoostSuccessNotifier } from '@/modules/recruiter/jobs/components/BoostSuccessNotifier';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -35,8 +38,22 @@ export default async function RecruiterJobDetailPage({ params }: PageProps) {
     );
   }
 
+  // INT-03: Fetch active boost status for this job
+  const activeBoost = await prisma.boostedJob.findUnique({
+    where: { jobId: id },
+    select: { expiresAt: true },
+  });
+  const now = new Date();
+  const isAlreadyBoosted = activeBoost !== null && activeBoost.expiresAt > now;
+  const boostExpiresAt = isAlreadyBoosted ? activeBoost.expiresAt.toISOString() : null;
+
   return (
     <div className="w-full p-8">
+      {/* Boost success toast — fires when returning from DodoPayments with ?boost=success */}
+      <Suspense fallback={null}>
+        <BoostSuccessNotifier />
+      </Suspense>
+
       {/* Header */}
       <div className="flex items-start gap-4 mb-10">
         <SidebarToggle className="mt-2" />
@@ -58,14 +75,12 @@ export default async function RecruiterJobDetailPage({ params }: PageProps) {
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="max-w-xl rounded-xl border border-brand-border bg-white p-6">
-            <h2 className="text-lg font-semibold text-brand-foreground">
-              Job overview
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
-              Boosting has been removed in Pivot v2. Verified applicant and talent pool
-              workflows replace paid job promotion.
-            </p>
+          <div className="max-w-sm pt-2">
+            <BoostJobButton
+              jobId={id}
+              isAlreadyBoosted={isAlreadyBoosted}
+              boostExpiresAt={boostExpiresAt}
+            />
           </div>
         </TabsContent>
 
