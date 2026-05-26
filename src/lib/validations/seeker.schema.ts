@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { POSITION_TYPE_VALUES } from "@/constants/enums";
+import { POSITION_TYPE_VALUES, SeekingStatus } from "@/constants/enums";
 import { CodingProfilesSchema } from "@/lib/verification/coding-profiles";
 
 const SkillNameSchema = z
@@ -138,6 +138,7 @@ export const SeekerSettingsSchema = z
     yearsExperience: z.number().int().min(0).max(10).optional().nullable(),
     workExperiences: z.array(WorkExperienceInputSchema).max(20).optional(),
     educations: z.array(EducationInputSchema).max(10).optional(),
+    seekingStatus: z.nativeEnum(SeekingStatus).optional(),
     topProjects: z.array(SeekerProjectInputSchema).max(3).optional(),
   })
   .refine(
