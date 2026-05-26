@@ -236,6 +236,7 @@ export async function GET() {
       image: true,
       timezone: true,
       hiddenUntil: true,
+      seekingStatus: true,
       seekerProfile: {
         select: {
           headline: true,
@@ -339,7 +340,12 @@ export async function PATCH(req: NextRequest) {
   const transactionOperations: Prisma.PrismaPromise<unknown>[] = [
     prisma.user.update({
       where: { id: session.user.id },
-      data: { name },
+      data: {
+        name,
+        ...(parsed.data.seekingStatus !== undefined
+          ? { seekingStatus: parsed.data.seekingStatus }
+          : {}),
+      },
     }),
     prisma.seekerProfile.update({
       where: { userId: session.user.id },
