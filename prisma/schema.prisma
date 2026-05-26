@@ -96,27 +96,33 @@ enum ContractType {
   PART_TIME
 }
 
+enum SeekingStatus {
+  ACTIVELY_LOOKING
+  OPEN_TO_OFFERS
+  NOT_LOOKING
+}
+
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  role              Role      @default(SEEKER)
-  plan              PlanTier  @default(FREE)
-  billingCustomerId String?
-  timezone          String?
-  onboardingCompleted Boolean @default(false)
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String?   @unique
+  emailVerified       DateTime?
+  image               String?
+  passwordHash        String?
+  role                Role      @default(SEEKER)
+  plan                PlanTier  @default(FREE)
+  billingCustomerId   String?
+  timezone            String?
+  onboardingCompleted Boolean   @default(false)
   onboardingStep      Int?
   onboardingDraft     Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   accounts Account[]
   sessions Session[]
 
-  seekerProfile   SeekerProfile?
+  seekerProfile    SeekerProfile?
   recruiterProfile RecruiterProfile?
 
   jobsPosted Job[] @relation("RecruiterJobs")
@@ -129,24 +135,25 @@ model User {
   clickEvents ClickEvent[]
 
   subscription         Subscription?
-  verificationStatus    VerificationStatus @default(NOT_SUBMITTED)
-  hiretivoScore         Int?
-  scoreUpdatedAt        DateTime?
-  timezoneOverlapHours  Int?
-  availableFrom         DateTime?
-  reapplyAfter          DateTime?
-  profileSlug           String? @unique
-  hiddenUntil           DateTime?
+  verificationStatus   VerificationStatus @default(NOT_SUBMITTED)
+  hiretivoScore        Int?
+  scoreUpdatedAt       DateTime?
+  timezoneOverlapHours Int?
+  availableFrom        DateTime?
+  reapplyAfter         DateTime?
+  profileSlug          String?            @unique
+  hiddenUntil          DateTime?
+  seekingStatus        SeekingStatus      @default(OPEN_TO_OFFERS)
 
-  verificationReviews   VerificationReview[]
-  unlocksGiven          EngineerUnlock[]   @relation("RecruiterUnlocks")
-  unlocksReceived       EngineerUnlock[]   @relation("EngineerUnlocks")
-  feedbackReceived      EmployerFeedback[] @relation("FeedbackReceived")
-  feedbackGiven         EmployerFeedback[] @relation("FeedbackGiven")
-  savedByRecruiters     SavedEngineer[]    @relation("SavedEngineer")
-  savedEngineers        SavedEngineer[]    @relation("SavedByRecruiter")
-  blockedRecruiters     BlockedRecruiter[]
-  feedbackRequests      FeedbackRequest[]  @relation("FeedbackRequests")
+  verificationReviews VerificationReview[]
+  unlocksGiven        EngineerUnlock[]     @relation("RecruiterUnlocks")
+  unlocksReceived     EngineerUnlock[]     @relation("EngineerUnlocks")
+  feedbackReceived    EmployerFeedback[]   @relation("FeedbackReceived")
+  feedbackGiven       EmployerFeedback[]   @relation("FeedbackGiven")
+  savedByRecruiters   SavedEngineer[]      @relation("SavedEngineer")
+  savedEngineers      SavedEngineer[]      @relation("SavedByRecruiter")
+  blockedRecruiters   BlockedRecruiter[]
+  feedbackRequests    FeedbackRequest[]    @relation("FeedbackRequests")
 }
 
 model Account {
@@ -192,40 +199,40 @@ model SeekerProfile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  headline       String?
-  bio            String?  @db.Text
-  location       String?
+  headline        String?
+  bio             String?   @db.Text
+  location        String?
   yearsExperience Int?
-  workPreference WorkType?
+  workPreference  WorkType?
 
-  situation       String?
-  primaryRole     String?
-  salaryMin       Int?
-  salaryMax       Int?
-  currency        String?
-  availability    String?
-  resumeKey       String?
+  situation    String?
+  primaryRole  String?
+  salaryMin    Int?
+  salaryMax    Int?
+  currency     String?
+  availability String?
+  resumeKey    String?
 
-  websiteUrl      String?
-  linkedinUrl     String?
-  githubUrl       String?
-  twitterUrl      String?
-  codingProfiles  Json?
+  websiteUrl     String?
+  linkedinUrl    String?
+  githubUrl      String?
+  twitterUrl     String?
+  codingProfiles Json?
 
-  digestEnabled Boolean @default(false)
-  githubUsername          String?
-  githubScore             Int?
-  githubAnalysis          Json?
-  githubScannedAt         DateTime?
-  verificationNotes       String?  @db.Text
-  verificationReviewedAt  DateTime?
-  verificationReviewedBy  String?
-  videoIntroUrl           String?
-  topProjects             Json?
-  salaryMinUsd            Int?
-  salaryMaxUsd            Int?
-  profilePublic           Boolean @default(false)
-  profilePublicConsentAt  DateTime?
+  digestEnabled          Boolean   @default(false)
+  githubUsername         String?
+  githubScore            Int?
+  githubAnalysis         Json?
+  githubScannedAt        DateTime?
+  verificationNotes      String?   @db.Text
+  verificationReviewedAt DateTime?
+  verificationReviewedBy String?
+  videoIntroUrl          String?
+  topProjects            Json?
+  salaryMinUsd           Int?
+  salaryMaxUsd           Int?
+  profilePublic          Boolean   @default(false)
+  profilePublicConsentAt DateTime?
 
   skills          SeekerSkill[]
   jobMatches      JobMatch[]
@@ -250,13 +257,13 @@ model Skill {
 }
 
 model SeekerSkill {
-  id              String @id @default(cuid())
+  id              String     @id @default(cuid())
   seekerProfileId String
   skillId         String
   level           SkillLevel
 
   seekerProfile SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
-  skill           Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skill         Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([seekerProfileId, skillId])
   @@index([skillId])
@@ -267,14 +274,14 @@ model RecruiterProfile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  companyName String
-  website     String?
-  bio         String? @db.Text
-  companySize String?
-  industry    String?
-  fundingType String?
-  isFullyRemote Boolean  @default(false)
-  logo        String?
+  companyName   String
+  website       String?
+  bio           String? @db.Text
+  companySize   String?
+  industry      String?
+  fundingType   String?
+  isFullyRemote Boolean @default(false)
+  logo          String?
 
   emailNotifications     Boolean @default(true)
   applicationAlerts      Boolean @default(true)
@@ -290,23 +297,23 @@ model Job {
   recruiter   User   @relation("RecruiterJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
 
   title       String
-  description String      @db.Text
+  description String    @db.Text
   jobType     JobType
   applyType   ApplyType
   workType    WorkType?
-  status      JobStatus   @default(DRAFT)
+  status      JobStatus @default(DRAFT)
 
   salaryMin Int?
   salaryMax Int?
   currency  String?
 
-  minYearsExperience Int?
-  category           String?
-  salaryMinUsd          Int?
-  salaryMaxUsd          Int?
-  timezoneOverlapHours  Int?
-  contractType          ContractType?
-  isRemoteOnly          Boolean @default(true)
+  minYearsExperience   Int?
+  category             String?
+  salaryMinUsd         Int?
+  salaryMaxUsd         Int?
+  timezoneOverlapHours Int?
+  contractType         ContractType?
+  isRemoteOnly         Boolean       @default(true)
 
   externalApplyUrl String?
 
@@ -318,15 +325,15 @@ model Job {
   companySize     String?
   companyIndustry String?
   companyFunding  String?
-  isAdminPosted   Boolean   @default(false)
+  isAdminPosted   Boolean @default(false)
 
   publishedAt DateTime?
   closedAt    DateTime?
 
-  skills        JobSkill[]
-  applications  Application[]
-  jobMatches    JobMatch[]
-  clickEvents   ClickEvent[]
+  skills       JobSkill[]
+  applications Application[]
+  jobMatches   JobMatch[]
+  clickEvents  ClickEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -339,7 +346,7 @@ model Job {
 }
 
 model JobSkill {
-  id      String @id @default(cuid())
+  id      String     @id @default(cuid())
   jobId   String
   skillId String
   level   SkillLevel
@@ -373,9 +380,9 @@ model Application {
   jobId    String
   seekerId String
 
-  status      AppStatus @default(APPLIED)
-  source      ApplicationSource @default(SEEKER_APPLIED)
-  matchScore  Int
+  status     AppStatus         @default(APPLIED)
+  source     ApplicationSource @default(SEEKER_APPLIED)
+  matchScore Int
 
   coverLetter String? @db.Text
   aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
@@ -406,11 +413,11 @@ model Interview {
   seekerId String
   seeker   User   @relation("InterviewSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
 
-  status   InterviewStatus @default(SCHEDULED)
-  startsAt DateTime?
-  endsAt   DateTime?
-  meetLink String?
-  notes             String? @db.Text
+  status            InterviewStatus @default(SCHEDULED)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  meetLink          String?
+  notes             String?         @db.Text
   scheduledTimeZone String?
 
   createdAt DateTime @default(now())
@@ -425,8 +432,8 @@ model Interview {
 model ClickEvent {
   id String @id @default(cuid())
 
-  jobId  String?
-  job    Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  jobId String?
+  job   Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -471,12 +478,12 @@ model WorkExperience {
 
   company      String
   title        String
-  startDate    String       // "MM/YYYY" — freeform display date, not a DateTime
-  endDate      String?      // "MM/YYYY" — null means currently working here
+  startDate    String // "MM/YYYY" — freeform display date, not a DateTime
+  endDate      String? // "MM/YYYY" — null means currently working here
   isCurrent    Boolean  @default(false)
   description  String?  @db.Text
-  positionType String?      // "technical" | "non-technical" — validated at Zod layer, not a Prisma enum
-  skills       String[]     // denormalized skill name tags; not FK to Skill table
+  positionType String? // "technical" | "non-technical" — validated at Zod layer, not a Prisma enum
+  skills       String[] // denormalized skill name tags; not FK to Skill table
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -485,15 +492,15 @@ model WorkExperience {
 }
 
 model VerificationReview {
-  id           String             @id @default(cuid())
-  userId       String
-  reviewedBy   String?
-  status       VerificationStatus
-  scoreGiven   Int?
-  notes        Json?
-  aiSummary    Json?
-  createdAt    DateTime           @default(now())
-  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String             @id @default(cuid())
+  userId     String
+  reviewedBy String?
+  status     VerificationStatus
+  scoreGiven Int?
+  notes      Json?
+  aiSummary  Json?
+  createdAt  DateTime           @default(now())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -501,13 +508,13 @@ model VerificationReview {
 }
 
 model EngineerUnlock {
-  id           String   @id @default(cuid())
-  recruiterId  String
-  engineerId   String
-  source       String
-  unlockedAt   DateTime @default(now())
-  recruiter    User     @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
-  engineer     User     @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  recruiterId String
+  engineerId  String
+  source      String
+  unlockedAt  DateTime @default(now())
+  recruiter   User     @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
+  engineer    User     @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
 
   @@unique([recruiterId, engineerId])
   @@index([recruiterId])
@@ -530,12 +537,12 @@ model EmployerFeedback {
 }
 
 model SavedEngineer {
-  id           String   @id @default(cuid())
-  recruiterId  String
-  engineerId   String
-  createdAt    DateTime @default(now())
-  recruiter    User     @relation("SavedByRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
-  engineer     User     @relation("SavedEngineer", fields: [engineerId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  recruiterId String
+  engineerId  String
+  createdAt   DateTime @default(now())
+  recruiter   User     @relation("SavedByRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
+  engineer    User     @relation("SavedEngineer", fields: [engineerId], references: [id], onDelete: Cascade)
 
   @@unique([recruiterId, engineerId])
   @@index([recruiterId])
@@ -573,7 +580,7 @@ model Education {
   seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
 
   institution    String
-  graduationDate String?      // "MM/YYYY" — freeform display date, not a DateTime
+  graduationDate String? // "MM/YYYY" — freeform display date, not a DateTime
   degree         String?
   major          String?
 
