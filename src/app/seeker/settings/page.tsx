@@ -17,6 +17,7 @@ import { WorkExperienceSection } from '@/modules/seeker/settings/components/Work
 import { ProjectsSection } from '@/modules/seeker/settings/components/ProjectsSection';
 import { EducationSection } from '@/modules/seeker/settings/components/EducationSection';
 import { HideProfileToggle } from '@/modules/seeker/settings/components/HideProfileToggle';
+import { SeekingStatusToggle } from "@/modules/seeker/settings/components/SeekingStatusToggle";
 import { WhoViewedMeSection } from '@/modules/seeker/settings/components/WhoViewedMeSection';
 import { BlockedRecruiterSection } from '@/modules/seeker/settings/components/BlockedRecruiterSection';
 
@@ -122,6 +123,7 @@ function SeekerSettingsPanels() {
             Control your visibility in the talent pool and manage recruiter access.
           </p>
         </div>
+        <SeekingStatusToggle />
         <HideProfileToggle hiddenUntil={settings?.hiddenUntil ?? null} />
         <WhoViewedMeSection />
         <BlockedRecruiterSection />
