@@ -16,14 +16,14 @@ const verifyCompanyLimiter = createRateLimiter("verify-company", 5, "1 m");
  * POST /api/recruiter/verify-company
  * Company verification entry point for recruiters.
  *
- * Level 1 (auto): if the recruiter's email domain matches their company website domain,
- * sets companyVerified=true and companyVerifiedAt=now() immediately and returns
- * { level: 1, verified: true }.
+ * Level 1 (auto — corporate email path):
+ *   - no_website: recruiter has no company website set → returns { level: 1, status: "no_website" }
+ *   - mismatch: email domain does not match website domain → returns { level: 1, status: "mismatch" }
+ *   - verified: domains match → sets companyVerified=true, companyVerifiedAt=now(), returns { level: 1, status: "verified", verified: true }
  *
- * Level 2 (manual): if the recruiter uses a freemail domain (Gmail/Yahoo/etc.) or the
- * domain doesn't match, expects { companyLinkedInUrl, companyWorkEmail } in body and
- * queues the submission for admin review. Stores both fields, notifies admin via email,
- * returns { level: 2, pending: true }.
+ * Level 2 (manual — freemail path):
+ *   - already_pending: companyWorkEmail already set (prior pending submission) → returns { level: 2, status: "already_pending" } without overwriting
+ *   - pending: stores companyLinkedInUrl + companyWorkEmail, notifies admin, returns { level: 2, pending: true }
  *
  * Rate limit: 5 req/min per user (write operation).
  * Returns 401 when unauthenticated, 403 when not RECRUITER role, 404 when profile
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
           companyName: true,
           website: true,
           companyVerified: true,
+          companyWorkEmail: true,
         },
       },
     },
@@ -73,20 +74,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ level: 1, verified: true, alreadyVerified: true });
   }
 
-  // --- Level 1: domain match check ---
-  // Only applicable when the company has a website and the recruiter email is not freemail
+  // --- Level 1: domain match check (corporate email path) ---
   const isFreemail = isFreemailDomain(email);
 
-  if (!isFreemail && websiteUrl && checkLevel1Match(email, websiteUrl)) {
-    // Auto-verify: email domain matches company website domain
+  if (!isFreemail) {
+    // Corporate email path — handle all sub-cases; never falls through to Level 2
+    if (!websiteUrl) {
+      return NextResponse.json({
+        level: 1,
+        status: "no_website",
+        message: "Set a company website first to auto-verify.",
+      });
+    }
+    if (!checkLevel1Match(email, websiteUrl)) {
+      return NextResponse.json({
+        level: 1,
+        status: "mismatch",
+        message: "Email domain does not match website domain.",
+      });
+    }
+    // Domains match — auto-verify
     await prisma.recruiterProfile.update({
       where: { id: recruiterProfile.id },
-      data: {
-        companyVerified: true,
-        companyVerifiedAt: new Date(),
-      },
+      data: { companyVerified: true, companyVerifiedAt: new Date() },
     });
-    return NextResponse.json({ level: 1, verified: true });
+    return NextResponse.json({ level: 1, status: "verified", verified: true });
+  }
+
+  // --- Level 2: freemail path — block duplicate pending submissions ---
+  // already_pending guard must run before body parse to avoid overwriting prior submission
+  if (recruiterProfile.companyWorkEmail) {
+    return NextResponse.json({
+      level: 2,
+      status: "already_pending",
+      message: "You already have a pending verification submission.",
+    });
   }
 
   // --- Level 2: parse body and queue for admin review ---
