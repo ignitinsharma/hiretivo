@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
+import { slugifySkillInput, resolveCanonicalSlug } from '@/lib/skill-synonyms';
 import { z } from 'zod';
 
 /*
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   const createSkillSchema = z.object({
     name: z.string().trim().min(1).max(100),
-    slug: z.string().trim().min(1).max(100),
+    slug: z.string().trim().min(1).max(100).optional(),
     category: z.string().trim().min(1).max(50),
   });
 
@@ -69,22 +70,47 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Normalize name → canonical slug server-side, ignoring client-provided slug.
+  // This prevents duplicate rows for aliases like "JS" vs "JavaScript".
+  const canonicalSlug = resolveCanonicalSlug(slugifySkillInput(parsed.data.name));
+  const displayName = parsed.data.name.trim();
+
+  // Return existing skill if it already matches by canonical slug or name (case-insensitive).
+  const existing = await prisma.skill.findFirst({
+    where: {
+      OR: [
+        { slug: canonicalSlug },
+        { name: { equals: displayName, mode: 'insensitive' } },
+      ],
+    },
+  });
+
+  if (existing) {
+    return NextResponse.json(existing, { status: 200 });
+  }
+
   try {
     const skill = await prisma.skill.create({
       data: {
-        name: parsed.data.name,
-        slug: parsed.data.slug,
+        name: displayName,
+        slug: canonicalSlug,
         category: parsed.data.category,
       },
     });
 
     return NextResponse.json(skill, { status: 201 });
   } catch (err: unknown) {
+    // P2002 = race condition — another request created the same skill concurrently.
     if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
-      return NextResponse.json(
-        { error: `Skill "${parsed.data.name}" already exists` },
-        { status: 409 }
-      );
+      const raceWinner = await prisma.skill.findFirst({
+        where: {
+          OR: [
+            { slug: canonicalSlug },
+            { name: { equals: displayName, mode: 'insensitive' } },
+          ],
+        },
+      });
+      if (raceWinner) return NextResponse.json(raceWinner, { status: 200 });
     }
     return NextResponse.json({ error: 'Failed to create skill' }, { status: 500 });
   }
