@@ -30,7 +30,7 @@ export async function GET(
         select: {
           id: true,
           recruiterProfile: {
-            select: { id: true, companyName: true, logo: true },
+            select: { id: true, companyName: true, logo: true, companyVerified: true },
           },
         },
       },
@@ -111,6 +111,7 @@ export async function GET(
       })),
       publishedAt: job.publishedAt?.toISOString() ?? null,
       applicantCount: job._count.applications,
+      companyVerified: job.isAdminPosted ? false : (job.recruiter.recruiterProfile?.companyVerified ?? false),
     },
     matchScore,
     matchBreakdown,

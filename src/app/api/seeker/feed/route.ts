@@ -201,6 +201,7 @@ export async function GET(req: NextRequest) {
               companySize: true,
               fundingType: true,
               industry: true,
+              companyVerified: true,
             },
           },
         },
@@ -246,6 +247,7 @@ export async function GET(req: NextRequest) {
     missingSkillsHint: string | null;
     description: string | null;
     applicantCount: number;
+    companyVerified: boolean;
   }> = [];
 
   for (const m of pageItems) {
@@ -301,6 +303,7 @@ export async function GET(req: NextRequest) {
       missingSkillsHint,
       description: job.description ? stripHtml(job.description) : null,
       applicantCount: job._count.applications,
+      companyVerified: job.recruiter.recruiterProfile?.companyVerified ?? false,
     });
   }
 
