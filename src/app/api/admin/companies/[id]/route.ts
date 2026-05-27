@@ -19,8 +19,12 @@ const adminWriteLimiter = createRateLimiter("admin-companies-write", 30, "1 m");
  *
  * [id] is the RecruiterProfile.id (not userId).
  *
+ * Tamper guard (T-15-05): returns 404 unless the record is genuinely pending
+ * (companyWorkEmail != null AND companyVerified == false). Prevents approve/reject
+ * on already-verified or never-submitted profiles.
+ *
  * Returns 403 for non-admin sessions, 400 on validation failure, 404 when
- * profile not found, 429 on rate limit.
+ * profile not found or not pending, 429 on rate limit.
  * Returns { success: true, companyVerified: boolean }
  */
 export async function PATCH(
@@ -55,13 +59,17 @@ export async function PATCH(
   const { action } = parsed.data;
   const profileId = params.id;
 
-  // Verify profile exists before mutating
+  // Tamper guard (T-15-05): only genuinely pending records may be approved/rejected.
+  // A record is pending when companyWorkEmail is set AND companyVerified is false.
   const profile = await prisma.recruiterProfile.findUnique({
     where: { id: profileId },
-    select: { id: true },
+    select: { id: true, companyWorkEmail: true, companyVerified: true },
   });
-  if (!profile) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  if (!profile || profile.companyVerified || !profile.companyWorkEmail) {
+    return NextResponse.json(
+      { error: "No pending verification for this company" },
+      { status: 404 }
+    );
   }
 
   if (action === "approve") {
