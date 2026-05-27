@@ -90,7 +90,7 @@ export function AnalyticsTab({ isFreePlan }: AnalyticsTabProps) {
  * Separated from AnalyticsTab so the hook is never invoked for FREE plans.
  */
 function AnalyticsTabContent() {
-  const { data, isLoading, isError, refetch } = useRecruiterAnalytics(!false);
+  const { data, isLoading, isError, refetch } = useRecruiterAnalytics();
 
   if (isLoading) {
     return (

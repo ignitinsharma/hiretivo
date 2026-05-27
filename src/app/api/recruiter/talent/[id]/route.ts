@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
-import { PlanTier, UserRole } from "@/constants/enums";
-import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
+import { UserRole } from "@/constants/enums";
+import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
@@ -12,22 +12,6 @@ interface TalentDetailRouteContext {
   };
 }
 
-/*
- * isPaidPlan
- * Checks whether a recruiter plan can view full talent profile details.
- * Returns true when billing access rules allow the feature.
- */
-function isPaidPlan(plan: string | null | undefined): boolean {
-  if (plan === PlanTier.PRO) {
-    return canAccessRecruiterPaidFeature(PlanTier.PRO);
-  }
-
-  if (plan === PlanTier.ENTERPRISE) {
-    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
-  }
-
-  return canAccessRecruiterPaidFeature(PlanTier.FREE);
-}
 
 /*
  * resolveResumeUrl
@@ -71,7 +55,7 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
     select: { plan: true },
   });
 
-  if (!isPaidPlan(recruiter?.plan)) {
+  if (!canAccessTalentPool(recruiter?.plan)) {
     return new Response("Forbidden", { status: 403 });
   }
 
