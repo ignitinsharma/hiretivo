@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronRight, Globe2, Users } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Globe2, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
@@ -25,6 +25,7 @@ interface JobData {
   externalApplyUrl: string | null;
   companyId: string | null;
   applicantCount: number;
+  companyVerified: boolean;
 }
 
 interface JobDetailHeaderProps {
@@ -86,6 +87,15 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
                 </Link>
               ) : (
                 <span className="font-semibold text-slate-900">{job.companyName}</span>
+              )}
+              {job.companyVerified ? (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-brand-success/10 px-2.5 py-1 text-xs font-semibold text-brand-success">
+                  <CheckCircle2 className="h-3 w-3" /> Verified Company
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-brand-surface px-2.5 py-1 text-xs font-medium text-brand-foreground-secondary">
+                  Unverified
+                </span>
               )}
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
               <span>{job.jobType.replace('_', ' ')}</span>
