@@ -119,7 +119,7 @@ Plans:
 ## v1.1 — Trust & Conversion
 
 - [x] **Phase 13: Real-time Availability Signal** - Engineer seeking status toggle (Actively Looking / Open to Offers / Not Looking); colored dot on talent pool cards; recruiter filter; stops wasted outreach. (completed 2026-05-26)
-- [ ] **Phase 14: Recruiter Analytics Dashboard** - Hiring funnel metrics tab on /recruiter/pipeline (Unlocked→Responded→Interviewed→Hired); conversion %, avg days per stage, credits used vs quota; drives FREE→paid upgrades.
+- [x] **Phase 14: Recruiter Analytics Dashboard** - Hiring funnel metrics tab on /recruiter/pipeline (Unlocked→Responded→Interviewed→Hired); conversion %, avg days per stage, credits used vs quota; drives FREE→paid upgrades. (completed 2026-05-27)
 - [ ] **Phase 15: Company Verification** - Domain-email auto-verification (Level 1) + LinkedIn URL + work email admin review (Level 2); "Verified Company ✓" badge on job cards and detail page; fixes trust asymmetry.
 
 ### Phase 13: Real-time Availability Signal
@@ -150,9 +150,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Restore plan-access.ts (fix PRO/ENTERPRISE → STARTER/GROWTH/SCALE), restore 5 deleted pipeline files, add Pipeline+Analytics tab container
-- [ ] 14-02-PLAN.md — Analytics types + GET /api/recruiter/analytics route (funnel groupBy, credits/quota, top 5 skills) + TanStack Query hook
-- [ ] 14-03-PLAN.md — AnalyticsTab UI (funnel cards, credits, top skills, FREE-plan lock overlay) wired into pipeline page
+- [x] 14-01-PLAN.md — Restore plan-access.ts (fix PRO/ENTERPRISE → STARTER/GROWTH/SCALE), restore 5 deleted pipeline files, add Pipeline+Analytics tab container
+- [x] 14-02-PLAN.md — Analytics types + GET /api/recruiter/analytics route (funnel groupBy, credits/quota, top 5 skills) + TanStack Query hook
+- [x] 14-03-PLAN.md — AnalyticsTab UI (funnel cards, credits, top skills, FREE-plan lock overlay) wired into pipeline page
 
 ### Phase 15: Company Verification
 **Goal**: Fix the trust asymmetry where engineers are hard-verified but any recruiter can post jobs with a Gmail. Show "Verified Company ✓" badge on job cards and detail pages so engineers trust the posting.
@@ -186,5 +186,5 @@ Plans:
 | 11. Job Match & Notifications (Pivot v2) | 3/3 | Complete    | 2026-05-16 |
 | 12. AI Review & Feedback (Pivot v2) | 3/3 | Complete    | 2026-05-16 |
 | 13. Real-time Availability Signal (v1.1) | 5/5 | Complete    | 2026-05-26 |
-| 14. Recruiter Analytics Dashboard (v1.1) | 0/TBD | Not started | - |
+| 14. Recruiter Analytics Dashboard (v1.1) | 3/3 | Complete    | 2026-05-27 |
 | 15. Company Verification (v1.1) | 0/TBD | Not started | - |
