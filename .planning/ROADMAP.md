@@ -166,7 +166,12 @@ Plans:
   4. Recruiter settings page has a "Company Verification" section showing current status + Level 1 auto-check result + Level 2 submission form (if applicable).
   5. Job cards (JobCard.tsx), job detail page (/jobs/[id]), and talent pool recruiter info show "Verified Company ✓" green badge or "Unverified" gray badge.
   6. Admin panel has a pending company verifications list at /admin/companies where admin can approve/reject Level 2 submissions.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Schema (4 RecruiterProfile fields + BLOCKING Neon push), domain/freemail lib, verify-company API (Level 1+2), admin companies API + page + nav
+- [ ] 15-02-PLAN.md — Recruiter settings Company Verification section (verified/pending/not-verified states, Level 1 button + Level 2 form)
+- [ ] 15-03-PLAN.md — Verified/Unverified badge on JobCard, job detail header, talent profile dialog + companyVerified in job queries
 
 ## Progress
 
