@@ -42,6 +42,10 @@ export async function GET() {
           emailNotifications: true,
           applicationAlerts: true,
           interviewNotifications: true,
+          companyVerified: true,
+          companyVerifiedAt: true,
+          companyLinkedInUrl: true,
+          companyWorkEmail: true,
         },
       },
     },
@@ -69,6 +73,10 @@ export async function GET() {
       emailNotifications: user.recruiterProfile.emailNotifications,
       applicationAlerts: user.recruiterProfile.applicationAlerts,
       interviewNotifications: user.recruiterProfile.interviewNotifications,
+      companyVerified: user.recruiterProfile.companyVerified,
+      companyVerifiedAt: user.recruiterProfile.companyVerifiedAt?.toISOString() ?? null,
+      companyLinkedInUrl: user.recruiterProfile.companyLinkedInUrl ?? null,
+      companyWorkEmail: user.recruiterProfile.companyWorkEmail ?? null,
     },
   });
 }
