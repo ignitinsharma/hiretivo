@@ -108,19 +108,19 @@ export const WORK_TYPE_VALUES = [WorkType.REMOTE, WorkType.HYBRID, WorkType.ONSI
 
 export enum PlanTier {
   FREE = "FREE",
-  STARTER = "STARTER",
-  GROWTH = "GROWTH",
-  SCALE = "SCALE",
+  PRO = "PRO",
+  ENTERPRISE = "ENTERPRISE",
 }
 
-export const PLAN_TIER_VALUES = [
-  PlanTier.FREE,
-  PlanTier.STARTER,
-  PlanTier.GROWTH,
-  PlanTier.SCALE,
+export const PLAN_TIER_VALUES = [PlanTier.FREE, PlanTier.PRO, PlanTier.ENTERPRISE] as const;
+
+export const RECRUITER_PAID_FEATURE_VALUES = [
+  "talent_pool",
+  "interview_scheduling",
+  "ai_candidate_summaries",
 ] as const;
 
-/** @deprecated Superseded by canAccessTalentPool/getUnlockQuota in plan-access.ts. Use plan-level checks instead of feature-level checks. */
+export type RecruiterPaidFeature = (typeof RECRUITER_PAID_FEATURE_VALUES)[number];
 
 export enum InterviewStatus {
   SCHEDULED = "SCHEDULED",
@@ -171,6 +171,11 @@ export enum BillingPeriod {
 
 export const BILLING_PERIOD_VALUES = [BillingPeriod.MONTHLY, BillingPeriod.ANNUAL] as const;
 
+export enum PricingTierId {
+  FREE = "free",
+  PRO = "pro",
+}
+
 export enum AiMessageRole {
   SYSTEM = "system",
   USER = "user",
@@ -194,33 +199,6 @@ export enum SubscriptionStatus {
   CANCELED = "CANCELED",
 }
 
-export enum VerificationStatus {
-  NOT_SUBMITTED = "NOT_SUBMITTED",
-  PENDING = "PENDING",
-  IN_REVIEW = "IN_REVIEW",
-  VERIFIED = "VERIFIED",
-  REJECTED = "REJECTED",
-}
-
-export const VERIFICATION_STATUS_VALUES = [
-  VerificationStatus.NOT_SUBMITTED,
-  VerificationStatus.PENDING,
-  VerificationStatus.IN_REVIEW,
-  VerificationStatus.VERIFIED,
-  VerificationStatus.REJECTED,
-] as const;
-
-export enum ApplicationSource {
-  SEEKER_APPLIED = "SEEKER_APPLIED",
-  RECRUITER_INITIATED = "RECRUITER_INITIATED",
-}
-
-export enum ContractType {
-  FULL_TIME = "FULL_TIME",
-  CONTRACT = "CONTRACT",
-  PART_TIME = "PART_TIME",
-}
-
 export enum PositionType {
   TECHNICAL = "technical",
   NON_TECHNICAL = "non-technical",
@@ -229,16 +207,4 @@ export enum PositionType {
 export const POSITION_TYPE_VALUES = [
   PositionType.TECHNICAL,
   PositionType.NON_TECHNICAL,
-] as const;
-
-export enum SeekingStatus {
-  ACTIVELY_LOOKING = "ACTIVELY_LOOKING",
-  OPEN_TO_OFFERS = "OPEN_TO_OFFERS",
-  NOT_LOOKING = "NOT_LOOKING",
-}
-
-export const SEEKING_STATUS_VALUES = [
-  SeekingStatus.ACTIVELY_LOOKING,
-  SeekingStatus.OPEN_TO_OFFERS,
-  SeekingStatus.NOT_LOOKING,
 ] as const;

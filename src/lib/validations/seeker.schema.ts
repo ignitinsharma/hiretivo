@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { POSITION_TYPE_VALUES, SeekingStatus } from "@/constants/enums";
-import { CodingProfilesSchema } from "@/lib/verification/coding-profiles";
+import { POSITION_TYPE_VALUES } from "@/constants/enums";
 
 const SkillNameSchema = z
   .string()
@@ -93,28 +92,14 @@ export const EducationInputSchema = z.object({
   major: z.string().optional().nullable(),
 });
 
-export const SeekerProjectInputSchema = z.object({
-  name: z.string().trim().min(1, "Project name is required").max(100),
-  description: z.string().trim().min(1, "Project description is required").max(500),
-  sourceUrl: z.string().url("Source or case-study URL must be valid").startsWith("https://"),
-  liveUrl: z
-    .string()
-    .url("Live URL must be valid")
-    .startsWith("https://")
-    .optional()
-    .or(z.literal(""))
-    .nullable(),
-});
-
 export type WorkExperienceInput = z.infer<typeof WorkExperienceInputSchema>;
 export type EducationInput = z.infer<typeof EducationInputSchema>;
-export type SeekerProjectInput = z.infer<typeof SeekerProjectInputSchema>;
 
 export const SeekerSettingsSchema = z
   .object({
     name: z.string().min(1, "Name is required").max(100),
     headline: z.string().max(200).optional().or(z.literal("")),
-    bio: z.string().max(150, "Bio must be 150 characters or fewer").optional().or(z.literal("")),
+    bio: z.string().max(1000).optional().or(z.literal("")),
     location: z.string().max(200).optional().or(z.literal("")),
     situation: z.string().max(200).optional().or(z.literal("")),
     primaryRole: z.string().max(100).optional().or(z.literal("")),
@@ -134,12 +119,9 @@ export const SeekerSettingsSchema = z
     linkedinUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
     githubUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
     twitterUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
-    codingProfiles: CodingProfilesSchema.optional(),
     yearsExperience: z.number().int().min(0).max(10).optional().nullable(),
     workExperiences: z.array(WorkExperienceInputSchema).max(20).optional(),
     educations: z.array(EducationInputSchema).max(10).optional(),
-    seekingStatus: z.nativeEnum(SeekingStatus).optional(),
-    topProjects: z.array(SeekerProjectInputSchema).max(3).optional(),
   })
   .refine(
     (data) =>
