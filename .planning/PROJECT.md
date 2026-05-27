@@ -54,7 +54,7 @@ Recruiters and seekers must reliably connect through skills-first matching, with
 | Remove seeker billing/upgrade UI | User explicitly said seeker should not have upgrade plan flow right now. | Pending |
 
 ---
-*Last updated: 2026-05-26*
+*Last updated: 2026-05-27*
 
 ## Completed Milestones
 
@@ -62,3 +62,4 @@ Recruiters and seekers must reliably connect through skills-first matching, with
 - **Phase 11** (2026-05-17): Weighted job match formula, VERIFIED-only apply gate, job-match notification cron, seeker dashboard recruiter invites tab.
 - **Phase 12** (2026-05-17): AI GitHub scan (Claude Haiku via OpenRouter) for admin review, employer feedback form at /feedback/[token], FeedbackRequest cron for HIRED+90d apps, Hiretivo Score auto-recalc, recruiter pipeline kanban.
 - **Phase 13** (2026-05-26): Real-time seeking-status signal — SeekingStatus enum, engineer toggle, recruiter filter+dots, public profile pill.
+- **Phase 14** (2026-05-27): Recruiter analytics dashboard — hiring funnel (6 stages, conversion %), credits used vs quota, top 5 skills. FREE plan gated with locked overlay; analytics API with parallel Prisma aggregation, rate-limit, cross-recruiter isolation.
