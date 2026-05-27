@@ -3,6 +3,7 @@ import {
   Ban,
   Bookmark,
   BriefcaseBusiness,
+  CheckCircle2,
   Clock,
   MapPin,
   Users,
@@ -101,11 +102,22 @@ export function JobCard({
       companyLogoUrl={job.companyLogoUrl}
       companyDetails={companyDetails}
       metaBadge={
-        job.postedAt ? (
-          <span className="inline-flex rounded-lg bg-brand-surface px-3 py-1 text-xs font-semibold text-brand-foreground">
-            {job.postedAt}
-          </span>
-        ) : null
+        <>
+          {job.postedAt && (
+            <span className="inline-flex rounded-lg bg-brand-surface px-3 py-1 text-xs font-semibold text-brand-foreground">
+              {job.postedAt}
+            </span>
+          )}
+          {job.companyVerified ? (
+            <span className="inline-flex items-center gap-1 rounded-lg bg-brand-success/10 px-2.5 py-1 text-xs font-semibold text-brand-success">
+              <CheckCircle2 className="h-3 w-3" /> Verified Company
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-lg bg-brand-surface px-2.5 py-1 text-xs font-medium text-brand-foreground-secondary">
+              Unverified
+            </span>
+          )}
+        </>
       }
       topRight={
         <>
