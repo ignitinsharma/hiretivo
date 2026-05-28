@@ -1,10 +1,11 @@
 import { ShieldCheck, DollarSign, BadgeCheck } from 'lucide-react'
+import Link from 'next/link'
 
 /*
  * WhyVerifiedSection
- * Renders the 3-pillar "Why Verified" trust section on the homepage.
- * Fully static — no props. Displays the Hiretivo Standard pillars:
- * pre-screened engineers, salary transparency, and India-first credential.
+ * Light-surface section with split header layout (headline left, paragraph right)
+ * and 3 premium white cards on gray background.
+ * Fully static — no props.
  */
 
 const PILLARS = [
@@ -31,36 +32,56 @@ const PILLARS = [
   },
 ]
 
+/*
+ * WhyVerifiedSection
+ * Renders the "Why Verified" trust section with split header and pillar cards.
+ * @returns JSX section element — fully static
+ */
 export function WhyVerifiedSection() {
   return (
-    <section className="bg-brand-surface py-20 px-4 md:px-8">
-      {/* Section header */}
+    <section className="border-b border-brand-border bg-brand-surface px-4 py-20 md:px-8">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-12 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
-            The Hiretivo Standard
-          </p>
-          <h2 className="mt-2 text-3xl font-bold text-brand-foreground md:text-4xl">
-            Why verified engineers are different
-          </h2>
+        {/* Split header */}
+        <div className="mb-12 grid grid-cols-1 items-end gap-10 lg:grid-cols-2 lg:gap-14">
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-[1.5px] text-brand-primary">
+              The Hiretivo Standard
+            </p>
+            <h2 className="text-3xl font-bold tracking-tight text-brand-foreground md:text-4xl">
+              Why verified engineers<br className="hidden lg:block" /> are different
+            </h2>
+          </div>
+          <div>
+            <p className="text-base leading-relaxed text-brand-foreground-muted">
+              Most job platforms show everyone who bothered to sign up.
+              We manually review every profile — GitHub activity, real project depth,
+              communication quality. Fewer engineers, sharply higher signal.
+            </p>
+            <Link
+              href="/seeker/verification"
+              className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-brand-primary hover:underline"
+            >
+              See how we verify →
+            </Link>
+          </div>
         </div>
 
         {/* Pillar cards */}
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {PILLARS.map((pillar) => {
             const Icon = pillar.icon
             return (
               <div
                 key={pillar.title}
-                className="rounded-xl border border-brand-border bg-white p-6"
+                className="rounded-2xl border border-brand-border bg-white p-6"
               >
-                {/* Icon wrapper */}
-                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-brand-border bg-brand-surface text-brand-primary">
+                {/* Icon */}
+                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl border border-brand-primary/20 bg-brand-primary/10 text-brand-primary">
                   <Icon className="h-5 w-5" />
                 </div>
 
                 {/* Title */}
-                <h3 className="mb-3 text-xl font-semibold tracking-tight text-brand-foreground">
+                <h3 className="mb-2 text-base font-bold tracking-tight text-brand-foreground">
                   {pillar.title}
                 </h3>
 
@@ -70,7 +91,7 @@ export function WhyVerifiedSection() {
                 </p>
 
                 {/* Tagline */}
-                <p className="text-sm font-semibold italic text-brand-primary">
+                <p className="text-sm font-bold italic text-brand-primary">
                   {pillar.tagline}
                 </p>
               </div>
