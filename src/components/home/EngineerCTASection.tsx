@@ -1,12 +1,12 @@
 import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
 
 /*
  * EngineerCTASection
- * Dark band CTA section targeting Indian engineers as the secondary audience.
- * Promotes the Hiretivo verification badge and encourages engineers to apply for
- * USD-paying jobs at US/EU startups. Fully static — no props, no data fetching.
+ * Dark band CTA targeting Indian engineers as secondary audience.
+ * Near-black background with subtle purple radial glow from below.
+ * Tight heading, trust chips, verification CTA.
+ * Fully static — no props, no data fetching.
  */
 export function EngineerCTASection() {
   const TRUST_CHIPS = [
@@ -16,43 +16,48 @@ export function EngineerCTASection() {
   ] as const
 
   return (
-    <section className="bg-brand-foreground py-20 px-4 md:px-8">
-      <div className="max-w-3xl mx-auto text-center">
+    <section className="relative overflow-hidden bg-brand-foreground px-4 py-20 md:px-8">
+      {/* Purple glow — centered bottom */}
+      <div
+        className="pointer-events-none absolute bottom-[-100px] left-1/2 h-[400px] w-[500px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(117,96,255,0.12),transparent_70%)]"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 mx-auto max-w-2xl text-center">
         {/* Eyebrow */}
-        <p className="text-brand-primary text-xs font-semibold uppercase tracking-wider mb-4">
+        <p className="mb-4 text-[11px] font-bold uppercase tracking-[1.5px] text-brand-primary">
           Are you an Indian engineer?
         </p>
 
         {/* Heading */}
-        <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight mb-4">
-          Get your Hiretivo ✓ badge.
-          <br />
+        <h2 className="mb-4 text-4xl font-bold leading-[1.05] tracking-[-1.5px] text-white md:text-[44px]">
+          Get your Hiretivo ✓ badge.<br />
           Free forever.
         </h2>
 
         {/* Subtext */}
-        <p className="text-brand-foreground-muted text-base leading-relaxed mb-8 max-w-xl mx-auto">
+        <p className="mb-8 text-[15px] leading-[1.7] text-white/30">
           Apply to jobs. Get discovered. Get paid in USD.
         </p>
 
         {/* CTA */}
         <div className="flex flex-col items-center">
-          <Link href="/seeker/verification">
-            <Button variant="primary" size="lg">
+          <Button asChild variant="primary" size="lg">
+            <Link href="/seeker/verification">
               Start Verification →
-            </Button>
-          </Link>
-          <p className="text-xs text-brand-foreground-muted mt-3">
+            </Link>
+          </Button>
+          <p className="mt-3 text-xs text-white/20">
             Takes ~10 minutes
           </p>
         </div>
 
         {/* Trust chips */}
-        <div className="flex flex-wrap justify-center gap-3 mt-8">
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
           {TRUST_CHIPS.map((chip) => (
             <span
               key={chip}
-              className="text-xs font-semibold text-white border border-white/20 rounded-full px-3 py-1"
+              className="rounded-full border border-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/35"
             >
               {chip}
             </span>
