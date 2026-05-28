@@ -1,7 +1,7 @@
 /*
  * EngineerPreviewCard
- * Dark-themed static preview card for the homepage hero.
- * First card is highlighted (purple border, full opacity).
+ * Light-themed static preview card for the homepage hero.
+ * First card is highlighted (purple border accent).
  * Cards 2+ are progressively blurred to tease the talent pool.
  * No DB calls, no interaction — purely decorative / trust signal.
  */
@@ -57,10 +57,10 @@ export function EngineerPreviewCard({
   return (
     <div
       className={cn(
-        'rounded-xl border bg-[#111] p-4 flex flex-col gap-3',
-        highlighted ? 'border-brand-primary/25' : 'border-white/[0.07]',
+        'rounded-xl border bg-white p-4 flex flex-col gap-3',
+        highlighted ? 'border-brand-primary/40' : 'border-brand-border',
         blurLevel === 'medium' && 'blur-[3.5px]',
-        blurLevel === 'heavy' && 'blur-[3.5px] opacity-50',
+        blurLevel === 'heavy' && 'blur-[3.5px] opacity-40',
       )}
     >
       {/* ── Row 1: Avatar + name/role + score ── */}
@@ -70,17 +70,17 @@ export function EngineerPreviewCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-white/90 leading-tight truncate">
+          <p className="text-sm font-bold text-brand-foreground leading-tight truncate">
             {firstName} {lastInitial} · {yearsExp} yrs
           </p>
-          <p className="text-xs text-white/35 truncate">{role}</p>
+          <p className="text-xs text-brand-foreground-muted truncate">{role}</p>
         </div>
 
         <div className="flex flex-col items-end gap-0.5 shrink-0">
           <span className="text-lg font-bold text-brand-primary leading-none tracking-tight">
             {hiretivoScore}
           </span>
-          <span className="text-[9px] text-white/20 font-medium">/ 100</span>
+          <span className="text-[9px] text-brand-foreground-secondary font-medium">/ 100</span>
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export function EngineerPreviewCard({
         {visibleSkills.map((skill) => (
           <span
             key={skill}
-            className="rounded-md border border-white/[0.07] bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-white/30"
+            className="rounded-md border border-brand-border bg-brand-surface px-2 py-0.5 text-[10px] font-semibold text-brand-foreground-muted"
           >
             {skill}
           </span>
@@ -112,15 +112,15 @@ export function EngineerPreviewCard({
 
       {/* ── Row 4: Meta (salary, overlap, availability) ── */}
       <div className="flex flex-wrap gap-x-3 gap-y-1">
-        <span className="flex items-center gap-1 text-[10px] text-white/25">
+        <span className="flex items-center gap-1 text-[10px] text-brand-foreground-muted">
           <DollarSign className="w-3 h-3 shrink-0" aria-hidden="true" />
           {salaryLabel}
         </span>
-        <span className="flex items-center gap-1 text-[10px] text-white/25">
+        <span className="flex items-center gap-1 text-[10px] text-brand-foreground-muted">
           <Clock className="w-3 h-3 shrink-0" aria-hidden="true" />
           {overlapLabel}
         </span>
-        <span className="flex items-center gap-1 text-[10px] text-white/25">
+        <span className="flex items-center gap-1 text-[10px] text-brand-foreground-muted">
           <Calendar className="w-3 h-3 shrink-0" aria-hidden="true" />
           {availableFrom}
         </span>
@@ -128,7 +128,7 @@ export function EngineerPreviewCard({
 
       {/* ── Row 5: Locked CTA ── */}
       <div
-        className="w-full flex items-center justify-center gap-2 rounded-lg border border-white/[0.07] text-white/20 text-[11px] font-semibold py-2 cursor-not-allowed select-none"
+        className="w-full flex items-center justify-center gap-2 rounded-lg border border-brand-border text-brand-foreground-muted text-[11px] font-semibold py-2 cursor-not-allowed select-none"
         aria-disabled="true"
         role="button"
         tabIndex={-1}

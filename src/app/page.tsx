@@ -48,7 +48,7 @@ export default async function Home() {
 
   return (
     <>
-      <Header variant="dark" />
+      <Header />
       <main>
         <HeroRecruiterSection />
         <HowItWorksSection />
