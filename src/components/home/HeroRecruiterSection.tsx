@@ -1,76 +1,95 @@
 /*
  * HeroRecruiterSection
- * Recruiter-first homepage hero — two-column layout.
- * Left column: headline copy, subtext, primary CTA (Browse Talent Pool),
- *              and a secondary link for engineers to get verified.
- * Right column: three blurred mock EngineerPreviewCard instances sourced
- *               from MOCK_ENGINEER_CARDS to tease the verified talent pool.
- *
+ * Dark hero for the Hiretivo homepage. Two-column layout:
+ * Left: badge, headline, subtext, primary CTA, inline quality stats.
+ * Right: 3 engineer preview cards — first fully visible, rest blurred.
+ * Background: near-black with radial purple glow + subtle grid texture.
  * Server component — no client state, no interactive handlers.
- * Data: static MOCK_ENGINEER_CARDS from src/config/home-page.ts (no DB call).
  */
 
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { MOCK_ENGINEER_CARDS } from '@/config/home-page'
+import { MOCK_ENGINEER_CARDS, HOMEPAGE_STATS } from '@/config/home-page'
 import { EngineerPreviewCard } from '@/components/home/EngineerPreviewCard'
 
 /*
  * HeroRecruiterSection
- * Renders the full-width pivot hero section on the Hiretivo homepage.
- * No props — all content is static / derived from config constants.
- * @returns JSX section element with copy left + engineer cards right.
+ * Renders the full-width dark hero section on the Hiretivo homepage.
+ * No props — all content sourced from config constants.
  */
 export function HeroRecruiterSection() {
   return (
-    <section className="grid-bg overflow-hidden border-b border-brand-border bg-white px-4 py-20 md:px-8 md:py-24">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1fr_1fr]">
+    <section className="relative overflow-hidden bg-[#080808] px-4 py-20 grid-texture md:px-8 md:py-24">
+      {/* Purple radial glow — top right */}
+      <div
+        className="pointer-events-none absolute right-[-100px] top-[-120px] h-[500px] w-[600px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(117,96,255,0.15),transparent_70%)]"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_400px]">
 
         {/* ── LEFT: copy ── */}
         <div>
           {/* Badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border bg-white px-4 py-1.5 text-sm font-semibold text-brand-foreground">
-            ✦ 500+ verified Indian engineers
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.04] px-4 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-primary [box-shadow:0_0_6px_#7560ff]" aria-hidden="true" />
+            <span className="text-xs font-semibold text-white/50">
+              500+ verified Indian engineers
+            </span>
           </div>
 
           {/* H1 */}
-          <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl lg:text-6xl">
-            Hire engineers<br />
-            <span className="italic">you can trust.</span>
+          <h1 className="mb-5 text-5xl font-bold leading-[1.0] tracking-[-2.5px] text-white md:text-[60px]">
+            Engineers you<br />
+            can{' '}
+            <span className="text-brand-primary">trust.</span>
           </h1>
 
           {/* Subtext */}
-          <p className="mb-8 max-w-lg text-lg leading-relaxed text-brand-foreground-muted">
-            Every engineer is manually reviewed, GitHub-scored, and salary-transparent
-            before you ever see them. Browse the verified talent pool. Unlock in one click.
+          <p className="mb-8 max-w-[420px] text-base leading-[1.7] text-white/30">
+            Every engineer is manually reviewed, GitHub-scored, and
+            salary-transparent before you ever see them.
+            Browse the verified talent pool. Unlock in one click.
           </p>
 
           {/* Primary CTA */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button asChild variant="primary" size="lg">
               <Link href="/recruiter/register">
                 Browse Talent Pool
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
+            <p className="text-sm text-white/25">
+              Are you an engineer?{' '}
+              <Link
+                href="/seeker/verification"
+                className="font-semibold text-brand-primary hover:underline"
+              >
+                Get verified free →
+              </Link>
+            </p>
           </div>
 
-          {/* Engineer secondary link */}
-          <p className="mt-4 text-sm text-brand-foreground-muted">
-            Are you an engineer?{' '}
-            <Link
-              href="/seeker/verification"
-              className="font-semibold text-brand-primary hover:underline"
-            >
-              Get verified free →
-            </Link>
-          </p>
+          {/* Inline stats */}
+          <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-white/[0.07] pt-7">
+            {HOMEPAGE_STATS.map((stat) => (
+              <div key={stat.label}>
+                <span className="block text-2xl font-bold tracking-tight text-white">
+                  {stat.value}
+                </span>
+                <span className="text-[11px] font-medium text-white/25">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── RIGHT: engineer preview cards ── */}
-        <div className="flex flex-col gap-4">
-          {MOCK_ENGINEER_CARDS.map((card) => (
+        <div className="flex flex-col gap-3">
+          {MOCK_ENGINEER_CARDS.map((card, i) => (
             <EngineerPreviewCard
               key={card.id}
               firstName={card.firstName}
@@ -84,6 +103,8 @@ export function HeroRecruiterSection() {
               salaryMax={card.salaryMax}
               timezoneOverlapHours={card.timezoneOverlapHours}
               availableFrom={card.availableFrom}
+              highlighted={i === 0}
+              blurLevel={i === 0 ? 'none' : i === 1 ? 'medium' : 'heavy'}
             />
           ))}
         </div>
