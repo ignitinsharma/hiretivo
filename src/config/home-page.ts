@@ -1,76 +1,85 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  Code2,
-  Palette,
-  PackageCheck,
-  Megaphone,
-  TrendingUp,
-  Headphones,
-} from "lucide-react";
+/*
+ * Home page configuration for Hiretivo
+ * Exports quality-signal stats and mock engineer cards for the marketplace
+ * HOMEPAGE_STATS: quality metrics that differentiate the verified engineer marketplace
+ * MOCK_ENGINEER_CARDS: sample blurred engineer profiles shown on homepage hero (no DB call)
+ */
 
-export const HOMEPAGE_DISPLAY_STATS = {
-  heroRemoteJobs: "300+",
-  activeJobs: "300+",
-  companiesHiring: "120+",
-  jobSeekers: "10k+",
-} as const;
+/**
+ * Quality-signal stats that highlight the verified marketplace advantage
+ * These replace old job-board metrics (job count, seeker count)
+ */
+export const HOMEPAGE_STATS = [
+  { value: '< 30%', label: 'Approval rate' },
+  { value: '48 hrs', label: 'Review SLA per engineer' },
+  { value: 'USD', label: 'Salary always visible both sides' },
+  { value: '7 days', label: 'Avg time to hire' },
+] as const;
 
-export interface CategoryShowcaseItem {
-  title: string;
-  count: string;
-  roles: string;
-  salary: string;
-  skills: string[];
-  icon: LucideIcon;
+/**
+ * Mock engineer card displayed in homepage hero
+ * Used for visual preview of engineer profiles without making DB calls
+ */
+export interface MockEngineerCard {
+  id: string;
+  firstName: string;
+  lastInitial: string;
+  isVerified: boolean;
+  hiretivoScore: number;
+  role: string;
+  yearsExp: number;
+  skills: readonly string[];
+  salaryMin: number;
+  salaryMax: number;
+  timezoneOverlapHours: number;
+  availableFrom: string;
 }
 
-export const CATEGORY_SHOWCASE: CategoryShowcaseItem[] = [
+/**
+ * Sample engineer cards shown on homepage
+ * Demonstrates verified engineer quality and marketplace positioning
+ */
+export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
   {
-    title: "Engineering",
-    count: "1,240 roles",
-    roles: "Frontend, Backend, Full-stack",
-    salary: "$120k - $210k",
-    skills: ["React", "Node.js", "AI"],
-    icon: Code2,
+    id: 'mock-1',
+    firstName: 'Priya',
+    lastInitial: 'S.',
+    isVerified: true,
+    hiretivoScore: 84,
+    role: 'Senior React Engineer',
+    yearsExp: 6,
+    skills: ['React', 'Node.js', 'AWS', 'PostgreSQL'],
+    salaryMin: 80000,
+    salaryMax: 120000,
+    timezoneOverlapHours: 5,
+    availableFrom: 'Jun 2026',
   },
   {
-    title: "Design",
-    count: "450 roles",
-    roles: "Product, Brand, UX systems",
-    salary: "$90k - $165k",
-    skills: ["Figma", "UX", "SaaS"],
-    icon: Palette,
+    id: 'mock-2',
+    firstName: 'Arjun',
+    lastInitial: 'M.',
+    isVerified: true,
+    hiretivoScore: 91,
+    role: 'Full-Stack Engineer',
+    yearsExp: 8,
+    skills: ['TypeScript', 'Python', 'GCP', 'Redis'],
+    salaryMin: 100000,
+    salaryMax: 150000,
+    timezoneOverlapHours: 6,
+    availableFrom: 'Immediate',
   },
   {
-    title: "Product",
-    count: "380 roles",
-    roles: "Growth, Platform, AI products",
-    salary: "$130k - $220k",
-    skills: ["Roadmaps", "Data", "Remote"],
-    icon: PackageCheck,
+    id: 'mock-3',
+    firstName: 'Kavya',
+    lastInitial: 'R.',
+    isVerified: true,
+    hiretivoScore: 77,
+    role: 'Backend Engineer',
+    yearsExp: 4,
+    skills: ['Go', 'Kubernetes', 'PostgreSQL', 'gRPC'],
+    salaryMin: 70000,
+    salaryMax: 100000,
+    timezoneOverlapHours: 4,
+    availableFrom: 'Jul 2026',
   },
-  {
-    title: "Marketing",
-    count: "320 roles",
-    roles: "Lifecycle, SEO, Demand gen",
-    salary: "$85k - $150k",
-    skills: ["SEO", "CRM", "B2B"],
-    icon: Megaphone,
-  },
-  {
-    title: "Sales",
-    count: "215 roles",
-    roles: "AE, SDR, Partnerships",
-    salary: "$100k - $180k",
-    skills: ["Pipeline", "SaaS", "Outbound"],
-    icon: TrendingUp,
-  },
-  {
-    title: "Customer Support",
-    count: "190 roles",
-    roles: "Success, Support, Operations",
-    salary: "$70k - $130k",
-    skills: ["CS", "Ops", "Async"],
-    icon: Headphones,
-  },
-];
+] as const;
