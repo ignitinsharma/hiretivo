@@ -11,7 +11,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { generatePageMetadata } from "@/lib/metadata";
-import { HOMEPAGE_DISPLAY_STATS } from "@/config/home-page";
 
 const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 
@@ -24,7 +23,7 @@ export const metadata = generatePageMetadata({
 /*
  * Home
  * Renders the public Hiretivo homepage for signed-out visitors.
- * Displays temporary marketing proof numbers from HOMEPAGE_DISPLAY_STATS.
+ * Stats values are hardcoded placeholders pending real data.
  */
 export default async function Home() {
   if (SHOW_COMING_SOON) {
@@ -53,15 +52,11 @@ export default async function Home() {
       <main>
         <HeroSection />
         <AIMatchmakingSection />
-        <StatsBar
-          activeJobs={HOMEPAGE_DISPLAY_STATS.activeJobs}
-          companiesHiring={HOMEPAGE_DISPLAY_STATS.companiesHiring}
-          jobSeekers={HOMEPAGE_DISPLAY_STATS.jobSeekers}
-        />
+        <StatsBar />
         <FeaturedJobsSection />
         <FindYourPeopleSection
-          clientCount={HOMEPAGE_DISPLAY_STATS.companiesHiring}
-          candidateCount={HOMEPAGE_DISPLAY_STATS.jobSeekers}
+          clientCount="0"
+          candidateCount="0"
           className="bg-brand-surface px-4 py-20 md:px-8"
         />
         {/* <CategoriesSection activeJobs={HOMEPAGE_DISPLAY_STATS.activeJobs} /> */}
