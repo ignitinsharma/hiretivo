@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
-import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
+import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS, PUBLIC_NAV_ITEMS } from "@/constants/nav";
 import { NavLink } from "@/components/layout/NavLink";
 import { SeekerNavLink } from "@/components/layout/SeekerNavLink";
 import { ChevronDown, Settings } from "lucide-react";
@@ -101,6 +101,21 @@ export async function Header({ className }: HeaderProps) {
           <nav className="hidden md:flex flex-1 justify-center gap-6">
             {RECRUITER_NAV_ITEMS.map((item) => (
               <NavLink key={item.href} href={item.href} label={item.label} />
+            ))}
+          </nav>
+        )}
+
+        {/* Public desktop nav — logged-out only */}
+        {!session && (
+          <nav className="hidden md:flex items-center gap-6" aria-label="Public navigation">
+            {PUBLIC_NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-sm font-semibold text-brand-foreground-muted hover:text-brand-foreground transition-colors"
+              >
+                {item.label}
+              </Link>
             ))}
           </nav>
         )}
