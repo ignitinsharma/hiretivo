@@ -1,7 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroRecruiterSection } from "@/components/home/HeroRecruiterSection";
-import { StatsBar } from "@/components/home/StatsBar";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { WhyVerifiedSection } from "@/components/home/WhyVerifiedSection";
 import { EngineerCTASection } from "@/components/home/EngineerCTASection";
@@ -22,8 +21,8 @@ export const metadata = generatePageMetadata({
 /*
  * Home
  * Public homepage for Hiretivo — verified Indian engineer marketplace.
- * Recruiter-first: hero with blurred engineer cards, quality stats, how-it-works,
- * why-verified pillars, and an engineer CTA band.
+ * Recruiter-first: dark hero with blurred engineer cards, inline stats,
+ * how-it-works, why-verified pillars, and an engineer CTA band.
  * Authenticated users redirect to their dashboard immediately.
  */
 export default async function Home() {
@@ -49,10 +48,9 @@ export default async function Home() {
 
   return (
     <>
-      <Header />
+      <Header variant="dark" />
       <main>
         <HeroRecruiterSection />
-        <StatsBar />
         <HowItWorksSection />
         <WhyVerifiedSection />
         <EngineerCTASection />
