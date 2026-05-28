@@ -71,16 +71,14 @@ export function HowItWorksSection() {
           />
 
           {STEPS.map(({ number, icon: Icon, title, description, isPrimary }) => (
-            <div key={number} className="flex flex-col gap-5 lg:pr-10 last:lg:pr-0">
+            <div key={number} className="flex flex-col gap-5 lg:pr-10 lg:last:pr-0">
               {/* Step number box */}
-              <div className="flex items-center gap-4">
-                <div
-                  className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white ${
-                    isPrimary ? 'bg-brand-primary' : 'bg-brand-foreground'
-                  }`}
-                >
-                  {number}
-                </div>
+              <div
+                className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white ${
+                  isPrimary ? 'bg-brand-primary' : 'bg-brand-foreground'
+                }`}
+              >
+                {number}
               </div>
 
               {/* Icon */}

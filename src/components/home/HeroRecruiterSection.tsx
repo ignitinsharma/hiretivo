@@ -90,22 +90,23 @@ export function HeroRecruiterSection() {
         {/* ── RIGHT: engineer preview cards ── */}
         <div className="flex flex-col gap-3">
           {MOCK_ENGINEER_CARDS.map((card, i) => (
-            <EngineerPreviewCard
-              key={card.id}
-              firstName={card.firstName}
-              lastInitial={card.lastInitial}
-              isVerified={card.isVerified}
-              hiretivoScore={card.hiretivoScore}
-              role={card.role}
-              yearsExp={card.yearsExp}
-              skills={card.skills}
-              salaryMin={card.salaryMin}
-              salaryMax={card.salaryMax}
-              timezoneOverlapHours={card.timezoneOverlapHours}
-              availableFrom={card.availableFrom}
-              highlighted={i === 0}
-              blurLevel={i === 0 ? 'none' : i === 1 ? 'medium' : 'heavy'}
-            />
+            <div key={card.id} aria-hidden={i !== 0 || undefined}>
+              <EngineerPreviewCard
+                firstName={card.firstName}
+                lastInitial={card.lastInitial}
+                isVerified={card.isVerified}
+                hiretivoScore={card.hiretivoScore}
+                role={card.role}
+                yearsExp={card.yearsExp}
+                skills={card.skills}
+                salaryMin={card.salaryMin}
+                salaryMax={card.salaryMax}
+                timezoneOverlapHours={card.timezoneOverlapHours}
+                availableFrom={card.availableFrom}
+                highlighted={i === 0}
+                blurLevel={i === 0 ? 'none' : i === 1 ? 'medium' : 'heavy'}
+              />
+            </div>
           ))}
         </div>
 

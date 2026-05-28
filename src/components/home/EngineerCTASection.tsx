@@ -1,6 +1,12 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
+const TRUST_CHIPS = [
+  "✓ Free forever",
+  "✓ USD salary visible to US/EU startups",
+  "✓ Blue tick on your profile",
+] as const
+
 /*
  * EngineerCTASection
  * Dark band CTA targeting Indian engineers as secondary audience.
@@ -9,12 +15,6 @@ import { Button } from "@/components/ui/button"
  * Fully static — no props, no data fetching.
  */
 export function EngineerCTASection() {
-  const TRUST_CHIPS = [
-    "✓ Free forever",
-    "✓ USD salary visible to US/EU startups",
-    "✓ Blue tick on your profile",
-  ] as const
-
   return (
     <section className="relative overflow-hidden bg-brand-foreground px-4 py-20 md:px-8">
       {/* Purple glow — centered bottom */}

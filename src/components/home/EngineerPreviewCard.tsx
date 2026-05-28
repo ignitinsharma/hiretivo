@@ -70,7 +70,7 @@ export function EngineerPreviewCard({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#e8e8e8] leading-tight truncate">
+          <p className="text-sm font-bold text-white/90 leading-tight truncate">
             {firstName} {lastInitial} · {yearsExp} yrs
           </p>
           <p className="text-xs text-white/35 truncate">{role}</p>
