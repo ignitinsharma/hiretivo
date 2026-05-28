@@ -1,25 +1,14 @@
 /*
  * EngineerPreviewCard
- * Static, non-interactive preview card used exclusively on the homepage hero
- * to tease the verified Indian engineer marketplace to US/EU startup visitors.
- * Displays blurred-style locked profile info — no DB calls, no auth, no onClick.
- *
- * Props: EngineerPreviewCardProps (mirrors MockEngineerCard from src/config/home-page.ts,
- *        without the `id` field which is not needed for display).
- *
- * Rows:
- *   1. Avatar + name/role + verified badge + Hiretivo score
- *   2. Skills pills (max 3 shown, overflow as "+N more")
- *   3. Salary range / timezone overlap / available-from detail items
- *   4. Locked CTA div (disabled appearance, no interaction)
+ * Dark-themed static preview card for the homepage hero.
+ * First card is highlighted (purple border, full opacity).
+ * Cards 2+ are progressively blurred to tease the talent pool.
+ * No DB calls, no interaction — purely decorative / trust signal.
  */
 
 import { Lock, DollarSign, Clock, Calendar } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-/*
- * EngineerPreviewCardProps
- * Matches the shape of MockEngineerCard from src/config/home-page.ts (minus `id`).
- */
 interface EngineerPreviewCardProps {
   firstName: string
   lastInitial: string
@@ -32,16 +21,17 @@ interface EngineerPreviewCardProps {
   salaryMax: number
   timezoneOverlapHours: number
   availableFrom: string
+  highlighted?: boolean
+  blurLevel?: 'none' | 'medium' | 'heavy'
 }
 
-/** Max number of skill pills to render before showing an overflow count */
 const MAX_VISIBLE_SKILLS = 3
 
 /*
  * EngineerPreviewCard
- * Renders a single static engineer preview card for the homepage hero section.
- * @param props - EngineerPreviewCardProps
- * @returns JSX card element — fully static, no side-effects
+ * Renders a single static engineer preview card for the dark homepage hero.
+ * @param highlighted - true for first card (purple border accent)
+ * @param blurLevel - 'none' | 'medium' (blur) | 'heavy' (blur + opacity)
  */
 export function EngineerPreviewCard({
   firstName,
@@ -49,91 +39,102 @@ export function EngineerPreviewCard({
   isVerified,
   hiretivoScore,
   role,
+  yearsExp,
   skills,
   salaryMin,
   salaryMax,
   timezoneOverlapHours,
   availableFrom,
+  highlighted = false,
+  blurLevel = 'none',
 }: EngineerPreviewCardProps) {
   const initials = `${firstName[0]}${lastInitial[0]}`.toUpperCase()
   const visibleSkills = skills.slice(0, MAX_VISIBLE_SKILLS)
   const overflowCount = skills.length - MAX_VISIBLE_SKILLS
-
   const salaryLabel = `$${(salaryMin / 1000).toFixed(0)}k–$${(salaryMax / 1000).toFixed(0)}k/yr`
   const overlapLabel = `${timezoneOverlapHours}+ hrs US overlap`
 
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-5 flex flex-col gap-4">
-      {/* ── Row 1: Avatar + name/role + verified badge + score ── */}
+    <div
+      className={cn(
+        'rounded-xl border bg-[#111] p-4 flex flex-col gap-3',
+        highlighted ? 'border-brand-primary/25' : 'border-white/[0.07]',
+        blurLevel === 'medium' && 'blur-[3.5px]',
+        blurLevel === 'heavy' && 'blur-[3.5px] opacity-50',
+      )}
+    >
+      {/* ── Row 1: Avatar + name/role + score ── */}
       <div className="flex items-center gap-3">
-        {/* Initials avatar */}
-        <div className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center text-sm font-bold shrink-0">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-primary/30 to-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-xs font-bold text-brand-primary shrink-0">
           {initials}
         </div>
 
-        {/* Name + role */}
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-brand-foreground leading-tight truncate">
-            {firstName} {lastInitial}
+          <p className="text-sm font-bold text-[#e8e8e8] leading-tight truncate">
+            {firstName} {lastInitial} · {yearsExp} yrs
           </p>
-          <p className="text-xs text-brand-foreground-muted truncate">{role}</p>
+          <p className="text-xs text-white/35 truncate">{role}</p>
         </div>
 
-        {/* Verified badge + score */}
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          {isVerified && (
-            <span className="bg-brand-primary/10 text-brand-primary text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-              ✓ Verified
-            </span>
-          )}
-          <span className="text-xs font-bold text-brand-foreground">
-            {hiretivoScore}/100
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
+          <span className="text-lg font-bold text-brand-primary leading-none tracking-tight">
+            {hiretivoScore}
           </span>
+          <span className="text-[9px] text-white/20 font-medium">/ 100</span>
         </div>
       </div>
 
-      {/* ── Row 2: Skills pills ── */}
+      {/* ── Row 2: Verified badge ── */}
+      {isVerified && (
+        <div className="flex">
+          <span className="inline-flex items-center gap-1 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-bold px-2 py-0.5 rounded">
+            ✓ Hiretivo Verified
+          </span>
+        </div>
+      )}
+
+      {/* ── Row 3: Skills pills ── */}
       <div className="flex flex-wrap gap-1.5">
         {visibleSkills.map((skill) => (
           <span
             key={skill}
-            className="rounded-full border border-brand-border bg-brand-surface px-2.5 py-0.5 text-xs font-medium text-brand-foreground-muted"
+            className="rounded-md border border-white/[0.07] bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-white/30"
           >
             {skill}
           </span>
         ))}
         {overflowCount > 0 && (
-          <span className="rounded-full border border-brand-border bg-brand-surface px-2.5 py-0.5 text-xs font-medium text-brand-foreground-muted">
-            +{overflowCount} more
+          <span className="rounded-md border border-white/[0.07] bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-white/30">
+            +{overflowCount}
           </span>
         )}
       </div>
 
-      {/* ── Row 3: Detail items (salary, timezone, availability) ── */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <span className="flex items-center gap-1 text-xs text-brand-foreground-muted">
+      {/* ── Row 4: Meta (salary, overlap, availability) ── */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        <span className="flex items-center gap-1 text-[10px] text-white/25">
           <DollarSign className="w-3 h-3 shrink-0" aria-hidden="true" />
           {salaryLabel}
         </span>
-        <span className="flex items-center gap-1 text-xs text-brand-foreground-muted">
+        <span className="flex items-center gap-1 text-[10px] text-white/25">
           <Clock className="w-3 h-3 shrink-0" aria-hidden="true" />
           {overlapLabel}
         </span>
-        <span className="flex items-center gap-1 text-xs text-brand-foreground-muted">
+        <span className="flex items-center gap-1 text-[10px] text-white/25">
           <Calendar className="w-3 h-3 shrink-0" aria-hidden="true" />
           {availableFrom}
         </span>
       </div>
 
-      {/* ── Row 4: Locked CTA (static div, not a Button component) ── */}
+      {/* ── Row 5: Locked CTA ── */}
       <div
-        className="w-full flex items-center justify-center gap-2 rounded-lg border border-brand-border text-brand-foreground-muted text-sm py-2 cursor-not-allowed opacity-70 select-none"
+        className="w-full flex items-center justify-center gap-2 rounded-lg border border-white/[0.07] text-white/20 text-[11px] font-semibold py-2 cursor-not-allowed select-none"
         aria-disabled="true"
         role="button"
         tabIndex={-1}
       >
-        <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-        Unlock Profile
+        <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
+        Unlock Full Profile
       </div>
     </div>
   )
