@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AlertCircle, Check, Clock, CreditCard, Crown } from "lucide-react";
+import { AlertCircle, Check, Clock, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,16 +15,15 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlanTier } from "@/constants/enums";
-import { cn } from "@/lib/utils";
 import { billingService } from "@/services/billing.service";
 import type { SubscriptionStatusData } from "@/services/billing.service";
 
 type SubscriptionStatus = "ACTIVE" | "PAST_DUE" | "CANCELED";
 
 const FREE_FEATURES = [
-  "1 active job post",
-  "20 applicant views/mo",
-  "Basic AI skill match",
+  "Browse verified engineers",
+  "Save engineers to shortlist",
+  "See Hiretivo Score and skills",
 ];
 
 const STATUS_STYLES: Record<SubscriptionStatus, string> = {
@@ -61,27 +60,27 @@ function FreePlanCard() {
   const router = useRouter();
 
   return (
-    <Card className="max-w-2xl border-slate-200 bg-white">
+    <Card className="max-w-2xl border-brand-border bg-white">
       <CardHeader>
         <CardTitle className="text-xl">You&apos;re on the Free plan</CardTitle>
         <CardDescription>
-          Start with matching basics, then upgrade when your hiring volume grows.
+          Browse the talent pool for free. Upgrade to unlock engineers and post jobs.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <ul className="space-y-3">
           {FREE_FEATURES.map((feature) => (
-            <li key={feature} className="flex items-center gap-2 text-sm text-slate-700">
-              <Check className="h-4 w-4 text-black" aria-hidden />
+            <li key={feature} className="flex items-center gap-2 text-sm text-brand-foreground-muted">
+              <Check className="h-4 w-4 text-brand-foreground" aria-hidden />
               {feature}
             </li>
           ))}
         </ul>
         <Button
-          className="bg-brand-primary text-white hover:bg-brand-primary-dark"
+          className="bg-brand-primary text-white hover:bg-brand-primary-dk"
           onClick={() => router.push("/pricing")}
         >
-          Upgrade to PRO
+          Upgrade to Starter
         </Button>
       </CardContent>
     </Card>
@@ -92,7 +91,7 @@ function PaidPlanCard({
   plan,
   subscription,
 }: {
-  plan: PlanTier.PRO | PlanTier.ENTERPRISE;
+  plan: PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE;
   subscription: SubscriptionStatusData["subscription"];
 }) {
   const portalMutation = useMutation({
@@ -105,44 +104,37 @@ function PaidPlanCard({
     },
   });
 
+  const planDisplayName =
+    plan === PlanTier.STARTER ? "Starter"
+    : plan === PlanTier.GROWTH ? "Growth"
+    : "Scale";
+
   const status = subscription?.status ?? "ACTIVE";
   const periodEnd = subscription?.currentPeriodEnd
     ? formatDate(subscription.currentPeriodEnd)
     : null;
   const cancelsAtPeriodEnd = subscription?.cancelAtPeriodEnd === true;
-  const isEnterprise = plan === PlanTier.ENTERPRISE;
 
   return (
-    <Card
-      className={cn(
-        "max-w-2xl border-slate-200 bg-white",
-        plan === PlanTier.PRO && "border-brand-primary/30",
-      )}
-    >
+    <Card className="max-w-2xl border-brand-primary/30 bg-white">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-xl">
-            {isEnterprise ? (
-              <CreditCard className="h-5 w-5 text-black" aria-hidden />
-            ) : (
-              <Crown className="h-5 w-5 text-black" aria-hidden />
-            )}
-            {isEnterprise ? "Enterprise plan" : "PRO plan"}
+            <Crown className="h-5 w-5 text-brand-foreground" aria-hidden />
+            {planDisplayName} plan
           </CardTitle>
           <Badge variant="default" className={STATUS_STYLES[status]}>
             {STATUS_LABELS[status]}
           </Badge>
         </div>
         <CardDescription>
-          {isEnterprise
-            ? "Contact your account manager for contract and seat changes."
-            : "Your recruiter workspace has PRO hiring tools enabled."}
+          Your recruiter workspace has {planDisplayName} plan features enabled.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {periodEnd && (
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <Clock className="h-4 w-4 text-slate-400" aria-hidden />
+          <div className="flex items-center gap-2 text-sm text-brand-foreground-muted">
+            <Clock className="h-4 w-4 text-brand-foreground-secondary" aria-hidden />
             {cancelsAtPeriodEnd ? `Expires on ${periodEnd}` : `Renews on ${periodEnd}`}
           </div>
         )}
@@ -155,7 +147,7 @@ function PaidPlanCard({
         )}
 
         <Button
-          className="bg-brand-primary text-white hover:bg-brand-primary-dark"
+          className="bg-brand-primary text-white hover:bg-brand-primary-dk"
           onClick={() => portalMutation.mutate()}
           disabled={portalMutation.isPending}
         >
@@ -166,6 +158,11 @@ function PaidPlanCard({
   );
 }
 
+/*
+ * BillingTabContent
+ * Displays the recruiter's current plan and billing status.
+ * Shows FreePlanCard for FREE, PaidPlanCard for STARTER/GROWTH/SCALE.
+ */
 export function BillingTabContent() {
   const {
     data,
@@ -201,18 +198,21 @@ export function BillingTabContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-gray-900">Billing</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-brand-foreground">Billing</h2>
+        <p className="mt-1 text-sm text-brand-foreground-muted">
           Plan, renewal, and payment management.
         </p>
       </div>
 
       {data.plan === PlanTier.FREE && <FreePlanCard />}
-      {data.plan === PlanTier.PRO && (
-        <PaidPlanCard plan={PlanTier.PRO} subscription={data.subscription} />
+      {data.plan === PlanTier.STARTER && (
+        <PaidPlanCard plan={PlanTier.STARTER} subscription={data.subscription} />
       )}
-      {data.plan === PlanTier.ENTERPRISE && (
-        <PaidPlanCard plan={PlanTier.ENTERPRISE} subscription={data.subscription} />
+      {data.plan === PlanTier.GROWTH && (
+        <PaidPlanCard plan={PlanTier.GROWTH} subscription={data.subscription} />
+      )}
+      {data.plan === PlanTier.SCALE && (
+        <PaidPlanCard plan={PlanTier.SCALE} subscription={data.subscription} />
       )}
     </div>
   );
