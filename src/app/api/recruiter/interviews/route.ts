@@ -1,9 +1,10 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
+import { InterviewStatus, UserRole } from "@/constants/enums";
 import { ScheduleInterviewSchema } from "@/lib/validations/interview.schema";
 import { normalizeTimezone } from "@/lib/timezone";
 import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
+import { isPaidPlan } from "@/lib/billing/plan-access";
 import { sendInterviewScheduledEmail } from "@/lib/email/interview-scheduled";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
@@ -42,13 +43,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Recruiter not found" }, { status: 404 });
   }
 
-  const canAccessInterviewScheduling = (plan: string | null | undefined): boolean => {
-  return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE || isRecruiterTrialActive();
-};
-
-  if (!canAccessInterviewScheduling(recruiter.plan)) {
+  if (!isPaidPlan(recruiter.plan) && !isRecruiterTrialActive()) {
     return NextResponse.json(
-      { error: "Interview scheduling requires Pro plan. Upgrade to unlock." },
+      { error: "Interview scheduling requires a Starter, Growth, or Scale plan. Upgrade to unlock." },
       { status: 403 },
     );
   }
