@@ -45,7 +45,18 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    line-height: 1.9;
+    font-family: var(--font-body), sans-serif;
+    line-height: 1.75;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display), sans-serif;
+  }
+}
+
+@layer utilities {
+  .dot-grid {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }
 

@@ -17,26 +17,33 @@ const STATS = [
 
 /*
  * StatsBarSection
- * Renders the 4-column stats band with icon, value, and label per stat.
+ * Renders the homepage metrics as compact premium tiles.
  * @returns JSX section element — fully static
  */
 export function StatsBarSection() {
   return (
-    <section className="border-y border-brand-border bg-brand-surface px-4 py-14 md:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="grid grid-cols-2 divide-x divide-brand-border/60 md:grid-cols-5">
+    <section className="border-y border-brand-border bg-white px-4 py-12 md:px-8 md:py-14">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {STATS.map(({ icon: Icon, value, label }) => (
             <div
               key={label}
-              className="flex flex-col items-center gap-2.5 px-6 py-2 text-center first:pl-0 last:pr-0"
+              className="group flex min-h-[150px] flex-col justify-between rounded-xl border border-brand-border bg-white p-5 transition-colors hover:border-brand-primary/40"
             >
-              <Icon className="h-6 w-6 text-brand-primary/70" aria-hidden="true" />
-              <span className="font-display text-3xl font-bold tracking-[-0.03em] text-brand-foreground">
-                {value}
-              </span>
-              <span className="font-body text-[10px] font-bold uppercase tracking-[1.5px] text-brand-foreground-muted">
-                {label}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-primary/15 bg-brand-primary/[0.06] text-brand-primary">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="h-px w-8 bg-brand-border transition-colors group-hover:bg-brand-primary/35" />
+              </div>
+              <div>
+                <span className="block font-display text-4xl font-bold leading-none tracking-tight text-brand-foreground">
+                  {value}
+                </span>
+                <span className="mt-3 block font-body text-[11px] font-bold uppercase tracking-[1.4px] text-brand-foreground-muted">
+                  {label}
+                </span>
+              </div>
             </div>
           ))}
         </div>

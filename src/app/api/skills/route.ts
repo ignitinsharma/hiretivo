@@ -5,6 +5,64 @@ import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/r
 import { slugifySkillInput, resolveCanonicalSlug } from '@/lib/skill-synonyms';
 import { z } from 'zod';
 
+interface SkillListItem {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+}
+
+/*
+ * getSkillCanonicalSlug
+ * Resolves stored skill rows and old alias rows to a single canonical slug.
+ * Used to hide duplicate rows such as "nextjs" when "Next.js" already exists.
+ */
+function getSkillCanonicalSlug(skill: Pick<SkillListItem, 'name' | 'slug'>): string {
+  return resolveCanonicalSlug(skill.slug || slugifySkillInput(skill.name));
+}
+
+/*
+ * shouldPreferSkill
+ * Chooses the canonical seeded skill over duplicate user-created aliases.
+ * Exact canonical slug wins first, then non-Other category, then display-name quality.
+ */
+function shouldPreferSkill(
+  candidate: SkillListItem,
+  current: SkillListItem,
+  canonicalSlug: string,
+): boolean {
+  const candidateIsCanonical = candidate.slug === canonicalSlug;
+  const currentIsCanonical = current.slug === canonicalSlug;
+
+  if (candidateIsCanonical !== currentIsCanonical) return candidateIsCanonical;
+  if (candidate.category !== 'Other' && current.category === 'Other') return true;
+  if (candidate.category === 'Other' && current.category !== 'Other') return false;
+  return candidate.name.length > current.name.length;
+}
+
+/*
+ * dedupeCanonicalSkills
+ * Returns one visible skill per canonical slug, preserving alphabetical output.
+ */
+function dedupeCanonicalSkills(skills: SkillListItem[]): SkillListItem[] {
+  const byCanonicalSlug = new Map<string, SkillListItem>();
+
+  for (const skill of skills) {
+    const canonicalSlug = getSkillCanonicalSlug(skill);
+    const current = byCanonicalSlug.get(canonicalSlug);
+
+    if (!current || shouldPreferSkill(skill, current, canonicalSlug)) {
+      byCanonicalSlug.set(canonicalSlug, skill);
+    }
+  }
+
+  return Array.from(byCanonicalSlug.values()).sort((a, b) => {
+    const categoryCompare = a.category.localeCompare(b.category);
+    if (categoryCompare !== 0) return categoryCompare;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 /*
  * GET /api/skills
  * Lists global skills for skill pickers and onboarding flows.
@@ -29,7 +87,7 @@ export async function GET(req: NextRequest) {
     ],
   });
 
-  return NextResponse.json(skills);
+  return NextResponse.json(dedupeCanonicalSkills(skills));
 }
 
 /*

@@ -1,27 +1,39 @@
 /*
  * Home page configuration for Hiretivo
- * Exports quality-signal stats and mock engineer cards for the marketplace
- * HOMEPAGE_STATS: quality metrics that differentiate the verified engineer marketplace
- * MOCK_ENGINEER_CARDS: sample blurred engineer profiles shown on homepage hero (no DB call)
+ * Exports quality-signal stats, mock engineer cards, featured engineers, and testimonials.
+ * HOMEPAGE_STATS: quality metrics shown in hero inline stats
+ * STATS_BAR: full-width stats bar data with icons
+ * MOCK_ENGINEER_CARDS: blurred hero preview cards (no DB call)
+ * FEATURED_ENGINEERS: top-1% showcase cards with score visualization
+ * TESTIMONIALS: social proof quotes from hiring managers
  */
 
 /**
- * Quality-signal stats that highlight the verified marketplace advantage
- * These replace old job-board metrics (job count, seeker count)
+ * Quality-signal stats shown inline in the hero section
  */
 export const HOMEPAGE_STATS = [
   { value: '< 30%', label: 'Approval rate' },
-  { value: '48 hrs', label: 'Review SLA per engineer' },
-  { value: 'USD', label: 'Salary always visible both sides' },
+  { value: '48 hrs', label: 'Review SLA' },
+  { value: 'USD', label: 'Salary always visible' },
   { value: '7 days', label: 'Avg time to hire' },
 ] as const;
 
 /**
- * Mock engineer card displayed in homepage hero
- * Used for visual preview of engineer profiles without making DB calls
+ * Stats bar section — full-width 4-column stat band below hero
+ */
+export const STATS_BAR = [
+  { icon: 'shield', value: '500+', label: 'Verified Engineers' },
+  { icon: 'clock', value: '48 HRS', label: 'Review SLA' },
+  { icon: 'dollar', value: 'USD', label: 'Salary Transparency' },
+  { icon: 'calendar', value: '7 Days', label: 'Avg Time to Hire' },
+] as const;
+
+/**
+ * Mock engineer card interface for homepage hero previews
  */
 export interface MockEngineerCard {
   id: string;
+  displayName: string;
   firstName: string;
   lastInitial: string;
   isVerified: boolean;
@@ -36,50 +48,168 @@ export interface MockEngineerCard {
 }
 
 /**
- * Sample engineer cards shown on homepage
- * Demonstrates verified engineer quality and marketplace positioning
+ * Sample hero preview cards — blurred to tease the talent pool
  */
 export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
   {
     id: 'mock-1',
-    firstName: 'Priya',
-    lastInitial: 'S.',
+    displayName: 'Arjun Nair',
+    firstName: 'Arjun',
+    lastInitial: 'N.',
     isVerified: true,
     hiretivoScore: 84,
     role: 'Senior React Engineer',
-    yearsExp: 6,
-    skills: ['React', 'Node.js', 'AWS', 'PostgreSQL'],
-    salaryMin: 80000,
+    yearsExp: 7,
+    skills: ['React', 'Node.js', 'AWS', 'TypeScript'],
+    salaryMin: 90000,
     salaryMax: 120000,
     timezoneOverlapHours: 5,
-    availableFrom: 'Jun 2026',
+    availableFrom: 'Available Now',
   },
   {
     id: 'mock-2',
-    firstName: 'Arjun',
-    lastInitial: 'M.',
+    displayName: 'Priya Sharma',
+    firstName: 'Priya',
+    lastInitial: 'S.',
     isVerified: true,
-    hiretivoScore: 91,
-    role: 'Full-Stack Engineer',
-    yearsExp: 8,
-    skills: ['TypeScript', 'Python', 'GCP', 'Redis'],
-    salaryMin: 100000,
-    salaryMax: 150000,
-    timezoneOverlapHours: 6,
-    availableFrom: 'Immediate',
+    hiretivoScore: 79,
+    role: 'Full Stack Engineer',
+    yearsExp: 6,
+    skills: ['Python', 'Django', 'PostgreSQL', 'AWS'],
+    salaryMin: 70000,
+    salaryMax: 95000,
+    timezoneOverlapHours: 5,
+    availableFrom: 'Available Now',
   },
   {
     id: 'mock-3',
-    firstName: 'Kavya',
-    lastInitial: 'R.',
+    displayName: 'Rahul Verma',
+    firstName: 'Rahul',
+    lastInitial: 'V.',
     isVerified: true,
-    hiretivoScore: 77,
+    hiretivoScore: 76,
     role: 'Backend Engineer',
-    yearsExp: 4,
-    skills: ['Go', 'Kubernetes', 'PostgreSQL', 'gRPC'],
+    yearsExp: 5,
+    skills: ['Node.js', 'Express', 'MongoDB', 'AWS'],
+    salaryMin: 60000,
+    salaryMax: 85000,
+    timezoneOverlapHours: 4,
+    availableFrom: 'Available Now',
+  },
+] as const;
+
+/**
+ * Featured engineer interface for the "Meet the top 1%" section
+ */
+export interface FeaturedEngineer {
+  id: string;
+  name: string;
+  yearsExp: number;
+  isVerified: boolean;
+  role: string;
+  location: string;
+  locationFlag: string;
+  skills: readonly string[];
+  salaryMin: number;
+  salaryMax: number;
+  hiretivoScore: number;
+  scoreBars: readonly number[];
+  initials: string;
+}
+
+/**
+ * Top-1% featured engineers shown in dedicated showcase section
+ * scoreBars: array of heights (0-100) for the score bar visualization
+ */
+export const FEATURED_ENGINEERS: readonly FeaturedEngineer[] = [
+  {
+    id: 'feat-1',
+    name: 'Aman Siddiqui',
+    yearsExp: 7,
+    isVerified: true,
+    role: 'Senior Full Stack Engineer',
+    location: 'Bengaluru, India',
+    locationFlag: '🇮🇳',
+    skills: ['React', 'TypeScript', 'Next.js', 'Tailwind', 'AWS'],
+    salaryMin: 80000,
+    salaryMax: 110000,
+    hiretivoScore: 91,
+    scoreBars: [35, 50, 65, 75, 85, 92, 88, 95, 90, 82],
+    initials: 'AS',
+  },
+  {
+    id: 'feat-2',
+    name: 'Priya Sharma',
+    yearsExp: 6,
+    isVerified: true,
+    role: 'Full Stack Engineer',
+    location: 'India',
+    locationFlag: '🇮🇳',
+    skills: ['Python', 'Django', 'PostgreSQL', 'AWS', 'Redis'],
     salaryMin: 70000,
     salaryMax: 100000,
-    timezoneOverlapHours: 4,
-    availableFrom: 'Jul 2026',
+    hiretivoScore: 88,
+    scoreBars: [30, 48, 60, 72, 82, 88, 85, 90, 86, 78],
+    initials: 'PS',
+  },
+  {
+    id: 'feat-3',
+    name: 'Rohit Kumar',
+    yearsExp: 5,
+    isVerified: true,
+    role: 'DevOps Engineer',
+    location: 'Pune, India',
+    locationFlag: '🇮🇳',
+    skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD'],
+    salaryMin: 65000,
+    salaryMax: 95000,
+    hiretivoScore: 86,
+    scoreBars: [28, 44, 58, 70, 80, 86, 84, 88, 83, 74],
+    initials: 'RK',
+  },
+] as const;
+
+/**
+ * Testimonial interface for the social proof section
+ */
+export interface Testimonial {
+  id: string;
+  quote: string;
+  name: string;
+  title: string;
+  initials: string;
+  stars: number;
+}
+
+/**
+ * Hiring manager testimonials for the "Hiring teams love Hiretivo" section
+ */
+export const TESTIMONIALS: readonly Testimonial[] = [
+  {
+    id: 'test-1',
+    quote:
+      'We hired a senior backend engineer in 4 days. The Hiretivo Score saved us 3 rounds of screening.',
+    name: 'Sarah K.',
+    title: 'CTO at a fintech startup',
+    initials: 'SK',
+    stars: 5,
+  },
+  {
+    id: 'test-2',
+    quote:
+      'No fluff. Every profile is real, salary is upfront, and engineers are actually available.',
+    name: 'Marcus D.',
+    title: 'Engineering Manager',
+    initials: 'MD',
+    stars: 5,
+  },
+  {
+    id: 'test-3',
+    quote:
+      'Best hiring experience for remote Indian talent. Far better than Upwork or Toptal.',
+    name: 'Priya M.',
+    title: 'Head of Engineering',
+    initials: 'PM',
+    stars: 5,
   },
 ] as const;

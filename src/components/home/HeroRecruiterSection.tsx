@@ -6,11 +6,11 @@
  * Server component — no client state, no interactive handlers.
  */
 
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { MOCK_ENGINEER_CARDS, HOMEPAGE_STATS } from '@/config/home-page'
-import { EngineerPreviewCard } from '@/components/home/EngineerPreviewCard'
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MOCK_ENGINEER_CARDS } from "@/config/home-page";
+import { EngineerPreviewCard } from "@/components/home/EngineerPreviewCard";
 
 /*
  * HeroRecruiterSection
@@ -18,15 +18,22 @@ import { EngineerPreviewCard } from '@/components/home/EngineerPreviewCard'
  * No props — all content from config constants.
  */
 export function HeroRecruiterSection() {
+  const [primaryEngineer, secondaryEngineer, tertiaryEngineer] =
+    MOCK_ENGINEER_CARDS;
+
   return (
     <section className="dot-grid relative overflow-hidden bg-white px-4 py-20 md:px-8 md:py-24">
-      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_440px]">
-
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_520px]">
         {/* ── LEFT: copy ── */}
         <div>
           {/* Badge */}
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-1.5">
-            <span className="text-xs font-bold text-brand-primary" aria-hidden="true">✓</span>
+            <span
+              className="text-xs font-bold text-brand-primary"
+              aria-hidden="true"
+            >
+              ✓
+            </span>
             <span className="text-xs font-semibold text-brand-foreground-muted">
               500+ Verified Indian Engineers
             </span>
@@ -34,15 +41,15 @@ export function HeroRecruiterSection() {
 
           {/* H1 */}
           <h1 className="mb-5 font-display text-5xl font-bold leading-[1.05] tracking-[-0.04em] text-brand-foreground md:text-[60px]">
-            Hire engineers<br />
-            you can{' '}
-            <span className="italic text-brand-primary">trust.</span>
+            Hire engineers
+            <br />
+            you can <span className="italic text-brand-primary">trust.</span>
           </h1>
 
           {/* Subtext */}
           <p className="mb-8 max-w-[420px] text-base leading-[1.7] text-brand-foreground-muted">
-            Every engineer is manually reviewed, GitHub-scored,
-            and salary-transparent before you see them.
+            Every engineer is manually reviewed, GitHub-scored, and
+            salary-transparent before you see them.
           </p>
 
           {/* Primary CTA */}
@@ -54,7 +61,7 @@ export function HeroRecruiterSection() {
               </Link>
             </Button>
             <p className="text-sm text-brand-foreground-muted">
-              Are you an engineer?{' '}
+              Are you an engineer?{" "}
               <Link
                 href="/seeker/verification"
                 className="font-semibold text-brand-primary hover:underline"
@@ -63,92 +70,83 @@ export function HeroRecruiterSection() {
               </Link>
             </p>
           </div>
-
-          {/* Inline stats */}
-          <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-brand-border pt-7">
-            {HOMEPAGE_STATS.map((stat) => (
-              <div key={stat.label}>
-                <span className="block font-display text-2xl font-bold tracking-[-0.02em] text-brand-foreground">
-                  {stat.value}
-                </span>
-                <span className="font-body text-[11px] font-medium text-brand-foreground-muted">
-                  {stat.label}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* ── RIGHT: cascading card stack ── */}
         <div className="hidden lg:block">
-          {/* Soft purple glow behind the stack */}
           <div
-            className="relative h-[480px]"
+            className="group/cards relative h-[500px] [perspective:900px]"
             aria-hidden="true"
           >
-            {/* Background gradient blob */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-brand-primary/[0.07] via-brand-primary/[0.04] to-transparent" />
+            {/* Soft radial glow behind the stack */}
+            <div className="absolute -left-10 top-0 h-[430px] w-[470px] rounded-full opacity-35 blur-2xl transition-transform duration-500 [background:#7560FF] [background:radial-gradient(circle,rgba(117,96,255,1)_0%,rgba(148,187,233,1)_100%)] group-hover/cards:scale-105" />
+            <div className="absolute left-24 top-28 h-[300px] w-[360px] rounded-full opacity-20 blur-3xl [background:radial-gradient(circle,rgba(117,96,255,1)_0%,rgba(148,187,233,1)_100%)]" />
 
-            {/* Card 1 — top, fully visible, slight right offset */}
-            <div className="absolute left-4 right-0 top-0 z-30">
+            {/* Card 1 — top, fully visible */}
+            <div className="absolute left-0 top-0 z-30 w-[360px] -rotate-2 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(-10px,-12px,34px)_rotateX(6deg)_rotateY(9deg)_rotateZ(-3deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
-                firstName={MOCK_ENGINEER_CARDS[0].firstName}
-                lastInitial={MOCK_ENGINEER_CARDS[0].lastInitial}
-                isVerified={MOCK_ENGINEER_CARDS[0].isVerified}
-                hiretivoScore={MOCK_ENGINEER_CARDS[0].hiretivoScore}
-                role={MOCK_ENGINEER_CARDS[0].role}
-                yearsExp={MOCK_ENGINEER_CARDS[0].yearsExp}
-                skills={MOCK_ENGINEER_CARDS[0].skills}
-                salaryMin={MOCK_ENGINEER_CARDS[0].salaryMin}
-                salaryMax={MOCK_ENGINEER_CARDS[0].salaryMax}
-                timezoneOverlapHours={5}
-                availableFrom={MOCK_ENGINEER_CARDS[0].availableFrom}
+                displayName={primaryEngineer.displayName}
+                firstName={primaryEngineer.firstName}
+                lastInitial={primaryEngineer.lastInitial}
+                isVerified={primaryEngineer.isVerified}
+                hiretivoScore={primaryEngineer.hiretivoScore}
+                role={primaryEngineer.role}
+                yearsExp={primaryEngineer.yearsExp}
+                skills={primaryEngineer.skills}
+                salaryMin={primaryEngineer.salaryMin}
+                salaryMax={primaryEngineer.salaryMax}
+                timezoneOverlapHours={primaryEngineer.timezoneOverlapHours}
+                availableFrom={primaryEngineer.availableFrom}
                 highlighted
                 blurLevel="none"
+                className="bg-white/95"
               />
             </div>
 
-            {/* Card 2 — offset down, blurred, slight left offset */}
-            <div className="absolute left-0 right-4 top-[188px] z-20">
+            {/* Card 2 — offset down and right */}
+            <div className="absolute left-11 top-[132px] z-20 w-[360px] rotate-3 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(12px,-6px,34px)_rotateX(-4deg)_rotateY(-10deg)_rotateZ(4deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
-                firstName={MOCK_ENGINEER_CARDS[1].firstName}
-                lastInitial={MOCK_ENGINEER_CARDS[1].lastInitial}
-                isVerified={MOCK_ENGINEER_CARDS[1].isVerified}
-                hiretivoScore={MOCK_ENGINEER_CARDS[1].hiretivoScore}
-                role={MOCK_ENGINEER_CARDS[1].role}
-                yearsExp={MOCK_ENGINEER_CARDS[1].yearsExp}
-                skills={MOCK_ENGINEER_CARDS[1].skills}
-                salaryMin={MOCK_ENGINEER_CARDS[1].salaryMin}
-                salaryMax={MOCK_ENGINEER_CARDS[1].salaryMax}
-                timezoneOverlapHours={5}
-                availableFrom={MOCK_ENGINEER_CARDS[1].availableFrom}
+                displayName={secondaryEngineer.displayName}
+                firstName={secondaryEngineer.firstName}
+                lastInitial={secondaryEngineer.lastInitial}
+                isVerified={secondaryEngineer.isVerified}
+                hiretivoScore={secondaryEngineer.hiretivoScore}
+                role={secondaryEngineer.role}
+                yearsExp={secondaryEngineer.yearsExp}
+                skills={secondaryEngineer.skills}
+                salaryMin={secondaryEngineer.salaryMin}
+                salaryMax={secondaryEngineer.salaryMax}
+                timezoneOverlapHours={secondaryEngineer.timezoneOverlapHours}
+                availableFrom={secondaryEngineer.availableFrom}
                 highlighted={false}
-                blurLevel="medium"
+                blurLevel="none"
+                className="bg-white/95"
               />
             </div>
 
-            {/* Card 3 — bottom, heavily blurred */}
-            <div className="absolute left-6 right-2 top-[340px] z-10">
+            {/* Card 3 — lower stack card, still readable and hoverable */}
+            <div className="absolute left-20 top-[264px] z-10 w-[360px] -rotate-2 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(18px,-4px,34px)_rotateX(-5deg)_rotateY(-8deg)_rotateZ(2deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
-                firstName={MOCK_ENGINEER_CARDS[2].firstName}
-                lastInitial={MOCK_ENGINEER_CARDS[2].lastInitial}
-                isVerified={MOCK_ENGINEER_CARDS[2].isVerified}
-                hiretivoScore={MOCK_ENGINEER_CARDS[2].hiretivoScore}
-                role={MOCK_ENGINEER_CARDS[2].role}
-                yearsExp={MOCK_ENGINEER_CARDS[2].yearsExp}
-                skills={MOCK_ENGINEER_CARDS[2].skills}
-                salaryMin={MOCK_ENGINEER_CARDS[2].salaryMin}
-                salaryMax={MOCK_ENGINEER_CARDS[2].salaryMax}
-                timezoneOverlapHours={4}
-                availableFrom={MOCK_ENGINEER_CARDS[2].availableFrom}
+                displayName={tertiaryEngineer.displayName}
+                firstName={tertiaryEngineer.firstName}
+                lastInitial={tertiaryEngineer.lastInitial}
+                isVerified={tertiaryEngineer.isVerified}
+                hiretivoScore={tertiaryEngineer.hiretivoScore}
+                role={tertiaryEngineer.role}
+                yearsExp={tertiaryEngineer.yearsExp}
+                skills={tertiaryEngineer.skills}
+                salaryMin={tertiaryEngineer.salaryMin}
+                salaryMax={tertiaryEngineer.salaryMax}
+                timezoneOverlapHours={tertiaryEngineer.timezoneOverlapHours}
+                availableFrom={tertiaryEngineer.availableFrom}
                 highlighted={false}
-                blurLevel="heavy"
+                blurLevel="none"
+                className="bg-white/95"
               />
             </div>
           </div>
         </div>
-
       </div>
     </section>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, ArrowLeft, Info } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Info, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { SkillsTagInput } from '@/components/forms/skills-tag-input';
 import { RichTextEditor } from '@/components/forms/RichTextEditor';
 import { cn } from '@/lib/utils';
+import { stripHtml } from '@/lib/utils';
 import { SUPPORT_URL } from '@/lib/config';
 import { OnboardingJobType } from '@/constants/enums';
 import type { JobType, ExperienceLevel, JobCategory } from '@/lib/validations/recruiter-onboarding.schema';
@@ -21,6 +22,16 @@ interface StepPostJobProps {
   onSkip?: () => void | Promise<void>;
   isSkipping?: boolean;
 }
+
+type FieldErrors = {
+  jobTitle?: string;
+  jobType?: string;
+  experienceLevel?: string;
+  category?: string;
+  salary?: string;
+  jobDescription?: string;
+  requiredSkills?: string;
+};
 
 const jobTypeOptions: { value: JobType; label: string }[] = [
   { value: OnboardingJobType.FULL_TIME, label: 'Full-time' },
@@ -44,82 +55,107 @@ const categoryOptions: { value: JobCategory; label: string }[] = [
   { value: 'SALES', label: 'Sales' },
 ];
 
+/*
+ * StepPostJob
+ * Onboarding step 3: post first job listing.
+ * Validates all required fields client-side (including HTML-stripped description length
+ * and salary range ordering) before calling the server action.
+ */
 export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobProps) {
-  const { 
-    step3, 
-    setJobTitle, 
-    setJobType, 
-    setExperienceLevel, 
-    setCategory, 
+  const {
+    step3,
+    setJobTitle,
+    setJobType,
+    setExperienceLevel,
+    setCategory,
     setSalaryRange,
     setJobDescription,
-    setRequiredSkills 
+    setRequiredSkills,
   } = useOnboardingStore();
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setApiError(null);
+  };
+
   const validateStep = (): boolean => {
-    const newErrors: string[] = [];
-    
+    const errs: FieldErrors = {};
+
     if (!step3.jobTitle.trim()) {
-      newErrors.push('Job title is required');
+      errs.jobTitle = 'Job title is required';
     }
     if (!step3.jobType) {
-      newErrors.push('Please select job type');
+      errs.jobType = 'Select job type';
     }
     if (!step3.experienceLevel) {
-      newErrors.push('Please select experience level');
+      errs.experienceLevel = 'Select experience level';
     }
     if (!step3.category) {
-      newErrors.push('Please select category');
+      errs.category = 'Select category';
     }
-    if (step3.jobDescription.trim().length < 50) {
-      newErrors.push('Job description must be at least 50 characters');
+
+    const { min, max } = step3.salaryRange;
+    if (min !== null && max !== null && min > max) {
+      errs.salary = 'Min salary cannot exceed max salary';
     }
+
+    // Strip HTML tags before counting chars — RichTextEditor returns HTML
+    const plainDescription = stripHtml(step3.jobDescription).trim();
+    if (plainDescription.length < 50) {
+      errs.jobDescription = `Job description must be at least 50 characters (currently ${plainDescription.length})`;
+    }
+
     if (step3.requiredSkills.length === 0) {
-      newErrors.push('At least one skill is required');
+      errs.requiredSkills = 'At least one skill is required';
     }
-    
-    setErrors(newErrors);
-    return newErrors.length === 0;
+
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleContinue = async () => {
     if (isSaving) return;
-    if (validateStep()) {
-      // Persist job to DB before advancing (per D-06)
-      setIsSaving(true);
-      const result = await createJobFromOnboarding({
-        title: step3.jobTitle,
-        description: step3.jobDescription,
-        jobType: step3.jobType!,
-        experienceLevel: step3.experienceLevel,
-        category: step3.category,
-        salaryMin: step3.salaryRange.min,
-        salaryMax: step3.salaryRange.max,
-        requiredSkills: step3.requiredSkills,
-      });
+    if (!validateStep()) return;
 
-      if (!result.success) {
-        console.error("[StepPostJob] createJobFromOnboarding failed:", result.error);
-        setErrors([result.error]);
-        setIsSaving(false);
-        return;
-      }
+    setIsSaving(true);
+    setApiError(null);
+    const result = await createJobFromOnboarding({
+      title: step3.jobTitle,
+      description: step3.jobDescription,
+      jobType: step3.jobType!,
+      experienceLevel: step3.experienceLevel,
+      category: step3.category,
+      salaryMin: step3.salaryRange.min,
+      salaryMax: step3.salaryRange.max,
+      requiredSkills: step3.requiredSkills,
+    });
 
+    if (!result.success) {
+      console.error('[StepPostJob] createJobFromOnboarding failed:', result.error);
+      setApiError(result.error);
       setIsSaving(false);
-      onNext();
+      return;
     }
+
+    setIsSaving(false);
+    onNext();
   };
 
-  const OptionButton = ({ 
-    selected, 
-    onClick, 
-    children 
-  }: { 
-    selected: boolean; 
-    onClick: () => void; 
+  const OptionButton = ({
+    selected,
+    onClick,
+    children,
+  }: {
+    selected: boolean;
+    onClick: () => void;
     children: React.ReactNode;
   }) => (
     <button
@@ -135,16 +171,6 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
       {children}
     </button>
   );
-
-  const getErrorMessage = () => {
-    if (errors.includes('Job title is required')) return 'Job title is required';
-    if (errors.includes('Please select job type')) return 'Please select job type';
-    if (errors.includes('Please select experience level')) return 'Please select experience level';
-    if (errors.includes('Please select category')) return 'Please select category';
-    if (errors.includes('Job description must be at least 50 characters')) return 'Job description must be at least 50 characters';
-    if (errors.includes('At least one skill is required')) return 'At least one skill is required';
-    return errors[0] ?? null;
-  };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -163,9 +189,13 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                 value={step3.jobTitle}
                 onChange={(e) => {
                   setJobTitle(e.target.value);
-                  setErrors([]);
+                  clearFieldError('jobTitle');
                 }}
+                className={cn(fieldErrors.jobTitle && 'border-destructive focus-visible:ring-destructive')}
               />
+              {fieldErrors.jobTitle && (
+                <p className="text-sm text-destructive">{fieldErrors.jobTitle}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -178,13 +208,16 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                       selected={step3.jobType === option.value}
                       onClick={() => {
                         setJobType(option.value);
-                        setErrors([]);
+                        clearFieldError('jobType');
                       }}
                     >
                       {option.label}
                     </OptionButton>
                   ))}
                 </div>
+                {fieldErrors.jobType && (
+                  <p className="text-sm text-destructive">{fieldErrors.jobType}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -196,31 +229,37 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                       selected={step3.experienceLevel === option.value}
                       onClick={() => {
                         setExperienceLevel(option.value);
-                        setErrors([]);
+                        clearFieldError('experienceLevel');
                       }}
                     >
                       {option.label}
                     </OptionButton>
                   ))}
                 </div>
+                {fieldErrors.experienceLevel && (
+                  <p className="text-sm text-destructive">{fieldErrors.experienceLevel}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Category</label>
                 <div className="grid grid-cols-1 gap-2">
-                  {categoryOptions.slice(0, 4).map((option) => (
+                  {categoryOptions.map((option) => (
                     <OptionButton
                       key={option.value}
                       selected={step3.category === option.value}
                       onClick={() => {
                         setCategory(option.value);
-                        setErrors([]);
+                        clearFieldError('category');
                       }}
                     >
                       {option.label}
                     </OptionButton>
                   ))}
                 </div>
+                {fieldErrors.category && (
+                  <p className="text-sm text-destructive">{fieldErrors.category}</p>
+                )}
               </div>
             </div>
 
@@ -233,10 +272,13 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                     type="number"
                     placeholder="Min"
                     value={step3.salaryRange.min ?? ''}
-                    onChange={(e) => setSalaryRange(
-                      e.target.value ? parseInt(e.target.value) : null,
-                      step3.salaryRange.max
-                    )}
+                    onChange={(e) => {
+                      setSalaryRange(
+                        e.target.value ? parseInt(e.target.value) : null,
+                        step3.salaryRange.max
+                      );
+                      clearFieldError('salary');
+                    }}
                     className="pl-7"
                   />
                 </div>
@@ -247,14 +289,20 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                     type="number"
                     placeholder="Max"
                     value={step3.salaryRange.max ?? ''}
-                    onChange={(e) => setSalaryRange(
-                      step3.salaryRange.min,
-                      e.target.value ? parseInt(e.target.value) : null
-                    )}
+                    onChange={(e) => {
+                      setSalaryRange(
+                        step3.salaryRange.min,
+                        e.target.value ? parseInt(e.target.value) : null
+                      );
+                      clearFieldError('salary');
+                    }}
                     className="pl-7"
                   />
                 </div>
               </div>
+              {fieldErrors.salary && (
+                <p className="text-sm text-destructive">{fieldErrors.salary}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -263,10 +311,13 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                 value={step3.jobDescription}
                 onChange={(html) => {
                   setJobDescription(html);
-                  setErrors([]);
+                  clearFieldError('jobDescription');
                 }}
                 placeholder="Describe the role, responsibilities, and requirements..."
               />
+              {fieldErrors.jobDescription && (
+                <p className="text-sm text-destructive">{fieldErrors.jobDescription}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -275,14 +326,20 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                 value={step3.requiredSkills}
                 onChange={(skills) => {
                   setRequiredSkills(skills);
-                  setErrors([]);
+                  clearFieldError('requiredSkills');
                 }}
                 placeholder="e.g. React, TypeScript, Node.js"
               />
+              {fieldErrors.requiredSkills && (
+                <p className="text-sm text-destructive">{fieldErrors.requiredSkills}</p>
+              )}
             </div>
 
-            {getErrorMessage() && (
-              <p className="text-sm text-destructive text-center">{getErrorMessage()}</p>
+            {apiError && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+                <AlertCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                <p className="text-sm text-destructive">{apiError}</p>
+              </div>
             )}
           </div>
 
@@ -312,15 +369,15 @@ export function StepPostJob({ onNext, onBack, onSkip, isSkipping }: StepPostJobP
                 Back
               </Button>
               {onSkip && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={onSkip}
-                    loading={isSkipping}
-                    loadingText="Skipping..."
-                  >
-                    Skip for now
-                  </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onSkip}
+                  loading={isSkipping}
+                  loadingText="Skipping..."
+                >
+                  Skip for now
+                </Button>
               )}
             </div>
           </div>

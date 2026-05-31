@@ -31,8 +31,9 @@ export default function ContactPage() {
   const { data: session, status } = useSession();
   const isPaidUser =
     status === "authenticated" &&
-    (session?.user?.plan === PlanTier.PRO ||
-      session?.user?.plan === PlanTier.ENTERPRISE);
+    (session?.user?.plan === PlanTier.STARTER ||
+      session?.user?.plan === PlanTier.GROWTH ||
+      session?.user?.plan === PlanTier.SCALE);
 
   const [mode, setMode] = useState<ContactRequestType>(
     ContactRequestType.CONTACT,

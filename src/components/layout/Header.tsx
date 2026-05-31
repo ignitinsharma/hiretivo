@@ -110,7 +110,7 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
         )}
 
         {/* Public desktop nav — logged-out only */}
-        {!session && (
+        {!session && PUBLIC_NAV_ITEMS.length > 0 && (
           <nav className="hidden md:flex items-center gap-6" aria-label="Public navigation">
             {PUBLIC_NAV_ITEMS.map((item) => (
               <Link

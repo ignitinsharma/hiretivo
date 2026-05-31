@@ -74,7 +74,9 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-jakarta)", "sans-serif"],
+        sans: ["var(--font-body)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
       },
       lineHeight: {
         tight: "1.45",

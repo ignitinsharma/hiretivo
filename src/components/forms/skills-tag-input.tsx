@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { skillService } from "@/services/skill.service";
+import { resolveCanonicalSlug, slugifySkillInput } from "@/lib/skill-synonyms";
 import type { SkillItem } from "@/services/skill.service";
 
 interface SkillsTagInputProps {
@@ -19,8 +20,9 @@ interface SkillsTagInputProps {
 }
 
 function hasSkill(skills: string[], nextSkill: string): boolean {
+  const nextSkillSlug = resolveCanonicalSlug(slugifySkillInput(nextSkill));
   return skills.some(
-    (skill) => skill.trim().toLowerCase() === nextSkill.trim().toLowerCase(),
+    (skill) => resolveCanonicalSlug(slugifySkillInput(skill)) === nextSkillSlug,
   );
 }
 

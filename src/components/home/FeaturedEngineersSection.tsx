@@ -49,7 +49,7 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
   const salaryLabel = `$${(engineer.salaryMin / 1000).toFixed(0)}k – $${(engineer.salaryMax / 1000).toFixed(0)}k/yr USD`
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-brand-border bg-white p-5">
+    <div className="flex flex-col gap-4 rounded-xl border border-brand-border bg-white p-6 transition-colors hover:border-brand-primary/40">
 
       {/* ── Row 1: Avatar + name + verified ── */}
       <div className="flex items-start gap-3">
@@ -57,7 +57,7 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
         <img
           src={avatarUrl(engineer.name)}
           alt=""
-          className="h-11 w-11 rounded-full shrink-0 bg-[#e8e5ff] object-cover"
+          className="h-12 w-12 rounded-full shrink-0 bg-[#e8e5ff] object-cover"
           aria-hidden="true"
         />
 
@@ -112,7 +112,7 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
           <p className="font-body text-[10px] font-bold uppercase tracking-[1.5px] text-brand-foreground-secondary">
             Hiretivo Score
           </p>
-          <p className="font-display text-2xl font-bold tracking-[-0.02em] text-brand-foreground">
+          <p className="font-display text-2xl font-bold tracking-[-0.02em] text-brand-primary">
             {engineer.hiretivoScore}
           </p>
         </div>
@@ -130,16 +130,16 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
  */
 export function FeaturedEngineersSection() {
   return (
-    <section className="border-b border-brand-border bg-white px-4 py-24 md:px-8 md:py-28">
-      <div className="mx-auto max-w-5xl">
+    <section className="border-b border-brand-border bg-white px-4 py-20 md:px-8 md:py-24">
+      <div className="mx-auto max-w-6xl">
 
         {/* ── Header ── */}
-        <div className="mb-10 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-[1.5px] text-brand-primary">
               Featured Engineers
             </p>
-            <h2 className="text-3xl font-bold tracking-tight text-brand-foreground md:text-4xl">
+            <h2 className="text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
               Meet the top 1%.
             </h2>
           </div>

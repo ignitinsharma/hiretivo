@@ -50,44 +50,46 @@ const STEPS: Step[] = [
  */
 export function HowItWorksSection() {
   return (
-    <section className="border-b border-brand-border bg-white px-4 py-20 md:px-8">
-      <div className="mx-auto max-w-5xl">
+    <section className="border-b border-brand-border bg-brand-surface px-4 py-20 md:px-8 md:py-24">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <div className="mb-16 text-center">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[1.5px] text-brand-primary">
             How it works
           </p>
-          <h2 className="text-3xl font-bold tracking-tight text-brand-foreground md:text-4xl">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
             From browse to hire in 3 steps
           </h2>
         </div>
 
         {/* Steps */}
-        <div className="relative grid grid-cols-1 gap-12 lg:grid-cols-3 lg:gap-0">
-          {/* Connecting gradient line — desktop only */}
+        <div className="relative grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Connecting line — desktop only, sits at the circle center */}
           <div
-            className="pointer-events-none absolute left-[calc(16.66%+20px)] right-[calc(16.66%+20px)] top-5 hidden h-px bg-gradient-to-r from-brand-border via-brand-primary/50 to-brand-border lg:block"
+            className="pointer-events-none absolute left-[calc(16.66%+24px)] right-[calc(16.66%+24px)] top-8 hidden h-px border-t border-dashed border-brand-primary/25 lg:block"
             aria-hidden="true"
           />
 
           {STEPS.map(({ number, icon: Icon, title, description, isPrimary }) => (
-            <div key={number} className="flex flex-col gap-5 lg:pr-10 lg:last:pr-0">
-              {/* Step number box */}
-              <div
-                className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white ${
-                  isPrimary ? 'bg-brand-primary' : 'bg-brand-foreground'
-                }`}
-              >
-                {number}
-              </div>
+            <div key={number} className="relative rounded-xl border border-brand-border bg-white p-6">
+              <div className="mb-8 flex items-center justify-between">
+                {/* Step number circle */}
+                <div
+                  className={`relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
+                    isPrimary ? 'bg-brand-primary' : 'bg-brand-foreground'
+                  }`}
+                >
+                  {number}
+                </div>
 
-              {/* Icon */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-surface text-brand-primary">
-                <Icon className="h-5 w-5" />
+                {/* Icon box */}
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-brand-primary/15 bg-brand-primary/[0.06] text-brand-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-bold tracking-tight text-brand-foreground">
+              <h3 className="text-xl font-bold tracking-tight text-brand-foreground">
                 {title}
               </h3>
 

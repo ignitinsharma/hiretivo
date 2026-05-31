@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ArrowRight, ArrowLeft, Upload, Camera, Globe, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Camera, Globe, Check, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,14 @@ interface StepCompanyProfileProps {
   onNext: () => void;
   onBack: () => void;
 }
+
+type FieldErrors = {
+  companyName?: string;
+  website?: string;
+  companySize?: string;
+  industry?: string;
+  fundingType?: string;
+};
 
 const companySizeOptions: { value: CompanySize; label: string }[] = [
   { value: '1-10', label: '1-10' },
@@ -45,31 +53,54 @@ const fundingTypeOptions: { value: FundingType; label: string }[] = [
   { value: 'PUBLICLY_TRADED', label: 'Publicly Traded' },
 ];
 
+/*
+ * StepCompanyProfile
+ * Onboarding step 2: collect company name, website, size, industry, funding type, remote flag, logo.
+ * Validates all required fields client-side (including URL auto-prepend) before hitting the server action.
+ */
 export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) {
   const { step2, setCompanyName, setCompanyWebsite, setCompanySize, setIndustry, setFundingType, setIsFullyRemote, setLogoUrl } = useOnboardingStore();
   const [logoPreview, setLogoPreview] = useState<string | null>(step2.logoUrl);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    setApiError(null);
+  };
+
   const validateStep = (): boolean => {
-    const newErrors: string[] = [];
-    
+    const errs: FieldErrors = {};
+
     if (!step2.companyName.trim()) {
-      newErrors.push('Company name is required');
+      errs.companyName = 'Company name is required';
     }
-    if (!step2.companySize) {
-      newErrors.push('Please select company size');
+
+    if (step2.companyWebsite) {
+      let url = step2.companyWebsite.trim();
+      if (url && !/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+        setCompanyWebsite(url);
+      }
+      try {
+        new URL(url);
+      } catch {
+        errs.website = 'Enter a valid URL (e.g. https://acme.com)';
+      }
     }
-    if (!step2.industry) {
-      newErrors.push('Please select industry');
-    }
-    if (!step2.fundingType) {
-      newErrors.push('Please select funding type');
-    }
-    
-    setErrors(newErrors);
-    return newErrors.length === 0;
+
+    if (!step2.companySize) errs.companySize = 'Select company size';
+    if (!step2.industry) errs.industry = 'Select industry';
+    if (!step2.fundingType) errs.fundingType = 'Select funding type';
+
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,39 +118,39 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
 
   const handleContinue = async () => {
     if (isSaving) return;
-    if (validateStep()) {
-      // Persist to DB before advancing (per D-06)
-      setIsSaving(true);
-      const result = await saveRecruiterProfile({
-        companyName: step2.companyName,
-        website: step2.companyWebsite || null,
-        companySize: step2.companySize,
-        bio: null,
-        industry: step2.industry,
-        fundingType: step2.fundingType,
-        isFullyRemote: step2.isFullyRemote,
-        logo: step2.logoUrl,
-      });
+    if (!validateStep()) return;
 
-      if (!result.success) {
-        console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
-        setErrors([result.error]);
-        setIsSaving(false);
-        return;
-      }
+    setIsSaving(true);
+    setApiError(null);
+    const result = await saveRecruiterProfile({
+      companyName: step2.companyName,
+      website: step2.companyWebsite || null,
+      companySize: step2.companySize,
+      bio: null,
+      industry: step2.industry,
+      fundingType: step2.fundingType,
+      isFullyRemote: step2.isFullyRemote,
+      logo: step2.logoUrl,
+    });
 
+    if (!result.success) {
+      console.error('[StepCompanyProfile] saveRecruiterProfile failed:', result.error);
+      setApiError(result.error);
       setIsSaving(false);
-      onNext();
+      return;
     }
+
+    setIsSaving(false);
+    onNext();
   };
 
-  const OptionButton = ({ 
-    selected, 
-    onClick, 
-    children 
-  }: { 
-    selected: boolean; 
-    onClick: () => void; 
+  const OptionButton = ({
+    selected,
+    onClick,
+    children,
+  }: {
+    selected: boolean;
+    onClick: () => void;
     children: React.ReactNode;
   }) => (
     <button
@@ -137,14 +168,6 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
     </button>
   );
 
-  const getErrorMessage = () => {
-    if (errors.includes('Company name is required')) return 'Company name is required';
-    if (errors.includes('Please select company size')) return 'Please select company size';
-    if (errors.includes('Please select industry')) return 'Please select industry';
-    if (errors.includes('Please select funding type')) return 'Please select funding type';
-    return null;
-  };
-
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="space-y-6">
@@ -161,12 +184,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
             >
               {logoPreview ? (
                 <>
-                  <Image
-                    src={logoPreview}
-                    alt="Company logo"
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={logoPreview} alt="Company logo" fill className="object-cover" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera className="w-6 h-6 text-white" />
                   </div>
@@ -178,13 +196,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                 </div>
               )}
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
             <p className="text-sm text-muted-foreground mt-2">Upload company logo</p>
           </div>
 
@@ -196,9 +208,13 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                 value={step2.companyName}
                 onChange={(e) => {
                   setCompanyName(e.target.value);
-                  setErrors([]);
+                  clearFieldError('companyName');
                 }}
+                className={cn(fieldErrors.companyName && 'border-destructive focus-visible:ring-destructive')}
               />
+              {fieldErrors.companyName && (
+                <p className="text-sm text-destructive">{fieldErrors.companyName}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -210,8 +226,15 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                 type="url"
                 placeholder="https://example.com"
                 value={step2.companyWebsite}
-                onChange={(e) => setCompanyWebsite(e.target.value)}
+                onChange={(e) => {
+                  setCompanyWebsite(e.target.value);
+                  clearFieldError('website');
+                }}
+                className={cn(fieldErrors.website && 'border-destructive focus-visible:ring-destructive')}
               />
+              {fieldErrors.website && (
+                <p className="text-sm text-destructive">{fieldErrors.website}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -223,13 +246,16 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                     selected={step2.companySize === option.value}
                     onClick={() => {
                       setCompanySize(option.value);
-                      setErrors([]);
+                      clearFieldError('companySize');
                     }}
                   >
                     {option.label}
                   </OptionButton>
                 ))}
               </div>
+              {fieldErrors.companySize && (
+                <p className="text-sm text-destructive">{fieldErrors.companySize}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -241,13 +267,16 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                     selected={step2.industry === option.value}
                     onClick={() => {
                       setIndustry(option.value);
-                      setErrors([]);
+                      clearFieldError('industry');
                     }}
                   >
                     {option.label}
                   </OptionButton>
                 ))}
               </div>
+              {fieldErrors.industry && (
+                <p className="text-sm text-destructive">{fieldErrors.industry}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -259,13 +288,16 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                     selected={step2.fundingType === option.value}
                     onClick={() => {
                       setFundingType(option.value);
-                      setErrors([]);
+                      clearFieldError('fundingType');
                     }}
                   >
                     {option.label}
                   </OptionButton>
                 ))}
               </div>
+              {fieldErrors.fundingType && (
+                <p className="text-sm text-destructive">{fieldErrors.fundingType}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -283,8 +315,11 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
               </label>
             </div>
 
-            {getErrorMessage() && (
-              <p className="text-sm text-destructive text-center">{getErrorMessage()}</p>
+            {apiError && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+                <AlertCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                <p className="text-sm text-destructive">{apiError}</p>
+              </div>
             )}
           </div>
 

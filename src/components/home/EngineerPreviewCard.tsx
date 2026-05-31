@@ -1,15 +1,17 @@
 /*
  * EngineerPreviewCard
- * Light-themed static preview card for the homepage hero.
- * First card is highlighted (purple border accent).
- * Cards 2+ are progressively blurred to tease the talent pool.
- * No DB calls, no interaction — purely decorative / trust signal.
+ * Light-themed static preview card for the homepage hero card stack.
+ * First card highlighted (purple border). Cards 2+ progressively blurred.
+ * Avatar gradient unique per engineer initial. Shows verified badge, skills,
+ * salary + green-dot availability, and locked unlock CTA.
+ * No DB calls, no interaction — purely decorative trust signal.
  */
 
-import { Lock, DollarSign, Clock, Calendar } from 'lucide-react'
+import { Lock, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface EngineerPreviewCardProps {
+  displayName?: string
   firstName: string
   lastInitial: string
   isVerified: boolean
@@ -23,117 +25,131 @@ interface EngineerPreviewCardProps {
   availableFrom: string
   highlighted?: boolean
   blurLevel?: 'none' | 'medium' | 'heavy'
+  className?: string
 }
 
-const MAX_VISIBLE_SKILLS = 3
+/* DiceBear notionists avatar URL — consistent per name seed */
+function avatarUrl(seed: string): string {
+  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e8e5ff`
+}
+
+const MAX_VISIBLE_SKILLS = 4
 
 /*
  * EngineerPreviewCard
- * Renders a single static engineer preview card for the dark homepage hero.
+ * Renders one engineer preview card for the hero cascading stack.
  * @param highlighted - true for first card (purple border accent)
- * @param blurLevel - 'none' | 'medium' (blur) | 'heavy' (blur + opacity)
+ * @param blurLevel - 'none' | 'medium' | 'heavy' progressive blur
  */
 export function EngineerPreviewCard({
+  displayName,
   firstName,
   lastInitial,
   isVerified,
   hiretivoScore,
   role,
-  yearsExp,
   skills,
   salaryMin,
   salaryMax,
-  timezoneOverlapHours,
   availableFrom,
   highlighted = false,
   blurLevel = 'none',
+  className,
 }: EngineerPreviewCardProps) {
-  const initials = `${firstName[0]}${lastInitial[0]}`.toUpperCase()
+  const seed = `${firstName}${lastInitial.replace('.', '')}`
+
   const visibleSkills = skills.slice(0, MAX_VISIBLE_SKILLS)
-  const overflowCount = skills.length - MAX_VISIBLE_SKILLS
-  const salaryLabel = `$${(salaryMin / 1000).toFixed(0)}k–$${(salaryMax / 1000).toFixed(0)}k/yr`
-  const overlapLabel = `${timezoneOverlapHours}+ hrs US overlap`
+  const salaryLabel = `$${(salaryMin / 1000).toFixed(0)}k–$${(salaryMax / 1000).toFixed(0)}k / yr`
+  const isAvailableNow = availableFrom === 'Available Now' || availableFrom === 'Immediate'
+  const nameLabel = displayName ?? `${firstName} ${lastInitial.replace('.', '')}`
 
   return (
     <div
       className={cn(
-        'rounded-xl border bg-white p-4 flex flex-col gap-3',
-        highlighted ? 'border-brand-primary/40' : 'border-brand-border',
-        blurLevel === 'medium' && 'blur-[3.5px]',
-        blurLevel === 'heavy' && 'blur-[3.5px] opacity-40',
+        'flex flex-col gap-2.5 rounded-xl border bg-white p-3.5',
+        highlighted ? 'border-brand-primary/35' : 'border-brand-border',
+        blurLevel === 'medium' && 'blur-[0.8px] opacity-95',
+        blurLevel === 'heavy' && 'blur-[1.5px] opacity-80',
+        className,
       )}
     >
-      {/* ── Row 1: Avatar + name/role + score ── */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-primary/30 to-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-xs font-bold text-brand-primary shrink-0">
-          {initials}
-        </div>
+      {/* ── Row 1: Avatar + name/role/verified + score ── */}
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={avatarUrl(seed)}
+          alt=""
+          className="h-12 w-12 shrink-0 rounded-full bg-[#e8e5ff] object-cover"
+          aria-hidden="true"
+        />
 
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-brand-foreground leading-tight truncate">
-            {firstName} {lastInitial} · {yearsExp} yrs
+        {/* Name + role + verified */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-sm font-bold leading-tight tracking-tight text-brand-foreground">
+            {nameLabel}
           </p>
-          <p className="text-xs text-brand-foreground-muted truncate">{role}</p>
+          <p className="mt-0.5 truncate font-body text-[11px] leading-snug text-brand-foreground-muted">
+            {role}
+          </p>
+
+          {isVerified && (
+            <div className="mt-2 flex">
+              <span className="inline-flex items-center gap-1 rounded-md border border-brand-primary/20 bg-brand-primary/[0.08] px-2 py-0.5 text-[10px] font-bold leading-none text-brand-primary">
+                ✓ Hiretivo Verified
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col items-end gap-0.5 shrink-0">
-          <span className="text-lg font-bold text-brand-primary leading-none tracking-tight">
-            {hiretivoScore}
+        {/* Score */}
+        <div className="flex shrink-0 flex-col items-end">
+          <div className="flex items-baseline gap-0.5 font-display leading-none">
+            <span className="text-xl font-bold tracking-tight text-brand-primary">
+              {hiretivoScore}
+            </span>
+            <span className="text-[10px] font-semibold text-brand-foreground-secondary">
+              /100
+            </span>
+          </div>
+          <span className="mt-0.5 font-body text-[8px] font-bold text-brand-foreground-secondary">
+            Score
           </span>
-          <span className="text-[9px] text-brand-foreground-secondary font-medium">/ 100</span>
         </div>
       </div>
 
-      {/* ── Row 2: Verified badge ── */}
-      {isVerified && (
-        <div className="flex">
-          <span className="inline-flex items-center gap-1 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-bold px-2 py-0.5 rounded">
-            ✓ Hiretivo Verified
-          </span>
-        </div>
-      )}
-
-      {/* ── Row 3: Skills pills ── */}
+      {/* ── Row 2: Skills pills ── */}
       <div className="flex flex-wrap gap-1.5">
         {visibleSkills.map((skill) => (
           <span
             key={skill}
-            className="rounded-md border border-brand-border bg-brand-surface px-2 py-0.5 text-[10px] font-semibold text-brand-foreground-muted"
+            className="rounded-md border border-brand-border bg-brand-surface px-2 py-0.5 font-body text-[10px] font-semibold text-brand-foreground-muted"
           >
             {skill}
           </span>
         ))}
-        {overflowCount > 0 && (
-          <span className="rounded-md border border-white/[0.07] bg-white/[0.04] px-2 py-0.5 text-[10px] font-semibold text-white/30">
-            +{overflowCount}
-          </span>
-        )}
       </div>
 
-      {/* ── Row 4: Meta (salary, overlap, availability) ── */}
-      <div className="flex flex-wrap gap-x-3 gap-y-1">
-        <span className="flex items-center gap-1 text-[10px] text-brand-foreground-muted">
-          <DollarSign className="w-3 h-3 shrink-0" aria-hidden="true" />
+      {/* ── Row 3: Salary + availability ── */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span className="flex items-center gap-1 font-body text-[10px] font-medium text-brand-foreground-muted">
+          <DollarSign className="h-3 w-3 shrink-0" aria-hidden="true" />
           {salaryLabel}
         </span>
-        <span className="flex items-center gap-1 text-[10px] text-brand-foreground-muted">
-          <Clock className="w-3 h-3 shrink-0" aria-hidden="true" />
-          {overlapLabel}
-        </span>
-        <span className="flex items-center gap-1 text-[10px] text-brand-foreground-muted">
-          <Calendar className="w-3 h-3 shrink-0" aria-hidden="true" />
-          {availableFrom}
+        <span className="flex items-center gap-1.5 font-body text-[10px] font-bold text-brand-success">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-success" aria-hidden="true" />
+          {isAvailableNow ? 'Available Now' : availableFrom}
         </span>
       </div>
 
-      {/* ── Row 5: Locked CTA ── */}
+      {/* ── Row 4: Locked CTA ── */}
       <div
-        className="w-full flex items-center justify-center gap-2 rounded-lg border border-brand-border text-brand-foreground-muted text-[11px] font-semibold py-2 cursor-not-allowed select-none"
+        className="flex w-full cursor-not-allowed select-none items-center justify-center gap-2 rounded-lg border border-brand-border bg-white py-2 font-body text-[10px] font-semibold text-brand-foreground-secondary"
         aria-disabled="true"
         role="button"
         tabIndex={-1}
       >
-        <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
+        <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
         Unlock Full Profile
       </div>
     </div>

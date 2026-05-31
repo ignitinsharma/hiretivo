@@ -1,8 +1,11 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroRecruiterSection } from "@/components/home/HeroRecruiterSection";
+import { StatsBarSection } from "@/components/home/StatsBarSection";
+import { FeaturedEngineersSection } from "@/components/home/FeaturedEngineersSection";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { WhyVerifiedSection } from "@/components/home/WhyVerifiedSection";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { EngineerCTASection } from "@/components/home/EngineerCTASection";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 import { redirect } from "next/navigation";
@@ -51,8 +54,11 @@ export default async function Home() {
       <Header />
       <main>
         <HeroRecruiterSection />
+        <StatsBarSection />
+        <FeaturedEngineersSection />
         <HowItWorksSection />
         <WhyVerifiedSection />
+        <TestimonialsSection />
         <EngineerCTASection />
       </main>
       <Footer />

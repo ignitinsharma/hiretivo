@@ -44,9 +44,4 @@ export interface PublicNavItem {
   href: string;
 }
 
-export const PUBLIC_NAV_ITEMS: PublicNavItem[] = [
-  { label: 'Browse Engineers', href: '/engineers' },
-  { label: 'Post a Job', href: '/recruiter/jobs/new' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'For Engineers', href: '/seeker/verification' },
-];
+export const PUBLIC_NAV_ITEMS: PublicNavItem[] = [];

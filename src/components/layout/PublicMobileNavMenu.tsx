@@ -41,14 +41,18 @@ export function PublicMobileNavMenu() {
         align="end"
         className="w-64 rounded-xl border-brand-border bg-white p-2 shadow-none"
       >
-        {PUBLIC_NAV_ITEMS.map((item) => (
-          <DropdownMenuItem asChild key={item.href}>
-            <Link className="cursor-pointer rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-foreground focus:bg-brand-surface" href={item.href}>
-              {item.label}
-            </Link>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
+        {PUBLIC_NAV_ITEMS.length > 0 && (
+          <>
+            {PUBLIC_NAV_ITEMS.map((item) => (
+              <DropdownMenuItem asChild key={item.href}>
+                <Link className="cursor-pointer rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-foreground focus:bg-brand-surface" href={item.href}>
+                  {item.label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+          </>
+        )}
         {PUBLIC_MOBILE_NAV_ITEMS.map((item) => (
           <DropdownMenuItem asChild key={item.href}>
             <Link

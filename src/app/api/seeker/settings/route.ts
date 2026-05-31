@@ -6,6 +6,7 @@ import { resolveLogoUrl } from "@/lib/r2";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
+import { resolveCanonicalSlug, slugifySkillInput } from "@/lib/skill-synonyms";
 import type { Prisma } from "@prisma/client";
 
 const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
@@ -26,28 +27,16 @@ function normalizeSkillName(name: string): string {
 }
 
 /*
- * slugifySkillName
- * Converts a normalized skill name into a stable URL-safe slug.
- * Returns a fallback slug for names without alphanumeric characters.
+ * canonicalSkillSlug
+ * Converts a skill name into the canonical slug used across skill pickers.
  */
-function slugifySkillName(name: string): string {
-  const normalizedName = normalizeSkillName(name);
-  const slug = normalizedName
-    .toLowerCase()
-    .replace(/\+/g, " plus ")
-    .replace(/#/g, " sharp ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return slug || `skill-${Array.from(normalizedName)
-    .map((character) => character.codePointAt(0)?.toString(36) ?? "")
-    .filter(Boolean)
-    .join("-")}`;
+function canonicalSkillSlug(name: string): string {
+  return resolveCanonicalSlug(slugifySkillInput(name));
 }
 
 /*
  * uniqueSkillNames
- * Deduplicates skill names case-insensitively while preserving first-seen casing.
+ * Deduplicates skill names by canonical slug while preserving first-seen casing.
  * Returns normalized names in the original input order.
  */
 function uniqueSkillNames(names: string[]): string[] {
@@ -55,7 +44,7 @@ function uniqueSkillNames(names: string[]): string[] {
   const result: string[] = [];
   names.forEach((name) => {
     const normalized = normalizeSkillName(name);
-    const key = normalized.toLowerCase();
+    const key = canonicalSkillSlug(normalized);
     if (!normalized || seen.has(key)) return;
     seen.add(key);
     result.push(normalized);
@@ -80,6 +69,44 @@ function uniqueSkillIds(ids: string[]): string[] {
 }
 
 /*
+ * canonicalizeSkillCandidates
+ * Replaces old alias skill rows with their canonical display row when present.
+ * Prevents settings from rendering duplicate labels like "nextjs" instead of "Next.js".
+ */
+async function canonicalizeSkillCandidates(
+  skills: SkillCandidate[],
+): Promise<SkillCandidate[]> {
+  const canonicalSlugs = Array.from(
+    new Set(skills.map((skill) => canonicalSkillSlug(skill.slug || skill.name))),
+  );
+
+  if (canonicalSlugs.length === 0) return [];
+
+  const canonicalSkills = await prisma.skill.findMany({
+    where: { slug: { in: canonicalSlugs } },
+    select: { id: true, name: true, slug: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const canonicalBySlug = new Map(
+    canonicalSkills.map((skill) => [skill.slug, skill]),
+  );
+  const seenSkillIds = new Set<string>();
+  const result: SkillCandidate[] = [];
+
+  for (const skill of skills) {
+    const canonicalSlug = canonicalSkillSlug(skill.slug || skill.name);
+    const canonicalSkill = canonicalBySlug.get(canonicalSlug) ?? skill;
+    if (seenSkillIds.has(canonicalSkill.id)) continue;
+
+    seenSkillIds.add(canonicalSkill.id);
+    result.push(canonicalSkill);
+  }
+
+  return result;
+}
+
+/*
  * resolveSkillIdsFromNames
  * Finds or creates skills from user-entered names for seeker settings.
  * Returns unique skill ids ready for seeker profile association.
@@ -89,7 +116,7 @@ async function resolveSkillIdsFromNames(skillNames: string[]): Promise<string[]>
   const skillIds: string[] = [];
 
   for (const normalizedName of names) {
-    const slug = slugifySkillName(normalizedName);
+    const slug = canonicalSkillSlug(normalizedName);
     const existingSkill = await findSkillBySlugOrName(normalizedName, slug);
 
     if (existingSkill) {
@@ -274,13 +301,16 @@ export async function GET() {
 
   const { seekerProfile, image, ...userFields } = user;
   const { skills, workExperiences, educations, ...profileFields } = seekerProfile;
+  const canonicalSkills = await canonicalizeSkillCandidates(
+    skills.map((s) => s.skill),
+  );
 
   return NextResponse.json({
     data: {
       ...userFields,
       image: resolveLogoUrl(image),
       ...profileFields,
-      skills: skills.map((s) => s.skill),
+      skills: canonicalSkills,
       workExperiences,
       educations,
     },

@@ -49,6 +49,7 @@ export function OnboardingContainer({
   } = useOnboardingStore();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isSkippingJob, setIsSkippingJob] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
 
   const progressPercent = ((currentStep - 1) / 3) * 100;
 
@@ -73,14 +74,15 @@ export function OnboardingContainer({
     setIsSkippingJob(false);
   };
 
-  const handleComplete = async () => {
+  const handleComplete = async (destination?: string) => {
     if (isNavigating) return;
     setIsNavigating(true);
+    setCompleteError(null);
 
-    // Ensure recruiterProfile exists in DB before navigating to dashboard
-    // This is a safety net in case StepCompanyProfile's save failed
+    // Safety net: re-save profile in case StepCompanyProfile's save failed silently.
+    // Failure here is non-fatal — profile may already exist from step 2.
     if (step2.companyName) {
-      await saveRecruiterProfile({
+      const saveResult = await saveRecruiterProfile({
         companyName: step2.companyName,
         website: step2.companyWebsite || null,
         companySize: step2.companySize,
@@ -90,17 +92,24 @@ export function OnboardingContainer({
         isFullyRemote: step2.isFullyRemote,
         logo: step2.logoUrl,
       });
+      if (!saveResult.success) {
+        console.error("[OnboardingContainer] safety-net saveRecruiterProfile failed:", saveResult.error);
+        setCompleteError(saveResult.error);
+        setIsNavigating(false);
+        return;
+      }
     }
 
     const result = await completeRecruiterOnboarding();
     if (!result.success) {
       console.error("[OnboardingContainer] completeRecruiterOnboarding failed:", result.error);
+      setCompleteError(result.error);
       setIsNavigating(false);
       return;
     }
 
     completeOnboarding();
-    router.push('/recruiter/dashboard');
+    router.push(destination ?? '/recruiter/dashboard');
   };
 
   const renderStep = () => {
@@ -128,7 +137,7 @@ export function OnboardingContainer({
           />
         );
       case 4:
-        return <StepComplete onComplete={handleComplete} isLoading={isNavigating} />;
+        return <StepComplete onComplete={handleComplete} isLoading={isNavigating} error={completeError} />;
       default:
         return null;
     }
