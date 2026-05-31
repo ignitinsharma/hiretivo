@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
@@ -25,73 +25,80 @@ import {
 import { useUIStore } from "@/store/use-ui-store";
 import { billingService } from "@/services/billing.service";
 import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
-import {
-  PRICING_CONFIG,
-  CURRENCY_SYMBOL,
-  type PricingCurrency,
-  type PricingTier,
-} from "@/constants/pricing";
+import { PRICING_CONFIG, CURRENCY_SYMBOL, type PricingTier } from "@/constants/pricing";
 import type { CheckoutRequestInput } from "@/lib/validations/checkout.schema";
 
-// ─── Table cell class constants (CLAUDE.md §15.2) ───────────────────────────
+// ─── Table cell class constants ──────────────────────────────────────────────
 
-const TD_BASE = "py-6 px-4 text-sm";
-const CELL_LABEL = cn(TD_BASE, "font-semibold text-slate-700");
-const CELL_MUTED = cn(TD_BASE, "text-slate-400");
-const CELL_BODY = cn(TD_BASE, "text-slate-600");
-const CELL_PRO = cn(TD_BASE, "font-bold text-black bg-gray-100/50");
-const CELL_CHECK_GREEN = cn(TD_BASE, "text-black font-bold");
-const CELL_PRO_CHECK = cn(TD_BASE, "font-bold text-black bg-gray-100/50");
+const TD_BASE = "py-5 px-3 text-sm";
+const CELL_LABEL = cn(TD_BASE, "font-semibold text-brand-foreground");
+const CELL_MUTED = cn(TD_BASE, "text-brand-foreground-secondary");
+const CELL_BODY = cn(TD_BASE, "text-brand-foreground-muted");
+const CELL_HIGHLIGHT = cn(TD_BASE, "font-bold text-brand-foreground bg-brand-surface");
 
-// ─── Feature comparison data (CLAUDE.md §15.4) ──────────────────────────────
-
-type PlanValue = string | boolean | null;
+// ─── Feature comparison data ─────────────────────────────────────────────────
 
 interface FeatureRow {
   feature: string;
-  free: PlanValue;
-  pro: PlanValue;
-  custom: PlanValue;
+  free: string | boolean | null;
+  starter: string | boolean | null;
+  growth: string | boolean | null;
+  scale: string | boolean | null;
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Active Jobs", free: "4 (trial) / 1", pro: "10", custom: "Custom" },
   {
-    feature: "Applicant Views",
-    free: "Unlimited",
-    pro: "Unlimited",
-    custom: "Custom",
+    feature: "Browse verified engineers",
+    free: true,
+    starter: true,
+    growth: true,
+    scale: true,
   },
   {
-    feature: "AI Candidate Summaries",
-    free: "Trial",
-    pro: true,
-    custom: true,
+    feature: "Engineer unlocks / month",
+    free: "0",
+    starter: "10",
+    growth: "30",
+    scale: "Unlimited",
   },
   {
-    feature: "AI Skill Suggestions",
-    free: "Trial",
-    pro: true,
-    custom: true,
+    feature: "Active job posts",
+    free: "0",
+    starter: "2",
+    growth: "Unlimited",
+    scale: "Unlimited",
   },
   {
-    feature: "AI Job Description Generator",
-    free: "Trial",
-    pro: true,
-    custom: true,
+    feature: "Priority match scoring",
+    free: null,
+    starter: null,
+    growth: true,
+    scale: true,
   },
   {
-    feature: "Interview Scheduling",
-    free: "Trial",
-    pro: true,
-    custom: true,
+    feature: "Direct email + scheduling",
+    free: null,
+    starter: true,
+    growth: true,
+    scale: true,
   },
-  { feature: "Talent Pool", free: null, pro: true, custom: true },
-  { feature: "Basic Skill Matching", free: true, pro: true, custom: true },
-  { feature: "Email Support", free: true, pro: true, custom: true },
+  {
+    feature: "Save engineers to shortlist",
+    free: true,
+    starter: true,
+    growth: true,
+    scale: true,
+  },
+  {
+    feature: "Support",
+    free: "Email",
+    starter: "Email",
+    growth: "Email",
+    scale: "Dedicated",
+  },
 ];
 
-// ─── FAQ data (CLAUDE.md §15.4) ─────────────────────────────────────────────
+// ─── FAQ data ─────────────────────────────────────────────────────────────────
 
 interface FaqItem {
   question: string;
@@ -100,79 +107,68 @@ interface FaqItem {
 
 const FAQ_ITEMS: FaqItem[] = [
   {
+    question: "What does an 'unlock' mean?",
+    answer:
+      "Unlocking an engineer reveals their full contact details — email, GitHub, and LinkedIn URL. Each cold unlock from the talent pool costs 1 credit from your monthly quota. If an engineer applies to your job, you see their profile for free with no quota charge.",
+  },
+  {
     question: "Can I change plans later?",
     answer:
-      "Yes. Recruiters can upgrade to Pro from the pricing page. If you are already on Pro, the pricing CTA opens billing management so you can manage your subscription.",
+      "Yes. Use the billing management portal from your recruiter settings to upgrade or cancel anytime. Cancellations take effect at the end of the current billing period.",
   },
   {
     question: "What payment methods do you accept?",
     answer:
-      "Checkout is handled securely through our billing provider. Available payment methods are shown during checkout based on your region and selected currency.",
+      "Checkout is handled securely through Dodo Payments. Available methods depend on your region and are shown at checkout.",
   },
   {
-    question: "Is there a free trial for PRO?",
+    question: "What happens to unlocked engineers if I downgrade?",
     answer:
-      "The Free plan includes a trial-style offer with up to 4 active job posts and access to core AI hiring features. Pro unlocks the full paid recruiter workflow.",
+      "Once unlocked, engineers remain accessible permanently — even after plan changes. Quota is reset at the start of each billing period.",
   },
   {
-    question: "What happens to my listings if I downgrade?",
+    question: "What happens to my jobs if I downgrade to a lower plan?",
     answer:
-      "Your existing listings remain tied to your recruiter account, but Free plan limits apply after downgrade. You can manage billing from the pricing page when signed in on Pro.",
+      "Excess OPEN jobs are automatically set to DRAFT when you downgrade. They are not deleted — you can re-open them if you upgrade again.",
+  },
+  {
+    question: "Are engineers always free?",
+    answer:
+      "Yes. Engineers never pay. The Hiretivo Verified badge, public profile, and job applications are always free for engineers.",
   },
 ];
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-interface FeatureCellProps {
-  value: PlanValue;
-  isPro?: boolean;
-}
+type PlanValue = string | boolean | null;
 
-function FeatureCell({ value, isPro = false }: FeatureCellProps) {
-  if (value === null) {
-    return <td className={isPro ? CELL_PRO : CELL_MUTED}>—</td>;
-  }
-  if (value === true) {
-    return <td className={isPro ? CELL_PRO_CHECK : CELL_CHECK_GREEN}>✓</td>;
-  }
-  return <td className={isPro ? CELL_PRO : CELL_BODY}>{value}</td>;
+function FeatureCell({ value, isHighlight = false }: { value: PlanValue; isHighlight?: boolean }) {
+  const base = isHighlight ? CELL_HIGHLIGHT : CELL_BODY;
+  if (value === null) return <td className={isHighlight ? CELL_HIGHLIGHT : CELL_MUTED}>—</td>;
+  if (value === true) return <td className={base}>✓</td>;
+  return <td className={base}>{value}</td>;
 }
 
 interface PricingCardProps {
   tier: PricingTier;
-  currency: PricingCurrency;
   isAnnual: boolean;
   userPlan?: PlanTier;
   onCtaClick: (tierId: string) => void;
   isPending?: boolean;
 }
 
-function PricingCardFeatureList({
-  features,
-  highlighted,
-}: {
-  features: string[];
-  highlighted: boolean;
-}) {
+function PricingCardFeatureList({ features, highlighted }: { features: string[]; highlighted: boolean }) {
   return (
     <ul className="space-y-3 mb-8 grow">
       {features.map((feature) => (
         <li key={feature} className="flex items-start gap-2">
           <CircleCheck
-            className={cn(
-              "mt-0.5 shrink-0",
-              highlighted ? "fill-primary" : "fill-primary text-white",
-            )}
+            className={cn("mt-0.5 shrink-0", highlighted ? "fill-white text-brand-primary" : "fill-brand-primary text-white")}
             size={16}
             strokeWidth={2.5}
             aria-hidden
           />
-          <span
-            className={cn(
-              "text-xs",
-              highlighted ? "text-gray-50" : "text-slate-700",
-            )}
-          >
+          <span className={cn("text-xs", highlighted ? "text-gray-50" : "text-brand-foreground-muted")}>
             {feature}
           </span>
         </li>
@@ -181,51 +177,39 @@ function PricingCardFeatureList({
   );
 }
 
-function PricingCard({
-  tier,
-  currency,
-  isAnnual,
-  userPlan,
-  onCtaClick,
-  isPending = false,
-}: PricingCardProps) {
-  const sym = CURRENCY_SYMBOL[currency];
-  const prices = tier[currency];
+function PricingCard({ tier, isAnnual, userPlan, onCtaClick, isPending = false }: PricingCardProps) {
+  const prices = tier.USD;
   const isHighlighted = tier.highlighted === true;
-  const isCustom = tier.isCustom === true;
-  const isCurrentPlan =
-    (userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO) ||
-    (userPlan === PlanTier.ENTERPRISE && isCustom);
+  const isFree = tier.id === PricingTierId.FREE;
 
-  const displayedCtaText =
-    userPlan === PlanTier.PRO && tier.id === PricingTierId.PRO
-      ? "Manage billing"
-      : tier.cta;
-  const priceFormatter = new Intl.NumberFormat(
-    currency === CurrencyCode.INR ? "en-IN" : "en-US",
-    { maximumFractionDigits: 0 },
-  );
+  const tierToPlan: Partial<Record<string, PlanTier>> = {
+    [PricingTierId.STARTER]: PlanTier.STARTER,
+    [PricingTierId.GROWTH]:  PlanTier.GROWTH,
+    [PricingTierId.SCALE]:   PlanTier.SCALE,
+    [PricingTierId.FREE]:    PlanTier.FREE,
+  };
+  const isCurrentPlan = userPlan !== undefined && userPlan === tierToPlan[tier.id];
 
-  const displayedPrice = (() => {
-    if (!prices) return null;
-    return isAnnual ? prices.annualTotal : prices.monthly;
-  })();
+  const ctaText = isCurrentPlan ? "Manage billing" : tier.cta;
 
+  const priceFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  const displayedPrice = prices
+    ? isAnnual ? prices.annualTotal : prices.monthly
+    : null;
   const annualSavings = prices && isAnnual ? prices.annualSavings : null;
   const annualTotal = prices && isAnnual ? prices.annualTotal : null;
-  const billingSuffix = isAnnual ? "/yr" : "/mo";
 
   return (
     <div
       className={cn(
         "p-6 rounded-xl flex flex-col h-full text-left relative",
         isHighlighted
-          ? "bg-brand-primary border-2 border-brand-primary  transform lg:scale-105 z-10 text-white"
-          : "bg-white border border-gray-200 ",
+          ? "bg-brand-primary border-2 border-brand-primary lg:scale-105 z-10 text-white"
+          : "bg-white border border-brand-border",
       )}
     >
       {isHighlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-extrabold px-4 py-1 rounded-full uppercase  whitespace-nowrap">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-brand-foreground text-[10px] font-bold px-4 py-1 rounded-full uppercase whitespace-nowrap">
           Most Popular
         </div>
       )}
@@ -243,184 +227,87 @@ function PricingCard({
       )}
 
       <div className="mb-6">
-        <h3
-          className={cn(
-            "text-[10px] font-bold uppercase tracking-wider mb-2",
-            isHighlighted ? "text-gray-100" : "text-slate-900",
-          )}
-        >
+        <h3 className={cn("text-[10px] font-bold uppercase tracking-wider mb-2", isHighlighted ? "text-gray-100" : "text-brand-foreground")}>
           {tier.name}
         </h3>
-        <p
-          className={cn(
-            "text-xs mb-4 min-h-8",
-            isHighlighted ? "text-gray-100" : "text-slate-500",
-          )}
-        >
+        <p className={cn("text-xs mb-4 min-h-8", isHighlighted ? "text-gray-100" : "text-brand-foreground-muted")}>
           {tier.description}
         </p>
 
-        {isCustom ? (
-          <>
-            <div className="flex items-baseline gap-1 min-h-12">
-              <span className="text-4xl font-extrabold text-slate-900">
-                Custom
-              </span>
-            </div>
-            <p className="mt-2 text-slate-400 text-[10px]">
-              Pricing available after consultation
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="flex items-baseline gap-1">
-              <span
-                className={cn(
-                  "text-4xl font-extrabold",
-                  isHighlighted ? "text-white" : "text-slate-900",
-                )}
-              >
-                {sym}
-                {displayedPrice === null
-                  ? ""
-                  : priceFormatter.format(displayedPrice)}
-              </span>
-              {tier.id !== PricingTierId.FREE && (
-                <span
-                  className={cn(
-                    "text-sm ml-1",
-                    isHighlighted ? "text-gray-200" : "text-slate-500",
-                  )}
-                >
-                  {billingSuffix}
-                </span>
-              )}
-            </div>
-            {tier.id === PricingTierId.FREE && (
-              <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
-            )}
-            {tier.id !== PricingTierId.FREE &&
-              currency === CurrencyCode.INR && (
-                <p
-                  className={cn(
-                    "mt-1 text-[10px] font-bold",
-                    isHighlighted ? "text-white" : "text-slate-400",
-                  )}
-                >
-                  GST included
-                </p>
-              )}
-          </>
+        <div className="flex items-baseline gap-1">
+          <span className={cn("text-4xl font-bold", isHighlighted ? "text-white" : "text-brand-foreground")}>
+            {displayedPrice === null ? "" : `${CURRENCY_SYMBOL}${priceFormatter.format(displayedPrice)}`}
+          </span>
+          {!isFree && (
+            <span className={cn("text-sm ml-1", isHighlighted ? "text-gray-200" : "text-brand-foreground-muted")}>
+              {isAnnual ? "/yr" : "/mo"}
+            </span>
+          )}
+        </div>
+
+        {isFree && (
+          <p className="mt-2 text-xs text-brand-foreground-secondary">Forever free for engineers & recruiters</p>
         )}
       </div>
 
-      {!isCustom && tier.id !== PricingTierId.FREE && (
-        <div
-          className={cn(
-            "p-2.5 rounded-lg mb-6 text-center",
-            isHighlighted ? "bg-white/10" : "bg-gray-50",
-          )}
-        >
+      {!isFree && (
+        <div className={cn("p-2.5 rounded-lg mb-6 text-center", isHighlighted ? "bg-white/10" : "bg-brand-surface")}>
           {isAnnual && annualSavings !== null && annualTotal !== null ? (
-            <p
-              className={cn(
-                "text-[10px] font-bold",
-                isHighlighted ? "text-white" : "text-black",
-              )}
-            >
-              Save {sym}
-              {priceFormatter.format(annualSavings)}/yr · {sym}
-              {priceFormatter.format(annualTotal)} billed annually
+            <p className={cn("text-[10px] font-bold", isHighlighted ? "text-white" : "text-brand-foreground")}>
+              {`Save ${CURRENCY_SYMBOL}${priceFormatter.format(annualSavings)}/yr · ${CURRENCY_SYMBOL}${priceFormatter.format(annualTotal)} billed annually`}
             </p>
           ) : (
-            <p
-              className={cn(
-                "text-[10px] font-bold",
-                isHighlighted ? "text-white" : "text-slate-600",
-              )}
-            >
+            <p className={cn("text-[10px] font-bold", isHighlighted ? "text-white" : "text-brand-foreground-muted")}>
               Billed monthly
             </p>
           )}
         </div>
       )}
 
-      {tier.id === PricingTierId.FREE && (
-        <div className="h-px bg-slate-100 mb-6" />
-      )}
+      {isFree && <div className={cn("h-px mb-6", isHighlighted ? "bg-white/20" : "bg-brand-border")} />}
 
-      {isCustom && <div className="h-px bg-slate-100 mb-6" />}
+      <PricingCardFeatureList features={tier.features} highlighted={isHighlighted} />
 
-      <PricingCardFeatureList
-        features={tier.features}
-        highlighted={isHighlighted}
-      />
-
-      {isCustom ? (
-        <Link href="/contact" className="w-full mt-auto">
-          <Button variant="default" size="lg" className="w-full">
-            {tier.cta}
-          </Button>
-        </Link>
-      ) : (
-        <Button
-          variant={isHighlighted ? "primary" : "secondary"}
-          size="lg"
-          className="w-full mt-auto"
-          loading={isPending}
-          loadingText={
-            isCurrentPlan ? "Opening billing..." : "Opening checkout..."
-          }
-          onClick={() => onCtaClick(tier.id)}
-        >
-          {displayedCtaText}
-        </Button>
-      )}
+      <Button
+        variant={isHighlighted ? "primary" : "secondary"}
+        size="lg"
+        className="w-full mt-auto"
+        loading={isPending}
+        loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
+        onClick={() => onCtaClick(tier.id)}
+      >
+        {ctaText}
+      </Button>
     </div>
   );
 }
 
-function PricingCompareTable(_props: { isAnnual: boolean }) {
-  // isAnnual reserved for future dynamic feature cells
+function PricingCompareTable({ isAnnual: _isAnnual }: { isAnnual: boolean }) {
   return (
-    <section className="py-24 px-6 overflow-x-auto border-t border-slate-100">
+    <section className="py-24 px-6 overflow-x-auto border-t border-brand-border">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-3xl font-extrabold text-center text-slate-900 mb-16">
-          Compare features
+        <h2 className="text-3xl font-bold text-center text-brand-foreground mb-16">
+          Compare plans
         </h2>
         <div className="min-w-[600px]">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="text-left border-b border-slate-200">
-                <th
-                  className={cn(
-                    TD_BASE,
-                    "font-bold text-slate-500 uppercase tracking-wider",
-                  )}
-                >
-                  Feature
-                </th>
-                <th className={cn(TD_BASE, "font-bold text-slate-900")}>
-                  Free
-                </th>
-                <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>PRO</th>
-                <th className={cn(TD_BASE, "font-bold text-slate-900")}>
-                  Custom
-                </th>
+              <tr className="text-left border-b border-brand-border">
+                <th className={cn(TD_BASE, "font-bold text-brand-foreground-muted uppercase tracking-wider")}>Feature</th>
+                <th className={cn(TD_BASE, "font-bold text-brand-foreground")}>Free</th>
+                <th className={cn(CELL_HIGHLIGHT, "font-bold rounded-t-xl")}>Starter</th>
+                <th className={cn(TD_BASE, "font-bold text-brand-foreground")}>Growth</th>
+                <th className={cn(TD_BASE, "font-bold text-brand-foreground")}>Scale</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-brand-border">
               {FEATURE_ROWS.map((row, idx) => (
-                <tr
-                  key={row.feature}
-                  className={
-                    idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""
-                  }
-                >
+                <tr key={row.feature} className={idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""}>
                   <td className={CELL_LABEL}>{row.feature}</td>
                   <FeatureCell value={row.free} />
-                  <FeatureCell value={row.pro} isPro />
-                  <FeatureCell value={row.custom} />
+                  <FeatureCell value={row.starter} isHighlight />
+                  <FeatureCell value={row.growth} />
+                  <FeatureCell value={row.scale} />
                 </tr>
               ))}
             </tbody>
@@ -433,9 +320,9 @@ function PricingCompareTable(_props: { isAnnual: boolean }) {
 
 function PricingFaqSection() {
   return (
-    <section className="py-24 px-6 bg-slate-50">
+    <section className="py-24 px-6 bg-brand-surface">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-4xl font-extrabold text-center text-slate-900 mb-16">
+        <h2 className="text-4xl font-bold text-center text-brand-foreground mb-16">
           Frequently asked questions
         </h2>
         <Accordion type="single" collapsible className="space-y-4">
@@ -443,9 +330,9 @@ function PricingFaqSection() {
             <AccordionItem
               key={item.question}
               value={item.question}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+              className="bg-white rounded-xl border border-brand-border overflow-hidden"
             >
-              <AccordionTrigger className="px-6 py-6 text-left text-lg font-bold text-slate-900 hover:no-underline hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-slate-500 [&[data-state=open]>svg]:text-brand-primary">
+              <AccordionTrigger className="px-6 py-6 text-left text-lg font-bold text-brand-foreground hover:no-underline hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-brand-foreground-secondary [&[data-state=open]>svg]:text-brand-primary">
                 {item.question}
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-6 text-base leading-relaxed text-brand-foreground-muted">
@@ -455,12 +342,9 @@ function PricingFaqSection() {
           ))}
         </Accordion>
         <div className="mt-16 text-center">
-          <p className="text-slate-500">
+          <p className="text-brand-foreground-muted">
             Still have questions?{" "}
-            <Link
-              className="text-black font-bold hover:underline decoration-2"
-              href="/contact"
-            >
+            <Link className="text-brand-foreground font-bold hover:underline decoration-2" href="/contact">
               Chat with our support team
             </Link>
           </p>
@@ -472,76 +356,44 @@ function PricingFaqSection() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-interface PricingClientProps {
-  currency: PricingCurrency;
-}
-
-function getBrowserCurrencyFallback(): PricingCurrency {
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const languages = navigator.languages.length > 0
-    ? navigator.languages
-    : [navigator.language];
-
-  if (
-    timeZone === "Asia/Kolkata" ||
-    timeZone === "Asia/Calcutta" ||
-    languages.some((language) => language.toLowerCase().endsWith("-in"))
-  ) {
-    return CurrencyCode.INR;
-  }
-
-  return CurrencyCode.USD;
-}
-
-async function createCheckoutSession(
-  body?: CheckoutRequestInput,
-): Promise<string> {
-  return billingService.createCheckoutSession(body);
-}
-
-async function createPortalSession(): Promise<string> {
-  return billingService.createPortalSession();
-}
-
-export function PricingClient({ currency }: PricingClientProps) {
+/*
+ * PricingClient
+ * Renders the full pricing page: hero + annual toggle, 4-tier card grid,
+ * feature comparison table, and FAQ. Handles checkout and portal mutations
+ * for each tier. USD only.
+ */
+export function PricingClient() {
   const [isAnnual, setIsAnnual] = useState(false);
-  const [activeCurrency, setActiveCurrency] =
-    useState<PricingCurrency>(currency);
   const { data: session } = useSession();
   const router = useRouter();
   const { openLoginModal, openEmailVerificationModal } = useUIStore();
   const { data: verificationStatus } = useEmailVerificationStatus();
 
-  useEffect(() => {
-    setActiveCurrency((currentCurrency) => {
-      if (currentCurrency === CurrencyCode.INR) return currentCurrency;
-      return getBrowserCurrencyFallback();
-    });
-  }, []);
-
   const userPlan = session?.user?.plan as PlanTier | undefined;
+
+  const tierIdToPlanTier: Partial<Record<string, PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE>> = {
+    [PricingTierId.STARTER]: PlanTier.STARTER,
+    [PricingTierId.GROWTH]:  PlanTier.GROWTH,
+    [PricingTierId.SCALE]:   PlanTier.SCALE,
+  };
+
+  const [pendingTierId, setPendingTierId] = useState<string | null>(null);
+
   const checkoutMutation = useMutation({
-    mutationFn: () =>
-      createCheckoutSession({
-        planId: PricingTierId.PRO,
-        period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
-        currency: activeCurrency,
-      }),
-    onSuccess: (url) => {
-      window.location.href = url;
-    },
+    mutationFn: (body: CheckoutRequestInput) => billingService.createCheckoutSession(body),
+    onSuccess: (url) => { window.location.href = url; },
     onError: (error: Error) => {
       toast.error(error.message);
+      setPendingTierId(null);
     },
   });
 
   const portalMutation = useMutation({
-    mutationFn: createPortalSession,
-    onSuccess: (url) => {
-      window.location.href = url;
-    },
+    mutationFn: billingService.createPortalSession,
+    onSuccess: (url) => { window.location.href = url; },
     onError: (error: Error) => {
       toast.error(error.message);
+      setPendingTierId(null);
     },
   });
 
@@ -551,56 +403,73 @@ export function PricingClient({ currency }: PricingClientProps) {
       return;
     }
 
-    if (tierId === PricingTierId.PRO) {
-      if (!session?.user) {
-        openLoginModal();
-        return;
-      }
-      if (session.user.role === UserRole.SEEKER) {
-        toast.error("This plan is for recruiters only");
-        return;
-      }
-
-      if (session.user.plan === PlanTier.PRO) {
-        portalMutation.mutate();
-        return;
-      }
-
-      if (verificationStatus?.requiresVerification) {
-        openEmailVerificationModal();
-        return;
-      }
-
-      checkoutMutation.mutate();
+    if (!session?.user) {
+      openLoginModal();
       return;
     }
+
+    if (session.user.role === UserRole.SEEKER) {
+      toast.error("This plan is for recruiters only");
+      return;
+    }
+
+    // Already on this plan → open portal to manage
+    const planForTier = tierIdToPlanTier[tierId];
+    if (planForTier && session.user.plan === planForTier) {
+      setPendingTierId(tierId);
+      portalMutation.mutate();
+      return;
+    }
+
+    // Already on ANY paid plan → portal for upgrades/downgrades
+    if (
+      session.user.plan === PlanTier.STARTER ||
+      session.user.plan === PlanTier.GROWTH ||
+      session.user.plan === PlanTier.SCALE
+    ) {
+      setPendingTierId(tierId);
+      portalMutation.mutate();
+      return;
+    }
+
+    // FREE → paid: verify email first
+    if (verificationStatus?.requiresVerification) {
+      openEmailVerificationModal();
+      return;
+    }
+
+    setPendingTierId(tierId);
+    checkoutMutation.mutate({
+      planId: tierId as CheckoutRequestInput["planId"],
+      period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
+      currency: CurrencyCode.USD,
+    });
   }
+
+  const isMutating = checkoutMutation.isPending || portalMutation.isPending;
 
   return (
     <>
       {/* Hero + Toggle + Cards */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight mb-6">
-            Pricing that scales with your hiring
+          <h1 className="text-4xl md:text-5xl font-bold text-brand-foreground tracking-tight mb-6">
+            Hire verified Indian engineers
           </h1>
-          <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
-            Choose the plan that fits your team&apos;s needs. Join 5,000+
-            remote-first companies.
+          <p className="text-lg md:text-xl text-brand-foreground-muted mb-10 max-w-2xl mx-auto">
+            Browse free. Unlock when ready. Cancel anytime.
           </p>
 
           {/* Monthly / Annual toggle */}
           <div className="flex items-center justify-center mb-16 relative z-30">
-            <div className="bg-slate-100 p-1.5 rounded-xl flex items-center shadow-inner border border-slate-200">
+            <div className="bg-brand-surface p-1.5 rounded-xl flex items-center border border-brand-border">
               <button
                 type="button"
                 onClick={() => setIsAnnual(false)}
                 aria-pressed={!isAnnual}
                 className={cn(
                   "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-                  !isAnnual
-                    ? "bg-white text-slate-900 "
-                    : "text-slate-500 hover:text-slate-800",
+                  !isAnnual ? "bg-white text-brand-foreground" : "text-brand-foreground-muted hover:text-brand-foreground",
                 )}
               >
                 Monthly
@@ -611,43 +480,31 @@ export function PricingClient({ currency }: PricingClientProps) {
                 aria-pressed={isAnnual}
                 className={cn(
                   "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-                  isAnnual
-                    ? "bg-white text-slate-900 "
-                    : "text-slate-500 hover:text-slate-800",
+                  isAnnual ? "bg-white text-brand-foreground" : "text-brand-foreground-muted hover:text-brand-foreground",
                 )}
               >
                 Annual
-                <span className="bg-primary text-white text-[10px] px-2 py-1 rounded-full uppercase font-extrabold tracking-wider pointer-events-none">
-                  Save 20% yearly
+                <span className="bg-brand-primary text-white text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider pointer-events-none">
+                  Save 17%
                 </span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* 3-card grid */}
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch px-4 relative z-0">
+        {/* 4-card grid */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch px-4 relative z-0">
           {PRICING_CONFIG.map((tier) => (
             <PricingCard
               key={tier.id}
               tier={tier}
-              currency={activeCurrency}
               isAnnual={isAnnual}
               userPlan={userPlan}
               onCtaClick={handleCtaClick}
-              isPending={
-                tier.id === PricingTierId.PRO &&
-                (checkoutMutation.isPending || portalMutation.isPending)
-              }
+              isPending={isMutating && pendingTierId === tier.id}
             />
           ))}
         </div>
-
-        {activeCurrency === CurrencyCode.INR && (
-          <p className="mt-6 text-xs text-slate-400 text-center">
-            All prices include 18% GST. No extra charges at checkout.
-          </p>
-        )}
       </section>
 
       <PricingCompareTable isAnnual={isAnnual} />
