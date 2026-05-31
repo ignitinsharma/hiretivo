@@ -1,12 +1,14 @@
 import Image from 'next/image';
 
-import { getInitials } from '@/lib/initials';
+import { getDiceBearUrl } from '@/lib/avatar';
 import { cn } from '@/lib/utils';
 
 interface InitialsAvatarProps {
   name?: string | null;
   companyName?: string | null;
   image?: string | null;
+  email?: string | null;
+  userId?: string | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
@@ -25,14 +27,20 @@ const SIZE_PIXELS: Record<NonNullable<InitialsAvatarProps['size']>, number> = {
   xl: 96,
 };
 
+/*
+ * InitialsAvatar
+ * Renders a user avatar. Shows real photo when image is set, otherwise falls
+ * back to a unique DiceBear illustrated face seeded by email > name > userId.
+ */
 export function InitialsAvatar({
   name,
   companyName,
   image,
+  email,
+  userId,
   size = 'md',
   className,
 }: InitialsAvatarProps) {
-  const initials = getInitials({ name, companyName });
   const px = SIZE_PIXELS[size];
   const label = companyName ?? name ?? 'Avatar';
 
@@ -48,16 +56,15 @@ export function InitialsAvatar({
     );
   }
 
+  const seed = email ?? name ?? companyName ?? userId ?? 'default';
   return (
-    <span
-      className={cn(
-        'inline-flex select-none items-center justify-center rounded-full bg-gray-100 font-semibold text-black',
-        SIZE_CLASSES[size],
-        className,
-      )}
-      aria-label={label}
-    >
-      {initials}
-    </span>
+    <Image
+      src={getDiceBearUrl(seed)}
+      alt={label}
+      width={px}
+      height={px}
+      unoptimized
+      className={cn('rounded-full', SIZE_CLASSES[size], className)}
+    />
   );
 }

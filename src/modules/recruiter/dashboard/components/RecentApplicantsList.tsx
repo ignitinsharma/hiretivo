@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
+import { getAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 import { ApplicationStatus } from "@/constants/enums";
 import type { RecentApplicant } from "@/modules/recruiter/dashboard/types/dashboard.types";
@@ -24,15 +26,6 @@ const STATUS_LABELS: Record<string, string> = {
   [ApplicationStatus.REJECTED]: "Rejected",
 };
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 function formatTimeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
@@ -50,13 +43,12 @@ function formatTimeAgo(dateStr: string): string {
 function ApplicantRow({ applicant }: { applicant: RecentApplicant }) {
   return (
     <div className="flex items-center gap-4">
-      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0 overflow-hidden">
-        {applicant.seekerImage ? (
-          <img src={applicant.seekerImage} alt={applicant.seekerName} className="h-full w-full object-cover" />
-        ) : (
-          getInitials(applicant.seekerName)
-        )}
-      </div>
+      <InitialsAvatar
+        image={getAvatarUrl(applicant.seekerImage)}
+        name={applicant.seekerName}
+        size="md"
+        className="shrink-0"
+      />
       <div className="flex-1 min-w-0">
         <p className="font-bold text-sm text-slate-900 truncate">
           {applicant.seekerName}

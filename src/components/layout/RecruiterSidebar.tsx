@@ -111,21 +111,6 @@ function RecruiterSidebarInner({
   }, []);
 
   const userName = session?.user?.name ?? "Recruiter";
-  const initials =
-    userName
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "R";
-
-  const avatarUrl =
-    companyLogo ??
-    (session?.user?.image
-      ? session.user.image.startsWith("http")
-        ? session.user.image
-        : `/api/logo?key=${encodeURIComponent(session.user.image)}`
-      : null);
   const sidebarTooltipClasses =
     "rounded-lg border border-brand-border bg-white text-[#0a0a0a] shadow-none font-medium";
 
