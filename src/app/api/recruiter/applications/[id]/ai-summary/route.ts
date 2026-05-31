@@ -64,7 +64,7 @@ export async function POST(
   // 4. Plan gate (D-07): FREE plan cannot access AI summaries (bypass during trial)
   if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
     return NextResponse.json(
-      { error: "AI candidate summaries require a PRO or ENTERPRISE plan." },
+      { error: "AI candidate summaries require a Starter, Growth, or Scale plan." },
       { status: 403 },
     );
   }
