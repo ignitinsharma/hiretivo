@@ -59,8 +59,9 @@ enum WorkType {
 
 enum PlanTier {
   FREE
-  PRO
-  ENTERPRISE
+  STARTER
+  GROWTH
+  SCALE
 }
 
 enum SubStatus {
