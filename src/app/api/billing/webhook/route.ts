@@ -36,7 +36,7 @@ function mapStatus(status: string): "ACTIVE" | "CANCELED" | "PAST_DUE" {
 }
 
 function getPlanForProduct(productId: string): PlanTier {
-  return DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO;
+  return DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.FREE;
 }
 
 function getSubscriptionUserId(sub: Subscription): string | null {
