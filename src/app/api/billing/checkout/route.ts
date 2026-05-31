@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getDodoProductId, DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
-import { CurrencyCode, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { PlanTier, PricingTierId, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -14,6 +14,12 @@ function getAppUrl(req: NextRequest): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
 }
 
+/*
+ * POST /api/billing/checkout
+ * Creates a Dodo Payments subscription checkout session for FREE → paid upgrades.
+ * Paid users must use the billing portal to change plans.
+ * USD only. Returns { data: { url: string } }.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -43,18 +49,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { planId, period, currency } = parsed.data;
-  const productId = getDodoProductId(period, currency);
-  if (!productId) {
+  const { planId, period } = parsed.data;
+
+  // Map PricingTierId → PlanTier for getDodoProductId
+  const tierMap: Partial<Record<PricingTierId, PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE>> = {
+    [PricingTierId.STARTER]: PlanTier.STARTER,
+    [PricingTierId.GROWTH]:  PlanTier.GROWTH,
+    [PricingTierId.SCALE]:   PlanTier.SCALE,
+  };
+
+  const tier = tierMap[planId as PricingTierId];
+  if (!tier) {
     return NextResponse.json(
-      { error: "Selected plan is not available" },
+      { error: "Selected plan is not available for self-serve checkout" },
       { status: 400 },
     );
   }
 
-  if (planId !== PricingTierId.PRO) {
+  const productId = getDodoProductId(tier, period);
+  if (!productId) {
     return NextResponse.json(
-      { error: "Selected plan is not available for self-serve checkout" },
+      { error: "Selected plan is not configured — contact support" },
       { status: 400 },
     );
   }
@@ -70,7 +85,7 @@ export async function POST(req: NextRequest) {
 
   if (user.plan !== PlanTier.FREE) {
     return NextResponse.json(
-      { error: "Use billing management for your current plan" },
+      { error: "Use billing management to change your current plan" },
       { status: 400 },
     );
   }
@@ -85,7 +100,7 @@ export async function POST(req: NextRequest) {
       } as const);
 
   const subscription = await dodo.subscriptions.create({
-    billing: { country: currency === CurrencyCode.INR ? "IN" : "US" },
+    billing: { country: "US" },
     customer: customerPayload,
     product_id: productId,
     quantity: 1,
@@ -93,7 +108,7 @@ export async function POST(req: NextRequest) {
     return_url: `${appUrl}/pricing/success`,
     metadata: {
       userId: session.user.id,
-      plan: DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO,
+      plan: DODO_PRODUCT_TO_PLAN[productId] ?? tier,
     },
   });
 
