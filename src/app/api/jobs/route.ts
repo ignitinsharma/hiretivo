@@ -134,17 +134,15 @@ export async function POST(req: NextRequest) {
 
     if (activeCount >= jobLimit) {
       const planName =
-        currentPlan === PlanTier.STARTER ? 'Starter'
-        : currentPlan === PlanTier.GROWTH ? 'Growth'
-        : currentPlan === PlanTier.SCALE ? 'Scale'
-        : jobLimit > 0 ? 'Free trial'
-        : 'Free';
+        currentPlan === PlanTier.FREE && jobLimit > 1
+          ? 'Free trial'
+          : currentPlan === PlanTier.PRO
+            ? 'Pro'
+            : 'Free';
       const nextStep =
-        currentPlan === PlanTier.STARTER
-          ? 'Upgrade to Growth for unlimited posts.'
-          : currentPlan === PlanTier.FREE
-            ? 'Upgrade to Starter to post jobs.'
-            : 'Contact support.';
+        currentPlan === PlanTier.PRO
+          ? 'Contact sales for Enterprise.'
+          : 'Upgrade to Pro for more.';
 
       return NextResponse.json(
         {

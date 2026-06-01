@@ -77,7 +77,6 @@ export async function GET() {
                   companySize: true,
                   industry: true,
                   fundingType: true,
-                  companyVerified: true,
                 },
               },
             },
@@ -132,7 +131,6 @@ export async function GET() {
           companyIndustry: company.companyIndustry,
           companySize: company.companySize,
           companyFundingType: company.companyFundingType,
-          companyVerified: savedJob.job.recruiter.recruiterProfile?.companyVerified ?? false,
         },
       };
     }),

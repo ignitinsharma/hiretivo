@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
-import { UserRole } from "@/constants/enums";
-import { isPaidPlan } from "@/lib/billing/plan-access";
+import { PlanTier, UserRole } from "@/constants/enums";
+import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { searchRateLimiter } from "@/lib/rate-limit";
@@ -41,6 +41,22 @@ function getBioExcerpt(bio: string | null | undefined): string | null {
   return bio.length > 180 ? `${bio.slice(0, 177)}...` : bio;
 }
 
+/*
+ * isPaidPlan
+ * Checks whether a recruiter plan can access paid talent features.
+ * Returns true when the plan is allowed by billing access rules.
+ */
+function isPaidPlan(plan: string | null | undefined): boolean {
+  if (plan === PlanTier.PRO) {
+    return canAccessRecruiterPaidFeature(PlanTier.PRO);
+  }
+
+  if (plan === PlanTier.ENTERPRISE) {
+    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
+  }
+
+  return canAccessRecruiterPaidFeature(PlanTier.FREE);
+}
 
 /*
  * GET /api/recruiter/talent

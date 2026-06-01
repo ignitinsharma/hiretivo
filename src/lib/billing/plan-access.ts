@@ -1,61 +1,37 @@
-import { PlanTier } from "@/constants/enums";
+import { PlanTier, type RecruiterPaidFeature } from "@/constants/enums";
 
-/*
- * Returns true if the recruiter plan allows access to the talent pool browse.
- * FREE plan sees blurred cards only — must upgrade to unlock engineers.
- */
-export function canAccessTalentPool(plan: string | null | undefined): boolean {
-  return (
-    plan === PlanTier.STARTER ||
-    plan === PlanTier.GROWTH ||
-    plan === PlanTier.SCALE
-  );
+export function canAccessRecruiterPaidFeature(plan: string | null | undefined): boolean {
+  return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE;
 }
 
-/*
- * Returns the monthly unlock quota for a plan.
- * null = unlimited (SCALE).
- * 0 = no unlocks (FREE — hard block).
- */
-export function getUnlockQuota(plan: string | null | undefined): number | null {
-  if (plan === PlanTier.STARTER) return 10;
-  if (plan === PlanTier.GROWTH) return 30;
-  if (plan === PlanTier.SCALE) return null;
-  return 0;
-}
-
-/*
- * Returns the max active job posts allowed for a plan.
- * null = unlimited.
- * 0 = cannot post jobs (FREE — hard block, must upgrade).
- */
-export function getActiveJobLimit(plan: string | null | undefined): number | null {
-  if (plan === PlanTier.STARTER) return 2;
-  if (plan === PlanTier.GROWTH || plan === PlanTier.SCALE) return null;
-  return 0;
-}
-
-/*
- * Returns true for any paid plan (STARTER, GROWTH, or SCALE).
- * Used for feature gates that require any active subscription.
- */
-export function isPaidPlan(plan: string | null | undefined): boolean {
-  return (
-    plan === PlanTier.STARTER ||
-    plan === PlanTier.GROWTH ||
-    plan === PlanTier.SCALE
-  );
-}
-
-/*
- * Display name for a plan tier in UI copy.
- */
-export function getPlanDisplayName(plan: string | null | undefined): string {
-  if (plan === PlanTier.STARTER) return "Starter";
-  if (plan === PlanTier.GROWTH) return "Growth";
-  if (plan === PlanTier.SCALE) return "Scale";
-  return "Free";
-}
+export const PAID_FEATURE_COPY: Record<
+  RecruiterPaidFeature,
+  { title: string; description: string }
+> = {
+  talent_pool: {
+    title: "Unlock the Talent Pool",
+    description:
+      "Search verified candidates by skills, role, location, and availability. Available on Pro and Enterprise.",
+  },
+  interview_scheduling: {
+    title: "Schedule Interviews from Hiretivo",
+    description:
+      "Send interview invites and email candidates directly. Available on Pro and Enterprise.",
+  },
+  ai_candidate_summaries: {
+    title: "AI Candidate Summaries",
+    description:
+      "Get instant AI-powered insights on every candidate. Available on Pro and Enterprise.",
+  },
+};
 
 export const PAID_FEATURE_FORBIDDEN_MESSAGE =
-  "This feature requires a Starter, Growth, or Scale plan. Upgrade to continue.";
+  "This feature requires Pro or Enterprise. Upgrade your plan to continue.";
+
+export const PAID_FEATURES_BENEFITS = [
+  { icon: "users", text: "Search verified candidates by skills & role" },
+  { icon: "calendar", text: "Schedule interviews directly" },
+  { icon: "sparkles", text: "AI candidate summaries & insights" },
+  { icon: "mail", text: "Email candidates directly" },
+  { icon: "zap", text: "Cancel anytime, no contracts" },
+];

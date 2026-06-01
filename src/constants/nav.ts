@@ -38,10 +38,3 @@ export const SEEKER_NAV_ITEMS: SeekerNavItem[] = [
   { label: 'Contact & Support', href: '/contact', iconName: 'life-buoy' },
   { label: 'Settings', href: '/seeker/settings', iconName: 'settings' },
 ];
-
-export interface PublicNavItem {
-  label: string;
-  href: string;
-}
-
-export const PUBLIC_NAV_ITEMS: PublicNavItem[] = [];

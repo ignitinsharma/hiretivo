@@ -92,14 +92,9 @@ function RecruiterSidebarInner({
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const currentPlan = session?.user?.plan ?? PlanTier.FREE;
   const planLabel =
-    currentPlan === PlanTier.STARTER ? "Starter"
-    : currentPlan === PlanTier.GROWTH ? "Growth"
-    : currentPlan === PlanTier.SCALE ? "Scale"
-    : "Free";
+    currentPlan === PlanTier.ENTERPRISE ? "Enterprise" : currentPlan;
   const isPaidPlan =
-    currentPlan === PlanTier.STARTER ||
-    currentPlan === PlanTier.GROWTH ||
-    currentPlan === PlanTier.SCALE;
+    currentPlan === PlanTier.PRO || currentPlan === PlanTier.ENTERPRISE;
 
   useEffect(() => {
     async function fetchSettings() {
@@ -116,6 +111,21 @@ function RecruiterSidebarInner({
   }, []);
 
   const userName = session?.user?.name ?? "Recruiter";
+  const initials =
+    userName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "R";
+
+  const avatarUrl =
+    companyLogo ??
+    (session?.user?.image
+      ? session.user.image.startsWith("http")
+        ? session.user.image
+        : `/api/logo?key=${encodeURIComponent(session.user.image)}`
+      : null);
   const sidebarTooltipClasses =
     "rounded-lg border border-brand-border bg-white text-[#0a0a0a] shadow-none font-medium";
 
@@ -151,7 +161,7 @@ function RecruiterSidebarInner({
                       : "border-brand-border bg-brand-surface text-brand-foreground-muted",
                   )}
                 >
-                  {planLabel}
+                  {planLabel === "Enterprise" ? "Ente." : planLabel}
                 </span>
               </Link>
               <SidebarToggle />

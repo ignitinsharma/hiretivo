@@ -9,7 +9,6 @@ import { recruiterService } from "@/services/recruiter.service";
 
 import { CompanyAvatarSection } from "./CompanyAvatarSection";
 import { CompanyProfileSection } from "./CompanyProfileSection";
-import { CompanyVerificationSection } from "./CompanyVerificationSection";
 import { RecruiterBillingSection } from "./RecruiterBillingSection";
 import { RecruiterProfileSection } from "./RecruiterProfileSection";
 
@@ -62,7 +61,6 @@ export function RecruiterSettingsClient() {
         <SettingsSectionSkeleton fieldCount={2} />
         <SettingsSectionSkeleton fieldCount={4} />
         <SettingsSectionSkeleton fieldCount={4} />
-        <SettingsSectionSkeleton fieldCount={2} />
       </div>
     );
   }
@@ -99,7 +97,6 @@ export function RecruiterSettingsClient() {
         }}
         isSaving={saveMutation.isPending}
       />
-      <CompanyVerificationSection settings={settings} />
     </div>
   );
 }

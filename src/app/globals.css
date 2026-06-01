@@ -45,18 +45,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-body), sans-serif;
-    line-height: 1.75;
-  }
-  h1, h2, h3, h4 {
-    font-family: var(--font-display), sans-serif;
-  }
-}
-
-@layer utilities {
-  .dot-grid {
-    background-image: radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px);
-    background-size: 24px 24px;
+    line-height: 1.9;
   }
 }
 
@@ -85,13 +74,6 @@
       linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
     background-size: 64px 64px;
-  }
-
-  .grid-texture {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-    background-size: 48px 48px;
   }
 
   .grainy-bg {

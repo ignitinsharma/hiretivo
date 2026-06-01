@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { useUIStore } from '@/store/use-ui-store';
 
-const PAID_FEATURES = [
+const PRO_FEATURES = [
   { icon: Brain, label: 'AI Candidate Summaries' },
   { icon: Calendar, label: 'Schedule Interviews' },
   { icon: Users, label: 'Talent Pool Access' },
@@ -40,22 +40,22 @@ export function PaidFeatureModal() {
     >
       <DialogContent className="rounded-xl backdrop-blur-sm sm:max-w-md">
         <DialogHeader>
-          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary text-brand-primary-foreground">
+          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
             <Lock className="h-6 w-6" />
           </div>
-          <DialogTitle className="text-center text-2xl font-semibold tracking-tight text-brand-foreground">
-            {title || 'Unlock Paid Features'}
+          <DialogTitle className="text-center text-2xl font-semibold tracking-tight text-foreground">
+            {title || 'Unlock Pro Features'}
           </DialogTitle>
-          <DialogDescription className="text-center text-brand-foreground-muted">
-            {description || 'Upgrade to a paid plan to access all features.'}
+          <DialogDescription className="text-center text-[#868685]">
+            {description || 'Upgrade to Pro to access all features.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="my-4 space-y-3">
-          {PAID_FEATURES.map((feature) => (
+          {PRO_FEATURES.map((feature) => (
             <div key={feature.label} className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-surface">
-                <feature.icon className="h-4 w-4 text-brand-primary" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
+                <feature.icon className="h-4 w-4 text-indigo-600" />
               </div>
               <span className="text-sm font-medium text-foreground">{feature.label}</span>
             </div>
@@ -65,10 +65,9 @@ export function PaidFeatureModal() {
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
           <Button
             onClick={onUpgrade}
-            variant="primary"
-            className="w-full"
+            className="w-full rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white transition-transform hover:scale-105 active:scale-95 hover:from-indigo-700 hover:to-purple-700"
           >
-            Upgrade Plan
+            Upgrade to Pro
             <ArrowUpRight className="ml-2 h-4 w-4" />
           </Button>
           <Button variant="ghost" onClick={closePaidFeatureModal}>

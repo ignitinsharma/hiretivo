@@ -50,7 +50,7 @@ export default async function JobDescriptionPage({
       recruiter: {
         select: {
           recruiterProfile: {
-            select: { id: true, companyName: true, logo: true, companyVerified: true },
+            select: { id: true, companyName: true, logo: true },
           },
         },
       },
@@ -133,7 +133,6 @@ export default async function JobDescriptionPage({
     })),
     publishedAt: job.publishedAt?.toISOString() ?? null,
     applicantCount: job._count.applications,
-    companyVerified: job.isAdminPosted ? false : (job.recruiter.recruiterProfile?.companyVerified ?? false),
   };
   const currentSkillIds = job.skills.map((jobSkill) => jobSkill.skillId);
   const recommendationFilters = [

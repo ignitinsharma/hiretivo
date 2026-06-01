@@ -1,16 +1,29 @@
 'use client';
 
+import Image from 'next/image';
 import { Bell, Plus, ChevronDown, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { InitialsAvatar } from '@/components/shared/InitialsAvatar';
 import { useSession, signOut } from 'next-auth/react';
 import { useUIStore } from '@/store/use-ui-store';
-import { getAvatarUrl } from '@/lib/avatar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+
+/** Derive initials from a name string */
+function getInitials(name: string | null | undefined): string {
+  if (!name) return 'R';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
+function getAvatarUrl(image: string | null | undefined): string | null {
+  if (!image) return null;
+  if (image.startsWith('http://') || image.startsWith('https://')) return image;
+  return `/api/logo?key=${encodeURIComponent(image)}`;
+}
 
 interface RecruiterHeaderProps {
   title?: string;
@@ -27,6 +40,8 @@ export function RecruiterHeader({
   const { openPostJobModal } = useUIStore();
 
   const userName = session?.user?.name ?? 'Recruiter';
+  const initials = getInitials(userName);
+  const avatarUrl = getAvatarUrl(session?.user?.image);
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
@@ -53,12 +68,13 @@ export function RecruiterHeader({
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex items-center gap-2 pl-3 border-l border-gray-200 cursor-pointer">
-              <InitialsAvatar
-                image={getAvatarUrl(session?.user?.image)}
-                name={session?.user?.name}
-                email={session?.user?.email}
-                size="md"
-              />
+              <div className="w-8 h-8 bg-brand-primary rounded-full overflow-hidden flex items-center justify-center text-white text-sm font-semibold">
+                {avatarUrl ? (
+                  <Image src={avatarUrl} alt={initials} width={32} height={32} className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </div>
               <ChevronDown className="w-4 h-4 text-gray-400" />
             </button>
           </PopoverTrigger>

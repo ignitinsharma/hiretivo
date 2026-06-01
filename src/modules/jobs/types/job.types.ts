@@ -26,8 +26,6 @@ export interface JobListItem {
   description?: string | null;
   /** Total number of applications received for this job (all statuses). */
   applicantCount?: number;
-  /** Whether the posting company is verified (RecruiterProfile.companyVerified). */
-  companyVerified?: boolean;
 }
 
 export interface JobSkillItem {

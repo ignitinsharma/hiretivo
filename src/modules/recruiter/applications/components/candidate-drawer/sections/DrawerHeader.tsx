@@ -1,10 +1,9 @@
 import { Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
-import { getAvatarUrl } from "@/lib/avatar";
 
 import type { CandidateApplication } from "../types";
+import { getInitials } from "../utils";
 
 interface DrawerHeaderProps {
   application: CandidateApplication;
@@ -16,15 +15,20 @@ export function DrawerHeader({ application }: DrawerHeaderProps) {
   return (
     <article className="rounded-xl border border-brand-border bg-white p-5">
       <div className="flex flex-col items-center text-center">
-        <div className="relative">
-          <InitialsAvatar
-            image={getAvatarUrl(application.candidateAvatar)}
-            name={application.candidateName}
-            email={application.candidateEmail}
-            size="lg"
-            className="border border-brand-border"
-          />
-          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+        <div className="relative h-20 w-20 overflow-hidden rounded-full border border-brand-border bg-brand-surface">
+          {application.candidateAvatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={application.candidateAvatar}
+              alt={application.candidateName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-brand-foreground">
+              {getInitials(application.candidateName)}
+            </span>
+          )}
+          <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
         </div>
 
         <h2 className="mt-4 text-2xl font-bold leading-tight tracking-tight text-brand-foreground">

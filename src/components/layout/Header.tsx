@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
-import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS, PUBLIC_NAV_ITEMS } from "@/constants/nav";
+import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { NavLink } from "@/components/layout/NavLink";
 import { SeekerNavLink } from "@/components/layout/SeekerNavLink";
 import { ChevronDown, Settings } from "lucide-react";
@@ -23,7 +23,6 @@ import { resolveLogoUrl } from "@/lib/r2";
 interface HeaderProps {
   className?: string;
   publicAudience?: "seeker" | "recruiter";
-  variant?: "dark" | "light";
 }
 
 /** Nav items to show — only Jobs and Applied Jobs, no Settings or Contact. */
@@ -36,7 +35,7 @@ const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
  * Renders the shared top navigation for public, seeker, and recruiter views.
  * Returns mobile-first public auth controls and role-specific desktop nav.
  */
-export async function Header({ className, variant = 'light' }: HeaderProps) {
+export async function Header({ className }: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isSeeker = !!session && role === UserRole.SEEKER;
@@ -59,10 +58,7 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
   return (
     <nav
       className={cn(
-        "sticky top-0 z-50 w-full border-b px-4 py-3 md:px-6",
-        variant === "dark"
-          ? "border-white/[0.07] bg-brand-foreground"
-          : "border-brand-border bg-white",
+        "sticky top-0 z-50 w-full border-b border-brand-border bg-white px-4 py-3 md:px-6",
         className,
       )}
       data-purpose="main-navigation"
@@ -109,26 +105,6 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
           </nav>
         )}
 
-        {/* Public desktop nav — logged-out only */}
-        {!session && PUBLIC_NAV_ITEMS.length > 0 && (
-          <nav className="hidden md:flex items-center gap-6" aria-label="Public navigation">
-            {PUBLIC_NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "text-sm font-semibold transition-colors",
-                  variant === "dark"
-                    ? "text-white/40 hover:text-white/70"
-                    : "text-brand-foreground-muted hover:text-brand-foreground",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        )}
-
         {/* Nav actions */}
         <div className="flex items-center gap-3" data-purpose="nav-actions">
           {/* Public nav — no session */}
@@ -136,34 +112,19 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
             <>
               <Link
                 href={"/recruiter/register"}
-                className={cn(
-                  "hidden rounded-lg px-5 py-2.5 text-sm font-bold transition-colors sm:block",
-                  variant === "dark"
-                    ? "bg-brand-primary text-white hover:bg-brand-primary-dark"
-                    : "border border-brand-primary/20 bg-brand-surface text-brand-foreground hover:bg-brand-primary hover:text-white",
-                )}
+                className="hidden rounded-lg border border-brand-primary/20 bg-brand-surface px-5 py-2.5 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-primary hover:text-white sm:block"
               >
                 I&apos;m a recruiter
               </Link>
               <Link
                 href={"/seeker/register"}
-                className={cn(
-                  "hidden rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors sm:block",
-                  variant === "dark"
-                    ? "border border-white/10 text-white/50 hover:bg-white/5"
-                    : "border border-brand-border text-brand-foreground hover:bg-brand-surface",
-                )}
+                className="hidden rounded-lg border border-brand-border px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface sm:block"
               >
                 Sign Up
               </Link>
               <Link
                 href={"/seeker/login"}
-                className={cn(
-                  "hidden rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors sm:block",
-                  variant === "dark"
-                    ? "border border-white/10 text-white/60 hover:bg-white/5"
-                    : "bg-brand-primary text-white hover:bg-brand-primary-dark",
-                )}
+                className="hidden rounded-lg bg-brand-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark sm:block"
               >
                 Sign In
               </Link>
