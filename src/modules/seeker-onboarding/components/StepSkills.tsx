@@ -190,7 +190,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
             What are your top skills?
           </h2>
           <p className="text-muted-foreground">
-            We use this to match you with the best remote jobs.
+            Recruiters search the talent pool by exact skills.
           </p>
         </div>
 

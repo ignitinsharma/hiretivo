@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Hand } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
   SITUATION_OPTIONS,
@@ -17,16 +18,23 @@ import type {
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep1 } from "@/app/actions/onboarding/seeker";
 
+/*
+ * StepWelcome
+ * Step 1 of seeker onboarding — About You.
+ * Captures current situation, experience level, location, and timezone.
+ * Saves to DB via saveStep1 before advancing.
+ */
 interface StepWelcomeProps {
   onNext: () => void;
-  onSkip?: () => void;
 }
 
-export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
+export function StepWelcome({ onNext }: StepWelcomeProps) {
   const { step1, userName, setSituation, setExperienceLevel } =
     useSeekerOnboardingStore();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [location, setLocation] = useState("");
+  const [timezone, setTimezone] = useState("");
 
   const handleContinue = async () => {
     if (isSaving) return;
@@ -71,20 +79,21 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
     <div className="w-full max-w-xl mx-auto">
       <div className="space-y-8">
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
-            <Hand className="w-7 h-7 text-primary" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-primary/10 mb-4">
+            <Hand className="w-7 h-7 text-brand-primary" />
           </div>
-          <h2 className="text-3xl font-semibold text-foreground">
+          <h2 className="text-3xl font-semibold text-brand-foreground">
             Welcome to Hiretivo, {userName}!
           </h2>
-          <p className="text-muted-foreground text-lg">
-            Let&apos;s personalize your job feed. Takes 2 minutes.
+          <p className="text-brand-foreground-muted text-lg">
+            Let&apos;s build your verified engineer profile. Takes about 5 minutes.
           </p>
         </div>
 
         <div className="space-y-8">
+          {/* Situation */}
           <div className="space-y-4">
-            <label className="text-base font-medium text-foreground block">
+            <label className="text-base font-medium text-brand-foreground block">
               What&apos;s your current situation?
             </label>
             <div className="grid grid-cols-1 gap-3">
@@ -101,16 +110,16 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
                     className={cn(
                       "flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left",
                       isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50",
+                        ? "border-brand-primary bg-brand-primary/5"
+                        : "border-brand-border hover:border-brand-primary/50",
                     )}
                   >
                     <div
                       className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0",
+                        "w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0",
                         isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted",
+                          ? "bg-brand-primary text-white"
+                          : "bg-brand-surface",
                       )}
                     >
                       {isSelected ? (
@@ -133,12 +142,14 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
                       <p
                         className={cn(
                           "font-medium",
-                          isSelected ? "text-primary" : "text-foreground",
+                          isSelected
+                            ? "text-brand-primary"
+                            : "text-brand-foreground",
                         )}
                       >
                         {option.label}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-brand-foreground-muted">
                         {option.description}
                       </p>
                     </div>
@@ -148,8 +159,9 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
             </div>
           </div>
 
+          {/* Experience level */}
           <div className="space-y-4">
-            <label className="text-base font-medium text-foreground block">
+            <label className="text-base font-medium text-brand-foreground block">
               What&apos;s your experience level?
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -166,8 +178,8 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
                     className={cn(
                       "flex items-center justify-center p-4 rounded-lg border-2 transition-all text-sm font-medium",
                       isSelected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:border-primary/50 text-foreground",
+                        ? "border-brand-primary bg-brand-primary text-white"
+                        : "border-brand-border hover:border-brand-primary/50 text-brand-foreground",
                     )}
                   >
                     {option.label}
@@ -177,8 +189,32 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
             </div>
           </div>
 
+          {/* Location */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-foreground block">
+              Where are you based?
+            </label>
+            <Input
+              placeholder="e.g. Mumbai, India"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
+
+          {/* Timezone */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-foreground block">
+              Your timezone
+            </label>
+            <Input
+              placeholder="e.g. IST (UTC+5:30)"
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+            />
+          </div>
+
           {getErrorMessage() && (
-            <p className="text-sm text-destructive text-center">
+            <p className="text-sm text-brand-danger text-center">
               {getErrorMessage()}
             </p>
           )}
@@ -188,7 +224,7 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
               type="button"
               onClick={handleContinue}
               size="lg"
-              variant={"primary"}
+              variant="primary"
               className="w-full"
               loading={isSaving}
               loadingText="Saving..."
@@ -196,16 +232,6 @@ export function StepWelcome({ onNext, onSkip }: StepWelcomeProps) {
               Continue
               <ArrowRight className="w-4 h-4" />
             </Button>
-            {onSkip && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onSkip}
-                className="w-full"
-              >
-                Skip setup
-              </Button>
-            )}
           </div>
         </div>
       </div>
