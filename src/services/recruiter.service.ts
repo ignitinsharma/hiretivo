@@ -255,18 +255,12 @@ export const recruiterService = {
   },
 
   getTalent: async (params: RecruiterTalentParams): Promise<TalentListResponse['data']> => {
-    try {
-      const { data } = await apiClient.get<TalentListResponse>('/recruiter/talent', {
-        params,
-      });
-      return data.data;
-    } catch (error) {
-      if (isForbiddenRequestError(error)) {
-        throw new TalentForbiddenError();
-      }
-
-      throw error;
-    }
+    // FREE plan now returns 200 with blurred items + isFreePlan:true (no longer 403).
+    // TalentForbiddenError 403 path is dead code for getTalent — removed.
+    const { data } = await apiClient.get<TalentListResponse>('/recruiter/talent', {
+      params,
+    });
+    return data.data;
   },
 
   getTalentDetail: async (seekerId: string): Promise<TalentDetail> => {

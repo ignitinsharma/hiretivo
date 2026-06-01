@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
 import { PlanTier, UserRole } from "@/constants/enums";
 import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
@@ -60,8 +61,11 @@ function isPaidPlan(plan: string | null | undefined): boolean {
 
 /*
  * GET /api/recruiter/talent
- * Searches seeker talent profiles for paid recruiters with filters and pagination.
- * Returns talent rows plus pagination metadata or auth/plan/rate-limit errors.
+ * Returns talent pool for paid and free recruiters with search/filter/pagination.
+ * FREE plan: returns blurred seeker items (name = "First L.", email/image null) + demoCount + isFreePlan:true.
+ *   Enables mix-mode in TalentPoolClient without a hard paywall.
+ * Paid plans: returns full unblurred talent list + demoCount + isFreePlan:false.
+ * demoCount is NOT filtered by search — always reflects total real pool size.
  */
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -83,8 +87,71 @@ export async function GET(req: NextRequest) {
     select: { plan: true },
   });
 
+  // Count all seekers with a profile — runs for both FREE and paid paths.
+  // Not affected by search filters — always reflects real pool size.
+  const demoCount = await prisma.user.count({
+    where: { role: "SEEKER", seekerProfile: { isNot: null } },
+  });
+
   if (!isPaidPlan(recruiter?.plan)) {
-    return new Response("Forbidden", { status: 403 });
+    // FREE plan: return blurred seeker items (up to DEMO_THRESHOLD) + demoCount.
+    // Names are blurred to "First L." server-side. Email and image are nulled.
+    // Client uses these alongside DEMO_ENGINEERS static cards for mix-mode grid.
+    const blurredSeekers = await prisma.user.findMany({
+      where: { role: "SEEKER", seekerProfile: { isNot: null } },
+      take: DEMO_THRESHOLD,
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        name: true,
+        seekerProfile: {
+          select: {
+            headline: true,
+            yearsExperience: true,
+            primaryRole: true,
+            availability: true,
+            resumeKey: true,
+            skills: {
+              select: { skill: { select: { name: true } } },
+              orderBy: { skill: { name: "asc" } },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: {
+        items: blurredSeekers.map((seeker) => {
+          const profile = seeker.seekerProfile;
+          // Blur name: "Priya Sharma" → "Priya S."
+          const nameParts = (seeker.name ?? "").trim().split(/\s+/);
+          const blurredName =
+            nameParts.length >= 2
+              ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+              : (nameParts[0] ?? "Engineer");
+          return {
+            id: seeker.id,
+            name: blurredName,
+            email: null,      // never expose email on FREE plan
+            image: null,      // never expose real avatar on FREE plan
+            headline: profile?.headline ?? null,
+            bioExcerpt: null, // bio hidden on FREE plan
+            location: null,   // location hidden on FREE plan
+            yearsExperience: profile?.yearsExperience ?? null,
+            primaryRole: profile?.primaryRole ?? null,
+            availability: profile?.availability ?? null,
+            resumeKey: false, // resume not accessible on FREE plan
+            skills: profile?.skills.map((item) => item.skill.name) ?? [],
+          };
+        }),
+        total: demoCount,
+        page: 1,
+        limit: DEMO_THRESHOLD,
+        demoCount,
+        isFreePlan: true,
+      },
+    });
   }
 
   const url = new URL(req.url);
@@ -227,6 +294,8 @@ export async function GET(req: NextRequest) {
       total,
       page,
       limit,
+      demoCount,
+      isFreePlan: false,
     },
   });
 }

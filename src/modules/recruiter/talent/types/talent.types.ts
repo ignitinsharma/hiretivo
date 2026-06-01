@@ -19,6 +19,8 @@ export interface TalentListResponse {
     total: number;
     page: number;
     limit: number;
+    demoCount: number;    // Count of all seekers with a profile (unaffected by search filters)
+    isFreePlan: boolean;  // true when caller is on FREE plan (items are blurred), false for paid
   };
 }
 
