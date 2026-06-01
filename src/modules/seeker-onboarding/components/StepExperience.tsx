@@ -12,6 +12,7 @@ import type {
   EducationEntry,
 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { saveExperience } from "@/app/actions/onboarding/seeker";
 
 /*
  * StepExperience
@@ -300,11 +301,13 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
   };
 
   const handleContinue = async () => {
+    const workToSave =
+      experience.workExperiences.length > 0
+        ? experience.workExperiences
+        : workExperiences;
+
     const validation = validateSeekerStep4Experience({
-      workExperiences:
-        experience.workExperiences.length > 0
-          ? experience.workExperiences
-          : workExperiences,
+      workExperiences: workToSave,
       educations: experience.educations,
     });
 
@@ -314,7 +317,18 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
     }
 
     setErrors([]);
-    // TODO: wire to saveExperience in task 7
+
+    const result = await saveExperience({
+      workExperiences: workToSave,
+      educations:
+        experience.educations.length > 0 ? experience.educations : undefined,
+    });
+
+    if (!result.success) {
+      setErrors([result.error]);
+      return;
+    }
+
     onNext();
   };
 

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { validateSeekerStep3 } from "@/lib/validations/seeker-onboarding.schema";
 import type { ProjectEntry } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { saveProofOfWork } from "@/app/actions/onboarding/seeker";
 
 /*
  * StepProofOfWork
@@ -154,12 +155,15 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
   };
 
   const handleContinue = async () => {
+    const projectsToSave =
+      proofOfWork.projects.length > 0 ? proofOfWork.projects : projects;
+
     const validation = validateSeekerStep3({
       githubUrl: proofOfWork.githubUrl,
       linkedinUrl: proofOfWork.linkedinUrl,
       websiteUrl: proofOfWork.websiteUrl,
       videoIntroUrl: proofOfWork.videoIntroUrl,
-      projects: proofOfWork.projects.length > 0 ? proofOfWork.projects : projects,
+      projects: projectsToSave,
     });
 
     if (!validation.valid) {
@@ -168,7 +172,20 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
     }
 
     setErrors([]);
-    // TODO: wire to saveProofOfWork in task 7
+
+    const result = await saveProofOfWork({
+      githubUrl: proofOfWork.githubUrl,
+      linkedinUrl: proofOfWork.linkedinUrl ?? null,
+      websiteUrl: proofOfWork.websiteUrl ?? null,
+      videoIntroUrl: proofOfWork.videoIntroUrl ?? null,
+      projects: projectsToSave,
+    });
+
+    if (!result.success) {
+      setErrors([result.error]);
+      return;
+    }
+
     onNext();
   };
 

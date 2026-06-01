@@ -20,6 +20,7 @@ import {
 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import type { ResumeFile } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
+import { saveCompensation } from "@/app/actions/onboarding/seeker";
 
 /*
  * StepCompensation
@@ -148,7 +149,35 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     }
 
     setErrors([]);
-    // TODO: wire to saveCompensation in task 7
+
+    // Build FormData so the File object transfers correctly to the server action
+    const formData = new FormData();
+    formData.append("headline", compensation.headline);
+    formData.append("bio", compensation.bio);
+    if (compensation.salaryMin !== null) {
+      formData.append("salaryMin", String(compensation.salaryMin));
+    }
+    if (compensation.salaryMax !== null) {
+      formData.append("salaryMax", String(compensation.salaryMax));
+    }
+    if (compensation.availability) {
+      formData.append("availability", compensation.availability);
+    }
+    if (compensation.contractType) {
+      formData.append("contractType", compensation.contractType);
+    }
+    // Append the raw File if available (new upload); skip if it's an existing key-only record
+    if (compensation.resume?.file instanceof File) {
+      formData.append("resumeFile", compensation.resume.file);
+    }
+
+    const result = await saveCompensation(formData);
+
+    if (!result.success) {
+      setErrors([result.error]);
+      return;
+    }
+
     onNext();
   };
 

@@ -9,13 +9,29 @@ import {
 import { prisma } from "@/lib/prisma";
 import { invalidateSeekerCache } from "@/lib/match";
 import { uploadFile } from "@/lib/r2";
-import { step1Schema, step2Schema, step4Schema } from "@/lib/validations/onboarding.schema";
+import { sendEmail } from "@/lib/resend";
+import {
+  step1Schema,
+  step2Schema,
+  step4Schema,
+} from "@/lib/validations/onboarding.schema";
+import {
+  projectEntrySchema,
+  workExperienceEntrySchema,
+  extractGithubUsername,
+} from "@/lib/validations/seeker-onboarding.schema";
+import { z } from "zod";
 
 type ActionResult = { success: true } | { success: false; error: string };
-type MissingSeekerOnboardingStep = 1 | 2 | 4;
+type MissingSeekerOnboardingStep = 1 | 2 | 3 | 4 | 5;
 type CompleteSeekerOnboardingResult =
-  | { success: true; redirectTo: "/seeker/settings" }
+  | { success: true; redirectTo: "/seeker/dashboard" }
   | { success: false; error: string; missingStep: MissingSeekerOnboardingStep };
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@hiretivo.com";
 
 // --- Step 1: Situation ---
 export async function saveStep1(data: {
@@ -211,35 +227,7 @@ export async function saveStep3(formData: FormData): Promise<ActionResult> {
   return { success: true };
 }
 
-export async function skipSeekerResumeOnboarding(): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-  if (session.user.role !== UserRole.SEEKER) {
-    return { success: false, error: "Forbidden" };
-  }
-  if (session.user.role !== UserRole.SEEKER) {
-    return { success: false, error: "Forbidden" };
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { onboardingStep: true, onboardingDraft: true },
-  });
-
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      onboardingStep: nextProgressStep(user?.onboardingStep, 4),
-      onboardingDraft: mergeOnboardingDraft(user?.onboardingDraft, {
-        seeker: { resumeSkipped: true },
-      }),
-    },
-  });
-
-  return { success: true };
-}
-
-// --- Step 4: Job Preferences ---
+// --- Step 4 (new flow): Step 4: Job Preferences ---
 export async function saveStep4(data: {
   jobType: string | null;
   category: string | null;
@@ -297,6 +285,314 @@ export async function saveStep4(data: {
   return { success: true };
 }
 
+/*
+ * saveProofOfWork
+ * Step 3 (6-step flow): saves GitHub URL, optional social/video links, and project entries.
+ * Derives githubUsername from the provided URL.
+ * Advances onboardingStep to 4.
+ * @returns ActionResult
+ */
+export async function saveProofOfWork(data: {
+  githubUrl: string;
+  linkedinUrl?: string | null;
+  websiteUrl?: string | null;
+  videoIntroUrl?: string | null;
+  projects: Array<{ title: string; url: string; description: string }>;
+}): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  // Validate with Zod
+  const schema = z.object({
+    githubUrl: z.string().url("Please enter a valid GitHub URL"),
+    linkedinUrl: z.string().url().nullable().optional(),
+    websiteUrl: z.string().url().nullable().optional(),
+    videoIntroUrl: z.string().url().nullable().optional(),
+    projects: projectEntrySchema.array().min(1, "At least one project is required"),
+  });
+
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const githubUsername = extractGithubUsername(parsed.data.githubUrl);
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingStep: true },
+  });
+
+  await prisma.$transaction([
+    prisma.seekerProfile.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        githubUrl: parsed.data.githubUrl,
+        githubUsername: githubUsername ?? null,
+        linkedinUrl: parsed.data.linkedinUrl ?? null,
+        websiteUrl: parsed.data.websiteUrl ?? null,
+        videoIntroUrl: parsed.data.videoIntroUrl ?? null,
+        topProjects: parsed.data.projects,
+      },
+      update: {
+        githubUrl: parsed.data.githubUrl,
+        githubUsername: githubUsername ?? null,
+        linkedinUrl: parsed.data.linkedinUrl ?? null,
+        websiteUrl: parsed.data.websiteUrl ?? null,
+        videoIntroUrl: parsed.data.videoIntroUrl ?? null,
+        topProjects: parsed.data.projects,
+      },
+    }),
+    prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        onboardingStep: nextProgressStep(user?.onboardingStep, 4),
+      },
+    }),
+  ]);
+
+  return { success: true };
+}
+
+/*
+ * saveExperience
+ * Step 4 (6-step flow): saves work experience entries (required) and optional education entries.
+ * Replaces all existing WorkExperience and Education rows for this seeker profile within a transaction.
+ * Advances onboardingStep to 5.
+ * @returns ActionResult
+ */
+export async function saveExperience(data: {
+  workExperiences: Array<{
+    company: string;
+    title: string;
+    startDate: string;
+    endDate?: string | null;
+    isCurrent: boolean;
+    description?: string | null;
+  }>;
+  educations?: Array<{
+    institution: string;
+    graduationDate?: string | null;
+    degree?: string | null;
+    major?: string | null;
+  }>;
+}): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  // Validate: at least 1 work experience
+  const schema = z.object({
+    workExperiences: workExperienceEntrySchema.array().min(1, "At least one work experience is required"),
+    educations: z
+      .object({
+        institution: z.string().trim().min(1, "Institution is required"),
+        graduationDate: z.string().trim().nullable().optional(),
+        degree: z.string().trim().nullable().optional(),
+        major: z.string().trim().nullable().optional(),
+      })
+      .array()
+      .optional(),
+  });
+
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const userId = session.user.id;
+
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { onboardingStep: true },
+    });
+
+    // Upsert SeekerProfile to get its id
+    const profile = await tx.seekerProfile.upsert({
+      where: { userId },
+      create: { userId },
+      update: {},
+      select: { id: true },
+    });
+
+    // Replace all work experiences
+    await tx.workExperience.deleteMany({
+      where: { seekerProfileId: profile.id },
+    });
+
+    await tx.workExperience.createMany({
+      data: parsed.data.workExperiences.map((exp) => ({
+        seekerProfileId: profile.id,
+        company: exp.company,
+        title: exp.title,
+        startDate: exp.startDate,
+        endDate: exp.endDate ?? null,
+        isCurrent: exp.isCurrent,
+        description: exp.description ?? null,
+      })),
+    });
+
+    // Replace educations if provided
+    if (parsed.data.educations && parsed.data.educations.length > 0) {
+      await tx.education.deleteMany({
+        where: { seekerProfileId: profile.id },
+      });
+
+      await tx.education.createMany({
+        data: parsed.data.educations.map((edu) => ({
+          seekerProfileId: profile.id,
+          institution: edu.institution,
+          graduationDate: edu.graduationDate ?? null,
+          degree: edu.degree ?? null,
+          major: edu.major ?? null,
+        })),
+      });
+    }
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        onboardingStep: nextProgressStep(user?.onboardingStep, 5),
+      },
+    });
+  });
+
+  return { success: true };
+}
+
+/*
+ * saveCompensation
+ * Step 5 (6-step flow): saves professional headline, bio, salary range, availability,
+ * contract type, and optional resume upload.
+ * Accepts FormData so the File object is transferred correctly across the server action boundary.
+ * Advances onboardingStep to 6.
+ * @returns ActionResult
+ */
+export async function saveCompensation(formData: FormData): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  // Extract fields from FormData
+  const headline = (formData.get("headline") as string | null)?.trim() ?? "";
+  const bio = (formData.get("bio") as string | null)?.trim() ?? "";
+  const salaryMinRaw = formData.get("salaryMin") as string | null;
+  const salaryMaxRaw = formData.get("salaryMax") as string | null;
+  const availability = (formData.get("availability") as string | null) || null;
+  const contractType = (formData.get("contractType") as string | null) || null;
+
+  const salaryMin = salaryMinRaw ? parseInt(salaryMinRaw, 10) : null;
+  const salaryMax = salaryMaxRaw ? parseInt(salaryMaxRaw, 10) : null;
+
+  // Server-side validation
+  if (!headline) return { success: false, error: "Professional headline is required" };
+  if (!bio) return { success: false, error: "Bio is required" };
+  if (salaryMin === null || isNaN(salaryMin)) {
+    return { success: false, error: "Minimum salary is required" };
+  }
+  if (salaryMax === null || isNaN(salaryMax)) {
+    return { success: false, error: "Maximum salary is required" };
+  }
+  if (salaryMin > salaryMax) {
+    return { success: false, error: "Minimum salary cannot exceed maximum salary" };
+  }
+
+  // Resume upload — same pattern as saveStep3
+  const resumeFile = formData.get("resumeFile") as File | null;
+  let resumeKey: string | null = null;
+
+  if (resumeFile && resumeFile.size > 0) {
+    const MAX_RESUME_SIZE = 5 * 1024 * 1024; // 5MB
+    if (resumeFile.size > MAX_RESUME_SIZE) {
+      return { success: false, error: "Resume must be under 5MB" };
+    }
+
+    const allowedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(resumeFile.type)) {
+      return { success: false, error: "Only PDF and DOCX files are allowed" };
+    }
+
+    try {
+      const ext =
+        resumeFile.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          ? "docx"
+          : "pdf";
+      const key = `resumes/${session.user.id}/resume.${ext}`;
+      await uploadFile(resumeFile, key);
+      resumeKey = key;
+    } catch (err) {
+      console.error("[saveCompensation] R2 upload failed:", err);
+      return { success: false, error: "Resume upload failed. Please try again." };
+    }
+  }
+
+  const userId = session.user.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { onboardingStep: true },
+  });
+
+  await prisma.seekerProfile.upsert({
+    where: { userId },
+    create: {
+      userId,
+      headline,
+      bio,
+      salaryMin,
+      salaryMax,
+      currency: "USD",
+      salaryMinUsd: salaryMin,
+      salaryMaxUsd: salaryMax,
+      availability,
+      workPreference: contractType as never ?? null,
+      ...(resumeKey ? { resumeKey } : {}),
+    },
+    update: {
+      headline,
+      bio,
+      salaryMin,
+      salaryMax,
+      currency: "USD",
+      salaryMinUsd: salaryMin,
+      salaryMaxUsd: salaryMax,
+      availability,
+      workPreference: contractType as never ?? null,
+      ...(resumeKey ? { resumeKey } : {}),
+    },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      onboardingStep: nextProgressStep(user?.onboardingStep, 6),
+    },
+  });
+
+  return { success: true };
+}
+
+/*
+ * completeSeekerOnboarding
+ * Validates all mandatory onboarding fields across all 5 steps, then marks the user
+ * as onboardingCompleted and sets verificationStatus to PENDING.
+ * Fires an admin notification email (fire-and-forget, non-fatal).
+ * Returns missingStep if any required step is incomplete.
+ * @returns CompleteSeekerOnboardingResult
+ */
 export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardingResult> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -306,16 +602,31 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     return { success: false, error: "Forbidden", missingStep: 1 };
   }
 
+  const userId = session.user.id;
+
   const profile = await prisma.seekerProfile.findUnique({
-    where: { userId: session.user.id },
+    where: { userId },
     select: {
       situation: true,
       primaryRole: true,
       availability: true,
-      _count: { select: { skills: true } },
+      githubUrl: true,
+      topProjects: true,
+      resumeKey: true,
+      headline: true,
+      bio: true,
+      salaryMinUsd: true,
+      verificationNotes: true,
+      _count: {
+        select: {
+          skills: true,
+          workExperiences: true,
+        },
+      },
     },
   });
 
+  // Step 1: situation
   if (!profile?.situation) {
     return {
       success: false,
@@ -324,6 +635,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     };
   }
 
+  // Step 2: primary role + at least 1 skill
   if (!profile.primaryRole || profile._count.skills === 0) {
     return {
       success: false,
@@ -332,23 +644,105 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     };
   }
 
-  if (!profile.availability) {
+  // Step 3: GitHub URL + at least 1 project
+  const projects = profile.topProjects as unknown as Array<unknown> | null;
+  if (!profile.githubUrl || !projects || projects.length === 0) {
     return {
       success: false,
-      error: "Choose your availability first.",
+      error: "Add your GitHub profile and at least one project first.",
+      missingStep: 3,
+    };
+  }
+
+  // Step 4: at least 1 work experience
+  if (profile._count.workExperiences === 0) {
+    return {
+      success: false,
+      error: "Add at least one work experience first.",
       missingStep: 4,
     };
   }
 
+  // Step 5: resume, headline, bio, availability, salaryMinUsd
+  if (
+    !profile.resumeKey ||
+    !profile.headline ||
+    !profile.bio ||
+    !profile.availability ||
+    profile.salaryMinUsd === null ||
+    profile.salaryMinUsd === undefined
+  ) {
+    return {
+      success: false,
+      error: "Complete your compensation and profile details first.",
+      missingStep: 5,
+    };
+  }
+
+  // All checks passed — mark as submitted for review
   await prisma.user.update({
-    where: { id: session.user.id },
-    data: { onboardingCompleted: true, onboardingStep: null },
+    where: { id: userId },
+    data: {
+      verificationStatus: "PENDING",
+      onboardingCompleted: true,
+      onboardingStep: null,
+    },
   });
+
+  await prisma.seekerProfile.update({
+    where: { userId },
+    data: { submittedForReviewAt: new Date() },
+  });
+
   await unstable_update({
     user: { onboardingCompleted: true, onboardingStep: null },
   });
 
-  return { success: true, redirectTo: "/seeker/settings" };
+  // Fire admin notification — fire-and-forget, non-fatal
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true },
+  });
+
+  sendAdminNotification({
+    userName: user?.name ?? "Unknown",
+    userEmail: user?.email ?? "",
+    profileUrl: `${APP_URL}/admin/verification/${userId}`,
+  }).catch((err) => {
+    console.error("[completeSeekerOnboarding] Admin notification failed (non-fatal):", err);
+  });
+
+  return { success: true, redirectTo: "/seeker/dashboard" };
+}
+
+/*
+ * sendAdminNotification
+ * Sends an internal notification email to admin when a new engineer submits for review.
+ * Fire-and-forget — never call with await in the main flow.
+ */
+async function sendAdminNotification(opts: {
+  userName: string;
+  userEmail: string;
+  profileUrl: string;
+}): Promise<void> {
+  await sendEmail({
+    from: FROM_EMAIL,
+    to: ADMIN_EMAIL,
+    subject: `New engineer submitted for review: ${opts.userName}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>New Verification Submission</h2>
+        <p><strong>${opts.userName}</strong> (${opts.userEmail}) has submitted their profile for verification.</p>
+        <p>
+          <a href="${opts.profileUrl}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">
+            Review Profile
+          </a>
+        </p>
+        <p style="color:#6b7280;font-size:14px;">Profile URL: ${opts.profileUrl}</p>
+      </div>
+    `,
+    text: `New verification submission from ${opts.userName} (${opts.userEmail}).\n\nReview at: ${opts.profileUrl}`,
+  });
 }
 
 // --- Profile Completeness (per D-09: computed on read, not stored) ---
