@@ -20,7 +20,6 @@ function PricingSuccessContent() {
   const sessionId = searchParams.get("session_id");
   const { update } = useSession();
   const [state, setState] = useState<PollState>("loading");
-  const [activePlan, setActivePlan] = useState<PlanTier | null>(null);
 
   useEffect(() => {
     let attempts = 0;
@@ -33,18 +32,15 @@ function PricingSuccessContent() {
       try {
         const payload = await billingService.getSubscriptionStatus();
         const isActive =
-          payload.plan !== PlanTier.FREE ||
+          payload.plan === PlanTier.PRO ||
           payload.subscription?.status === "ACTIVE";
 
         if (isActive) {
-          if (!cancelled) {
-            setState("success");
-            setActivePlan(payload.plan ?? PlanTier.STARTER);
-          }
+          if (!cancelled) setState("success");
 
           void update({
             user: {
-              plan: payload.plan ?? PlanTier.STARTER,
+              plan: payload.plan ?? PlanTier.PRO,
             },
           }).catch(() => {
             // Billing status is already persisted in the database. Session
@@ -77,20 +73,14 @@ function PricingSuccessContent() {
     };
   }, [update]);
 
-  const planName =
-    activePlan === PlanTier.STARTER ? "Starter"
-    : activePlan === PlanTier.GROWTH ? "Growth"
-    : activePlan === PlanTier.SCALE ? "Scale"
-    : "paid";
-
   const title =
     state === "success"
-      ? `You're now on the ${planName} plan!`
+      ? "You're now on the PRO plan!"
       : state === "timeout"
         ? "Your payment was processed"
         : state === "error"
           ? "Payment received, verification is delayed"
-          : "Setting up your plan...";
+          : "Setting up your PRO plan...";
 
   const message =
     state === "success"

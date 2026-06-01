@@ -7,21 +7,13 @@ import { FEATURES } from "@/lib/config";
 import { ReactQueryProvider } from "@/providers/query-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -49,7 +41,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${bricolage.variable} ${dmSans.variable} font-body antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ReactQueryProvider>
           <AuthSessionProvider>
             {children}

@@ -1,15 +1,15 @@
 import { z } from "zod";
-import { BILLING_PERIOD_VALUES, CurrencyCode, PricingTierId } from "@/constants/enums";
+import {
+  BILLING_CURRENCY_VALUES,
+  BILLING_PERIOD_VALUES,
+  CurrencyCode,
+  PricingTierId,
+} from "@/constants/enums";
 
-/*
- * Validates the checkout request body.
- * planId: only paid tiers (FREE has no checkout).
- * currency: USD only per PIVOT.md §11.
- */
 export const CheckoutRequestSchema = z.object({
-  planId: z.enum([PricingTierId.STARTER, PricingTierId.GROWTH, PricingTierId.SCALE]),
+  planId: z.enum([PricingTierId.PRO]),
   period: z.enum(BILLING_PERIOD_VALUES),
-  currency: z.literal(CurrencyCode.USD).default(CurrencyCode.USD),
+  currency: z.enum(BILLING_CURRENCY_VALUES).default(CurrencyCode.USD),
 });
 
 export type CheckoutRequestInput = z.infer<typeof CheckoutRequestSchema>;

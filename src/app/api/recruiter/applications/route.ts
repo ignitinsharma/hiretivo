@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
-import { isPaidPlan } from "@/lib/billing/plan-access";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 20;
@@ -212,8 +211,8 @@ export async function GET(req: NextRequest) {
         matchScore: app.matchScore,
         status: app.status,
         plan: recruiter?.plan ?? PlanTier.FREE,
-        canScheduleInterviews: isRecruiterTrialActive() || isPaidPlan(recruiter?.plan),
-        canUseAi: isRecruiterTrialActive() || isPaidPlan(recruiter?.plan),
+        canScheduleInterviews: isRecruiterTrialActive() || recruiter?.plan !== PlanTier.FREE,
+        canUseAi: isRecruiterTrialActive() || recruiter?.plan !== PlanTier.FREE,
         coverLetter: app.coverLetter,
         resumeUrl,
         appliedAt: app.createdAt.toISOString(),

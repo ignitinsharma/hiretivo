@@ -311,7 +311,7 @@ export function ScheduleInterviewModal({
         error.message.toLowerCase().includes("requires pro or enterprise")
       ) {
         closeScheduleModal();
-        openPaidFeatureModal({ feature: "talent_pool" });
+        openPaidFeatureModal({ feature: "interview_scheduling" });
         return;
       }
 

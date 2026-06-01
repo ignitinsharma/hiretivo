@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
-import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { getAvatarUrl } from "@/lib/avatar";
 import { SEEKER_NAV_ITEMS } from "@/constants/nav";
 import {
   DropdownMenu,
@@ -24,6 +23,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+/** Returns the user's initials (up to 2 chars) from their display name. */
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "U";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 /** Nav items to show — only Jobs and Applied Jobs per D-18. */
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
@@ -35,9 +42,18 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   send: Send,
 };
 
+function getAvatarUrl(image: string | null | undefined): string | null {
+  if (!image) return null;
+  if (image.startsWith('http://') || image.startsWith('https://')) return image;
+  return `/api/logo?key=${encodeURIComponent(image)}`;
+}
+
 export function SeekerHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  const initials = getInitials(session?.user?.name);
+  const avatarUrl = getAvatarUrl(session?.user?.image);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
@@ -80,13 +96,13 @@ export function SeekerHeader() {
                 className="flex items-center gap-2 group outline-none"
                 aria-label="Account menu"
               >
-                <InitialsAvatar
-                  image={getAvatarUrl(session?.user?.image)}
-                  name={session?.user?.name}
-                  email={session?.user?.email}
-                  size="md"
-                  className="border-2 border-primary/20 ring-2 ring-transparent transition-all group-hover:border-primary"
-                />
+                <div className="w-9 h-9 rounded-full bg-primary/10 border-2 border-primary/20 overflow-hidden flex items-center justify-center text-primary font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-primary">
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt={initials} width={36} height={36} className="h-full w-full object-cover" />
+                  ) : (
+                    initials
+                  )}
+                </div>
                 <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
               </button>
             </DropdownMenuTrigger>

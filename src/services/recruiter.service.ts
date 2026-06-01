@@ -59,10 +59,6 @@ export interface RecruiterSettingsData {
   emailNotifications: boolean;
   applicationAlerts: boolean;
   interviewNotifications: boolean;
-  companyVerified: boolean;
-  companyVerifiedAt: string | null;
-  companyLinkedInUrl: string | null;
-  companyWorkEmail: string | null;
 }
 
 export interface CandidateWorkExperience {
@@ -226,22 +222,6 @@ export const recruiterService = {
 
   updateSettings: async (payload: RecruiterProfileSettingsInput): Promise<void> => {
     await apiClient.patch('/recruiter/settings', payload);
-  },
-
-  /*
-   * verifyCompany
-   * Triggers company verification. Pass { companyLinkedInUrl, companyWorkEmail } for Level 2
-   * (freemail) submissions; pass undefined to trigger Level 1 auto-check (corporate email).
-   * Returns the raw response from /api/recruiter/verify-company.
-   */
-  verifyCompany: async (
-    body?: { companyLinkedInUrl: string; companyWorkEmail: string },
-  ): Promise<DataResponse<{ level: number; status: string; message?: string }>> => {
-    const { data } = await apiClient.post<DataResponse<{ level: number; status: string; message?: string }>>(
-      '/recruiter/verify-company',
-      body ?? {},
-    );
-    return data;
   },
 
   updateNotificationSettings: async (payload: {

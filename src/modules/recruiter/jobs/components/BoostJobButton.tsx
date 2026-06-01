@@ -41,8 +41,14 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
       return;
     }
 
-    toast.info('Job boosting is coming soon. Visit pricing to see available plans.');
-    void jobId;
+    setIsLoading(true);
+    try {
+      const url = await billingService.createBoostCheckoutSession(jobId);
+      window.location.href = url;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to start boost. Try again.');
+      setIsLoading(false);
+    }
   };
 
   if (isAlreadyBoosted && boostExpiresAt) {

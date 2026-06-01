@@ -59,9 +59,8 @@ enum WorkType {
 
 enum PlanTier {
   FREE
-  STARTER
-  GROWTH
-  SCALE
+  PRO
+  ENTERPRISE
 }
 
 enum SubStatus {
@@ -227,11 +226,6 @@ model RecruiterProfile {
   fundingType String?
   isFullyRemote Boolean  @default(false)
   logo        String?
-
-  companyVerified    Boolean   @default(false)
-  companyVerifiedAt  DateTime?
-  companyLinkedInUrl String?
-  companyWorkEmail   String?
 
   emailNotifications     Boolean @default(true)
   applicationAlerts      Boolean @default(true)

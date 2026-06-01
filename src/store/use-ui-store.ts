@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { PAID_FEATURE_COPY } from '@/lib/billing/plan-access';
 
 import type { RecruiterPaidFeature } from '@/constants/enums';
 
@@ -149,8 +150,8 @@ export const useUIStore = create<UIState>((set) => ({
     paidFeatureModal: {
       isOpen: true,
       feature,
-      title: title ?? "Upgrade required",
-      description: description ?? "This feature requires a Starter, Growth, or Scale plan.",
+      title: title ?? PAID_FEATURE_COPY[feature].title,
+      description: description ?? PAID_FEATURE_COPY[feature].description,
     },
   }),
   closePaidFeatureModal: () => set({

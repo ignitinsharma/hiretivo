@@ -47,7 +47,7 @@ export function InterviewPanel({
             className="w-full"
             onClick={() =>
               openPaidFeatureModal({
-                feature: "talent_pool",
+                feature: "interview_scheduling",
                 title: "Schedule Interviews",
                 description: "Schedule interviews and email applicants directly from your dashboard.",
               })
