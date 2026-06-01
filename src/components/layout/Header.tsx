@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import Image from "next/image";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
-import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS, PUBLIC_NAV_ITEMS } from "@/constants/nav";
+import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { NavLink } from "@/components/layout/NavLink";
 import { SeekerNavLink } from "@/components/layout/SeekerNavLink";
 import { ChevronDown, Settings } from "lucide-react";
@@ -17,6 +16,7 @@ import {
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { PublicMobileNavMenu } from "@/components/layout/PublicMobileNavMenu";
 import { Logo } from "@/components/shared/Logo";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 
@@ -42,7 +42,6 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
   const isSeeker = !!session && role === UserRole.SEEKER;
   const isRecruiter = !!session && role === UserRole.RECRUITER;
 
-  const initials = session?.user?.name?.[0]?.toUpperCase() ?? "U";
   let companyLogoUrl: string | null = null;
   if (isRecruiter && session?.user?.id) {
     const recruiter = await prisma.recruiterProfile.findUnique({
@@ -109,26 +108,6 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
           </nav>
         )}
 
-        {/* Public desktop nav — logged-out only */}
-        {!session && PUBLIC_NAV_ITEMS.length > 0 && (
-          <nav className="hidden md:flex items-center gap-6" aria-label="Public navigation">
-            {PUBLIC_NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "text-sm font-semibold transition-colors",
-                  variant === "dark"
-                    ? "text-white/40 hover:text-white/70"
-                    : "text-brand-foreground-muted hover:text-brand-foreground",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        )}
-
         {/* Nav actions */}
         <div className="flex items-center gap-3" data-purpose="nav-actions">
           {/* Public nav — no session */}
@@ -177,19 +156,15 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="relative cursor-pointer flex items-center gap-2 group outline-none">
-                    <div className="w-9 h-9 overflow-hidden rounded-full bg-black/10 border-2 border-brand-primary/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
-                      {avatarUrl ? (
-                        <Image
-                          src={avatarUrl}
-                          alt={initials}
-                          width={36}
-                          height={36}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        initials
-                      )}
-                    </div>
+                    <InitialsAvatar
+                      name={session.user.name}
+                      email={session.user.email}
+                      userId={session.user.id}
+                      image={avatarUrl}
+                      fallbackSeed="header-avatar"
+                      size="md"
+                      className="h-9 w-9 border-2 border-brand-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-black"
+                    />
                     <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </div>
                 </DropdownMenuTrigger>

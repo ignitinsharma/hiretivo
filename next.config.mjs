@@ -8,14 +8,14 @@ import { withSentryConfig } from "@sentry/nextjs";
  *  - Vercel Insights/Analytics for first-party analytics
  *  - Sentry for client error reporting
  *  - Upstash for direct browser calls (rare, defensive)
- *  - R2 + Google avatar host + data: for images
+ *  - R2 + Google avatar host + DiceBear fallbacks + data: for images
  *  - Resend tracking pixels are server-side only, no entry needed
  */
 const CSP_DIRECTIVES = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel-insights.com https://*.vercel-scripts.com https://*.sentry.io https://*.googletagmanager.com https://*.google-analytics.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://*.r2.dev https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://*.gstatic.com https://*.google-analytics.com https://*.googletagmanager.com https://cdn.pixabay.com",
+  "img-src 'self' blob: data: https://*.r2.dev https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://api.dicebear.com https://*.gstatic.com https://*.google-analytics.com https://*.googletagmanager.com https://cdn.pixabay.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.sentry.io https://*.upstash.io https://*.vercel-insights.com https://*.google-analytics.com https://*.googletagmanager.com",
   "frame-ancestors 'none'",

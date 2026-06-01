@@ -85,9 +85,11 @@ export function HeroRecruiterSection() {
             {/* Card 1 — top, fully visible */}
             <div className="absolute left-0 top-0 z-30 w-[360px] -rotate-2 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(-10px,-12px,34px)_rotateX(6deg)_rotateY(9deg)_rotateZ(-3deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
+                id={primaryEngineer.id}
                 displayName={primaryEngineer.displayName}
                 firstName={primaryEngineer.firstName}
                 lastInitial={primaryEngineer.lastInitial}
+                image={primaryEngineer.image}
                 isVerified={primaryEngineer.isVerified}
                 hiretivoScore={primaryEngineer.hiretivoScore}
                 role={primaryEngineer.role}
@@ -106,9 +108,11 @@ export function HeroRecruiterSection() {
             {/* Card 2 — offset down and right */}
             <div className="absolute left-11 top-[132px] z-20 w-[360px] rotate-3 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(12px,-6px,34px)_rotateX(-4deg)_rotateY(-10deg)_rotateZ(4deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
+                id={secondaryEngineer.id}
                 displayName={secondaryEngineer.displayName}
                 firstName={secondaryEngineer.firstName}
                 lastInitial={secondaryEngineer.lastInitial}
+                image={secondaryEngineer.image}
                 isVerified={secondaryEngineer.isVerified}
                 hiretivoScore={secondaryEngineer.hiretivoScore}
                 role={secondaryEngineer.role}
@@ -127,9 +131,11 @@ export function HeroRecruiterSection() {
             {/* Card 3 — lower stack card, still readable and hoverable */}
             <div className="absolute left-20 top-[264px] z-10 w-[360px] -rotate-2 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(18px,-4px,34px)_rotateX(-5deg)_rotateY(-8deg)_rotateZ(2deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
+                id={tertiaryEngineer.id}
                 displayName={tertiaryEngineer.displayName}
                 firstName={tertiaryEngineer.firstName}
                 lastInitial={tertiaryEngineer.lastInitial}
+                image={tertiaryEngineer.image}
                 isVerified={tertiaryEngineer.isVerified}
                 hiretivoScore={tertiaryEngineer.hiretivoScore}
                 role={tertiaryEngineer.role}

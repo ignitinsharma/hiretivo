@@ -8,13 +8,10 @@
 
 import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
+import { InitialsAvatar } from '@/components/shared/InitialsAvatar'
 import { FEATURED_ENGINEERS } from '@/config/home-page'
 import type { FeaturedEngineer } from '@/config/home-page'
 import { cn } from '@/lib/utils'
-
-function avatarUrl(seed: string): string {
-  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e8e5ff`
-}
 
 /*
  * ScoreBarChart
@@ -53,12 +50,13 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
 
       {/* ── Row 1: Avatar + name + verified ── */}
       <div className="flex items-start gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={avatarUrl(engineer.name)}
-          alt=""
-          className="h-12 w-12 rounded-full shrink-0 bg-[#e8e5ff] object-cover"
-          aria-hidden="true"
+        <InitialsAvatar
+          name={engineer.name}
+          userId={engineer.id}
+          fallbackSeed={engineer.initials}
+          image={engineer.image}
+          size="lg"
+          className="shrink-0 bg-brand-surface"
         />
 
         <div className="flex-1 min-w-0">

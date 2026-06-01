@@ -8,12 +8,15 @@
  */
 
 import { Lock, DollarSign } from 'lucide-react'
+import { InitialsAvatar } from '@/components/shared/InitialsAvatar'
 import { cn } from '@/lib/utils'
 
 interface EngineerPreviewCardProps {
+  id?: string
   displayName?: string
   firstName: string
   lastInitial: string
+  image?: string | null
   isVerified: boolean
   hiretivoScore: number
   role: string
@@ -28,11 +31,6 @@ interface EngineerPreviewCardProps {
   className?: string
 }
 
-/* DiceBear notionists avatar URL — consistent per name seed */
-function avatarUrl(seed: string): string {
-  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e8e5ff`
-}
-
 const MAX_VISIBLE_SKILLS = 4
 
 /*
@@ -42,9 +40,11 @@ const MAX_VISIBLE_SKILLS = 4
  * @param blurLevel - 'none' | 'medium' | 'heavy' progressive blur
  */
 export function EngineerPreviewCard({
+  id,
   displayName,
   firstName,
   lastInitial,
+  image,
   isVerified,
   hiretivoScore,
   role,
@@ -75,13 +75,13 @@ export function EngineerPreviewCard({
     >
       {/* ── Row 1: Avatar + name/role/verified + score ── */}
       <div className="flex items-start gap-3">
-        {/* Avatar */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={avatarUrl(seed)}
-          alt=""
-          className="h-12 w-12 shrink-0 rounded-full bg-[#e8e5ff] object-cover"
-          aria-hidden="true"
+        <InitialsAvatar
+          name={nameLabel}
+          userId={id}
+          fallbackSeed={seed}
+          image={image}
+          size="lg"
+          className="shrink-0 bg-brand-surface"
         />
 
         {/* Name + role + verified */}

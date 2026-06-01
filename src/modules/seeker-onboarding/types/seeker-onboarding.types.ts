@@ -33,7 +33,7 @@ export type JobCategory =
   | 'SUPPORT' 
   | 'OTHER';
 
-export type Currency = CurrencyCode.USD | CurrencyCode.EUR | CurrencyCode.GBP;
+export type Currency = CurrencyCode.USD;
 
 export type Availability = 
   | 'IMMEDIATELY' 

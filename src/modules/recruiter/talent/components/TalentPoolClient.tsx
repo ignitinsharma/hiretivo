@@ -103,7 +103,13 @@ function TalentCard({
     <article className={`${TALENT_CARD_CLASS} flex h-full min-h-64 flex-col`}>
       <div className="mb-4 flex min-h-14 items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <InitialsAvatar name={talent.name} image={talent.image} size="lg" />
+          <InitialsAvatar
+            name={talent.name}
+            email={talent.email}
+            userId={talent.id}
+            image={talent.image}
+            size="lg"
+          />
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">
               {talent.name ?? "Unnamed talent"}

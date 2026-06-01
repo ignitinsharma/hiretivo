@@ -36,7 +36,7 @@ export function StatsBarSection() {
                 </span>
                 <span className="h-px w-8 bg-brand-border transition-colors group-hover:bg-brand-primary/35" />
               </div>
-              <div>
+              <div className="mt-6">
                 <span className="block font-display text-4xl font-bold leading-none tracking-tight text-brand-foreground">
                   {value}
                 </span>

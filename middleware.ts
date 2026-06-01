@@ -19,6 +19,7 @@ export default auth((req) => {
     pathname.startsWith("/feed") ||
     pathname.startsWith("/pricing") ||
     pathname.startsWith("/contact") ||
+    pathname.startsWith("/hire-talent") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/how") ||

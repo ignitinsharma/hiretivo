@@ -7,10 +7,7 @@
 
 import { TESTIMONIALS } from '@/config/home-page'
 import type { Testimonial } from '@/config/home-page'
-
-function avatarUrl(seed: string): string {
-  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=e8e5ff`
-}
+import { InitialsAvatar } from '@/components/shared/InitialsAvatar'
 
 /*
  * StarRating
@@ -49,12 +46,13 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
       {/* Footer: avatar + name/title + stars */}
       <div className="flex items-center gap-3 pt-2 border-t border-brand-border">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={avatarUrl(testimonial.name)}
-          alt=""
-          className="h-9 w-9 rounded-full shrink-0 bg-[#e8e5ff] object-cover"
-          aria-hidden="true"
+        <InitialsAvatar
+          name={testimonial.name}
+          userId={testimonial.id}
+          fallbackSeed={testimonial.initials}
+          image={testimonial.image}
+          size="md"
+          className="h-9 w-9 shrink-0 bg-brand-surface"
         />
         <div className="flex-1 min-w-0">
           <p className="font-display text-sm font-bold text-brand-foreground truncate">{testimonial.name}</p>

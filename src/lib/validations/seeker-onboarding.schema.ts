@@ -36,7 +36,7 @@ export const step1Schema = z.object({
 export const salaryRangeSchema = z.object({
   min: z.number().nullable(),
   max: z.number().nullable(),
-  currency: z.enum(SEEKER_CURRENCY_VALUES),
+  currency: z.literal(CurrencyCode.USD),
 }).refine(
   (data) => {
     if (data.min !== null && data.max !== null) {

@@ -38,7 +38,11 @@ export function DemoEngineerCard({ profile, onUpgrade }: DemoEngineerCardProps):
       {/* Header: avatar + name + headline */}
       <div className="mb-4 flex min-h-14 items-start justify-between gap-3 pr-16">
         <div className="flex min-w-0 items-center gap-3">
-          <InitialsAvatar name={profile.name} size="lg" />
+          <InitialsAvatar
+            name={profile.name}
+            fallbackSeed={profile.name}
+            size="lg"
+          />
           <div className="min-w-0">
             {/* Full name visible — per D-02 — contrast with blurred real cards */}
             <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">

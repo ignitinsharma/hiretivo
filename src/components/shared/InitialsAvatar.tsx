@@ -1,11 +1,17 @@
-import Image from 'next/image';
+'use client';
 
+import { useEffect, useState } from 'react';
+
+import { getAvatarImageUrl, getDiceBearAvatarUrl } from '@/lib/avatar';
 import { getInitials } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
 interface InitialsAvatarProps {
   name?: string | null;
   companyName?: string | null;
+  email?: string | null;
+  userId?: string | null;
+  fallbackSeed?: string | null;
   image?: string | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
@@ -28,22 +34,59 @@ const SIZE_PIXELS: Record<NonNullable<InitialsAvatarProps['size']>, number> = {
 export function InitialsAvatar({
   name,
   companyName,
+  email,
+  userId,
+  fallbackSeed,
   image,
   size = 'md',
   className,
 }: InitialsAvatarProps) {
+  const [uploadedImageFailed, setUploadedImageFailed] = useState(false);
+  const [fallbackImageFailed, setFallbackImageFailed] = useState(false);
   const initials = getInitials({ name, companyName });
   const px = SIZE_PIXELS[size];
   const label = companyName ?? name ?? 'Avatar';
+  const uploadedImageUrl = getAvatarImageUrl(image);
+  const fallbackImageUrl = getDiceBearAvatarUrl({
+    userId,
+    email,
+    name,
+    companyName,
+    fallbackSeed,
+  });
 
-  if (image) {
+  useEffect(() => {
+    setUploadedImageFailed(false);
+  }, [uploadedImageUrl]);
+
+  useEffect(() => {
+    setFallbackImageFailed(false);
+  }, [fallbackImageUrl]);
+
+  if (uploadedImageUrl && !uploadedImageFailed) {
     return (
-      <Image
-        src={image}
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={uploadedImageUrl}
         alt={label}
         width={px}
         height={px}
         className={cn('rounded-full object-cover', SIZE_CLASSES[size], className)}
+        onError={() => setUploadedImageFailed(true)}
+      />
+    );
+  }
+
+  if (!fallbackImageFailed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={fallbackImageUrl}
+        alt={label}
+        width={px}
+        height={px}
+        className={cn('rounded-full object-cover', SIZE_CLASSES[size], className)}
+        onError={() => setFallbackImageFailed(true)}
       />
     );
   }

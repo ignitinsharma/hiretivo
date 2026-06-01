@@ -36,6 +36,7 @@ export interface MockEngineerCard {
   displayName: string;
   firstName: string;
   lastInitial: string;
+  image?: string | null;
   isVerified: boolean;
   hiretivoScore: number;
   role: string;
@@ -104,6 +105,7 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
 export interface FeaturedEngineer {
   id: string;
   name: string;
+  image?: string | null;
   yearsExp: number;
   isVerified: boolean;
   role: string;
@@ -176,6 +178,7 @@ export interface Testimonial {
   id: string;
   quote: string;
   name: string;
+  image?: string | null;
   title: string;
   initials: string;
   stars: number;
