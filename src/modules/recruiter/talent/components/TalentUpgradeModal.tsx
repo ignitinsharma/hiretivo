@@ -57,9 +57,9 @@ interface TalentUpgradeModalProps {
  *   - Unlock a demo engineer card (Unlock Now button)
  *   - Unlock a real blurred engineer card
  *   - Click the disabled search bar
- * Shows 3 pricing tiers (Starter/Growth/Scale) with direct checkout links.
- * Per D-07: links to /api/billing/checkout?plan=PLAN_NAME for each tier.
- * Secondary "See all plans →" link navigates to /pricing.
+ * Shows 3 pricing tiers (Starter/Growth/Scale) with CTAs that route to /pricing.
+ * Direct checkout links deferred until STARTER/GROWTH/SCALE billing tiers exist in the API.
+ * Secondary "See all plans →" link also navigates to /pricing.
  * @param open - Dialog open state
  * @param onOpenChange - Dialog close handler
  * @param engineerTeaser - Optional teaser text (name + score + skills) to personalize modal
@@ -110,9 +110,9 @@ export function TalentUpgradeModal({
                 className="w-full"
                 size="sm"
               >
-                <a href={`/api/billing/checkout?plan=${tier.plan}`}>
+                <Link href="/pricing" onClick={() => onOpenChange(false)}>
                   Start with {tier.name}
-                </a>
+                </Link>
               </Button>
             </div>
           ))}

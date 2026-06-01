@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
-import { PlanTier, UserRole } from "@/constants/enums";
+import { UserRole } from "@/constants/enums";
 import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
@@ -42,22 +42,6 @@ function getBioExcerpt(bio: string | null | undefined): string | null {
   return bio.length > 180 ? `${bio.slice(0, 177)}...` : bio;
 }
 
-/*
- * isPaidPlan
- * Checks whether a recruiter plan can access paid talent features.
- * Returns true when the plan is allowed by billing access rules.
- */
-function isPaidPlan(plan: string | null | undefined): boolean {
-  if (plan === PlanTier.PRO) {
-    return canAccessRecruiterPaidFeature(PlanTier.PRO);
-  }
-
-  if (plan === PlanTier.ENTERPRISE) {
-    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
-  }
-
-  return canAccessRecruiterPaidFeature(PlanTier.FREE);
-}
 
 /*
  * GET /api/recruiter/talent
@@ -93,7 +77,7 @@ export async function GET(req: NextRequest) {
     where: { role: "SEEKER", seekerProfile: { isNot: null } },
   });
 
-  if (!isPaidPlan(recruiter?.plan)) {
+  if (!canAccessRecruiterPaidFeature(recruiter?.plan)) {
     // FREE plan: return blurred seeker items (up to DEMO_THRESHOLD) + demoCount.
     // Names are blurred to "First L." server-side. Email and image are nulled.
     // Client uses these alongside DEMO_ENGINEERS static cards for mix-mode grid.
