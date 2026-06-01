@@ -193,3 +193,15 @@ Plans:
 | 13. Real-time Availability Signal (v1.1) | 5/5 | Complete    | 2026-05-26 |
 | 14. Recruiter Analytics Dashboard (v1.1) | 3/3 | Complete    | 2026-05-27 |
 | 15. Company Verification (v1.1) | 0/TBD | Not started | - |
+
+### Phase 16: Free Plan Demo Preview
+
+**Goal:** Convert FREE-plan recruiters to paid by replacing the locked talent pool wall with 6 realistic demo engineer cards that demonstrate product value before paywall. Pure UI/UX change — no schema migrations.
+**Requirements**: [DEMO-01, DEMO-02, DEMO-03, DEMO-04, DEMO-05, DEMO-06, DEMO-07, DEMO-08, DEMO-09, DEMO-10]
+**Depends on:** Phase 10 (talent pool UI), Phase 13 (seekingStatus)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Static demo-engineers.ts constant (6 profiles + DemoEngineerProfile type) + demoCount API field + FREE plan unblocked response
+- [ ] 16-02-PLAN.md — DemoEngineerCard component (Preview chip, full name, score, Unlock Now) + TalentUpgradeModal (3 tiers, checkout links)
+- [ ] 16-03-PLAN.md — TalentPoolClient refactor: demo/mix logic, disabled search tooltip, banner, upgrade modal wiring
