@@ -63,6 +63,20 @@ enum PlanTier {
   ENTERPRISE
 }
 
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum SeekingStatus {
+  ACTIVELY_LOOKING
+  OPEN_TO_OFFERS
+  NOT_LOOKING
+}
+
 enum SubStatus {
   ACTIVE
   PAST_DUE
@@ -90,6 +104,8 @@ model User {
   onboardingCompleted Boolean @default(false)
   onboardingStep      Int?
   onboardingDraft     Json?
+  verificationStatus   VerificationStatus @default(NOT_SUBMITTED)
+  seekingStatus        SeekingStatus      @default(OPEN_TO_OFFERS)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -112,6 +128,7 @@ model User {
   savedJobs            SavedJob[]
   dismissedJobs        DismissedJob[]
   subscription         Subscription?
+  verificationReviews  VerificationReview[]
 }
 
 model Account {
@@ -175,6 +192,16 @@ model SeekerProfile {
   linkedinUrl     String?
   githubUrl       String?
   twitterUrl      String?
+
+  githubUsername         String?
+  videoIntroUrl          String?
+  topProjects            Json?
+  salaryMinUsd           Int?
+  salaryMaxUsd           Int?
+  verificationNotes      String?   @db.Text
+  verificationReviewedAt DateTime?
+  verificationReviewedBy String?
+  submittedForReviewAt   DateTime?
 
   digestEnabled Boolean @default(false)
 
@@ -491,4 +518,20 @@ model Education {
   updatedAt DateTime @updatedAt
 
   @@index([seekerProfileId])
+}
+
+model VerificationReview {
+  id         String             @id @default(cuid())
+  userId     String
+  reviewedBy String?
+  status     VerificationStatus
+  scoreGiven Int?
+  notes      Json?
+  createdAt  DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
