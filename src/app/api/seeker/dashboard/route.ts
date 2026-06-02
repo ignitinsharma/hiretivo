@@ -27,10 +27,19 @@ export async function GET() {
 
   const userId = session.user.id;
 
-  // Fetch seeker profile
-  const seekerProfile = await prisma.seekerProfile.findUnique({
-    where: { userId },
-  });
+  // Fetch user verification status and seeker profile in parallel
+  const [userRecord, seekerProfile] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        verificationStatus: true,
+        seekerProfile: { select: { verificationNotes: true } },
+      },
+    }),
+    prisma.seekerProfile.findUnique({
+      where: { userId },
+    }),
+  ]);
 
   // Fetch applied job IDs for skill gap exclusion
   const appliedJobIds = seekerProfile
@@ -58,6 +67,10 @@ export async function GET() {
     skillGap,
     digest: {
       enabled: seekerProfile?.digestEnabled ?? false,
+    },
+    verification: {
+      status: userRecord?.verificationStatus ?? 'NOT_SUBMITTED',
+      verificationNotes: userRecord?.seekerProfile?.verificationNotes ?? null,
     },
   };
 
