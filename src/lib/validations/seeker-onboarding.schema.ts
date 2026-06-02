@@ -158,12 +158,28 @@ export interface EducationEntry {
 // ---------------------------------------------------------------------------
 
 /*
+ * httpUrl enforces http/https protocol — blocks javascript:, data:, and other XSS vectors
+ * that z.string().url() alone allows.
+ */
+const httpUrl = z
+  .string()
+  .url()
+  .refine((u) => {
+    try {
+      const { protocol } = new URL(u);
+      return protocol === 'https:' || protocol === 'http:';
+    } catch {
+      return false;
+    }
+  }, 'Only http(s) URLs are allowed');
+
+/*
  * projectEntrySchema
- * Validates a single project entry: title, valid URL, and a minimum description.
+ * Validates a single project entry: title, valid http(s) URL, and a minimum description.
  */
 export const projectEntrySchema = z.object({
   title: z.string().trim().min(1, 'Project title is required'),
-  url: z.string().trim().url('Please enter a valid URL'),
+  url: httpUrl.describe('Project URL'),
   description: z.string().trim().min(20, 'Description must be at least 20 characters'),
 });
 

@@ -25,9 +25,12 @@ export async function sendVerificationReviewEmail({
   approved,
   notes,
 }: SendVerificationReviewEmailInput): Promise<void> {
-  const greeting = recipientName?.trim()
-    ? `Hi ${recipientName.trim()},`
-    : "Hi there,";
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const safeName = recipientName?.trim() ? esc(recipientName.trim()) : null;
+  const safeNotes = notes ? esc(notes) : null;
+  const greeting = safeName ? `Hi ${safeName},` : "Hi there,";
 
   const subject = approved
     ? "Congratulations — your Hiretivo verification was approved!"
@@ -47,7 +50,7 @@ export async function sendVerificationReviewEmail({
 
   const rejectedHtml = `
     <p>Thank you for submitting your profile for verification. After our review, we were unable to approve your verification at this time.</p>
-    ${notes ? `<p><strong>Reviewer notes:</strong> ${notes}</p>` : ""}
+    ${safeNotes ? `<p><strong>Reviewer notes:</strong> ${safeNotes}</p>` : ""}
     <p>You may update your profile and resubmit for review once you have addressed any gaps.</p>
     <p>
       <a href="${dashboardUrl}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">

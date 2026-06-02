@@ -305,12 +305,17 @@ export async function saveProofOfWork(data: {
     return { success: false, error: "Forbidden" };
   }
 
-  // Validate with Zod
+  // Validate with Zod — httpUrl blocks javascript:/data: XSS vectors
+  const httpUrl = z.string().url().refine((u) => {
+    try { const { protocol } = new URL(u); return protocol === 'https:' || protocol === 'http:'; }
+    catch { return false; }
+  }, 'Only http(s) URLs are allowed');
+
   const schema = z.object({
-    githubUrl: z.string().url("Please enter a valid GitHub URL"),
-    linkedinUrl: z.string().url().nullable().optional(),
-    websiteUrl: z.string().url().nullable().optional(),
-    videoIntroUrl: z.string().url().nullable().optional(),
+    githubUrl: httpUrl.refine((u) => /github\.com\/[a-zA-Z0-9_-]+/.test(u), "Please enter a valid GitHub profile URL"),
+    linkedinUrl: httpUrl.nullable().optional(),
+    websiteUrl: httpUrl.nullable().optional(),
+    videoIntroUrl: httpUrl.nullable().optional(),
     projects: projectEntrySchema.array().min(1, "At least one project is required"),
   });
 
@@ -725,14 +730,19 @@ async function sendAdminNotification(opts: {
   userEmail: string;
   profileUrl: string;
 }): Promise<void> {
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const safeName = esc(opts.userName);
+  const safeEmail = esc(opts.userEmail);
+  // profileUrl is admin-internal (cuid-based path, not user-controlled text) — safe to use as href
   await sendEmail({
     from: FROM_EMAIL,
     to: ADMIN_EMAIL,
-    subject: `New engineer submitted for review: ${opts.userName}`,
+    subject: `New engineer submitted for review: ${safeName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>New Verification Submission</h2>
-        <p><strong>${opts.userName}</strong> (${opts.userEmail}) has submitted their profile for verification.</p>
+        <p><strong>${safeName}</strong> (${safeEmail}) has submitted their profile for verification.</p>
         <p>
           <a href="${opts.profileUrl}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">
             Review Profile
