@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
   // Count all seekers with a profile — runs for both FREE and paid paths.
   // Not affected by search filters — always reflects real pool size.
   const demoCount = await prisma.user.count({
-    where: { role: "SEEKER", seekerProfile: { isNot: null } },
+    where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
   });
 
   if (!canAccessRecruiterPaidFeature(recruiter?.plan)) {
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     // Names are blurred to "First L." server-side. Email and image are nulled.
     // Client uses these alongside DEMO_ENGINEERS static cards for mix-mode grid.
     const blurredSeekers = await prisma.user.findMany({
-      where: { role: "SEEKER", seekerProfile: { isNot: null } },
+      where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
       take: DEMO_THRESHOLD,
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
@@ -151,6 +151,7 @@ export async function GET(req: NextRequest) {
 
   const where: Prisma.UserWhereInput = {
     role: "SEEKER",
+    verificationStatus: 'VERIFIED',
     seekerProfile: {
       is: {
         ...(location
