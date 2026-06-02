@@ -31,6 +31,8 @@ interface JobCardProps {
   variant?: "default" | "compact";
   isPreview?: boolean;
   showDescription?: boolean;
+  /** When set, replaces the Apply button with a locked/disabled state and this label. */
+  applyLockedLabel?: string;
 }
 
 function formatEnumLabel(value?: string | null): string | null {
@@ -56,6 +58,7 @@ export function JobCard({
   variant = "default",
   isPreview = false,
   showDescription = false,
+  applyLockedLabel,
 }: JobCardProps) {
   const isCompact = variant === "compact";
   const saveLabel = isSaved
@@ -153,14 +156,26 @@ export function JobCard({
                 Not interested
               </Button>
             )}
-            <Button
-              onClick={onApply}
-              variant="primary"
-              size="sm"
-              disabled={!onApply}
-            >
-              Apply Now
-            </Button>
+            {applyLockedLabel ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled
+                className="cursor-not-allowed"
+                aria-disabled="true"
+              >
+                {applyLockedLabel}
+              </Button>
+            ) : (
+              <Button
+                onClick={onApply}
+                variant="primary"
+                size="sm"
+                disabled={!onApply}
+              >
+                Apply Now
+              </Button>
+            )}
           </div>
         )
       }
