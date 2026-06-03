@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { applicationService } from "@/services/application.service";
 import { CheckCircle2, Briefcase } from "lucide-react";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { UserRole } from "@/constants/enums";
+import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { trackEvent } from "@/lib/analytics";
 
 const RESUME_REQUIRED_ERROR =
@@ -31,11 +33,40 @@ export function ApplyJobModal() {
     selectedCompanyName,
     showExternalConfirm,
   } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
-  const { openEmailVerificationModal } = useUIStore();
+  const { data: session } = useSession();
+  const isSeeker = session?.user?.role === UserRole.SEEKER;
+  const hiretivo = useVerificationStatus();
   const queryClient = useQueryClient();
   const [coverLetter, setCoverLetter] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /*
+   * guardHiretivoVerified
+   * Defense-in-depth check before every apply submission.
+   * Returns true (allow) for non-seekers — the API enforces role.
+   * Returns false silently while the status query loads to avoid acting on
+   * stale null state. Shows a status-aware toast and closes the modal when
+   * the seeker is not Hiretivo-verified.
+   */
+  const guardHiretivoVerified = (): boolean => {
+    if (!isSeeker) return true;
+    if (hiretivo.isLoading) return false;
+    if (hiretivo.isVerified) return true;
+    closeApplyModal();
+    const msg =
+      hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW"
+        ? "Verification is pending — check back soon."
+        : hiretivo.status === "REJECTED"
+          ? "Verification rejected. Check your email for next steps."
+          : "Submit your profile for verification to apply.";
+    toast.error(msg, {
+      action:
+        !hiretivo.status || hiretivo.status === "NOT_SUBMITTED"
+          ? { label: "Start Verification", onClick: () => { window.location.href = "/seeker/settings"; } }
+          : undefined,
+    });
+    return false;
+  };
 
   const handleApplyError = (error: unknown) => {
     const message =
@@ -62,10 +93,7 @@ export function ApplyJobModal() {
 
   const handleConfirmApplied = async () => {
     if (!selectedJobId) return;
-    if (verificationStatus?.requiresVerification) {
-      openEmailVerificationModal();
-      return;
-    }
+    if (!guardHiretivoVerified()) return;
 
     closeApplyModal();
 
@@ -90,10 +118,7 @@ export function ApplyJobModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedJobId) return;
-    if (verificationStatus?.requiresVerification) {
-      openEmailVerificationModal();
-      return;
-    }
+    if (!guardHiretivoVerified()) return;
 
     setIsSubmitting(true);
     try {

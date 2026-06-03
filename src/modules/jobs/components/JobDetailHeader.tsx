@@ -8,7 +8,6 @@ import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
 import { CurrencyCode, UserRole, WorkType } from '@/constants/enums';
 import { SaveJobButton } from '@/modules/jobs/components/SaveJobButton';
-import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
 import { useVerificationStatus } from '@/hooks/use-verification-status';
 import { formatApplicantCount } from '@/lib/jobs/format-applicant-count';
 
@@ -45,22 +44,27 @@ function formatSalary(min: number | null, max: number | null, currency: string |
 }
 
 export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps) {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
   const hiretivo = useVerificationStatus();
 
   /*
    * applyLockedLabel
    * Truthy when the authenticated seeker is not yet Hiretivo-verified.
-   * Drives the disabled Apply button label; undefined means normal Apply flow.
+   * Shows 'Checking...' while the status query is in-flight to prevent a
+   * false 'Get verified to apply' flash for already-verified seekers.
+   * undefined means the normal Apply flow is allowed.
    */
   const applyLockedLabel: string | undefined =
-    isAuth && userRole === UserRole.SEEKER && !hiretivo.isVerified
-      ? hiretivo.status === 'PENDING' || hiretivo.status === 'IN_REVIEW'
-        ? 'Verification pending'
-        : hiretivo.status === 'REJECTED'
-          ? 'Fix profile to apply'
-          : 'Get verified to apply'
+    isAuth && userRole === UserRole.SEEKER
+      ? hiretivo.isLoading
+        ? 'Checking...'
+        : !hiretivo.isVerified
+          ? hiretivo.status === 'PENDING' || hiretivo.status === 'IN_REVIEW'
+            ? 'Verification pending'
+            : hiretivo.status === 'REJECTED'
+              ? 'Fix profile to apply'
+              : 'Get verified to apply'
+          : undefined
       : undefined;
 
   return (
@@ -142,13 +146,7 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
             </Button>
           ) : (
             <Button
-              onClick={() => {
-                if (verificationStatus?.requiresVerification) {
-                  openEmailVerificationModal();
-                  return;
-                }
-                openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl);
-              }}
+              onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
               variant="primary"
               className="px-8 py-3"
             >

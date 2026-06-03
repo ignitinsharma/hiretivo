@@ -57,6 +57,18 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Verification gate — only VERIFIED seekers may record an external application
+  const seekerUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { verificationStatus: true },
+  });
+  if (seekerUser?.verificationStatus !== "VERIFIED") {
+    return NextResponse.json(
+      { error: 'Complete verification to apply to jobs' },
+      { status: 403 },
+    );
+  }
+
   const { success } = await writeRateLimiter.limit(session.user.id);
   if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });

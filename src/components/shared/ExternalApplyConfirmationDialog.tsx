@@ -5,8 +5,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
-import { useUIStore } from '@/store/use-ui-store';
+import { useSession } from 'next-auth/react';
+import { UserRole } from '@/constants/enums';
+import { useVerificationStatus } from '@/hooks/use-verification-status';
 import {
   Dialog,
   DialogContent,
@@ -32,17 +33,38 @@ export function ExternalApplyConfirmationDialog({
 }: ExternalApplyConfirmationDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-  const { data: verificationStatus } = useEmailVerificationStatus();
-  const { openEmailVerificationModal } = useUIStore();
+  const { data: session } = useSession();
+  const isSeeker = session?.user?.role === UserRole.SEEKER;
+  const hiretivo = useVerificationStatus();
 
-  const guardVerifiedEmail = (): boolean => {
-    if (!verificationStatus?.requiresVerification) return true;
-    openEmailVerificationModal();
+  /*
+   * guardVerified
+   * Blocks the action and shows a status-aware toast when a seeker is not
+   * Hiretivo-verified. Returns true for non-seekers — the API enforces role.
+   * Returns false silently while the status query is loading to avoid acting
+   * on stale null state.
+   */
+  const guardVerified = (): boolean => {
+    if (!isSeeker) return true;
+    if (hiretivo.isLoading) return false;
+    if (hiretivo.isVerified) return true;
+    const msg =
+      hiretivo.status === 'PENDING' || hiretivo.status === 'IN_REVIEW'
+        ? 'Verification is pending — check back soon.'
+        : hiretivo.status === 'REJECTED'
+          ? 'Verification rejected. Check your email for next steps.'
+          : 'Submit your profile for verification to apply.';
+    toast.error(msg, {
+      action:
+        !hiretivo.status || hiretivo.status === 'NOT_SUBMITTED'
+          ? { label: 'Start Verification', onClick: () => { window.location.href = '/seeker/settings'; } }
+          : undefined,
+    });
     return false;
   };
 
   const confirmApplied = async () => {
-    if (!guardVerifiedEmail()) return;
+    if (!guardVerified()) return;
 
     setIsConfirming(true);
     try {
@@ -86,7 +108,7 @@ export function ExternalApplyConfirmationDialog({
       <Button
         type="button"
         onClick={() => {
-          if (!guardVerifiedEmail()) return;
+          if (!guardVerified()) return;
           trackEvent('apply_job', {
             apply_type: 'external',
             stage: 'attempt',
@@ -103,7 +125,7 @@ export function ExternalApplyConfirmationDialog({
       <Button
         type="button"
         onClick={() => {
-          if (!guardVerifiedEmail()) return;
+          if (!guardVerified()) return;
           setIsOpen(true);
         }}
         className="w-full rounded-full bg-gray-100 font-semibold text-foreground transition-transform hover:scale-105 active:scale-95"

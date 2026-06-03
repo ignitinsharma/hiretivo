@@ -12,7 +12,6 @@ import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SaveJobButton } from "@/modules/jobs/components/SaveJobButton";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 interface RecommendedJob {
@@ -52,22 +51,27 @@ export function JobDetailSidebar({
   userRole,
   recommendedJobs,
 }: JobDetailSidebarProps) {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
   const hiretivo = useVerificationStatus();
 
   /*
    * applyLockedLabel
    * Truthy when the authenticated seeker is not yet Hiretivo-verified.
-   * Drives the disabled Apply button label; undefined means normal Apply flow.
+   * Shows 'Checking...' while status query is in-flight to prevent a false
+   * 'Get verified to apply' flash for already-verified seekers.
+   * undefined means the normal Apply flow is allowed.
    */
   const applyLockedLabel: string | undefined =
-    isAuth && userRole === UserRole.SEEKER && !hiretivo.isVerified
-      ? hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW"
-        ? "Verification pending"
-        : hiretivo.status === "REJECTED"
-          ? "Fix profile to apply"
-          : "Get verified to apply"
+    isAuth && userRole === UserRole.SEEKER
+      ? hiretivo.isLoading
+        ? "Checking..."
+        : !hiretivo.isVerified
+          ? hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW"
+            ? "Verification pending"
+            : hiretivo.status === "REJECTED"
+              ? "Fix profile to apply"
+              : "Get verified to apply"
+          : undefined
       : undefined;
 
   return (
@@ -112,15 +116,13 @@ export function JobDetailSidebar({
           ) : (
             <Button
               onClick={() =>
-                verificationStatus?.requiresVerification
-                  ? openEmailVerificationModal()
-                  : openApplyModal(
-                      job.id,
-                      job.title,
-                      job.companyName,
-                      job.applyType,
-                      job.externalApplyUrl,
-                    )
+                openApplyModal(
+                  job.id,
+                  job.title,
+                  job.companyName,
+                  job.applyType,
+                  job.externalApplyUrl,
+                )
               }
               variant="primary"
               className="w-full py-3"

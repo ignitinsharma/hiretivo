@@ -7,15 +7,13 @@ import { toast } from "sonner";
 
 import { JobCard } from "@/components/shared/JobCard";
 import { Card } from "@/components/ui/card";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
 
 export function RecommendedJobsList() {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
   const hiretivo = useVerificationStatus();
   const queryClient = useQueryClient();
   const [dismissingJobId, setDismissingJobId] = useState<string | null>(null);
@@ -84,11 +82,6 @@ export function RecommendedJobsList() {
     applyType?: string,
     externalApplyUrl?: string | null,
   ) => {
-    if (verificationStatus?.requiresVerification) {
-      openEmailVerificationModal();
-      return;
-    }
-
     openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
   };
 
