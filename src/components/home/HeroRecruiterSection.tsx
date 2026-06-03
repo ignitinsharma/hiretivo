@@ -7,7 +7,7 @@
  */
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BadgeCheck, CircleDollarSign, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MOCK_ENGINEER_CARDS } from "@/config/home-page";
 import { EngineerPreviewCard } from "@/components/home/EngineerPreviewCard";
@@ -28,29 +28,43 @@ export function HeroRecruiterSection() {
         <div className="min-w-0">
           {/* Badge */}
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-1.5">
-            <span
-              className="text-xs font-bold text-brand-primary"
+            <BadgeCheck
+              className="h-3.5 w-3.5 text-brand-primary"
               aria-hidden="true"
-            >
-              ✓
-            </span>
+            />
             <span className="text-xs font-semibold text-brand-foreground-muted">
-              500+ Verified Indian Engineers
+              500+ manually verified Indian engineers
             </span>
           </div>
 
           {/* H1 */}
-          <h1 className="mb-5 break-words font-display text-5xl font-bold leading-[1.05] tracking-[-0.04em] text-brand-foreground md:text-[60px]">
-            Hire engineers
+          <h1 className="mb-5 break-words font-display text-5xl font-bold leading-[1.06] tracking-[-0.03em] text-brand-foreground md:text-[60px]">
+            Hire <span className="text-brand-primary">verified</span>
             <br />
-            you can <span className="italic text-brand-primary">trust.</span>
+            engineers you can <br />
+            trust.
           </h1>
 
           {/* Subtext */}
-          <p className="mb-8 max-w-[420px] break-words text-base leading-[1.7] text-brand-foreground-muted">
+          <p className="mb-5 max-w-[460px] break-words text-base leading-[1.7] text-brand-foreground-muted">
             Every engineer is manually reviewed, GitHub-scored, and
             salary-transparent before you see them.
           </p>
+
+          <div className="mb-8 flex max-w-[520px] flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
+              <BadgeCheck className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+              Manual review
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
+              <Github className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+              GitHub score
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
+              <CircleDollarSign className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+              Salary upfront
+            </span>
+          </div>
 
           {/* Primary CTA */}
           <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -78,10 +92,6 @@ export function HeroRecruiterSection() {
             className="group/cards relative h-[500px] [perspective:900px]"
             aria-hidden="true"
           >
-            {/* Soft radial glow behind the stack */}
-            <div className="absolute -left-10 top-0 h-[430px] w-[470px] rounded-full opacity-35 blur-2xl transition-transform duration-500 [background:#7560FF] [background:radial-gradient(circle,rgba(117,96,255,1)_0%,rgba(148,187,233,1)_100%)] group-hover/cards:scale-105" />
-            <div className="absolute left-24 top-28 h-[300px] w-[360px] rounded-full opacity-20 blur-3xl [background:radial-gradient(circle,rgba(117,96,255,1)_0%,rgba(148,187,233,1)_100%)]" />
-
             {/* Card 1 — top, fully visible */}
             <div className="absolute left-0 top-0 z-30 w-[360px] -rotate-2 [transform-style:preserve-3d] transition-transform duration-500 ease-out will-change-transform hover:z-50 hover:[transform:translate3d(-10px,-12px,34px)_rotateX(6deg)_rotateY(9deg)_rotateZ(-3deg)] motion-reduce:transition-none motion-reduce:hover:transform-none">
               <EngineerPreviewCard
