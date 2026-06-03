@@ -52,7 +52,7 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <main>
+      <main className="overflow-x-hidden">
         <HeroRecruiterSection />
         <StatsBarSection />
         <FeaturedEngineersSection />

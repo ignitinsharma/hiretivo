@@ -1,6 +1,7 @@
 /*
  * TestimonialsSection
  * Social proof section — 3 hiring manager testimonials with quote, name, title, stars.
+ * Cards use subtle CSS-only 3D hover while preserving reduced-motion behavior.
  * Displayed below the WhyVerified comparison table.
  * Fully static — no props, no data fetching.
  */
@@ -18,7 +19,7 @@ function StarRating({ count }: { count: number }) {
   return (
     <div className="flex gap-0.5" aria-label={`${count} out of 5 stars`}>
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} className="text-amber-400 text-sm" aria-hidden="true">
+        <span key={i} className="text-sm text-brand-primary" aria-hidden="true">
           ★
         </span>
       ))}
@@ -33,35 +34,49 @@ function StarRating({ count }: { count: number }) {
  */
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-brand-border bg-white p-6 transition-colors hover:border-brand-primary/40">
-      {/* Quote mark */}
-      <span className="font-display text-5xl font-bold leading-none text-brand-primary/20 select-none" aria-hidden="true">
-        &ldquo;
-      </span>
-
-      {/* Quote text */}
-      <p className="font-body flex-1 text-[13px] leading-[1.85] text-brand-foreground -mt-3">
-        {testimonial.quote}
-      </p>
-
-      {/* Footer: avatar + name/title + stars */}
-      <div className="flex items-center gap-3 pt-2 border-t border-brand-border">
-        <InitialsAvatar
-          name={testimonial.name}
-          userId={testimonial.id}
-          fallbackSeed={testimonial.initials}
-          image={testimonial.image}
-          size="md"
-          className="h-9 w-9 shrink-0 bg-brand-surface"
+    <div className="group [perspective:1000px]">
+      <article className="relative flex min-h-[310px] flex-col gap-4 rounded-xl border border-brand-border bg-white p-6 transition-all duration-500 ease-out [transform-style:preserve-3d] hover:-translate-y-1 hover:border-brand-primary/40 hover:[transform:rotateX(4deg)_rotateY(-5deg)_translateY(-4px)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none">
+        <div
+          className="pointer-events-none absolute inset-x-4 top-4 h-16 rounded-lg border border-brand-border bg-brand-surface transition-transform duration-500 group-hover:[transform:translate3d(0,-3px,18px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none"
+          aria-hidden="true"
         />
-        <div className="flex-1 min-w-0">
-          <p className="font-display text-sm font-bold text-brand-foreground truncate">{testimonial.name}</p>
-          <p className="font-body text-xs text-brand-foreground-muted truncate">{testimonial.title}</p>
+
+        {/* Quote mark */}
+        <span
+          className="relative z-10 select-none text-5xl font-bold leading-none text-brand-primary/35 transition-transform duration-500 [transform:translateZ(28px)] group-hover:[transform:translate3d(0,-2px,36px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none"
+          aria-hidden="true"
+        >
+          &ldquo;
+        </span>
+
+        {/* Quote text */}
+        <p className="relative z-10 -mt-3 flex-1 text-[13px] leading-[1.85] text-brand-foreground transition-transform duration-500 [transform:translateZ(22px)] group-hover:[transform:translate3d(0,-1px,30px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+          {testimonial.quote}
+        </p>
+
+        {/* Footer: avatar + name/title + stars */}
+        <div className="relative z-10 flex items-center gap-3 border-t border-brand-border pt-4 transition-transform duration-500 [transform:translateZ(18px)] group-hover:[transform:translate3d(0,0,26px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+          <InitialsAvatar
+            name={testimonial.name}
+            userId={testimonial.id}
+            fallbackSeed={testimonial.initials}
+            image={testimonial.image}
+            size="md"
+            className="h-9 w-9 shrink-0 bg-brand-surface"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-brand-foreground">
+              {testimonial.name}
+            </p>
+            <p className="truncate text-xs text-brand-foreground-muted">
+              {testimonial.title}
+            </p>
+          </div>
+          <StarRating count={testimonial.stars} />
         </div>
-        <StarRating count={testimonial.stars} />
-      </div>
+      </article>
     </div>
-  )
+  );
 }
 
 /*
@@ -71,7 +86,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
  */
 export function TestimonialsSection() {
   return (
-    <section className="border-b border-brand-border bg-white px-4 py-20 md:px-8 md:py-24">
+    <section className="grid-bg border-b border-brand-border bg-white px-4 py-20 md:px-8 md:py-24">
       <div className="mx-auto max-w-6xl">
 
         {/* ── Header ── */}

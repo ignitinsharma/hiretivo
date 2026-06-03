@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
 import { UserRole } from "@/constants/enums";
-import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
+import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { searchRateLimiter } from "@/lib/rate-limit";
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
   });
 
-  if (!canAccessRecruiterPaidFeature(recruiter?.plan)) {
+  if (!canAccessTalentPool(recruiter?.plan)) {
     // FREE plan: return blurred seeker items (up to DEMO_THRESHOLD) + demoCount.
     // Names are blurred to "First L." server-side. Email and image are nulled.
     // Client uses these alongside DEMO_ENGINEERS static cards for mix-mode grid.
@@ -256,6 +256,17 @@ export async function GET(req: NextRequest) {
     prisma.user.count({ where }),
   ]);
 
+  // Batch-load which engineers this recruiter has already unlocked
+  const seekerIds = seekers.map((s) => s.id);
+  const existingUnlocks = await prisma.engineerUnlock.findMany({
+    where: {
+      recruiterId: session.user.id,
+      engineerId: { in: seekerIds },
+    },
+    select: { engineerId: true },
+  });
+  const unlockedSet = new Set(existingUnlocks.map((u) => u.engineerId));
+
   return NextResponse.json({
     data: {
       items: seekers.map((seeker) => {
@@ -274,6 +285,7 @@ export async function GET(req: NextRequest) {
           availability: profile?.availability ?? null,
           resumeKey: Boolean(profile?.resumeKey),
           skills: profile?.skills.map((item) => item.skill.name) ?? [],
+          isUnlocked: unlockedSet.has(seeker.id),
         };
       }),
       total,

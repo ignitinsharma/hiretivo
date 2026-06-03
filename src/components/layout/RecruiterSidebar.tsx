@@ -92,9 +92,12 @@ function RecruiterSidebarInner({
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const currentPlan = session?.user?.plan ?? PlanTier.FREE;
   const planLabel =
-    currentPlan === PlanTier.ENTERPRISE ? "Enterprise" : currentPlan;
+    currentPlan === PlanTier.SCALE ? "Scale"
+    : currentPlan === PlanTier.GROWTH ? "Growth"
+    : currentPlan === PlanTier.STARTER ? "Starter"
+    : "Free";
   const isPaidPlan =
-    currentPlan === PlanTier.PRO || currentPlan === PlanTier.ENTERPRISE;
+    currentPlan === PlanTier.STARTER || currentPlan === PlanTier.GROWTH || currentPlan === PlanTier.SCALE;
 
   useEffect(() => {
     async function fetchSettings() {
@@ -161,7 +164,7 @@ function RecruiterSidebarInner({
                       : "border-brand-border bg-brand-surface text-brand-foreground-muted",
                   )}
                 >
-                  {planLabel === "Enterprise" ? "Ente." : planLabel}
+                  {planLabel}
                 </span>
               </Link>
               <SidebarToggle />

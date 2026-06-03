@@ -59,8 +59,9 @@ enum WorkType {
 
 enum PlanTier {
   FREE
-  PRO
-  ENTERPRISE
+  STARTER
+  GROWTH
+  SCALE
 }
 
 enum VerificationStatus {
@@ -129,6 +130,8 @@ model User {
   dismissedJobs        DismissedJob[]
   subscription         Subscription?
   verificationReviews  VerificationReview[]
+  engineerUnlocksAsRecruiter EngineerUnlock[] @relation("RecruiterUnlocks")
+  engineerUnlocksAsEngineer  EngineerUnlock[] @relation("EngineerUnlocks")
 }
 
 model Account {
@@ -533,5 +536,23 @@ model VerificationReview {
 
   @@index([userId])
   @@index([status])
+  @@index([createdAt])
+}
+
+model EngineerUnlock {
+  id          String   @id @default(cuid())
+  recruiterId String
+  engineerId  String
+  // "talent_pool" = counts against quota | "application_auto" = free, never counted
+  source      String   @default("talent_pool")
+  createdAt   DateTime @default(now())
+
+  recruiter User @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
+  engineer  User @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, engineerId])
+  @@index([recruiterId])
+  @@index([engineerId])
+  @@index([source])
   @@index([createdAt])
 }

@@ -108,19 +108,17 @@ export const WORK_TYPE_VALUES = [WorkType.REMOTE, WorkType.HYBRID, WorkType.ONSI
 
 export enum PlanTier {
   FREE = "FREE",
-  PRO = "PRO",
-  ENTERPRISE = "ENTERPRISE",
+  STARTER = "STARTER",
+  GROWTH = "GROWTH",
+  SCALE = "SCALE",
 }
 
-export const PLAN_TIER_VALUES = [PlanTier.FREE, PlanTier.PRO, PlanTier.ENTERPRISE] as const;
-
-export const RECRUITER_PAID_FEATURE_VALUES = [
-  "talent_pool",
-  "interview_scheduling",
-  "ai_candidate_summaries",
+export const PLAN_TIER_VALUES = [
+  PlanTier.FREE,
+  PlanTier.STARTER,
+  PlanTier.GROWTH,
+  PlanTier.SCALE,
 ] as const;
-
-export type RecruiterPaidFeature = (typeof RECRUITER_PAID_FEATURE_VALUES)[number];
 
 export enum InterviewStatus {
   SCHEDULED = "SCHEDULED",
@@ -173,7 +171,9 @@ export const BILLING_PERIOD_VALUES = [BillingPeriod.MONTHLY, BillingPeriod.ANNUA
 
 export enum PricingTierId {
   FREE = "free",
-  PRO = "pro",
+  STARTER = "starter",
+  GROWTH = "growth",
+  SCALE = "scale",
 }
 
 export enum AiMessageRole {

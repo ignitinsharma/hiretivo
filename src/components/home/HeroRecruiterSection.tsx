@@ -22,10 +22,10 @@ export function HeroRecruiterSection() {
     MOCK_ENGINEER_CARDS;
 
   return (
-    <section className="dot-grid relative overflow-hidden bg-white px-4 py-20 md:px-8 md:py-24">
-      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_520px]">
+    <section className="grid-bg relative overflow-hidden bg-white px-4 py-20 md:px-8 md:py-24">
+      <div className="relative z-10 mx-auto grid max-w-7xl min-w-0 items-center gap-14 lg:grid-cols-[1fr_520px]">
         {/* ── LEFT: copy ── */}
-        <div>
+        <div className="min-w-0">
           {/* Badge */}
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-1.5">
             <span
@@ -40,14 +40,14 @@ export function HeroRecruiterSection() {
           </div>
 
           {/* H1 */}
-          <h1 className="mb-5 font-display text-5xl font-bold leading-[1.05] tracking-[-0.04em] text-brand-foreground md:text-[60px]">
+          <h1 className="mb-5 break-words font-display text-5xl font-bold leading-[1.05] tracking-[-0.04em] text-brand-foreground md:text-[60px]">
             Hire engineers
             <br />
             you can <span className="italic text-brand-primary">trust.</span>
           </h1>
 
           {/* Subtext */}
-          <p className="mb-8 max-w-[420px] text-base leading-[1.7] text-brand-foreground-muted">
+          <p className="mb-8 max-w-[420px] break-words text-base leading-[1.7] text-brand-foreground-muted">
             Every engineer is manually reviewed, GitHub-scored, and
             salary-transparent before you see them.
           </p>

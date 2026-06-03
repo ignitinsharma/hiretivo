@@ -92,7 +92,7 @@ function PaidPlanCard({
   plan,
   subscription,
 }: {
-  plan: PlanTier.PRO | PlanTier.ENTERPRISE;
+  plan: PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE;
   subscription: SubscriptionStatusData["subscription"];
 }) {
   const portalMutation = useMutation({
@@ -110,33 +110,25 @@ function PaidPlanCard({
     ? formatDate(subscription.currentPeriodEnd)
     : null;
   const cancelsAtPeriodEnd = subscription?.cancelAtPeriodEnd === true;
-  const isEnterprise = plan === PlanTier.ENTERPRISE;
+  const planLabel =
+    plan === PlanTier.SCALE ? "Scale"
+    : plan === PlanTier.GROWTH ? "Growth"
+    : "Starter";
 
   return (
-    <Card
-      className={cn(
-        "max-w-2xl border-slate-200 bg-white",
-        plan === PlanTier.PRO && "border-brand-primary/30",
-      )}
-    >
+    <Card className="max-w-2xl border-brand-primary/30 border-slate-200 bg-white">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-xl">
-            {isEnterprise ? (
-              <CreditCard className="h-5 w-5 text-black" aria-hidden />
-            ) : (
-              <Crown className="h-5 w-5 text-black" aria-hidden />
-            )}
-            {isEnterprise ? "Enterprise plan" : "PRO plan"}
+            <Crown className="h-5 w-5 text-black" aria-hidden />
+            {planLabel} plan
           </CardTitle>
           <Badge variant="default" className={STATUS_STYLES[status]}>
             {STATUS_LABELS[status]}
           </Badge>
         </div>
         <CardDescription>
-          {isEnterprise
-            ? "Contact your account manager for contract and seat changes."
-            : "Your recruiter workspace has PRO hiring tools enabled."}
+          Your recruiter workspace has {planLabel} hiring tools enabled.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -208,11 +200,14 @@ export function BillingTabContent() {
       </div>
 
       {data.plan === PlanTier.FREE && <FreePlanCard />}
-      {data.plan === PlanTier.PRO && (
-        <PaidPlanCard plan={PlanTier.PRO} subscription={data.subscription} />
+      {data.plan === PlanTier.STARTER && (
+        <PaidPlanCard plan={PlanTier.STARTER} subscription={data.subscription} />
       )}
-      {data.plan === PlanTier.ENTERPRISE && (
-        <PaidPlanCard plan={PlanTier.ENTERPRISE} subscription={data.subscription} />
+      {data.plan === PlanTier.GROWTH && (
+        <PaidPlanCard plan={PlanTier.GROWTH} subscription={data.subscription} />
+      )}
+      {data.plan === PlanTier.SCALE && (
+        <PaidPlanCard plan={PlanTier.SCALE} subscription={data.subscription} />
       )}
     </div>
   );

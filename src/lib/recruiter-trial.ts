@@ -6,11 +6,16 @@ export function isRecruiterTrialActive(): boolean {
   return new Date() < new Date(end);
 }
 
+/*
+ * getRecruiterJobLimit
+ * Returns max active job posts for the plan, or null for unlimited.
+ * Trial override (env-flag) grants 4 posts to any FREE recruiter during the launch window.
+ */
 export function getRecruiterJobLimit(
   plan: PlanTier | string | null | undefined,
 ): number | null {
-  if (plan === PlanTier.ENTERPRISE) return null;
-  if (plan === PlanTier.PRO) return 10;
+  if (plan === PlanTier.SCALE || plan === PlanTier.GROWTH) return null;
+  if (plan === PlanTier.STARTER) return 2;
   if (isRecruiterTrialActive()) return 4;
-  return 1;
+  return 0;
 }

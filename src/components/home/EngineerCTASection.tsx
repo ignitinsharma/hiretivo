@@ -1,13 +1,13 @@
 /*
  * EngineerCTASection
  * Engineer conversion CTA — "Get your Hiretivo badge. Free forever."
- * Layout: before/after comparison cards flanking centered CTA copy.
+ * Layout: grid-backed CTA copy with verified profile/badge preview.
  * Fully static — no props, no data fetching.
  */
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Check, X } from 'lucide-react'
+import { BadgeCheck, Check, ShieldCheck, X } from 'lucide-react'
 
 interface BeforeAfterRow {
   label: string
@@ -42,50 +42,94 @@ const BEFORE_AFTER_ROWS: BeforeAfterRow[] = [
 ]
 
 /*
- * BeforeCard
- * "Before Verification" state card — shows unverified profile metrics.
+ * SignalRow
+ * Compact before/after row used inside the proof cards.
  */
-function BeforeCard() {
+function SignalRow({ label, value, tone }: { label: string; value: string; tone: 'before' | 'after' }) {
+  const isAfter = tone === 'after'
+
   return (
-    <div className="w-full rounded-xl border border-brand-danger/20 bg-white p-5">
-      <p className="mb-4 text-[11px] font-bold uppercase tracking-[1.2px] text-brand-danger/70">
-        Before
-      </p>
-      <div className="flex flex-col gap-3">
-        {BEFORE_AFTER_ROWS.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-4 rounded-lg bg-brand-surface px-3 py-2.5">
-            <p className="text-xs font-medium text-brand-foreground-muted">{row.label}</p>
-            <div className="flex items-center gap-1.5">
-              <X className="h-3.5 w-3.5 text-brand-danger" aria-hidden="true" />
-              <span className="text-xs font-bold text-brand-danger">{row.before}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div
+      className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 ${
+        isAfter
+          ? 'border-brand-primary/15 bg-brand-primary/[0.035]'
+          : 'border-brand-border bg-brand-surface'
+      }`}
+    >
+      <span className="text-xs font-medium text-brand-foreground-muted">{label}</span>
+      <span className={`text-right text-xs font-bold ${isAfter ? 'text-brand-success' : 'text-brand-danger'}`}>
+        {value}
+      </span>
     </div>
   )
 }
 
 /*
- * AfterCard
- * "After Verification" state card — shows verified profile metrics.
+ * BadgeSignalBoard
+ * Product proof-card board showing the verified profile signal before and after review.
  */
-function AfterCard() {
+function BadgeSignalBoard() {
   return (
-    <div className="w-full rounded-xl border border-brand-primary/25 bg-white p-5">
-      <p className="mb-4 text-[11px] font-bold uppercase tracking-[1.2px] text-brand-primary">
-        After verification
-      </p>
-      <div className="flex flex-col gap-3">
-        {BEFORE_AFTER_ROWS.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-4 rounded-lg bg-brand-primary/[0.04] px-3 py-2.5">
-            <p className="text-xs font-medium text-brand-foreground-muted">{row.label}</p>
-            <div className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 text-brand-success" aria-hidden="true" />
-              <span className="text-xs font-bold text-brand-success">{row.after}</span>
+    <div className="grid-bg relative min-w-0 overflow-visible rounded-xl border border-brand-border bg-brand-surface p-4 md:p-6">
+      <div className="absolute inset-0 rounded-xl bg-white/55" aria-hidden="true" />
+
+      <div className="relative z-10 grid min-w-0 gap-4">
+        <article className="group relative z-20 min-w-0 overflow-hidden rounded-xl border border-brand-primary/25 bg-white p-5 transition-all duration-500 ease-out [perspective:1000px] [transform-style:preserve-3d] hover:z-50 hover:-translate-y-1 hover:border-brand-primary/45 hover:[transform:rotateX(4deg)_rotateY(-5deg)_translateY(-4px)] md:mx-auto md:w-[82%] md:rotate-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none">
+          <div className="flex items-start justify-between gap-4 transition-transform duration-500 [transform:translateZ(28px)] group-hover:[transform:translate3d(0,-2px,38px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-brand-primary/20 bg-brand-primary/[0.06] text-lg font-bold text-brand-primary">
+                HV
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-brand-foreground">Hiretivo Verified</p>
+                <p className="text-xs text-brand-foreground-muted">Profile signal</p>
+              </div>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand-primary/15 bg-brand-primary/[0.06] text-brand-primary">
+              <BadgeCheck className="h-5 w-5" aria-hidden="true" />
+            </span>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-brand-primary/20 bg-brand-primary/[0.035] p-4 transition-transform duration-500 [transform:translateZ(20px)] group-hover:[transform:translate3d(0,-1px,32px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+            <div className="flex items-center justify-between gap-4 border-b border-brand-primary/15 pb-3">
+              <p className="text-[11px] font-bold uppercase tracking-[1.3px] text-brand-primary">
+                Verification badge
+              </p>
+              <ShieldCheck className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+            </div>
+            <div className="mt-4 grid gap-2">
+              {BEFORE_AFTER_ROWS.map((row) => (
+                <SignalRow key={row.label} label={row.label} value={row.after} tone="after" />
+              ))}
             </div>
           </div>
-        ))}
+        </article>
+
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+          <article className="group relative z-10 min-w-0 overflow-hidden rounded-xl border border-brand-border bg-white p-4 transition-all duration-500 ease-out [perspective:1000px] [transform-style:preserve-3d] hover:z-50 hover:-translate-y-1 hover:border-brand-danger/30 hover:[transform:rotateX(3deg)_rotateY(4deg)_translateY(-4px)] md:-rotate-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none">
+            <div className="mb-3 flex items-center gap-2 text-brand-danger transition-transform duration-500 [transform:translateZ(20px)] group-hover:[transform:translate3d(0,-1px,30px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+              <X className="h-4 w-4" aria-hidden="true" />
+              <p className="text-[11px] font-bold uppercase tracking-[1.2px]">Before</p>
+            </div>
+            <div className="grid gap-2 transition-transform duration-500 [transform:translateZ(16px)] group-hover:[transform:translate3d(0,-1px,26px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+              {BEFORE_AFTER_ROWS.map((row) => (
+                <SignalRow key={row.before} label={row.label} value={row.before} tone="before" />
+              ))}
+            </div>
+          </article>
+
+          <article className="group relative z-10 min-w-0 overflow-hidden rounded-xl border border-brand-primary/25 bg-white p-4 transition-all duration-500 ease-out [perspective:1000px] [transform-style:preserve-3d] hover:z-50 hover:-translate-y-1 hover:border-brand-primary/45 hover:[transform:rotateX(4deg)_rotateY(-4deg)_translateY(-4px)] md:rotate-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none">
+            <div className="mb-3 flex items-center gap-2 text-brand-primary transition-transform duration-500 [transform:translateZ(20px)] group-hover:[transform:translate3d(0,-1px,30px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+              <Check className="h-4 w-4" aria-hidden="true" />
+              <p className="text-[11px] font-bold uppercase tracking-[1.2px]">After verification</p>
+            </div>
+            <div className="grid gap-2 transition-transform duration-500 [transform:translateZ(16px)] group-hover:[transform:translate3d(0,-1px,26px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+              {BEFORE_AFTER_ROWS.map((row) => (
+                <SignalRow key={row.after} label={row.label} value={row.after} tone="after" />
+              ))}
+            </div>
+          </article>
+        </div>
       </div>
     </div>
   )
@@ -100,25 +144,25 @@ function AfterCard() {
 export function EngineerCTASection() {
   return (
     <section className="border-b border-brand-border bg-white px-4 py-20 md:px-8 md:py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="overflow-hidden rounded-xl border border-brand-border bg-white lg:grid lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="mx-auto max-w-6xl min-w-0">
+        <div className="min-w-0 overflow-hidden rounded-xl border border-brand-border bg-white lg:grid lg:grid-cols-[0.9fr_1.1fr]">
 
           {/* ── Left CTA copy ── */}
           <div className="grid-bg relative isolate flex flex-col justify-center overflow-hidden bg-brand-surface p-6 text-brand-foreground md:p-10 lg:p-12">
             <div className="absolute inset-0 bg-white/55" />
             <div className="absolute left-0 top-0 h-full w-1 bg-brand-primary" />
 
-            <div className="relative z-10">
+            <div className="relative z-10 min-w-0">
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[1.6px] text-brand-primary">
                 Are you an Indian engineer?
               </p>
 
-              <h2 className="text-3xl font-bold leading-tight tracking-tight md:text-5xl">
+              <h2 className="break-words text-3xl font-bold leading-tight tracking-tight md:text-5xl">
                 Get your Hiretivo <span className="text-brand-primary">✓</span> badge.<br />
                 Free forever.
               </h2>
 
-              <p className="mt-5 max-w-md text-base leading-relaxed text-brand-foreground-muted">
+              <p className="mt-5 max-w-md break-words text-base leading-relaxed text-brand-foreground-muted">
                 Apply once, get reviewed, and show recruiters that your skills,
                 salary range, and availability are already verified.
               </p>
@@ -140,7 +184,7 @@ export function EngineerCTASection() {
             </div>
           </div>
 
-          {/* ── Right proof cards ── */}
+          {/* ── Right proof preview ── */}
           <div className="bg-gradient-to-br from-white via-white to-brand-primary/[0.03] p-5 md:p-8 lg:p-10">
             <div className="mb-5 flex items-end justify-between gap-4">
               <div>
@@ -152,10 +196,7 @@ export function EngineerCTASection() {
                 </h3>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <BeforeCard />
-              <AfterCard />
-            </div>
+            <BadgeSignalBoard />
           </div>
         </div>
       </div>

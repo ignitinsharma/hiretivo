@@ -35,8 +35,8 @@ function mapStatus(status: string): "ACTIVE" | "CANCELED" | "PAST_DUE" {
   return "ACTIVE";
 }
 
-function getPlanForProduct(productId: string): PlanTier {
-  return DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.PRO;
+function getPlanForProduct(productId: string): PlanTier | null {
+  return DODO_PRODUCT_TO_PLAN[productId] ?? null;
 }
 
 function getSubscriptionUserId(sub: Subscription): string | null {
@@ -82,6 +82,10 @@ async function handleSubscriptionActive(sub: Subscription): Promise<void> {
 
   const status = mapStatus(sub.status);
   const plan = getPlanForProduct(sub.product_id);
+  if (!plan) {
+    console.error(`Unknown product ID ${sub.product_id} — cannot determine plan tier. Skipping plan update.`);
+    return;
+  }
 
   await prisma.$transaction([
     prisma.subscription.upsert({
@@ -121,6 +125,10 @@ async function handleSubscriptionRenewed(sub: Subscription): Promise<void> {
 
   const status = mapStatus(sub.status);
   const plan = getPlanForProduct(sub.product_id);
+  if (!plan) {
+    console.error(`Unknown product ID ${sub.product_id} — cannot determine plan tier. Skipping plan update.`);
+    return;
+  }
 
   await prisma.$transaction([
     prisma.subscription.upsert({
