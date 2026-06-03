@@ -272,11 +272,19 @@ export async function GET(req: NextRequest) {
       items: seekers.map((seeker) => {
         const profile = seeker.seekerProfile;
 
+        const isUnlocked = unlockedSet.has(seeker.id);
+        const nameParts = (seeker.name ?? "").trim().split(/\s+/);
+        const lockedName =
+          nameParts.length >= 2
+            ? `${nameParts[0]} ${nameParts[nameParts.length - 1]!.charAt(0)}.`
+            : (nameParts[0] ?? "Engineer");
+
         return {
           id: seeker.id,
-          name: seeker.name,
-          email: seeker.email,
-          image: resolveLogoUrl(seeker.image),
+          isUnlocked,
+          name: isUnlocked ? seeker.name : lockedName,
+          email: isUnlocked ? seeker.email : null,
+          image: isUnlocked ? resolveLogoUrl(seeker.image) : null,
           headline: profile?.headline ?? null,
           bioExcerpt: getBioExcerpt(profile?.bio),
           location: profile?.location ?? null,
@@ -285,7 +293,6 @@ export async function GET(req: NextRequest) {
           availability: profile?.availability ?? null,
           resumeKey: Boolean(profile?.resumeKey),
           skills: profile?.skills.map((item) => item.skill.name) ?? [],
-          isUnlocked: unlockedSet.has(seeker.id),
         };
       }),
       total,

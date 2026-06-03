@@ -3,6 +3,8 @@
 import { Mail, Search, X } from "lucide-react";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
@@ -91,10 +93,12 @@ function TalentCard({
   talent,
   onView,
   onUnlock,
+  isUnlocking,
 }: {
   talent: TalentListItem;
   onView: (id: string) => void;
   onUnlock?: () => void;
+  isUnlocking?: boolean;
 }): ReactElement {
   const visibleSkills = talent.skills.slice(0, MAX_CARD_SKILLS);
   const hiddenSkillCount = Math.max(talent.skills.length - MAX_CARD_SKILLS, 0);
@@ -151,8 +155,9 @@ function TalentCard({
             onClick={onUnlock}
             variant="secondary"
             className="flex-1"
+            disabled={isUnlocking}
           >
-            Unlock Profile
+            {isUnlocking ? "Unlocking…" : "Unlock Profile"}
           </Button>
         ) : (
           <>
@@ -243,6 +248,8 @@ export function TalentPoolClient(): ReactElement {
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeTeaser, setUpgradeTeaser] = useState<string | undefined>(undefined);
+  const [unlockingId, setUnlockingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const talentQuery = useFetchTalent({ q: debouncedSearch });
   const isFreePlan = talentQuery.data?.isFreePlan ?? false;
@@ -259,6 +266,30 @@ export function TalentPoolClient(): ReactElement {
   function openUpgrade(teaser?: string) {
     setUpgradeTeaser(teaser);
     setUpgradeModalOpen(true);
+  }
+
+  /*
+   * handleUnlock
+   * Calls POST /api/recruiter/talent/[id]/unlock and refetches the talent list.
+   * Idempotent — re-unlocking returns 200 without consuming quota.
+   */
+  async function handleUnlock(engineerId: string) {
+    setUnlockingId(engineerId);
+    try {
+      const res = await fetch(`/api/recruiter/talent/${engineerId}/unlock`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error ?? "Failed to unlock profile. Try again.");
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ["recruiter-talent"] });
+    } catch {
+      toast.error("Network error. Try again.");
+    } finally {
+      setUnlockingId(null);
+    }
   }
 
   // Compute demo cards for mix-mode — only for FREE plan (D-05)
@@ -340,12 +371,15 @@ export function TalentPoolClient(): ReactElement {
               key={talent.id}
               talent={talent}
               onView={setSelectedTalentId}
+              isUnlocking={unlockingId === talent.id}
               onUnlock={
                 isFreePlan
                   ? () =>
                       openUpgrade(
                         `${talent.name} • ${talent.skills.slice(0, 3).join(", ")}`
                       )
+                  : !talent.isUnlocked
+                  ? () => handleUnlock(talent.id)
                   : undefined
               }
             />

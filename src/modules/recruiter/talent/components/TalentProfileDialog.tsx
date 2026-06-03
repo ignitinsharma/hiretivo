@@ -188,7 +188,7 @@ function TalentProfileSkeleton(): ReactElement {
  * Renders the reference-style candidate identity header.
  */
 function TalentProfileHeader({ talent }: { talent: TalentDetail }): ReactElement {
-  const visibleLinks = getVisibleLinks(talent.links);
+  const visibleLinks = talent.links ? getVisibleLinks(talent.links) : [];
   const statusLabel = formatAvailability(talent.availability);
 
   return (

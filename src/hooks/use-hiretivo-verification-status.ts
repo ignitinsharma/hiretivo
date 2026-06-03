@@ -27,7 +27,7 @@ export function useHiretvoVerificationStatus(): {
       const res = await fetch("/api/seeker/verification-status");
       if (!res.ok) throw new Error("Failed to fetch verification status");
       const json = await res.json();
-      const status: HiretvoStatus = json.data?.verificationStatus ?? "NOT_SUBMITTED";
+      const status: HiretvoStatus = json.data?.status ?? "NOT_SUBMITTED";
       return {
         status,
         isVerified: status === "VERIFIED",
