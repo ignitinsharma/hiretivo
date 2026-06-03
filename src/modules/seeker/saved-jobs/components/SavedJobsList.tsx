@@ -8,7 +8,7 @@ import { JobCard } from "@/components/shared/JobCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { useHiretvoVerificationStatus } from "@/hooks/use-hiretivo-verification-status";
 import { useUIStore } from "@/store/use-ui-store";
 
 import { useSavedJobs, useUnsaveJob } from "../queries/use-saved-jobs";
@@ -19,8 +19,8 @@ const SKELETON_ITEMS = Array.from(
 );
 
 export function SavedJobsList() {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
+  const { data: hiretvoStatus } = useHiretvoVerificationStatus();
   const { data: savedJobs, isLoading, isError } = useSavedJobs();
   const unsaveMutation = useUnsaveJob();
 
@@ -105,8 +105,14 @@ export function SavedJobsList() {
               savedJob.application || savedJob.job.isClosed
                 ? undefined
                 : () => {
-                    if (verificationStatus?.requiresVerification) {
-                      openEmailVerificationModal();
+                    if (hiretvoStatus && !hiretvoStatus.isVerified) {
+                      const message =
+                        hiretvoStatus.notSubmitted
+                          ? "Submit your profile for Hiretivo verification before applying."
+                          : hiretvoStatus.isPending
+                          ? "Your verification is under review. You can apply once approved."
+                          : "Your verification was rejected. Check your dashboard for next steps.";
+                      toast.error(message);
                       return;
                     }
                     openApplyModal(

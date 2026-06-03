@@ -13,6 +13,12 @@ import { FEATURED_ENGINEERS } from '@/config/home-page'
 import type { FeaturedEngineer } from '@/config/home-page'
 import { cn } from '@/lib/utils'
 
+const ENGINEER_CARD_POSITIONS = [
+  'md:-rotate-1',
+  'md:translate-y-5 md:rotate-1',
+  'md:-translate-y-2 md:-rotate-1',
+] as const
+
 /*
  * ScoreBarChart
  * Renders the Hiretivo Score bar visualization — a series of vertical bars
@@ -42,14 +48,20 @@ function ScoreBarChart({ bars, score }: { bars: readonly number[]; score: number
  * salary, and Hiretivo Score with bar chart.
  * @param engineer - FeaturedEngineer data object
  */
-function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
+function FeaturedEngineerCard({ engineer, index }: { engineer: FeaturedEngineer; index: number }) {
   const salaryLabel = `$${(engineer.salaryMin / 1000).toFixed(0)}k – $${(engineer.salaryMax / 1000).toFixed(0)}k/yr USD`
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-brand-border bg-white p-6 transition-colors hover:border-brand-primary/40">
+    <div className="group min-w-0 [perspective:1000px]">
+      <article
+        className={cn(
+          'relative flex min-h-[330px] min-w-0 flex-col gap-4 overflow-hidden rounded-xl border border-brand-border bg-white p-6 transition-all duration-500 ease-out [transform-style:preserve-3d] hover:-translate-y-1 hover:border-brand-primary/40 hover:[transform:rotateX(4deg)_rotateY(-5deg)_translateY(-4px)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none',
+          ENGINEER_CARD_POSITIONS[index],
+        )}
+      >
 
       {/* ── Row 1: Avatar + name + verified ── */}
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3 transition-transform duration-500 [transform:translateZ(24px)] group-hover:[transform:translate3d(0,-2px,34px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
         <InitialsAvatar
           name={engineer.name}
           userId={engineer.id}
@@ -79,12 +91,12 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
       </div>
 
       {/* ── Location ── */}
-      <p className="text-xs text-brand-foreground-muted -mt-1">
+      <p className="-mt-1 text-xs text-brand-foreground-muted transition-transform duration-500 [transform:translateZ(18px)] group-hover:[transform:translate3d(0,-1px,28px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
         {engineer.location} {engineer.locationFlag}
       </p>
 
       {/* ── Skills ── */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1.5 transition-transform duration-500 [transform:translateZ(16px)] group-hover:[transform:translate3d(0,-1px,26px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
         {engineer.skills.map((skill) => (
           <span
             key={skill}
@@ -96,16 +108,16 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
       </div>
 
       {/* ── Availability ── */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 transition-transform duration-500 [transform:translateZ(18px)] group-hover:[transform:translate3d(0,-1px,28px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
         <span className="h-2 w-2 rounded-full bg-brand-success" aria-hidden="true" />
         <span className="text-xs font-semibold text-brand-success">Available Now</span>
       </div>
 
       {/* ── Salary ── */}
-      <p className="font-body text-xs font-semibold text-brand-foreground -mt-1">{salaryLabel}</p>
+      <p className="-mt-1 break-words font-body text-xs font-semibold text-brand-foreground transition-transform duration-500 [transform:translateZ(18px)] group-hover:[transform:translate3d(0,-1px,28px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">{salaryLabel}</p>
 
       {/* ── Hiretivo Score + bar chart ── */}
-      <div className="mt-auto flex items-center justify-between border-t border-brand-border pt-4">
+      <div className="mt-auto flex min-w-0 items-center justify-between gap-4 border-t border-brand-border pt-4 transition-transform duration-500 [transform:translateZ(22px)] group-hover:[transform:translate3d(0,0,32px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
         <div>
           <p className="font-body text-[10px] font-bold uppercase tracking-[1.5px] text-brand-foreground-secondary">
             Hiretivo Score
@@ -114,8 +126,11 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
             {engineer.hiretivoScore}
           </p>
         </div>
-        <ScoreBarChart bars={engineer.scoreBars} score={engineer.hiretivoScore} />
+        <div className="shrink-0">
+          <ScoreBarChart bars={engineer.scoreBars} score={engineer.hiretivoScore} />
+        </div>
       </div>
+      </article>
     </div>
   )
 }
@@ -129,7 +144,7 @@ function FeaturedEngineerCard({ engineer }: { engineer: FeaturedEngineer }) {
 export function FeaturedEngineersSection() {
   return (
     <section className="border-b border-brand-border bg-white px-4 py-20 md:px-8 md:py-24">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl min-w-0">
 
         {/* ── Header ── */}
         <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -142,7 +157,7 @@ export function FeaturedEngineersSection() {
             </h2>
           </div>
           <Link
-            href="/engineers"
+            href="/recruiter/talent"
             className="text-sm font-semibold text-brand-primary hover:underline"
           >
             View all engineers →
@@ -150,10 +165,12 @@ export function FeaturedEngineersSection() {
         </div>
 
         {/* ── Engineer cards ── */}
-        <div className="grid gap-5 md:grid-cols-3">
-          {FEATURED_ENGINEERS.map((engineer) => (
-            <FeaturedEngineerCard key={engineer.id} engineer={engineer} />
-          ))}
+        <div className="grid-bg min-w-0 overflow-hidden rounded-xl border border-brand-border bg-brand-surface p-3 md:p-4">
+          <div className="grid gap-4 md:grid-cols-3 md:gap-5">
+            {FEATURED_ENGINEERS.map((engineer, index) => (
+              <FeaturedEngineerCard key={engineer.id} engineer={engineer} index={index} />
+            ))}
+          </div>
         </div>
       </div>
     </section>
