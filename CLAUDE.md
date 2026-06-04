@@ -32,6 +32,45 @@
 5. style={{}}    → className="mt-4" NOT style={{marginTop:16}} [LAST RESORT ONLY]
 ```
 
+### Arbitrary Value Rule (MANDATORY)
+
+Before writing `[Xpx]`, check if a canonical class exists:
+
+- **px divisible by 4** → use scale step: `max-w-[460px]` → `max-w-115` (460÷4=115)
+- **text sizes** → use named scale: `text-[60px]` → `text-6xl`
+- **leading ratios** → use named scale: `leading-[1.7]` → `leading-relaxed`
+- **tracking** → use named scale: `tracking-[-0.03em]` → `tracking-tight`
+
+```
+Arbitrary [X] is ONLY valid when:
+  - Value is NOT divisible by 4 (e.g. 310px, 132px)
+  - It's a ratio/em with no named Tailwind equivalent
+  - It's a CSS feature (perspective, translateZ, transform, blur)
+  - It's sub-pixel micro-typography (10px, 11px, 13px — between xs/sm)
+  - It's a color (must still follow brand token priority)
+```
+
+**Quick canonical lookup:**
+
+| Arbitrary | Canonical |
+|-----------|-----------|
+| `text-[60px]` | `text-6xl` |
+| `text-[48px]` | `text-5xl` |
+| `text-[36px]` | `text-4xl` |
+| `text-[30px]` | `text-3xl` |
+| `leading-[1.5]` | `leading-normal` |
+| `leading-[1.625]` | `leading-relaxed` |
+| `leading-[1.7]` | `leading-relaxed` |
+| `leading-[2]` | `leading-loose` |
+| `tracking-[-0.05em]` | `tracking-tighter` |
+| `tracking-[-0.025em]` | `tracking-tight` |
+| `tracking-[0.025em]` | `tracking-wide` |
+| `max-w-[Xpx]` where X÷4=N | `max-w-N` |
+| `w-[Xpx]` where X÷4=N | `w-N` |
+| `h-[Xpx]` where X÷4=N | `h-N` |
+| `gap-[Xpx]` where X÷4=N | `gap-N` |
+| `p-[Xpx]` where X÷4=N | `p-N` |
+
 ### Imports
 
 ```ts
@@ -286,6 +325,16 @@ className="font-extrabold text-7xl"   // ✅ font-bold
 
 // ❌ NEVER rounded-full on inputs/cards
 className="rounded-full"             // ✅ rounded-lg or rounded-xl
+
+// ❌ NEVER arbitrary pixel/rem values when canonical Tailwind class exists
+className="max-w-[460px]"           // ✅ max-w-md / max-w-lg / max-w-xl / max-w-2xl
+className="max-w-[520px]"           // ✅ max-w-xl or max-w-2xl
+className="leading-[1.7]"           // ✅ leading-7 or leading-relaxed
+className="h-[3.5rem]"             // ✅ h-14
+className="w-[3.5rem]"             // ✅ w-14
+className="gap-[1.5rem]"           // ✅ gap-6
+// Arbitrary [Xpx] ONLY for values with no canonical Tailwind equivalent
+// When in doubt: use the nearest standard Tailwind step, not an exact pixel match
 
 // ❌ NEVER skip comments on functions/routes
 // Every function needs: purpose, return value, key details

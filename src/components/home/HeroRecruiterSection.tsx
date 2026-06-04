@@ -11,6 +11,7 @@ import { ArrowRight, BadgeCheck, CircleDollarSign, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MOCK_ENGINEER_CARDS } from "@/config/home-page";
 import { EngineerPreviewCard } from "@/components/home/EngineerPreviewCard";
+import { DecorativeUnderline } from "./EngineerCTASection";
 
 /*
  * HeroRecruiterSection
@@ -38,30 +39,43 @@ export function HeroRecruiterSection() {
           </div>
 
           {/* H1 */}
-          <h1 className="mb-5 break-words font-display text-5xl font-bold leading-[1.06] tracking-[-0.03em] text-brand-foreground md:text-[60px]">
-            Hire <span className="text-brand-primary">verified</span>
+          <h1 className="mb-5 break-words font-display text-5xl font-bold leading-[1.06] tracking-[-0.03em] text-brand-foreground md:text-6xl">
+            Hire{" "}
+            <span className="relative inline-block text-brand-primary">
+              verified
+              <DecorativeUnderline className="absolute -bottom-3 left-0 h-3 w-full text-brand-primary/70" />
+            </span>
             <br />
             engineers you can <br />
             trust.
           </h1>
 
           {/* Subtext */}
-          <p className="mb-5 max-w-[460px] break-words text-base leading-[1.7] text-brand-foreground-muted">
+          <p className="mb-5 max-w-115 break-words text-base leading-relaxed text-brand-foreground-muted">
             Every engineer is manually reviewed, GitHub-scored, and
             salary-transparent before you see them.
           </p>
 
-          <div className="mb-8 flex max-w-[520px] flex-wrap gap-2">
+          <div className="mb-8 flex max-w-130 flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
-              <BadgeCheck className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+              <BadgeCheck
+                className="h-3.5 w-3.5 text-brand-primary"
+                aria-hidden="true"
+              />
               Manual review
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
-              <Github className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+              <Github
+                className="h-3.5 w-3.5 text-brand-primary"
+                aria-hidden="true"
+              />
               GitHub score
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
-              <CircleDollarSign className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+              <CircleDollarSign
+                className="h-3.5 w-3.5 text-brand-primary"
+                aria-hidden="true"
+              />
               Salary upfront
             </span>
           </div>

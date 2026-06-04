@@ -43,16 +43,18 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
         {/* Quote mark */}
         <span
-          className="relative z-10 select-none text-5xl font-bold leading-none text-brand-primary/35 transition-transform duration-500 [transform:translateZ(28px)] group-hover:[transform:translate3d(0,-2px,36px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none"
+          className="relative z-10 select-none text-5xl font-bold leading-none text-brand-primary transition-transform duration-500 transform-[translateZ(28px)] group-hover:[transform:translate3d(0,-2px,36px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none"
           aria-hidden="true"
         >
           &ldquo;
         </span>
 
         {/* Quote text */}
-        <p className="relative z-10 -mt-3 flex-1 text-[13px] leading-[1.85] text-brand-foreground transition-transform duration-500 [transform:translateZ(22px)] group-hover:[transform:translate3d(0,-1px,30px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
-          {testimonial.quote}
-        </p>
+        <div className="relative z-10 -mt-3 flex flex-1 items-center">
+          <p className="text-[13px] leading-[1.85] text-brand-foreground transition-transform duration-500 [transform:translateZ(22px)] group-hover:[transform:translate3d(0,-1px,30px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+            {testimonial.quote}
+          </p>
+        </div>
 
         {/* Footer: avatar + name/title + stars */}
         <div className="relative z-10 flex items-center gap-3 border-t border-brand-border pt-4 transition-transform duration-500 [transform:translateZ(18px)] group-hover:[transform:translate3d(0,0,26px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
