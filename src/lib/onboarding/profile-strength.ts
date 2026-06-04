@@ -14,7 +14,7 @@ export interface ProfileStrengthResult {
  * Returns percentage (0-100), tier label, and next recommended action.
  */
 export function computeOnboardingStrength(state: {
-  step1: { situation: string | null; experienceLevel: string | null }
+  step1: { situation: string | null; experienceLevel: string | null; city?: string | null; state?: string | null }
   step2: { primaryRole: string; yearsOfExperience: string | null; skills: string[] }
   proofOfWork: { githubUrl: string; projects: Array<unknown> }
   experience: { workExperiences: Array<unknown> }
@@ -26,14 +26,13 @@ export function computeOnboardingStrength(state: {
     availability: string | null
     resume: unknown | null
   }
-  location?: string | null
 }): ProfileStrengthResult {
   let filledWeight = 0
 
   // Group A — About you (12 total)
   if (state.step1.situation) filledWeight += 4
   if (state.step1.experienceLevel) filledWeight += 4
-  if (state.location) filledWeight += 4
+  if (state.step1.city && state.step1.state) filledWeight += 4
 
   // Group B — Role & skills (18 total)
   if (state.step2.primaryRole.trim().length > 0) filledWeight += 6
