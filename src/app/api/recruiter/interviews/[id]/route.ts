@@ -6,6 +6,7 @@ import { sendInterviewRescheduledEmail } from "@/lib/email/interview";
 import { normalizeTimezone } from "@/lib/timezone";
 import { writeRateLimiter } from "@/lib/rate-limit";
 import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
+import { INDIA_TIMEZONE } from "@/modules/india-location";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RouteContext {
@@ -92,7 +93,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       endsAt: updated.endsAt ?? new Date(endsAt),
       meetLink: updated.meetLink,
       scheduledTimeZone: updated.scheduledTimeZone ?? null,
-      viewerTimezone: existing.application.seeker.timezone ?? null,
+      viewerTimezone: existing.application.seeker.timezone ?? INDIA_TIMEZONE,
     }).catch((err: unknown) => {
       console.error("Failed to send interview rescheduled email:", err);
     });
