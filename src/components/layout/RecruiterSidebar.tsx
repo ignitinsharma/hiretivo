@@ -143,7 +143,7 @@ function RecruiterSidebarInner({
         {/* Logo + Toggle */}
         <div
           className={cn(
-            "px-5 py-5 flex items-center gap-3",
+            "px-5 py-5 flex items-start gap-3",
             collapsed && "justify-center px-0",
           )}
         >
@@ -153,12 +153,12 @@ function RecruiterSidebarInner({
             <>
               <Link
                 href="/recruiter/dashboard"
-                className="flex items-center justify-between gap-1 flex-1"
+                className="flex min-w-0 flex-1 flex-col items-start gap-2"
               >
                 <Logo />
                 <span
                   className={cn(
-                    "inline-flex items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
+                    "inline-flex max-w-full items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
                     isPaidPlan
                       ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
                       : "border-brand-border bg-brand-surface text-brand-foreground-muted",
@@ -167,7 +167,7 @@ function RecruiterSidebarInner({
                   {planLabel}
                 </span>
               </Link>
-              <SidebarToggle />
+              <SidebarToggle className="shrink-0" />
             </>
           )}
         </div>
