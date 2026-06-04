@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { invalidateSeekerCache } from "@/lib/match";
 import { uploadFile } from "@/lib/r2";
 import { sendEmail } from "@/lib/resend";
+import { getAppUrl } from "@/lib/config";
 import {
   step1Schema,
   step2Schema,
@@ -28,7 +29,6 @@ type CompleteSeekerOnboardingResult =
   | { success: true; redirectTo: "/seeker/dashboard" }
   | { success: false; error: string; missingStep: MissingSeekerOnboardingStep };
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@hiretivo.com";
@@ -493,7 +493,12 @@ export async function saveCompensation(formData: FormData): Promise<ActionResult
   const salaryMinRaw = formData.get("salaryMin") as string | null;
   const salaryMaxRaw = formData.get("salaryMax") as string | null;
   const availability = (formData.get("availability") as string | null) || null;
-  const contractType = (formData.get("contractType") as string | null) || null;
+  const workPreferenceRaw = (formData.get("workPreference") as string | null) || null;
+  const VALID_WORK_TYPES = ["REMOTE", "HYBRID", "ONSITE"] as const;
+  type ValidWorkType = typeof VALID_WORK_TYPES[number];
+  const workPreference: ValidWorkType | null = VALID_WORK_TYPES.includes(workPreferenceRaw as ValidWorkType)
+    ? (workPreferenceRaw as ValidWorkType)
+    : null;
 
   const salaryMin = salaryMinRaw ? parseInt(salaryMinRaw, 10) : null;
   const salaryMax = salaryMaxRaw ? parseInt(salaryMaxRaw, 10) : null;
@@ -563,7 +568,7 @@ export async function saveCompensation(formData: FormData): Promise<ActionResult
       salaryMinUsd: salaryMin,
       salaryMaxUsd: salaryMax,
       availability,
-      workPreference: contractType as never ?? null,
+      workPreference: workPreference ?? null,
       ...(resumeKey ? { resumeKey } : {}),
     },
     update: {
@@ -575,7 +580,7 @@ export async function saveCompensation(formData: FormData): Promise<ActionResult
       salaryMinUsd: salaryMin,
       salaryMaxUsd: salaryMax,
       availability,
-      workPreference: contractType as never ?? null,
+      workPreference: workPreference ?? null,
       ...(resumeKey ? { resumeKey } : {}),
     },
   });
@@ -712,7 +717,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
   sendAdminNotification({
     userName: user?.name ?? "Unknown",
     userEmail: user?.email ?? "",
-    profileUrl: `${APP_URL}/admin/verification/${userId}`,
+    profileUrl: `${getAppUrl()}/admin/verification/${userId}`,
   }).catch((err) => {
     console.error("[completeSeekerOnboarding] Admin notification failed (non-fatal):", err);
   });

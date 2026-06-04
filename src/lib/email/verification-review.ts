@@ -1,7 +1,7 @@
 import { sendEmail } from "@/lib/resend";
+import { getAppUrl } from "@/lib/config";
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 interface SendVerificationReviewEmailInput {
   toEmail: string;
@@ -36,8 +36,8 @@ export async function sendVerificationReviewEmail({
     ? "Congratulations — your Hiretivo verification was approved!"
     : "Your Hiretivo verification was not approved";
 
-  const approvedUrl = `${APP_URL}/seeker/profile`;
-  const rejectedUrl = `${APP_URL}/seeker/onboarding`;
+  const approvedUrl = `${getAppUrl()}/seeker/profile`;
+  const rejectedUrl = `${getAppUrl()}/seeker/onboarding`;
 
   const approvedHtml = `
     <p>We reviewed your profile and are pleased to confirm that you have been <strong>verified</strong> on Hiretivo.</p>

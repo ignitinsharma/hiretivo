@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRateLimitIp, publicReadRateLimiter } from "@/lib/rate-limit";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+import { getAppUrl } from "@/lib/config";
 
 /*
  * resultRedirect
@@ -10,7 +9,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
  * Returns a NextResponse redirect with the status query parameter.
  */
 function resultRedirect(status: string): NextResponse {
-  return NextResponse.redirect(`${APP_URL}/auth/verify-email?status=${status}`);
+  return NextResponse.redirect(`${getAppUrl()}/auth/verify-email?status=${status}`);
 }
 
 /*

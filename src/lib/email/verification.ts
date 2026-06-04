@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/resend";
+import { getAppUrl } from "@/lib/config";
 
 const VERIFICATION_EXPIRY_HOURS = 24;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
 
 interface SendVerificationEmailInput {
@@ -42,7 +42,7 @@ export async function sendVerificationEmail({
   recipientName,
 }: SendVerificationEmailInput): Promise<void> {
   const token = await createVerificationToken(email);
-  const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+  const verifyUrl = `${getAppUrl()}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
   const greetingName = recipientName?.trim();
   const greeting = greetingName ? `Hi ${greetingName},` : "Hi there,";
 
