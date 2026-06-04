@@ -106,8 +106,9 @@ export const SeekerSettingsSchema = z
       .min(2, "City must be at least 2 characters")
       .max(100, "City must be under 100 characters")
       .regex(/^[^,]+$/, "City name cannot contain commas")
-      .optional(),
-    state: z.string().optional(),
+      .optional()
+      .or(z.literal("")),
+    state: z.string().optional().or(z.literal("")),
     situation: z.string().max(200).optional().or(z.literal("")),
     primaryRole: z.string().max(100).optional().or(z.literal("")),
     salaryMin: SalarySchema,
