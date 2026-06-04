@@ -5,6 +5,13 @@ import { ArrowRight, Hand } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   SITUATION_OPTIONS,
@@ -15,13 +22,14 @@ import type {
   SeekerSituation,
   ExperienceLevel,
 } from "@/lib/validations/seeker-onboarding.schema";
+import { INDIA_STATES } from "@/modules/india-location";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep1 } from "@/app/actions/onboarding/seeker";
 
 /*
  * StepWelcome
  * Step 1 of seeker onboarding — About You.
- * Captures current situation, experience level, location, and timezone.
+ * Captures current situation, experience level, city, and state/UT.
  * Saves to DB via saveStep1 before advancing.
  */
 interface StepWelcomeProps {
@@ -29,18 +37,18 @@ interface StepWelcomeProps {
 }
 
 export function StepWelcome({ onNext }: StepWelcomeProps) {
-  const { step1, userName, setSituation, setExperienceLevel } =
+  const { step1, userName, setSituation, setExperienceLevel, setCity, setState } =
     useSeekerOnboardingStore();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [location, setLocation] = useState("");
-  const [timezone, setTimezone] = useState("");
 
   const handleContinue = async () => {
     if (isSaving) return;
     const validation = validateSeekerStep1({
       situation: step1.situation ?? undefined,
       experienceLevel: step1.experienceLevel ?? undefined,
+      city: step1.city ?? undefined,
+      state: step1.state ?? undefined,
     });
 
     if (!validation.valid) {
@@ -49,12 +57,12 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
     }
 
     setErrors([]);
-
-    // Persist to DB before advancing (per D-04)
     setIsSaving(true);
     const result = await saveStep1({
       situation: step1.situation!,
       experienceLevel: step1.experienceLevel!,
+      city: step1.city!,
+      state: step1.state!,
     });
     setIsSaving(false);
 
@@ -72,6 +80,9 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
       return "Please select your current situation";
     if (errors.includes("Please select your experience level"))
       return "Please select your experience level";
+    if (errors.includes("Please enter your city")) return "Please enter your city";
+    if (errors.includes("Please select your state or union territory"))
+      return "Please select your state or union territory";
     return errors[0] ?? null;
   };
 
@@ -189,28 +200,44 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
             </div>
           </div>
 
-          {/* Location */}
+          {/* City */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-brand-foreground block">
-              Where are you based?
+            <label className="text-sm font-semibold text-brand-foreground">
+              City
             </label>
             <Input
-              placeholder="e.g. Mumbai, India"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={step1.city ?? ""}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Bengaluru"
+              disabled={isSaving}
+              aria-label="City"
             />
+            <p className="text-xs text-brand-foreground-muted">
+              Recruiters see this to evaluate timezone fit.
+            </p>
           </div>
 
-          {/* Timezone */}
+          {/* State / UT */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-brand-foreground block">
-              Your timezone
+            <label className="text-sm font-semibold text-brand-foreground">
+              State / Union Territory
             </label>
-            <Input
-              placeholder="e.g. IST (UTC+5:30)"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-            />
+            <Select
+              value={step1.state ?? ""}
+              onValueChange={(val) => setState(val)}
+              disabled={isSaving}
+            >
+              <SelectTrigger className="rounded-lg" aria-label="State or Union Territory">
+                <SelectValue placeholder="Select state or UT" />
+              </SelectTrigger>
+              <SelectContent>
+                {INDIA_STATES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {getErrorMessage() && (
