@@ -40,13 +40,13 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-const CONTRACT_OPTIONS = [
-  { value: "FULL_TIME", label: "Full-time" },
-  { value: "CONTRACT", label: "Contract" },
-  { value: "BOTH", label: "Both" },
+const WORK_PREFERENCE_OPTIONS = [
+  { value: "REMOTE", label: "Remote" },
+  { value: "HYBRID", label: "Hybrid" },
+  { value: "ONSITE", label: "On-site" },
 ] as const;
 
-type ContractOption = (typeof CONTRACT_OPTIONS)[number]["value"];
+type WorkPreferenceOption = (typeof WORK_PREFERENCE_OPTIONS)[number]["value"];
 
 /*
  * formatFileSize
@@ -65,13 +65,14 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     setBio,
     setSalaryMinMax,
     setCompensationAvailability,
-    setContractType,
+    setWorkPreference,
     setCompensationResume,
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   /* Resume upload handler */
@@ -134,6 +135,8 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
   }, [compensation.resume, setCompensationResume]);
 
   const handleContinue = async () => {
+    if (isSaving) return;
+
     const validation = validateSeekerStep5({
       headline: compensation.headline,
       bio: compensation.bio,
@@ -163,22 +166,25 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     if (compensation.availability) {
       formData.append("availability", compensation.availability);
     }
-    if (compensation.contractType) {
-      formData.append("contractType", compensation.contractType);
+    if (compensation.workPreference) {
+      formData.append("workPreference", compensation.workPreference);
     }
     // Append the raw File if available (new upload); skip if it's an existing key-only record
     if (compensation.resume?.file instanceof File) {
       formData.append("resumeFile", compensation.resume.file);
     }
 
-    const result = await saveCompensation(formData);
-
-    if (!result.success) {
-      setErrors([result.error]);
-      return;
+    setIsSaving(true);
+    try {
+      const result = await saveCompensation(formData);
+      if (!result.success) {
+        setErrors([result.error]);
+        return;
+      }
+      onNext();
+    } finally {
+      setIsSaving(false);
     }
-
-    onNext();
   };
 
   return (
@@ -312,24 +318,24 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
             </div>
           </div>
 
-          {/* Contract type */}
+          {/* Work preference */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-brand-foreground">
-              Contract type{" "}
+              Work preference{" "}
               <span className="text-brand-foreground-secondary text-xs font-normal">
                 (optional)
               </span>
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {CONTRACT_OPTIONS.map((option) => {
-                const isSelected = compensation.contractType === option.value;
+              {WORK_PREFERENCE_OPTIONS.map((option) => {
+                const isSelected = compensation.workPreference === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() =>
-                      setContractType(
-                        isSelected ? null : (option.value as ContractOption),
+                      setWorkPreference(
+                        isSelected ? null : (option.value as WorkPreferenceOption),
                       )
                     }
                     className={cn(
@@ -435,6 +441,8 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
             size="lg"
             className="w-full"
             disabled={isUploading}
+            loading={isSaving}
+            loadingText="Saving..."
           >
             Continue
             <ArrowRight className="w-4 h-4" />

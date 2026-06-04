@@ -44,12 +44,36 @@ export default async function SeekerOnboardingPage() {
           salaryMax: true,
           currency: true,
           availability: true,
+          workPreference: true,
           resumeKey: true,
           headline: true,
+          bio: true,
           githubUrl: true,
+          linkedinUrl: true,
+          websiteUrl: true,
+          videoIntroUrl: true,
           topProjects: true,
           skills: { select: { skill: { select: { name: true } } } },
-          _count: { select: { workExperiences: true } },
+          workExperiences: {
+            select: {
+              company: true,
+              title: true,
+              startDate: true,
+              endDate: true,
+              isCurrent: true,
+              description: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+          educations: {
+            select: {
+              institution: true,
+              graduationDate: true,
+              degree: true,
+              major: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          },
         },
       },
     },
@@ -66,9 +90,24 @@ export default async function SeekerOnboardingPage() {
   const profile = user?.seekerProfile;
   const draft = parseOnboardingDraft(user?.onboardingDraft);
 
-  // Determine whether the seeker has at least one project in topProjects
-  const topProjects = profile?.topProjects as unknown as Array<unknown> | null;
-  const hasProjects = Array.isArray(topProjects) && topProjects.length > 0;
+  // Safely cast topProjects JSON → typed project entries
+  const rawProjects = profile?.topProjects as unknown as Array<Record<string, unknown>> | null;
+  const projects = Array.isArray(rawProjects)
+    ? rawProjects
+        .filter(
+          (p) =>
+            typeof p?.title === 'string' &&
+            typeof p?.url === 'string' &&
+            typeof p?.description === 'string',
+        )
+        .map((p) => ({
+          title: p.title as string,
+          url: p.url as string,
+          description: p.description as string,
+        }))
+    : [];
+
+  const hasProjects = projects.length > 0;
 
   const initialStep: SeekerOnboardingStep = resolveSeekerOnboardingStep(
     user?.onboardingStep,
@@ -80,7 +119,7 @@ export default async function SeekerOnboardingPage() {
           skillsCount: profile.skills.length,
           githubUrl: profile.githubUrl,
           hasProjects,
-          workExperiencesCount: profile._count.workExperiences,
+          workExperiencesCount: profile.workExperiences.length,
           resumeKey: profile.resumeKey,
           headline: profile.headline,
         }
@@ -127,6 +166,35 @@ export default async function SeekerOnboardingPage() {
               currency: (profile?.currency ?? "USD") as Currency,
             },
             availability: profile?.availability as Availability | null | undefined,
+          },
+          proofOfWork: {
+            githubUrl: profile?.githubUrl ?? "",
+            linkedinUrl: profile?.linkedinUrl ?? null,
+            websiteUrl: profile?.websiteUrl ?? null,
+            videoIntroUrl: profile?.videoIntroUrl ?? null,
+            projects,
+          },
+          experience: {
+            workExperiences: profile?.workExperiences ?? [],
+            educations: profile?.educations ?? [],
+          },
+          compensation: {
+            headline: profile?.headline ?? "",
+            bio: profile?.bio ?? "",
+            salaryMin: profile?.salaryMin ?? null,
+            salaryMax: profile?.salaryMax ?? null,
+            availability: profile?.availability ?? null,
+            workPreference: profile?.workPreference ?? null,
+            resume: profile?.resumeKey
+              ? {
+                  name: profile.resumeKey.split("/").pop() ?? "resume.pdf",
+                  size: 0,
+                  type: "application/octet-stream",
+                  key: profile.resumeKey,
+                  url: null,
+                  file: null,
+                }
+              : null,
           },
         }}
       />

@@ -21,6 +21,9 @@ import type {
   Step2Data,
   Step3Data,
   Step4Data,
+  ProofOfWorkData,
+  ExperienceData,
+  CompensationData,
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
 /*
@@ -49,6 +52,9 @@ interface SeekerOnboardingContainerProps {
     step2: Partial<Step2Data>;
     step3: Partial<Step3Data>;
     step4: Partial<Step4Data>;
+    proofOfWork?: Partial<ProofOfWorkData>;
+    experience?: Partial<ExperienceData>;
+    compensation?: Partial<CompensationData>;
   };
 }
 

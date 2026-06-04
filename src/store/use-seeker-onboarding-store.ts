@@ -101,7 +101,7 @@ interface SeekerOnboardingState {
   setBio: (bio: string) => void;
   setSalaryMinMax: (min: number | null, max: number | null) => void;
   setCompensationAvailability: (availability: string | null) => void;
-  setContractType: (contractType: string | null) => void;
+  setWorkPreference: (workPreference: string | null) => void;
   setCompensationResume: (resume: ResumeFile | null) => void;
 
   completeOnboarding: () => void;
@@ -149,7 +149,7 @@ const initialCompensationData: CompensationData = {
   salaryMin: null,
   salaryMax: null,
   availability: null,
-  contractType: null,
+  workPreference: null,
   resume: null,
 };
 
@@ -397,8 +397,8 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
       compensation: { ...state.compensation, availability },
     })),
 
-    setContractType: (contractType) => set((state) => ({
-      compensation: { ...state.compensation, contractType },
+    setWorkPreference: (workPreference) => set((state) => ({
+      compensation: { ...state.compensation, workPreference },
     })),
 
     setCompensationResume: (resume) => set((state) => ({

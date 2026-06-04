@@ -109,7 +109,7 @@ export interface ExperienceData {
 
 /*
  * CompensationData
- * Step 5: Professional headline, bio, salary expectations, availability, contract type, and resume.
+ * Step 5: Professional headline, bio, salary expectations, availability, work preference, and resume.
  */
 export interface CompensationData {
   headline: string;
@@ -117,7 +117,7 @@ export interface CompensationData {
   salaryMin: number | null;
   salaryMax: number | null;
   availability: string | null;
-  contractType: string | null;
+  workPreference: string | null;
   resume: ResumeFile | null;
 }
 

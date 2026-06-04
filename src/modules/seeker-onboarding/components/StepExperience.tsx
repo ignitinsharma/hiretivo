@@ -25,6 +25,22 @@ interface StepExperienceProps {
   onBack: () => void;
 }
 
+/* Convert "MM/YYYY" stored string → "YYYY-MM" for <input type="month"> value */
+function toMonthInput(v: string | null | undefined): string {
+  if (!v) return "";
+  const [mm, yyyy] = v.split("/");
+  if (!mm || !yyyy) return "";
+  return `${yyyy}-${mm.padStart(2, "0")}`;
+}
+
+/* Convert "YYYY-MM" from <input type="month"> → "MM/YYYY" for storage */
+function fromMonthInput(v: string): string | null {
+  if (!v) return null;
+  const [yyyy, mm] = v.split("-");
+  if (!yyyy || !mm) return null;
+  return `${mm}/${yyyy}`;
+}
+
 const EMPTY_WORK: WorkExperienceEntry = {
   company: "",
   title: "",
@@ -106,24 +122,28 @@ function WorkExperienceRow({
           <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
             Start date <span className="text-brand-danger">*</span>
           </label>
-          <Input
-            placeholder="MM/YYYY"
-            value={exp.startDate}
-            onChange={(e) => onChange(index, { ...exp, startDate: e.target.value })}
+          <input
+            type="month"
+            value={toMonthInput(exp.startDate)}
+            onChange={(e) => onChange(index, { ...exp, startDate: fromMonthInput(e.target.value) ?? "" })}
+            className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
             End date
           </label>
-          <Input
-            placeholder="MM/YYYY"
-            value={exp.endDate ?? ""}
+          <input
+            type="month"
+            value={toMonthInput(exp.endDate)}
             disabled={exp.isCurrent}
             onChange={(e) =>
-              onChange(index, { ...exp, endDate: e.target.value || null })
+              onChange(index, { ...exp, endDate: fromMonthInput(e.target.value) })
             }
-            className={cn(exp.isCurrent && "opacity-50 cursor-not-allowed")}
+            className={cn(
+              "w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary",
+              exp.isCurrent && "opacity-50 cursor-not-allowed",
+            )}
           />
         </div>
       </div>
@@ -237,12 +257,13 @@ function EducationRow({ edu, index, onChange, onRemove }: EducationRowProps) {
         <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
           Graduation date
         </label>
-        <Input
-          placeholder="MM/YYYY"
-          value={edu.graduationDate ?? ""}
+        <input
+          type="month"
+          value={toMonthInput(edu.graduationDate)}
           onChange={(e) =>
-            onChange(index, { ...edu, graduationDate: e.target.value || null })
+            onChange(index, { ...edu, graduationDate: fromMonthInput(e.target.value) })
           }
+          className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
         />
       </div>
     </div>
@@ -261,6 +282,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [showEducation, setShowEducation] = useState(
     experience.educations.length > 0
   );
@@ -301,6 +323,8 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
   };
 
   const handleContinue = async () => {
+    if (isSaving) return;
+
     const workToSave =
       experience.workExperiences.length > 0
         ? experience.workExperiences
@@ -318,18 +342,23 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
 
     setErrors([]);
 
-    const result = await saveExperience({
-      workExperiences: workToSave,
-      educations:
-        experience.educations.length > 0 ? experience.educations : undefined,
-    });
+    setIsSaving(true);
+    try {
+      const result = await saveExperience({
+        workExperiences: workToSave,
+        educations:
+          experience.educations.length > 0 ? experience.educations : undefined,
+      });
 
-    if (!result.success) {
-      setErrors([result.error]);
-      return;
+      if (!result.success) {
+        setErrors([result.error]);
+        return;
+      }
+
+      onNext();
+    } finally {
+      setIsSaving(false);
     }
-
-    onNext();
   };
 
   return (
@@ -424,6 +453,8 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
             variant="primary"
             size="lg"
             className="w-full"
+            loading={isSaving}
+            loadingText="Saving..."
           >
             Continue
             <ArrowRight className="w-4 h-4" />

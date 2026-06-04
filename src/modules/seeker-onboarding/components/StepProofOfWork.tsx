@@ -119,6 +119,7 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
   } = useSeekerOnboardingStore();
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   /* Local state for optional fields — synced to store on blur */
   const [linkedinInput, setLinkedinInput] = useState(
@@ -155,6 +156,8 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
   };
 
   const handleContinue = async () => {
+    if (isSaving) return;
+
     const projectsToSave =
       proofOfWork.projects.length > 0 ? proofOfWork.projects : projects;
 
@@ -173,20 +176,25 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
 
     setErrors([]);
 
-    const result = await saveProofOfWork({
-      githubUrl: proofOfWork.githubUrl,
-      linkedinUrl: proofOfWork.linkedinUrl ?? null,
-      websiteUrl: proofOfWork.websiteUrl ?? null,
-      videoIntroUrl: proofOfWork.videoIntroUrl ?? null,
-      projects: projectsToSave,
-    });
+    setIsSaving(true);
+    try {
+      const result = await saveProofOfWork({
+        githubUrl: proofOfWork.githubUrl,
+        linkedinUrl: proofOfWork.linkedinUrl ?? null,
+        websiteUrl: proofOfWork.websiteUrl ?? null,
+        videoIntroUrl: proofOfWork.videoIntroUrl ?? null,
+        projects: projectsToSave,
+      });
 
-    if (!result.success) {
-      setErrors([result.error]);
-      return;
+      if (!result.success) {
+        setErrors([result.error]);
+        return;
+      }
+
+      onNext();
+    } finally {
+      setIsSaving(false);
     }
-
-    onNext();
   };
 
   return (
@@ -323,6 +331,8 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             variant="primary"
             size="lg"
             className="w-full"
+            loading={isSaving}
+            loadingText="Saving..."
           >
             Continue
             <ArrowRight className="w-4 h-4" />
