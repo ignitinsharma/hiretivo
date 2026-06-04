@@ -33,6 +33,7 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/engines",
+      "@sentry/cli",
       "esbuild",
       "prisma",
       "unrs-resolver"
