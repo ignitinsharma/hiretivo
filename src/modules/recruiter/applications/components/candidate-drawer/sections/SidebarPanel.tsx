@@ -104,7 +104,7 @@ export function SidebarPanel({
               <div className="rounded-lg bg-brand-surface p-2"><MapPin className="h-4 w-4 text-brand-primary" /></div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-brand-foreground-secondary">Location</p>
-                <p className="text-sm font-semibold text-brand-foreground">{profile?.location ?? "Remote"}</p>
+                <p className="text-sm font-semibold text-brand-foreground">{profile?.location ?? "Location not provided"}</p>
               </div>
             </div>
             {profile?.yearsExperience != null ? (

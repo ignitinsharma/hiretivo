@@ -142,7 +142,7 @@ function TalentCard({
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-2 text-sm font-semibold text-brand-foreground-muted">
-        <span>{talent.location ?? "Remote"}</span>
+        <span>{talent.location ?? "Location not provided"}</span>
         <span>{talent.availability ? formatProfileLabel(talent.availability) : "Availability unknown"}</span>
         <span>{formatCardExperience(talent.yearsExperience)}</span>
         <span>{talent.resumeKey ? "Resume available" : "No resume"}</span>

@@ -143,7 +143,7 @@ function getVisibleLinks(links: TalentProfileLinks): ResolvedSocialLink[] {
 function getProfileMeta(talent: TalentDetail): string {
   return [
     formatExperience(talent.yearsExperience),
-    talent.location ?? "Remote",
+    talent.location ?? "Location not provided",
     formatProfileLabel(talent.profile.workPreference),
   ].join(" • ");
 }
@@ -156,7 +156,7 @@ function getOpportunityChips(talent: TalentDetail): OpportunityChip[] {
 
   return [
     { label: formatProfileLabel(talent.profile.workPreference), tone: "primary" },
-    { label: talent.location ?? "Remote", tone: "primary" },
+    { label: talent.location ?? "Location not provided", tone: "primary" },
     { label: talent.primaryRole ?? "Role open", tone: "primary" },
     ...(salary ? [{ label: salary, tone: "neutral" as const }] : []),
   ];
