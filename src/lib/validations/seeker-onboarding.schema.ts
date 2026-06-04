@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CurrencyCode, OnboardingJobType, SEEKER_CURRENCY_VALUES, SEEKER_ONBOARDING_JOB_TYPE_VALUES } from '@/constants/enums';
+import { isValidState, isValidCity } from '@/modules/india-location';
 
 export type {
   SeekerSituation,
@@ -21,11 +22,13 @@ export type {
 
 /*
  * step1Schema
- * Validates seeker situation and experience level in step 1 of onboarding.
+ * Validates seeker situation, experience level, and India location in step 1 of onboarding.
  */
 export const step1Schema = z.object({
   situation: z.enum(['ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'EXPLORING_OPTIONS', 'STUDENT_FRESH_GRAD']).optional(),
   experienceLevel: z.enum(['ENTRY', 'JUNIOR', 'MID', 'SENIOR']).optional(),
+  city: z.string().min(2, "City must be at least 2 characters").max(100).regex(/^[^,]+$/, "City name cannot contain commas").optional(),
+  state: z.string().optional(),
 });
 
 /*
@@ -323,7 +326,7 @@ export function validateSeekerStep5(data: Step5Input): { valid: boolean; errors:
 
 /*
  * validateSeekerStep1
- * Validates step 1: requires situation and experience level selections.
+ * Validates step 1: requires situation, experience level, city, and Indian state/UT.
  * @returns { valid, errors }
  */
 export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors: string[] } {
@@ -333,6 +336,12 @@ export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors:
   }
   if (!data.experienceLevel) {
     errors.push('Please select your experience level');
+  }
+  if (!data.city || !isValidCity(data.city)) {
+    errors.push('Please enter your city');
+  }
+  if (!data.state || !isValidState(data.state)) {
+    errors.push('Please select your state or union territory');
   }
   return { valid: errors.length === 0, errors };
 }

@@ -61,6 +61,8 @@ interface SeekerOnboardingState {
   // Step 1 setters
   setSituation: (situation: SeekerSituation) => void;
   setExperienceLevel: (level: ExperienceLevel) => void;
+  setCity: (city: string | null) => void;
+  setState: (state: string | null) => void;
 
   // Step 2 setters
   setPrimaryRole: (role: string) => void;
@@ -111,6 +113,8 @@ interface SeekerOnboardingState {
 const initialStep1Data: Step1Data = {
   situation: null,
   experienceLevel: null,
+  city: null,
+  state: null,
 };
 
 const initialStep2Data: Step2Data = {
@@ -220,6 +224,14 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
 
     setExperienceLevel: (level) => set((state) => ({
       step1: { ...state.step1, experienceLevel: level },
+    })),
+
+    setCity: (city) => set((state) => ({
+      step1: { ...state.step1, city },
+    })),
+
+    setState: (stateValue) => set((state) => ({
+      step1: { ...state.step1, state: stateValue },
     })),
 
     // -------------------------------------------------------------------------

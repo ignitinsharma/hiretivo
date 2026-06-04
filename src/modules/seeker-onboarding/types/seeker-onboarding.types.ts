@@ -74,6 +74,8 @@ export interface ResumeFile {
 export interface Step1Data {
   situation: SeekerSituation | null;
   experienceLevel: ExperienceLevel | null;
+  city: string | null;
+  state: string | null;
 }
 
 /*
