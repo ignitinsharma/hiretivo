@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { POSITION_TYPE_VALUES } from "@/constants/enums";
+import { isValidState, isValidCity } from "@/modules/india-location";
 
 const SkillNameSchema = z
   .string()
@@ -100,7 +101,13 @@ export const SeekerSettingsSchema = z
     name: z.string().min(1, "Name is required").max(100),
     headline: z.string().max(200).optional().or(z.literal("")),
     bio: z.string().max(1000).optional().or(z.literal("")),
-    location: z.string().max(200).optional().or(z.literal("")),
+    city: z
+      .string()
+      .min(2, "City must be at least 2 characters")
+      .max(100, "City must be under 100 characters")
+      .regex(/^[^,]+$/, "City name cannot contain commas")
+      .optional(),
+    state: z.string().optional(),
     situation: z.string().max(200).optional().or(z.literal("")),
     primaryRole: z.string().max(100).optional().or(z.literal("")),
     salaryMin: SalarySchema,
@@ -131,6 +138,19 @@ export const SeekerSettingsSchema = z
     {
       message: "Minimum salary must be less than or equal to maximum salary",
       path: ["salaryMax"],
+    },
+  )
+  .refine(
+    (data) => {
+      const hasCity = !!data.city && isValidCity(data.city);
+      const hasState = !!data.state && isValidState(data.state);
+      if (hasCity && !hasState) return false;
+      if (!hasCity && hasState) return false;
+      return true;
+    },
+    {
+      message: "Provide a valid city and state together, or omit both",
+      path: ["city"],
     },
   )
   .transform((data) => ({

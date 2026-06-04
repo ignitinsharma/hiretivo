@@ -40,7 +40,9 @@ export interface SeekerSettingsData {
   image: string | null;
   headline: string;
   bio: string;
-  location: string;
+  location: string | null;    // raw stored value — kept for recruiter display
+  city: string | null;        // derived by GET endpoint via parseLegacyLocation
+  state: string | null;       // derived by GET endpoint via parseLegacyLocation
   situation: string;
   primaryRole: string;
   salaryMin: number | null;
