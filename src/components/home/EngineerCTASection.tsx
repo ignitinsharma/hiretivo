@@ -180,7 +180,7 @@ function VerificationSeal() {
  */
 function VerifiedProfileCard() {
   return (
-    <article className="rounded-xl border border-brand-primary/20 bg-white p-4 transition-colors hover:border-brand-primary/40 sm:p-5">
+    <article className="rounded-xl border border-brand-primary/20 bg-white p-4 shadow-[0_18px_50px_rgba(117,96,255,0.10)] transition-colors hover:border-brand-primary/40 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-brand-primary/20 bg-brand-primary/[0.06] text-xl font-bold text-brand-primary">
@@ -230,8 +230,8 @@ export function ComparisonCard({ tone }: { tone: "before" | "after" }) {
       className={cn(
         "min-w-0 rounded-xl border bg-white p-4 transition-colors",
         isAfter
-          ? "border-brand-success/20 hover:border-brand-success/40"
-          : "border-brand-danger/20 hover:border-brand-danger/40",
+          ? "border-brand-success/20 shadow-[0_18px_45px_rgba(22,163,74,0.08)] hover:border-brand-success/40"
+          : "border-brand-danger/20 shadow-[0_18px_45px_rgba(239,68,68,0.08)] hover:border-brand-danger/40",
       )}
     >
       <div
