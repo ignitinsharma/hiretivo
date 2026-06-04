@@ -355,7 +355,9 @@ export async function PATCH(req: NextRequest) {
         bio: profileData.bio || null,
         ...(profileData.city && profileData.state && isValidCity(profileData.city) && isValidState(profileData.state)
           ? { location: formatLocation(profileData.city, profileData.state as IndiaState) }
-          : {}),
+          : (!profileData.city && !profileData.state)
+            ? { location: null }
+            : {}),
         situation: profileData.situation || null,
         primaryRole: profileData.primaryRole || null,
         ...(profileData.salaryMin !== undefined ? { salaryMin: profileData.salaryMin } : {}),
