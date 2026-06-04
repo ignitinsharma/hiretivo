@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
+import { parseLegacyLocation } from "@/modules/india-location";
 import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { SeekerOnboardingContainer } from "@/modules/seeker-onboarding";
 import {
@@ -39,6 +40,7 @@ export default async function SeekerOnboardingPage() {
       seekerProfile: {
         select: {
           situation: true,
+          location: true,
           primaryRole: true,
           salaryMin: true,
           salaryMax: true,
@@ -114,6 +116,7 @@ export default async function SeekerOnboardingPage() {
     profile
       ? {
           situation: profile.situation,
+          location: profile.location,
           primaryRole: profile.primaryRole,
           availability: profile.availability,
           skillsCount: profile.skills.length,
@@ -136,6 +139,7 @@ export default async function SeekerOnboardingPage() {
           step1: {
             situation: profile?.situation as SeekerSituation | null | undefined,
             experienceLevel: draft.seeker?.experienceLevel as ExperienceLevel | null | undefined,
+            ...parseLegacyLocation(profile?.location),
           },
           step2: {
             primaryRole: profile?.primaryRole ?? "",

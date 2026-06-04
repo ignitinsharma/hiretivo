@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { isCanonicalLocation } from "@/modules/india-location";
 
 export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
 export type RecruiterOnboardingStep = 1 | 2 | 3 | 4;
@@ -32,6 +33,7 @@ export interface SeekerProgressProfile {
   workExperiencesCount?: number;
   resumeKey?: string | null;
   headline?: string | null;
+  location?: string | null;
 }
 
 export interface RecruiterProgressProfile {
@@ -128,8 +130,8 @@ export function resolveSeekerOnboardingStep(
   storedStep: number | null | undefined,
   profile: SeekerProgressProfile | null | undefined,
 ): SeekerOnboardingStep {
-  // Hard gate: step 1 — situation required
-  if (!profile?.situation) return 1;
+  // Hard gate: step 1 — situation AND canonical India location required
+  if (!profile?.situation || !isCanonicalLocation(profile.location)) return 1;
 
   // Hard gate: step 2 — primary role + at least 1 skill required
   if (!profile.primaryRole || profile.skillsCount === 0) return 2;
