@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma migrate deploy && prisma generate && next build",
+    "vercel-build": "next build",
     "verify:route-access": "tsx scripts/verify/route-access-control.ts",
     "verify:api-rate-limits": "tsx scripts/verify/api-rate-limits.ts",
     "trial:end-recruiter": "tsx scripts/end-recruiter-trial.ts",
