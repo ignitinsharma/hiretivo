@@ -638,6 +638,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     where: { userId },
     select: {
       situation: true,
+      location: true,
       primaryRole: true,
       availability: true,
       githubUrl: true,
@@ -661,6 +662,15 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     return {
       success: false,
       error: "Complete your current situation first.",
+      missingStep: 1,
+    };
+  }
+
+  // Step 1 continued: canonical India location required
+  if (!isCanonicalLocation(profile.location)) {
+    return {
+      success: false,
+      error: "Please provide your city and state before submitting.",
       missingStep: 1,
     };
   }
