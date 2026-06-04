@@ -24,7 +24,6 @@ interface EngineerPreviewCardProps {
   skills: readonly string[]
   salaryMin: number
   salaryMax: number
-  timezoneOverlapHours: number
   availableFrom: string
   highlighted?: boolean
   blurLevel?: 'none' | 'medium' | 'heavy'

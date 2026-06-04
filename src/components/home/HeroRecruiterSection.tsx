@@ -121,7 +121,6 @@ export function HeroRecruiterSection() {
                 skills={primaryEngineer.skills}
                 salaryMin={primaryEngineer.salaryMin}
                 salaryMax={primaryEngineer.salaryMax}
-                timezoneOverlapHours={primaryEngineer.timezoneOverlapHours}
                 availableFrom={primaryEngineer.availableFrom}
                 highlighted
                 blurLevel="none"
@@ -144,7 +143,6 @@ export function HeroRecruiterSection() {
                 skills={secondaryEngineer.skills}
                 salaryMin={secondaryEngineer.salaryMin}
                 salaryMax={secondaryEngineer.salaryMax}
-                timezoneOverlapHours={secondaryEngineer.timezoneOverlapHours}
                 availableFrom={secondaryEngineer.availableFrom}
                 highlighted={false}
                 blurLevel="none"
@@ -167,7 +165,6 @@ export function HeroRecruiterSection() {
                 skills={tertiaryEngineer.skills}
                 salaryMin={tertiaryEngineer.salaryMin}
                 salaryMax={tertiaryEngineer.salaryMax}
-                timezoneOverlapHours={tertiaryEngineer.timezoneOverlapHours}
                 availableFrom={tertiaryEngineer.availableFrom}
                 highlighted={false}
                 blurLevel="none"

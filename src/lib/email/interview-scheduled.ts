@@ -68,9 +68,9 @@ export async function sendInterviewScheduledEmail(
       <p>${companyName} scheduled an interview with you for <strong>${jobTitle}</strong>.</p>
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0;">
         <p><strong>Scheduled start:</strong> ${escapeHtml(startsAt.scheduled)}</p>
-        <p><strong>Your start:</strong> ${escapeHtml(startsAt.viewer)}</p>
+        <p><strong>India time start:</strong> ${escapeHtml(startsAt.viewer)}</p>
         <p><strong>Scheduled end:</strong> ${escapeHtml(endsAt.scheduled)}</p>
-        <p><strong>Your end:</strong> ${escapeHtml(endsAt.viewer)}</p>
+        <p><strong>India time end:</strong> ${escapeHtml(endsAt.viewer)}</p>
       </div>
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
@@ -82,9 +82,9 @@ export async function sendInterviewScheduledEmail(
     `Hi ${input.seekerName},`,
     `${input.companyName} scheduled an interview with you for ${input.jobTitle}.`,
     `Scheduled start: ${startsAt.scheduled}`,
-    `Your start: ${startsAt.viewer}`,
+    `India time start: ${startsAt.viewer}`,
     `Scheduled end: ${endsAt.scheduled}`,
-    `Your end: ${endsAt.viewer}`,
+    `India time end: ${endsAt.viewer}`,
     `Duration: ${duration}`,
     meetLink ? `Join meeting: ${meetLink}` : "The recruiter has not added a meeting link yet.",
     notes ? `Notes: ${notes}` : "",

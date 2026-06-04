@@ -44,7 +44,6 @@ export interface MockEngineerCard {
   skills: readonly string[];
   salaryMin: number;
   salaryMax: number;
-  timezoneOverlapHours: number;
   availableFrom: string;
 }
 
@@ -64,7 +63,6 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
     skills: ['React', 'Node.js', 'AWS', 'TypeScript'],
     salaryMin: 90000,
     salaryMax: 120000,
-    timezoneOverlapHours: 5,
     availableFrom: 'Available Now',
   },
   {
@@ -79,7 +77,6 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
     skills: ['Python', 'Django', 'PostgreSQL', 'AWS'],
     salaryMin: 70000,
     salaryMax: 95000,
-    timezoneOverlapHours: 5,
     availableFrom: 'Available Now',
   },
   {
@@ -94,7 +91,6 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
     skills: ['Node.js', 'Express', 'MongoDB', 'AWS'],
     salaryMin: 60000,
     salaryMax: 85000,
-    timezoneOverlapHours: 4,
     availableFrom: 'Available Now',
   },
 ] as const;

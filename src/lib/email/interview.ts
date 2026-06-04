@@ -32,16 +32,16 @@ function formatInterviewTimeBlock(
     html: `
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0;">
         <p><strong>Scheduled start:</strong> ${starts.scheduled}</p>
-        <p><strong>Your start:</strong> ${starts.viewer}</p>
+        <p><strong>India time start:</strong> ${starts.viewer}</p>
         <p><strong>Scheduled end:</strong> ${ends.scheduled}</p>
-        <p><strong>Your end:</strong> ${ends.viewer}</p>
+        <p><strong>India time end:</strong> ${ends.viewer}</p>
       </div>
     `,
     text: [
       `Scheduled start: ${starts.scheduled}`,
-      `Your start: ${starts.viewer}`,
+      `India time start: ${starts.viewer}`,
       `Scheduled end: ${ends.scheduled}`,
-      `Your end: ${ends.viewer}`,
+      `India time end: ${ends.viewer}`,
     ].join(" "),
   };
 }
