@@ -81,10 +81,11 @@ export default async function SeekerOnboardingPage() {
     },
   });
 
-  // Only redirect if onboarding is complete AND the profile has been submitted for review
+  // Redirect only when review is pending/approved — REJECTED seekers must be able to resubmit
   if (
     user?.onboardingCompleted === true &&
-    user?.verificationStatus !== "NOT_SUBMITTED"
+    user?.verificationStatus !== "NOT_SUBMITTED" &&
+    user?.verificationStatus !== "REJECTED"
   ) {
     redirect("/seeker/dashboard");
   }
