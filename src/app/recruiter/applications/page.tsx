@@ -434,7 +434,7 @@ export default function RecruiterApplicationsPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center text-sm font-semibold text-slate-600">
                         <MapPin className="w-4 h-4 mr-1.5 text-slate-300" />
-                        {application.candidateProfile?.location ?? "Remote"}
+                        {application.candidateProfile?.location ?? "Location not provided"}
                       </div>
                     </td>
                     <td className="px-8 py-6">
