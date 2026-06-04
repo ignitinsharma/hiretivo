@@ -16,7 +16,11 @@ const SALARY_ERROR_MESSAGE = "Salary must be a non-negative integer at most 2147
 const SalarySchema = z
   .union([z.number(), z.string(), z.null(), z.undefined()])
   .transform((value, ctx) => {
-    if (value == null) {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    if (value === null) {
       return null;
     }
 
@@ -98,7 +102,7 @@ export type EducationInput = z.infer<typeof EducationInputSchema>;
 
 export const SeekerSettingsSchema = z
   .object({
-    name: z.string().min(1, "Name is required").max(100),
+    name: z.string().min(1, "Name is required").max(100).optional(),
     headline: z.string().max(200).optional().or(z.literal("")),
     bio: z.string().max(1000).optional().or(z.literal("")),
     city: z
@@ -153,11 +157,6 @@ export const SeekerSettingsSchema = z
       message: "Provide a valid city and state together, or omit both",
       path: ["city"],
     },
-  )
-  .transform((data) => ({
-    ...data,
-    salaryMin: data.salaryMin ?? null,
-    salaryMax: data.salaryMax ?? null,
-  }));
+  );
 
 export type SeekerSettingsInput = z.input<typeof SeekerSettingsSchema>;

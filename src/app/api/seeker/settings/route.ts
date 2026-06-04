@@ -336,11 +336,18 @@ export async function PATCH(req: NextRequest) {
     ? await resolveSkillIdsFromNames(skillNames)
     : skillIds;
 
-  const transactionOperations: Prisma.PrismaPromise<unknown>[] = [
-    prisma.user.update({
-      where: { id: session.user.id },
-      data: { name },
-    }),
+  const transactionOperations: Prisma.PrismaPromise<unknown>[] = [];
+
+  if (name !== undefined) {
+    transactionOperations.push(
+      prisma.user.update({
+        where: { id: session.user.id },
+        data: { name },
+      }),
+    );
+  }
+
+  transactionOperations.push(
     prisma.seekerProfile.update({
       where: { userId: session.user.id },
       data: {
@@ -351,8 +358,8 @@ export async function PATCH(req: NextRequest) {
           : {}),
         situation: profileData.situation || null,
         primaryRole: profileData.primaryRole || null,
-        salaryMin: profileData.salaryMin ?? null,
-        salaryMax: profileData.salaryMax ?? null,
+        ...(profileData.salaryMin !== undefined ? { salaryMin: profileData.salaryMin } : {}),
+        ...(profileData.salaryMax !== undefined ? { salaryMax: profileData.salaryMax } : {}),
         currency: profileData.currency || null,
         availability: profileData.availability || null,
         websiteUrl: profileData.websiteUrl !== undefined ? (profileData.websiteUrl || null) : undefined,
@@ -362,7 +369,7 @@ export async function PATCH(req: NextRequest) {
         yearsExperience: profileData.yearsExperience !== undefined ? profileData.yearsExperience : undefined,
       },
     }),
-  ];
+  );
 
   if (nextSkillIds) {
     transactionOperations.push(
@@ -423,19 +430,10 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const [userUpdate, profileUpdate] = await prisma.$transaction(
-    transactionOperations,
-  );
+  await prisma.$transaction(transactionOperations);
 
   if (nextSkillIds) {
     await invalidateSeekerCache(seekerProfile.id);
-  }
-
-  if (!userUpdate || !profileUpdate) {
-    return NextResponse.json(
-      { error: "Failed to update profile" },
-      { status: 500 },
-    );
   }
 
   return NextResponse.json({ data: { success: true } }, { status: 200 });
