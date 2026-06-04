@@ -21,6 +21,8 @@ import {
   workExperienceEntrySchema,
   extractGithubUsername,
 } from "@/lib/validations/seeker-onboarding.schema";
+import { isValidState, isValidCity, formatLocation, isCanonicalLocation } from "@/modules/india-location";
+import type { IndiaState } from "@/modules/india-location";
 import { z } from "zod";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -33,10 +35,17 @@ const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@hiretivo.com";
 
-// --- Step 1: Situation ---
+/*
+ * saveStep1
+ * Persists step 1 data: situation (to SeekerProfile), experienceLevel (to draft),
+ * and canonical India location (to SeekerProfile.location) in a single transaction.
+ * Validates city (no commas, 2-100 chars) and state (must be valid Indian State/UT).
+ */
 export async function saveStep1(data: {
   situation: string;
   experienceLevel: string;
+  city: string;
+  state: string;
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
@@ -49,6 +58,15 @@ export async function saveStep1(data: {
     return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
   }
 
+  if (!isValidCity(data.city)) {
+    return { success: false, error: "City must be 2–100 characters and cannot contain commas." };
+  }
+  if (!isValidState(data.state)) {
+    return { success: false, error: "Please select a valid Indian State or Union Territory." };
+  }
+
+  const location = formatLocation(data.city, data.state as IndiaState);
+
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { onboardingStep: true, onboardingDraft: true },
@@ -60,9 +78,11 @@ export async function saveStep1(data: {
       create: {
         userId: session.user.id,
         situation: parsed.data.situation,
+        location,
       },
       update: {
         situation: parsed.data.situation,
+        location,
       },
     }),
     prisma.user.update({

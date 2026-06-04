@@ -6,6 +6,8 @@ import { WorkType, SkillLevel, JobType } from "@/constants/enums";
 export const step1Schema = z.object({
   situation: z.string().trim().min(1, "Situation is required").max(500, "Situation must be under 500 characters"),
   experienceLevel: z.string().trim().max(100, "Experience level must be under 100 characters"),
+  city: z.string().min(2, "City must be at least 2 characters").max(100).regex(/^[^,]+$/, "City name cannot contain commas"),
+  state: z.string().min(1, "State is required"),
 });
 
 export const step2Schema = z.object({
