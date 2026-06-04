@@ -5,6 +5,8 @@ import { ArrowLeft, ShieldCheck, CheckCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { formatLocation } from "@/modules/india-location";
+import type { IndiaState } from "@/modules/india-location";
 
 /*
  * StepReviewSubmit
@@ -125,6 +127,14 @@ export function StepReviewSubmit({ onBack, onComplete }: StepReviewSubmitProps) 
               value={
                 step1.experienceLevel
                   ? EXP_LEVEL_LABELS[step1.experienceLevel] ?? step1.experienceLevel
+                  : null
+              }
+            />
+            <ReviewRow
+              label="Location"
+              value={
+                step1.city && step1.state
+                  ? formatLocation(step1.city, step1.state as IndiaState)
                   : null
               }
             />
