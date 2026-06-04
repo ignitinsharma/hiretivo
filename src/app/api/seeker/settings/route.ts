@@ -6,6 +6,8 @@ import { resolveLogoUrl } from "@/lib/r2";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
+import { parseLegacyLocation, isValidState, isValidCity, formatLocation } from "@/modules/india-location";
+import type { IndiaState } from "@/modules/india-location";
 import type { Prisma } from "@prisma/client";
 
 const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
@@ -275,11 +277,15 @@ export async function GET() {
   const { seekerProfile, image, ...userFields } = user;
   const { skills, workExperiences, educations, ...profileFields } = seekerProfile;
 
+  const { city, state: derivedState } = parseLegacyLocation(profileFields.location);
+
   return NextResponse.json({
     data: {
       ...userFields,
       image: resolveLogoUrl(image),
       ...profileFields,
+      city,
+      state: derivedState,
       skills: skills.map((s) => s.skill),
       workExperiences,
       educations,
@@ -340,7 +346,9 @@ export async function PATCH(req: NextRequest) {
       data: {
         headline: profileData.headline || null,
         bio: profileData.bio || null,
-        location: profileData.location || null,
+        ...(profileData.city && profileData.state && isValidCity(profileData.city) && isValidState(profileData.state)
+          ? { location: formatLocation(profileData.city, profileData.state as IndiaState) }
+          : {}),
         situation: profileData.situation || null,
         primaryRole: profileData.primaryRole || null,
         salaryMin: profileData.salaryMin ?? null,
