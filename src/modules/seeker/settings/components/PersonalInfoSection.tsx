@@ -22,6 +22,7 @@ import {
 } from "@/lib/validations/seeker.schema";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerSettingsData } from "@/services/seeker.service";
+import { INDIA_STATES } from "@/modules/india-location";
 
 const YEARS_OPTIONS = [
   { value: '0', label: '< 1 Year' },
@@ -67,7 +68,8 @@ function getProfileFormValues(
     name: profile?.name ?? "",
     headline: profile?.headline ?? "",
     bio: profile?.bio ?? "",
-    location: profile?.location ?? "",
+    city: profile?.city ?? "",
+    state: profile?.state ?? "",
     situation: profile?.situation ?? "",
     primaryRole: profile?.primaryRole ?? "",
     salaryMin: profile?.salaryMin ?? null,
@@ -121,11 +123,11 @@ export function PersonalInfoSection() {
   };
 
   return (
-    <section id="account" className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      <div className="flex items-start justify-between gap-4 p-6 border-b border-slate-100">
+    <section id="account" className="bg-white border border-brand-border rounded-xl overflow-hidden">
+      <div className="flex items-start justify-between gap-4 p-6 border-b border-brand-border">
         <div>
-          <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-lg font-bold text-brand-foreground">Personal Information</h3>
+          <p className="text-sm text-brand-foreground-muted">
             Update your profile information that recruiters will see.
           </p>
         </div>
@@ -175,7 +177,7 @@ export function PersonalInfoSection() {
         <div className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Full Name</label>
+              <label className="text-sm font-semibold text-brand-foreground">Full Name</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <>
                   <Input {...form.register("name")} aria-invalid={!!form.formState.errors.name} disabled={isFormDisabled} />
@@ -187,10 +189,10 @@ export function PersonalInfoSection() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Email Address</label>
+              <label className="text-sm font-semibold text-brand-foreground">Email Address</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <div className="relative">
-                  <Input value={profile?.email ?? ""} readOnly className="bg-slate-50 text-slate-500 pr-24" />
+                  <Input value={profile?.email ?? ""} readOnly className="bg-brand-surface text-brand-foreground-muted pr-24" />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-black bg-gray-100 px-2 py-0.5 rounded">
                     Verified
                   </span>
@@ -199,21 +201,21 @@ export function PersonalInfoSection() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Professional Headline</label>
+              <label className="text-sm font-semibold text-brand-foreground">Professional Headline</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input {...form.register("headline")} placeholder="e.g. Senior Frontend Developer" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Primary Role</label>
+              <label className="text-sm font-semibold text-brand-foreground">Primary Role</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input {...form.register("primaryRole")} placeholder="e.g. Frontend Developer" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Job Search Status</label>
+              <label className="text-sm font-semibold text-brand-foreground">Job Search Status</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Select
                   value={form.watch('situation') ?? ''}
@@ -233,7 +235,7 @@ export function PersonalInfoSection() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Availability</label>
+              <label className="text-sm font-semibold text-brand-foreground">Availability</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Select
                   value={form.watch('availability') ?? ''}
@@ -252,15 +254,55 @@ export function PersonalInfoSection() {
               )}
             </div>
 
+            {/* City */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Location</label>
+              <label className="text-sm font-semibold text-brand-foreground">City</label>
+              <p className="text-xs text-brand-foreground-muted">
+                Recruiters see your city and state to evaluate timezone fit.
+              </p>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("location")} placeholder="e.g. San Francisco, CA" disabled={isFormDisabled} />
+                <>
+                  <Input
+                    {...form.register("city")}
+                    placeholder="e.g. Bengaluru"
+                    disabled={isFormDisabled}
+                    aria-invalid={!!form.formState.errors.city}
+                  />
+                  {form.formState.errors.city && (
+                    <p className="text-xs text-red-500">{form.formState.errors.city.message}</p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* State / UT */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-brand-foreground">State / Union Territory</label>
+              {isLoading ? <Skeleton className="h-10 w-full" /> : (
+                <>
+                  <Select
+                    value={form.watch("state") ?? ""}
+                    onValueChange={(val) => form.setValue("state", val, { shouldValidate: true })}
+                    disabled={isFormDisabled}
+                  >
+                    <SelectTrigger className="rounded-lg" aria-label="State or Union Territory">
+                      <SelectValue placeholder="Select state or UT" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INDIA_STATES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.city?.message?.includes("together") && (
+                    <p className="text-xs text-red-500">Both city and state are required.</p>
+                  )}
+                </>
               )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Years of Experience</label>
+              <label className="text-sm font-semibold text-brand-foreground">Years of Experience</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Select
                   value={form.watch('yearsExperience')?.toString() ?? ''}
@@ -280,28 +322,28 @@ export function PersonalInfoSection() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Preferred Currency</label>
+              <label className="text-sm font-semibold text-brand-foreground">Preferred Currency</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input {...form.register("currency")} placeholder="e.g. USD, INR" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Minimum Salary</label>
+              <label className="text-sm font-semibold text-brand-foreground">Minimum Salary</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input type="number" {...form.register("salaryMin")} placeholder="e.g. 80000" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Maximum Salary</label>
+              <label className="text-sm font-semibold text-brand-foreground">Maximum Salary</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input type="number" {...form.register("salaryMax")} placeholder="e.g. 120000" disabled={isFormDisabled} />
               )}
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-slate-700">Bio</label>
+              <label className="text-sm font-semibold text-brand-foreground">Bio</label>
               {isLoading ? <Skeleton className="h-24 w-full" /> : (
                 <Textarea rows={3} {...form.register("bio")} placeholder="Tell recruiters about yourself..." disabled={isFormDisabled} />
               )}
