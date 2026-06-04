@@ -13,11 +13,17 @@ import { withSentryConfig } from "@sentry/nextjs";
  */
 const CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel-insights.com https://*.vercel-scripts.com https://*.sentry.io https://*.googletagmanager.com https://*.google-analytics.com",
-  "style-src 'self' 'unsafe-inline'",
+  // vercel.live = Vercel toolbar/feedback (preview deployments only)
+  // blob: worker needed by Sentry Replay — must be explicit since worker-src falls back to script-src
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel-insights.com https://*.vercel-scripts.com https://*.vercel.live https://vercel.live https://*.sentry.io https://*.googletagmanager.com https://*.google-analytics.com",
+  // fonts.googleapis.com serves the Material Symbols / Google Fonts CSS stylesheet
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' blob: data: https://*.r2.dev https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://api.dicebear.com https://*.gstatic.com https://*.google-analytics.com https://*.googletagmanager.com https://cdn.pixabay.com",
-  "font-src 'self' data:",
-  "connect-src 'self' https://*.sentry.io https://*.upstash.io https://*.vercel-insights.com https://*.google-analytics.com https://*.googletagmanager.com",
+  // fonts.gstatic.com serves the actual font files referenced by the Google Fonts stylesheet
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "connect-src 'self' https://*.sentry.io https://*.upstash.io https://*.vercel-insights.com https://*.vercel.live https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com",
+  // blob: required for Sentry Replay worker (createObjectURL blob)
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

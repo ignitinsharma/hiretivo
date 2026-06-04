@@ -43,8 +43,15 @@ function getSubscriptionUserId(sub: Subscription): string | null {
   return sub.metadata?.userId ?? null;
 }
 
+/*
+ * getPeriodEnd
+ * Maps Dodo Subscription to DB currentPeriodEnd.
+ * next_billing_date is required (string) — the monthly renewal date.
+ * expires_at is optional (string | null) — 20-year subscription lifetime, NOT the renewal date.
+ * Must never prefer expires_at over next_billing_date.
+ */
 function getPeriodEnd(sub: Subscription): Date {
-  return new Date(sub.expires_at ?? sub.next_billing_date);
+  return new Date(sub.next_billing_date);
 }
 
 async function upsertSubscription(
