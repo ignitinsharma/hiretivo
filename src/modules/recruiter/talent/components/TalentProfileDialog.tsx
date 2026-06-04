@@ -188,14 +188,20 @@ function TalentProfileSkeleton(): ReactElement {
  * Renders the reference-style candidate identity header.
  */
 function TalentProfileHeader({ talent }: { talent: TalentDetail }): ReactElement {
-  const visibleLinks = getVisibleLinks(talent.links);
+  const visibleLinks = talent.links ? getVisibleLinks(talent.links) : [];
   const statusLabel = formatAvailability(talent.availability);
 
   return (
     <DialogHeader className="shrink-0 border-b border-brand-border px-6 py-5 text-left">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
-          <InitialsAvatar name={talent.name} image={talent.image} size="lg" />
+          <InitialsAvatar
+            name={talent.name}
+            email={talent.email}
+            userId={talent.id}
+            image={talent.image}
+            size="lg"
+          />
           <div className="min-w-0">
             <DialogTitle className="text-2xl font-bold capitalize leading-tight tracking-tight text-brand-foreground">
               {talent.name ?? "Unnamed talent"}

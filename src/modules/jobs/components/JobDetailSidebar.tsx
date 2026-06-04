@@ -12,7 +12,7 @@ import { useUIStore } from "@/store/use-ui-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SaveJobButton } from "@/modules/jobs/components/SaveJobButton";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 interface RecommendedJob {
   id: string;
@@ -51,8 +51,28 @@ export function JobDetailSidebar({
   userRole,
   recommendedJobs,
 }: JobDetailSidebarProps) {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
+  const hiretivo = useVerificationStatus();
+
+  /*
+   * applyLockedLabel
+   * Truthy when the authenticated seeker is not yet Hiretivo-verified.
+   * Shows 'Checking...' while status query is in-flight to prevent a false
+   * 'Get verified to apply' flash for already-verified seekers.
+   * undefined means the normal Apply flow is allowed.
+   */
+  const applyLockedLabel: string | undefined =
+    isAuth && userRole === UserRole.SEEKER
+      ? hiretivo.isLoading
+        ? "Checking..."
+        : !hiretivo.isVerified
+          ? hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW"
+            ? "Verification pending"
+            : hiretivo.status === "REJECTED"
+              ? "Fix profile to apply"
+              : "Get verified to apply"
+          : undefined
+      : undefined;
 
   return (
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
@@ -84,25 +104,33 @@ export function JobDetailSidebar({
         </div>
 
         <div className="space-y-3">
-          <Button
-            onClick={() =>
-              verificationStatus?.requiresVerification
-                ? openEmailVerificationModal()
-                :
-              openApplyModal(
-                job.id,
-                job.title,
-                job.companyName,
-                job.applyType,
-                job.externalApplyUrl,
-              )
-            }
-            variant="primary"
-            className="w-full py-3"
-          >
-            Apply Now
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          {applyLockedLabel ? (
+            <Button
+              variant="secondary"
+              className="w-full py-3 cursor-not-allowed"
+              disabled
+              aria-disabled="true"
+            >
+              {applyLockedLabel}
+            </Button>
+          ) : (
+            <Button
+              onClick={() =>
+                openApplyModal(
+                  job.id,
+                  job.title,
+                  job.companyName,
+                  job.applyType,
+                  job.externalApplyUrl,
+                )
+              }
+              variant="primary"
+              className="w-full py-3"
+            >
+              Apply Now
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          )}
           <SaveJobButton
             jobId={job.id}
             isAuth={isAuth}

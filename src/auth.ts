@@ -14,8 +14,9 @@ function isRole(value: unknown): value is Role {
 function isPlanTier(value: unknown): value is PlanTier {
   return (
     value === PlanTier.FREE ||
-    value === PlanTier.PRO ||
-    value === PlanTier.ENTERPRISE
+    value === PlanTier.STARTER ||
+    value === PlanTier.GROWTH ||
+    value === PlanTier.SCALE
   );
 }
 

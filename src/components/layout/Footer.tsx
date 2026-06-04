@@ -26,7 +26,9 @@ export function Footer({ className }: FooterProps) {
               <Logo variant="white" size="lg" />
             </Link>
             <p className="text-gray-500 text-base mb-8">
-              Skills-based remote job portal connecting talented professionals with remote-first companies worldwide.
+              Hiretivo helps US and EU startups discover verified Indian
+              engineers with clear skills, salary expectations, and availability
+              before the first call.
             </p>
             <div className="flex gap-3">
               {SOCIAL_LINKS.map(({ href, icon: Icon, label }) => (
@@ -50,6 +52,8 @@ export function Footer({ className }: FooterProps) {
               <ul className="space-y-3 text-sm">
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/about">About</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how">How It Works</Link></li>
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/pricing">Pricing</Link></li>
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/recruiter/register">Post a Job</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
               </ul>
             </div>

@@ -29,12 +29,18 @@ export interface DigestPreferenceSummary {
   enabled: boolean;
 }
 
+export interface VerificationSummary {
+  status: string;
+  verificationNotes: string | null;
+}
+
 export interface SeekerDashboardData {
   greetingName: string | null;
   profileStrength: ProfileStrengthSummary;
   quickStats: QuickStatsSummary;
   skillGap: SkillGapSummary;
   digest: DigestPreferenceSummary;
+  verification: VerificationSummary;
 }
 
 export interface SeekerInterview {

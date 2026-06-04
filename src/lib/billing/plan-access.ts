@@ -1,37 +1,56 @@
-import { PlanTier, type RecruiterPaidFeature } from "@/constants/enums";
+import { PlanTier } from "@/constants/enums";
 
-export function canAccessRecruiterPaidFeature(plan: string | null | undefined): boolean {
-  return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE;
+/*
+ * canAccessTalentPool
+ * Returns true for all paid plans (STARTER/GROWTH/SCALE).
+ * FREE recruiters see blurred demo cards only.
+ */
+export function canAccessTalentPool(plan: string | null | undefined): boolean {
+  return (
+    plan === PlanTier.STARTER ||
+    plan === PlanTier.GROWTH ||
+    plan === PlanTier.SCALE
+  );
 }
 
-export const PAID_FEATURE_COPY: Record<
-  RecruiterPaidFeature,
-  { title: string; description: string }
-> = {
-  talent_pool: {
-    title: "Unlock the Talent Pool",
-    description:
-      "Search verified candidates by skills, role, location, and availability. Available on Pro and Enterprise.",
-  },
-  interview_scheduling: {
-    title: "Schedule Interviews from Hiretivo",
-    description:
-      "Send interview invites and email candidates directly. Available on Pro and Enterprise.",
-  },
-  ai_candidate_summaries: {
-    title: "AI Candidate Summaries",
-    description:
-      "Get instant AI-powered insights on every candidate. Available on Pro and Enterprise.",
-  },
+/*
+ * getUnlockQuota
+ * Returns max talent_pool unlocks per billing period.
+ * null = unlimited (SCALE). 0 = FREE (no unlocks).
+ */
+export function getUnlockQuota(plan: string | null | undefined): number | null {
+  if (plan === PlanTier.STARTER) return 10;
+  if (plan === PlanTier.GROWTH) return 30;
+  if (plan === PlanTier.SCALE) return null;
+  return 0;
+}
+
+/*
+ * canPostJob
+ * Returns true when this plan can post another active job given the current count.
+ * STARTER=2 active jobs, GROWTH/SCALE=unlimited, FREE=0.
+ */
+export function canPostJob(
+  plan: string | null | undefined,
+  currentActiveJobCount: number,
+): boolean {
+  if (plan === PlanTier.STARTER) return currentActiveJobCount < 2;
+  if (plan === PlanTier.GROWTH || plan === PlanTier.SCALE) return true;
+  return false;
+}
+
+/*
+ * getJobLimit
+ * Returns the max active jobs allowed for the plan. null = unlimited.
+ */
+export function getJobLimit(plan: string | null | undefined): number | null {
+  if (plan === PlanTier.STARTER) return 2;
+  if (plan === PlanTier.GROWTH || plan === PlanTier.SCALE) return null;
+  return 0;
+}
+
+export const TALENT_POOL_UPGRADE_COPY = {
+  title: "Unlock the Verified Talent Pool",
+  description:
+    "Browse 1,000+ verified Indian engineers. Unlock profiles to reveal full contact details. Starting at $199/mo.",
 };
-
-export const PAID_FEATURE_FORBIDDEN_MESSAGE =
-  "This feature requires Pro or Enterprise. Upgrade your plan to continue.";
-
-export const PAID_FEATURES_BENEFITS = [
-  { icon: "users", text: "Search verified candidates by skills & role" },
-  { icon: "calendar", text: "Schedule interviews directly" },
-  { icon: "sparkles", text: "AI candidate summaries & insights" },
-  { icon: "mail", text: "Email candidates directly" },
-  { icon: "zap", text: "Cancel anytime, no contracts" },
-];

@@ -1,5 +1,6 @@
 export interface TalentListItem {
   id: string;
+  isUnlocked: boolean;
   name: string | null;
   email: string | null;
   image: string | null;
@@ -19,6 +20,8 @@ export interface TalentListResponse {
     total: number;
     page: number;
     limit: number;
+    demoCount: number;    // Count of all seekers with a profile (unaffected by search filters)
+    isFreePlan: boolean;  // true when caller is on FREE plan (items are blurred), false for paid
   };
 }
 
@@ -57,6 +60,7 @@ export interface TalentEducation {
 
 export interface TalentDetail {
   id: string;
+  isUnlocked: boolean;
   name: string | null;
   email: string | null;
   image: string | null;
@@ -69,7 +73,7 @@ export interface TalentDetail {
   resumeKey: boolean;
   resumeUrl: string | null;
   skills: TalentSkill[];
-  links: TalentProfileLinks;
+  links: TalentProfileLinks | null;
   workExperiences: TalentWorkExperience[];
   educations: TalentEducation[];
   profile: {

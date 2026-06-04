@@ -3,18 +3,18 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import {
-  completeSeekerOnboarding,
-  skipSeekerResumeOnboarding,
-} from '@/app/actions/onboarding/seeker';
+import { completeSeekerOnboarding } from '@/app/actions/onboarding/seeker';
 import { OnboardingShell } from '@/components/layout/OnboardingShell';
 import { cn } from '@/lib/utils';
+import { computeOnboardingStrength } from '@/lib/onboarding/profile-strength';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
+import { OnboardingSideRail } from './OnboardingSideRail';
 import { StepWelcome } from './StepWelcome';
 import { StepSkills } from './StepSkills';
-import { StepResume } from './StepResume';
-import { StepPreferences } from './StepPreferences';
-import { StepSeekerComplete } from './StepSeekerComplete';
+import { StepProofOfWork } from './StepProofOfWork';
+import { StepExperience } from './StepExperience';
+import { StepCompensation } from './StepCompensation';
+import { StepReviewSubmit } from './StepReviewSubmit';
 import type {
   SeekerOnboardingStep,
   Step1Data,
@@ -23,7 +23,23 @@ import type {
   Step4Data,
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
-const STEP_LABELS = ['Welcome', 'Skills', 'Resume', 'Preferences', 'Complete'];
+/*
+ * SeekerOnboardingContainer
+ * Root client component for the 6-step verified-engineer onboarding flow.
+ * Manages step transitions, progress bar, side rail strength computation,
+ * and the final completeSeekerOnboarding server action.
+ */
+
+const STEP_LABELS = [
+  'About You',
+  'Skills',
+  'Proof of Work',
+  'Experience',
+  'Compensation',
+  'Review & Submit',
+];
+
+const TOTAL_STEPS = 6;
 
 interface SeekerOnboardingContainerProps {
   initialStep: SeekerOnboardingStep;
@@ -47,9 +63,12 @@ export function SeekerOnboardingContainer({
     previousStep,
     setCurrentStep,
     initializeOnboarding,
+    step1,
+    step2,
+    proofOfWork,
+    experience,
+    compensation,
   } = useSeekerOnboardingStore();
-
-  const progressPercent = ((currentStep - 1) / 4) * 100;
 
   useEffect(() => {
     initializeOnboarding({
@@ -59,97 +78,103 @@ export function SeekerOnboardingContainer({
     window.localStorage.removeItem('hiretivo-seeker-onboarding');
   }, [initialData, initialStep, initializeOnboarding]);
 
-  const handleSkipResume = async () => {
-    const result = await skipSeekerResumeOnboarding();
-    if (!result.success) {
-      console.error("[SeekerOnboardingContainer] skipSeekerResumeOnboarding failed:", result.error);
-      return;
-    }
-    setCurrentStep(4);
-  };
-
+  /*
+   * handleComplete
+   * Triggers the completeSeekerOnboarding server action.
+   * On success: redirects to the returned URL.
+   * On failure: snaps back to the missing step.
+   */
   const handleComplete = async () => {
     const result = await completeSeekerOnboarding();
 
     if (!result.success) {
-      console.error("[SeekerOnboardingContainer] completeSeekerOnboarding failed:", result.error);
+      console.error(
+        '[SeekerOnboardingContainer] completeSeekerOnboarding failed:',
+        result.error,
+      );
       setCurrentStep(result.missingStep);
-      return result;
+      return;
     }
 
     router.push(result.redirectTo);
     router.refresh();
-    return result;
   };
+
+  /* Compute live profile strength for the side rail */
+  const strength = computeOnboardingStrength({
+    step1,
+    step2,
+    proofOfWork,
+    experience,
+    compensation,
+  });
+
+  /* Clamp step to valid SeekerOnboardingStep range (1–6) for the side rail */
+  const sideRailStep = Math.min(
+    Math.max(currentStep, 1),
+    TOTAL_STEPS,
+  ) as SeekerOnboardingStep;
+
+  const showProgress = currentStep <= TOTAL_STEPS;
+  const progressPercent = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <StepWelcome
-            onNext={nextStep}
-          />
-        );
+        return <StepWelcome onNext={nextStep} />;
       case 2:
-        return (
-          <StepSkills
-            onNext={nextStep}
-            onBack={previousStep}
-          />
-        );
+        return <StepSkills onNext={nextStep} onBack={previousStep} />;
       case 3:
-        return (
-          <StepResume
-            onNext={nextStep}
-            onBack={previousStep}
-            onSkip={handleSkipResume}
-          />
-        );
+        return <StepProofOfWork onNext={nextStep} onBack={previousStep} />;
       case 4:
-        return (
-          <StepPreferences
-            onNext={nextStep}
-            onBack={previousStep}
-          />
-        );
+        return <StepExperience onNext={nextStep} onBack={previousStep} />;
       case 5:
-        return <StepSeekerComplete onComplete={handleComplete} />;
+        return <StepCompensation onNext={nextStep} onBack={previousStep} />;
+      case 6:
+        return (
+          <StepReviewSubmit onBack={previousStep} onComplete={handleComplete} />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <OnboardingShell>
-      {currentStep < 5 && (
+    <OnboardingShell
+      sideRail={<OnboardingSideRail strength={strength} step={sideRailStep} />}
+    >
+      {showProgress && (
         <div className="max-w-2xl mx-auto mb-8">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-foreground">
-              Step {currentStep} of 5
+            <p className="text-sm font-medium text-brand-foreground">
+              Step {currentStep} of {TOTAL_STEPS}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-brand-foreground-muted">
               {Math.round(progressPercent)}% Complete
             </p>
           </div>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map((step) => (
+          <div className="flex gap-1.5">
+            {STEP_LABELS.map((label, index) => (
               <div
-                key={step}
+                key={label}
                 className={cn(
                   'flex-1 h-2 rounded-full transition-colors',
-                  step <= currentStep ? 'bg-primary' : 'bg-muted'
+                  index + 1 <= currentStep ? 'bg-brand-primary' : 'bg-brand-surface',
                 )}
               />
             ))}
           </div>
-          <div className="flex justify-between mt-2">
+          <div className="flex justify-between mt-2 overflow-hidden">
             {STEP_LABELS.map((label, index) => (
               <p
                 key={label}
                 className={cn(
-                  'text-xs',
-                  index + 1 <= currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
+                  'text-xs truncate',
+                  index + 1 <= currentStep
+                    ? 'text-brand-primary font-medium'
+                    : 'text-brand-foreground-muted',
                 )}
+                style={{ maxWidth: `${100 / STEP_LABELS.length}%` }}
               >
                 {label}
               </p>

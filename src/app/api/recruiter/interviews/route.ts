@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
   }
 
   const canAccessInterviewScheduling = (plan: string | null | undefined): boolean => {
-  return plan === PlanTier.PRO || plan === PlanTier.ENTERPRISE || isRecruiterTrialActive();
-};
+    return plan === PlanTier.STARTER || plan === PlanTier.GROWTH || plan === PlanTier.SCALE || isRecruiterTrialActive();
+  };
 
   if (!canAccessInterviewScheduling(recruiter.plan)) {
     return NextResponse.json(

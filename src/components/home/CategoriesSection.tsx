@@ -1,7 +1,35 @@
 import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, DollarSign, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CATEGORY_SHOWCASE, HOMEPAGE_DISPLAY_STATS } from "@/config/home-page";
+import { Code2, Palette, BarChart3 } from "lucide-react";
+
+/* Hardcoded fallback — CATEGORY_SHOWCASE was removed from home-page.ts config. This file will be deleted in the next homepage rebuild task. */
+const CATEGORY_SHOWCASE = [
+  {
+    title: "Engineering",
+    count: "0 jobs",
+    roles: "Frontend, Backend, Full-Stack",
+    salary: "$80k – $150k",
+    skills: ["React", "Node.js", "TypeScript"],
+    icon: Code2,
+  },
+  {
+    title: "Design",
+    count: "0 jobs",
+    roles: "Product, UX, Brand",
+    salary: "$70k – $120k",
+    skills: ["Figma", "Prototyping", "Research"],
+    icon: Palette,
+  },
+  {
+    title: "Growth",
+    count: "0 jobs",
+    roles: "Marketing, Analytics, SEO",
+    salary: "$60k – $110k",
+    skills: ["SEO", "Ads", "Analytics"],
+    icon: BarChart3,
+  },
+];
 
 interface CategoriesSectionProps {
   activeJobs: string;

@@ -1,32 +1,13 @@
 import { auth } from "@/auth";
-import { PlanTier, UserRole } from "@/constants/enums";
-import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
+import { UserRole } from "@/constants/enums";
+import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 
 interface TalentDetailRouteContext {
-  params: {
-    id: string;
-  };
-}
-
-/*
- * isPaidPlan
- * Checks whether a recruiter plan can view full talent profile details.
- * Returns true when billing access rules allow the feature.
- */
-function isPaidPlan(plan: string | null | undefined): boolean {
-  if (plan === PlanTier.PRO) {
-    return canAccessRecruiterPaidFeature(PlanTier.PRO);
-  }
-
-  if (plan === PlanTier.ENTERPRISE) {
-    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
-  }
-
-  return canAccessRecruiterPaidFeature(PlanTier.FREE);
+  params: { id: string };
 }
 
 /*
@@ -35,10 +16,7 @@ function isPaidPlan(plan: string | null | undefined): boolean {
  * Returns null when no key exists or signing fails.
  */
 async function resolveResumeUrl(resumeKey: string | null): Promise<string | null> {
-  if (!resumeKey) {
-    return null;
-  }
-
+  if (!resumeKey) return null;
   try {
     return await getSignedFileUrl(resumeKey);
   } catch {
@@ -48,15 +26,16 @@ async function resolveResumeUrl(resumeKey: string | null): Promise<string | null
 
 /*
  * GET /api/recruiter/talent/[id]
- * Returns the complete Talent Pool profile for paid recruiters.
- * Responds with profile detail or auth/plan/not-found/rate-limit errors.
+ * Returns engineer profile in locked or unlocked shape based on EngineerUnlock record.
+ * Only VERIFIED engineers are accessible. Requires STARTER/GROWTH/SCALE plan.
+ * Locked shape: first name + last initial, skills, headline — no PII.
+ * Unlocked shape: full PII including email, resume URL, social links.
  */
 export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
     return new Response("Unauthorized", { status: 401 });
   }
-
   if (session.user.role !== UserRole.RECRUITER) {
     return new Response("Forbidden", { status: 403 });
   }
@@ -71,14 +50,16 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
     select: { plan: true },
   });
 
-  if (!isPaidPlan(recruiter?.plan)) {
+  if (!canAccessTalentPool(recruiter?.plan)) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  const seeker = await prisma.user.findFirst({
+  // Only VERIFIED engineers accessible — prevents ID-guessing attacks
+  const engineer = await prisma.user.findFirst({
     where: {
       id: params.id,
       role: "SEEKER",
+      verificationStatus: "VERIFIED",
     },
     select: {
       id: true,
@@ -139,19 +120,77 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
     },
   });
 
-  if (!seeker?.seekerProfile) {
+  if (!engineer?.seekerProfile) {
     return new Response("Not found", { status: 404 });
   }
 
-  const profile = seeker.seekerProfile;
-  const resumeUrl = await resolveResumeUrl(profile.resumeKey);
+  // Check if this recruiter has already unlocked this engineer
+  const unlock = await prisma.engineerUnlock.findUnique({
+    where: {
+      recruiterId_engineerId: {
+        recruiterId: session.user.id,
+        engineerId: params.id,
+      },
+    },
+    select: { id: true },
+  });
 
+  const isUnlocked = unlock !== null;
+  const profile = engineer.seekerProfile;
+
+  // Build name for locked shape: "Priya S."
+  const nameParts = (engineer.name ?? "").trim().split(/\s+/);
+  const lockedName =
+    nameParts.length >= 2
+      ? `${nameParts[0]} ${nameParts[nameParts.length - 1]!.charAt(0)}.`
+      : (nameParts[0] ?? "Engineer");
+
+  const skills = profile.skills.map((item) => ({
+    name: item.skill.name,
+    category: item.skill.category,
+    level: item.level,
+  }));
+
+  if (!isUnlocked) {
+    return NextResponse.json({
+      data: {
+        id: engineer.id,
+        isUnlocked: false,
+        name: lockedName,
+        image: null,
+        email: null,
+        headline: profile.headline,
+        bio: null,
+        location: profile.location,
+        yearsExperience: profile.yearsExperience,
+        primaryRole: profile.primaryRole,
+        availability: profile.availability,
+        resumeKey: false,
+        resumeUrl: null,
+        skills,
+        links: null,
+        workExperiences: [],
+        educations: [],
+        profile: {
+          workPreference: profile.workPreference,
+          situation: null,
+          salaryMin: null,
+          salaryMax: null,
+          currency: profile.currency,
+        },
+      },
+    });
+  }
+
+  // Unlocked shape — full PII
+  const resumeUrl = await resolveResumeUrl(profile.resumeKey);
   return NextResponse.json({
     data: {
-      id: seeker.id,
-      name: seeker.name,
-      email: seeker.email,
-      image: resolveLogoUrl(seeker.image),
+      id: engineer.id,
+      isUnlocked: true,
+      name: engineer.name,
+      image: resolveLogoUrl(engineer.image),
+      email: engineer.email,
       headline: profile.headline,
       bio: profile.bio,
       location: profile.location,
@@ -160,11 +199,7 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
       availability: profile.availability,
       resumeKey: Boolean(profile.resumeKey),
       resumeUrl,
-      skills: profile.skills.map((item) => ({
-        name: item.skill.name,
-        category: item.skill.category,
-        level: item.level,
-      })),
+      skills,
       links: {
         websiteUrl: profile.websiteUrl,
         linkedinUrl: profile.linkedinUrl,

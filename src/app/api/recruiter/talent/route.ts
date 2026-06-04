@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
-import { PlanTier, UserRole } from "@/constants/enums";
-import { canAccessRecruiterPaidFeature } from "@/lib/billing/plan-access";
+import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
+import { UserRole } from "@/constants/enums";
+import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { searchRateLimiter } from "@/lib/rate-limit";
@@ -41,27 +42,14 @@ function getBioExcerpt(bio: string | null | undefined): string | null {
   return bio.length > 180 ? `${bio.slice(0, 177)}...` : bio;
 }
 
-/*
- * isPaidPlan
- * Checks whether a recruiter plan can access paid talent features.
- * Returns true when the plan is allowed by billing access rules.
- */
-function isPaidPlan(plan: string | null | undefined): boolean {
-  if (plan === PlanTier.PRO) {
-    return canAccessRecruiterPaidFeature(PlanTier.PRO);
-  }
-
-  if (plan === PlanTier.ENTERPRISE) {
-    return canAccessRecruiterPaidFeature(PlanTier.ENTERPRISE);
-  }
-
-  return canAccessRecruiterPaidFeature(PlanTier.FREE);
-}
 
 /*
  * GET /api/recruiter/talent
- * Searches seeker talent profiles for paid recruiters with filters and pagination.
- * Returns talent rows plus pagination metadata or auth/plan/rate-limit errors.
+ * Returns talent pool for paid and free recruiters with search/filter/pagination.
+ * FREE plan: returns blurred seeker items (name = "First L.", email/image null) + demoCount + isFreePlan:true.
+ *   Enables mix-mode in TalentPoolClient without a hard paywall.
+ * Paid plans: returns full unblurred talent list + demoCount + isFreePlan:false.
+ * demoCount is NOT filtered by search — always reflects total real pool size.
  */
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -83,8 +71,71 @@ export async function GET(req: NextRequest) {
     select: { plan: true },
   });
 
-  if (!isPaidPlan(recruiter?.plan)) {
-    return new Response("Forbidden", { status: 403 });
+  // Count all seekers with a profile — runs for both FREE and paid paths.
+  // Not affected by search filters — always reflects real pool size.
+  const demoCount = await prisma.user.count({
+    where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
+  });
+
+  if (!canAccessTalentPool(recruiter?.plan)) {
+    // FREE plan: return blurred seeker items (up to DEMO_THRESHOLD) + demoCount.
+    // Names are blurred to "First L." server-side. Email and image are nulled.
+    // Client uses these alongside DEMO_ENGINEERS static cards for mix-mode grid.
+    const blurredSeekers = await prisma.user.findMany({
+      where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
+      take: DEMO_THRESHOLD,
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        name: true,
+        seekerProfile: {
+          select: {
+            headline: true,
+            yearsExperience: true,
+            primaryRole: true,
+            availability: true,
+            resumeKey: true,
+            skills: {
+              select: { skill: { select: { name: true } } },
+              orderBy: { skill: { name: "asc" } },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: {
+        items: blurredSeekers.map((seeker) => {
+          const profile = seeker.seekerProfile;
+          // Blur name: "Priya Sharma" → "Priya S."
+          const nameParts = (seeker.name ?? "").trim().split(/\s+/);
+          const blurredName =
+            nameParts.length >= 2
+              ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
+              : (nameParts[0] ?? "Engineer");
+          return {
+            id: seeker.id,
+            name: blurredName,
+            email: null,      // never expose email on FREE plan
+            image: null,      // never expose real avatar on FREE plan
+            headline: profile?.headline ?? null,
+            bioExcerpt: null, // bio hidden on FREE plan
+            location: null,   // location hidden on FREE plan
+            yearsExperience: profile?.yearsExperience ?? null,
+            primaryRole: profile?.primaryRole ?? null,
+            availability: profile?.availability ?? null,
+            resumeKey: false, // resume not accessible on FREE plan
+            skills: profile?.skills.map((item) => item.skill.name) ?? [],
+          };
+        }),
+        total: demoCount,
+        page: 1,
+        limit: DEMO_THRESHOLD,
+        demoCount,
+        isFreePlan: true,
+      },
+    });
   }
 
   const url = new URL(req.url);
@@ -100,6 +151,7 @@ export async function GET(req: NextRequest) {
 
   const where: Prisma.UserWhereInput = {
     role: "SEEKER",
+    verificationStatus: 'VERIFIED',
     seekerProfile: {
       is: {
         ...(location
@@ -204,16 +256,35 @@ export async function GET(req: NextRequest) {
     prisma.user.count({ where }),
   ]);
 
+  // Batch-load which engineers this recruiter has already unlocked
+  const seekerIds = seekers.map((s) => s.id);
+  const existingUnlocks = await prisma.engineerUnlock.findMany({
+    where: {
+      recruiterId: session.user.id,
+      engineerId: { in: seekerIds },
+    },
+    select: { engineerId: true },
+  });
+  const unlockedSet = new Set(existingUnlocks.map((u) => u.engineerId));
+
   return NextResponse.json({
     data: {
       items: seekers.map((seeker) => {
         const profile = seeker.seekerProfile;
 
+        const isUnlocked = unlockedSet.has(seeker.id);
+        const nameParts = (seeker.name ?? "").trim().split(/\s+/);
+        const lockedName =
+          nameParts.length >= 2
+            ? `${nameParts[0]} ${nameParts[nameParts.length - 1]!.charAt(0)}.`
+            : (nameParts[0] ?? "Engineer");
+
         return {
           id: seeker.id,
-          name: seeker.name,
-          email: seeker.email,
-          image: resolveLogoUrl(seeker.image),
+          isUnlocked,
+          name: isUnlocked ? seeker.name : lockedName,
+          email: isUnlocked ? seeker.email : null,
+          image: isUnlocked ? resolveLogoUrl(seeker.image) : null,
           headline: profile?.headline ?? null,
           bioExcerpt: getBioExcerpt(profile?.bio),
           location: profile?.location ?? null,
@@ -227,6 +298,8 @@ export async function GET(req: NextRequest) {
       total,
       page,
       limit,
+      demoCount,
+      isFreePlan: false,
     },
   });
 }

@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import Image from "next/image";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
@@ -17,12 +16,14 @@ import {
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { PublicMobileNavMenu } from "@/components/layout/PublicMobileNavMenu";
 import { Logo } from "@/components/shared/Logo";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 
 interface HeaderProps {
   className?: string;
   publicAudience?: "seeker" | "recruiter";
+  variant?: "dark" | "light";
 }
 
 /** Nav items to show — only Jobs and Applied Jobs, no Settings or Contact. */
@@ -35,13 +36,12 @@ const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
  * Renders the shared top navigation for public, seeker, and recruiter views.
  * Returns mobile-first public auth controls and role-specific desktop nav.
  */
-export async function Header({ className }: HeaderProps) {
+export async function Header({ className, variant = 'light' }: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isSeeker = !!session && role === UserRole.SEEKER;
   const isRecruiter = !!session && role === UserRole.RECRUITER;
 
-  const initials = session?.user?.name?.[0]?.toUpperCase() ?? "U";
   let companyLogoUrl: string | null = null;
   if (isRecruiter && session?.user?.id) {
     const recruiter = await prisma.recruiterProfile.findUnique({
@@ -58,7 +58,10 @@ export async function Header({ className }: HeaderProps) {
   return (
     <nav
       className={cn(
-        "sticky top-0 z-50 w-full border-b border-brand-border bg-white px-4 py-3 md:px-6",
+        "sticky top-0 z-50 w-full border-b px-4 py-3 md:px-6",
+        variant === "dark"
+          ? "border-white/[0.07] bg-brand-foreground"
+          : "border-brand-border bg-white",
         className,
       )}
       data-purpose="main-navigation"
@@ -112,19 +115,34 @@ export async function Header({ className }: HeaderProps) {
             <>
               <Link
                 href={"/recruiter/register"}
-                className="hidden rounded-lg border border-brand-primary/20 bg-brand-surface px-5 py-2.5 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-primary hover:text-white sm:block"
+                className={cn(
+                  "hidden rounded-lg px-5 py-2.5 text-sm font-bold transition-colors sm:block",
+                  variant === "dark"
+                    ? "bg-brand-primary text-white hover:bg-brand-primary-dark"
+                    : "border border-brand-primary/20 bg-brand-surface text-brand-foreground hover:bg-brand-primary hover:text-white",
+                )}
               >
                 I&apos;m a recruiter
               </Link>
               <Link
                 href={"/seeker/register"}
-                className="hidden rounded-lg border border-brand-border px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface sm:block"
+                className={cn(
+                  "hidden rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors sm:block",
+                  variant === "dark"
+                    ? "border border-white/10 text-white/50 hover:bg-white/5"
+                    : "border border-brand-border text-brand-foreground hover:bg-brand-surface",
+                )}
               >
                 Sign Up
               </Link>
               <Link
                 href={"/seeker/login"}
-                className="hidden rounded-lg bg-brand-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark sm:block"
+                className={cn(
+                  "hidden rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors sm:block",
+                  variant === "dark"
+                    ? "border border-white/10 text-white/60 hover:bg-white/5"
+                    : "bg-brand-primary text-white hover:bg-brand-primary-dark",
+                )}
               >
                 Sign In
               </Link>
@@ -138,19 +156,15 @@ export async function Header({ className }: HeaderProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="relative cursor-pointer flex items-center gap-2 group outline-none">
-                    <div className="w-9 h-9 overflow-hidden rounded-full bg-black/10 border-2 border-brand-primary/20 flex items-center justify-center text-black font-bold text-sm ring-2 ring-transparent transition-all group-hover:border-black">
-                      {avatarUrl ? (
-                        <Image
-                          src={avatarUrl}
-                          alt={initials}
-                          width={36}
-                          height={36}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        initials
-                      )}
-                    </div>
+                    <InitialsAvatar
+                      name={session.user.name}
+                      email={session.user.email}
+                      userId={session.user.id}
+                      image={avatarUrl}
+                      fallbackSeed="header-avatar"
+                      size="md"
+                      className="h-9 w-9 border-2 border-brand-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-black"
+                    />
                     <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </div>
                 </DropdownMenuTrigger>

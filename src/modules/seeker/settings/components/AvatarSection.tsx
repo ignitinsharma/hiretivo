@@ -54,7 +54,7 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
       <div className="border-b border-slate-100 p-6">
         <h3 className="text-lg font-bold text-slate-900">Avatar</h3>
         <p className="text-sm text-slate-500">
-          Add a profile image or use initials fallback across Hiretivo.
+          Add a profile image for your Hiretivo profile.
         </p>
       </div>
       <div className="flex items-center justify-between gap-4 p-6">

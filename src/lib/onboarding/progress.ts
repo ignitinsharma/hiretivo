@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5;
+export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
 export type RecruiterOnboardingStep = 1 | 2 | 3 | 4;
 
 export interface SeekerOnboardingDraft {
@@ -27,6 +27,11 @@ export interface SeekerProgressProfile {
   primaryRole: string | null;
   availability: string | null;
   skillsCount: number;
+  githubUrl?: string | null;
+  hasProjects?: boolean;
+  workExperiencesCount?: number;
+  resumeKey?: string | null;
+  headline?: string | null;
 }
 
 export interface RecruiterProgressProfile {
@@ -110,7 +115,7 @@ export function nextProgressStep(
 }
 
 function isSeekerStep(value: number | null | undefined): value is SeekerOnboardingStep {
-  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6;
 }
 
 function isRecruiterStep(
@@ -123,15 +128,24 @@ export function resolveSeekerOnboardingStep(
   storedStep: number | null | undefined,
   profile: SeekerProgressProfile | null | undefined,
 ): SeekerOnboardingStep {
+  // Hard gate: step 1 — situation required
   if (!profile?.situation) return 1;
+
+  // Hard gate: step 2 — primary role + at least 1 skill required
   if (!profile.primaryRole || profile.skillsCount === 0) return 2;
 
-  if (isSeekerStep(storedStep)) {
-    if (storedStep === 5 && !profile.availability) return 4;
-    return storedStep;
-  }
+  // Hard gate: step 3 — GitHub URL + at least 1 project required
+  if (!profile.githubUrl || !profile.hasProjects) return 3;
 
-  return profile.availability ? 5 : 4;
+  // Hard gate: step 4 — at least 1 work experience required
+  if ((profile.workExperiencesCount ?? 0) === 0) return 4;
+
+  // Hard gate: step 5 — availability, headline, and resumeKey required
+  if (!profile.availability || !profile.headline || !profile.resumeKey) return 5;
+
+  // All steps complete — review step
+  if (isSeekerStep(storedStep) && storedStep >= 6) return 6;
+  return 6;
 }
 
 export function resolveRecruiterOnboardingStep(

@@ -6,9 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
 import { Button } from '@/components/ui/button';
-import { CurrencyCode, WorkType } from '@/constants/enums';
+import { CurrencyCode, UserRole, WorkType } from '@/constants/enums';
 import { SaveJobButton } from '@/modules/jobs/components/SaveJobButton';
-import { useEmailVerificationStatus } from '@/hooks/use-email-verification-status';
+import { useVerificationStatus } from '@/hooks/use-verification-status';
 import { formatApplicantCount } from '@/lib/jobs/format-applicant-count';
 
 interface JobData {
@@ -44,8 +44,28 @@ function formatSalary(min: number | null, max: number | null, currency: string |
 }
 
 export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps) {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
+  const hiretivo = useVerificationStatus();
+
+  /*
+   * applyLockedLabel
+   * Truthy when the authenticated seeker is not yet Hiretivo-verified.
+   * Shows 'Checking...' while the status query is in-flight to prevent a
+   * false 'Get verified to apply' flash for already-verified seekers.
+   * undefined means the normal Apply flow is allowed.
+   */
+  const applyLockedLabel: string | undefined =
+    isAuth && userRole === UserRole.SEEKER
+      ? hiretivo.isLoading
+        ? 'Checking...'
+        : !hiretivo.isVerified
+          ? hiretivo.status === 'PENDING' || hiretivo.status === 'IN_REVIEW'
+            ? 'Verification pending'
+            : hiretivo.status === 'REJECTED'
+              ? 'Fix profile to apply'
+              : 'Get verified to apply'
+          : undefined
+      : undefined;
 
   return (
     <>
@@ -115,19 +135,24 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
             userRole={userRole}
             className="px-6 py-3"
           />
-          <Button
-            onClick={() => {
-              if (verificationStatus?.requiresVerification) {
-                openEmailVerificationModal();
-                return;
-              }
-              openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl);
-            }}
-            variant="primary"
-            className="px-8 py-3"
-          >
-            Apply Now
-          </Button>
+          {applyLockedLabel ? (
+            <Button
+              variant="secondary"
+              className="px-8 py-3 cursor-not-allowed"
+              disabled
+              aria-disabled="true"
+            >
+              {applyLockedLabel}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)}
+              variant="primary"
+              className="px-8 py-3"
+            >
+              Apply Now
+            </Button>
+          )}
         </div>
       </div>
     </>

@@ -7,14 +7,14 @@ import { toast } from "sonner";
 
 import { JobCard } from "@/components/shared/JobCard";
 import { Card } from "@/components/ui/card";
-import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
+import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
 
 export function RecommendedJobsList() {
-  const { openApplyModal, openEmailVerificationModal } = useUIStore();
-  const { data: verificationStatus } = useEmailVerificationStatus();
+  const { openApplyModal } = useUIStore();
+  const hiretivo = useVerificationStatus();
   const queryClient = useQueryClient();
   const [dismissingJobId, setDismissingJobId] = useState<string | null>(null);
 
@@ -60,6 +60,21 @@ export function RecommendedJobsList() {
     },
   });
 
+  /*
+   * resolveApplyLockedLabel
+   * Returns a user-facing label when the seeker's Hiretivo verification blocks applying.
+   * Returns undefined when the seeker is verified (normal Apply Now flow).
+   */
+  const resolveApplyLockedLabel = (): string | undefined => {
+    if (hiretivo.isVerified) return undefined;
+    if (hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW")
+      return "Verification pending";
+    if (hiretivo.status === "REJECTED") return "Fix profile to apply";
+    return "Get verified to apply";
+  };
+
+  const applyLockedLabel = resolveApplyLockedLabel();
+
   const handleApply = (
     jobId: string,
     title?: string,
@@ -67,11 +82,6 @@ export function RecommendedJobsList() {
     applyType?: string,
     externalApplyUrl?: string | null,
   ) => {
-    if (verificationStatus?.requiresVerification) {
-      openEmailVerificationModal();
-      return;
-    }
-
     openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
   };
 
@@ -148,14 +158,18 @@ export function RecommendedJobsList() {
               showDescription
               onNotInterested={() => dismissMutation.mutate(job.id)}
               isDismissing={dismissingJobId === job.id}
-              onApply={() =>
-                handleApply(
-                  job.id,
-                  job.title,
-                  job.companyName,
-                  job.applyType,
-                  job.externalApplyUrl,
-                )
+              applyLockedLabel={applyLockedLabel}
+              onApply={
+                applyLockedLabel
+                  ? undefined
+                  : () =>
+                      handleApply(
+                        job.id,
+                        job.title,
+                        job.companyName,
+                        job.applyType,
+                        job.externalApplyUrl,
+                      )
               }
             />
           ))}

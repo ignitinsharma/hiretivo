@@ -1,82 +1,125 @@
-import { CurrencyCode, PricingTierId } from "@/constants/enums";
+import { PricingTierId } from "@/constants/enums";
 
-export type PricingCurrency = CurrencyCode.INR | CurrencyCode.USD;
-
-interface PricePoint {
-  monthly: number;
-  annualTotal: number;
-  annualSavings: number;
-}
-
-export interface PricingTier {
+export interface PlanTierConfig {
   id: PricingTierId | "custom";
   name: string;
-  description: string;
-  cta: string;
+  monthlyPrice: number | null;
+  annualTotal: number | null;
+  annualSavings: number | null;
+  unlocks: number | null;
+  jobSlots: number | null;
   highlighted: boolean;
   isCustom: boolean;
   features: string[];
-  USD: PricePoint | null;
-  INR: PricePoint | null;
+  cta: string;
 }
 
-export const PRICING_CONFIG: PricingTier[] = [
+/*
+ * PLAN_TIERS
+ * Canonical pricing config for the pivot model. USD only.
+ * Annual = 2 months free (~17% off): monthlyPrice × 10.
+ */
+export const PLAN_TIERS: PlanTierConfig[] = [
   {
     id: PricingTierId.FREE,
     name: "Free",
-    description: "Trial offer — post up to 4 jobs and use AI features for free.",
-    cta: "Get started",
+    monthlyPrice: 0,
+    annualTotal: 0,
+    annualSavings: 0,
+    unlocks: 0,
+    jobSlots: 0,
     highlighted: false,
     isCustom: false,
     features: [
-      "4 active job posts",
-      "Unlimited applicant views",
+      "Browse blurred talent pool",
+      "Unlimited applicant views (inbound)",
       "AI candidate summaries",
       "Interview scheduling",
       "Basic skill matching",
-      "Email support",
     ],
-    USD: { monthly: 0, annualTotal: 0, annualSavings: 0 },
-    INR: { monthly: 0, annualTotal: 0, annualSavings: 0 },
+    cta: "Get started free",
   },
   {
-    id: PricingTierId.PRO,
-    name: "Pro",
-    description: "Advanced hiring tools for growing recruiter teams.",
-    cta: "Upgrade to Pro",
+    id: PricingTierId.STARTER,
+    name: "Starter",
+    monthlyPrice: 199,
+    annualTotal: 1990,
+    annualSavings: 398,
+    unlocks: 10,
+    jobSlots: 2,
+    highlighted: false,
+    isCustom: false,
+    features: [
+      "10 engineer unlocks per month",
+      "2 active job posts",
+      "Full contact details after unlock",
+      "AI candidate summaries",
+      "Interview scheduling",
+      "Priority email support",
+    ],
+    cta: "Start with Starter",
+  },
+  {
+    id: PricingTierId.GROWTH,
+    name: "Growth",
+    monthlyPrice: 399,
+    annualTotal: 3990,
+    annualSavings: 798,
+    unlocks: 30,
+    jobSlots: null,
     highlighted: true,
     isCustom: false,
     features: [
-      "10 active job posts",
-      "Unlimited applicant views",
-      "Talent pool access",
-      "Interview scheduling",
+      "30 engineer unlocks per month",
+      "Unlimited active job posts",
+      "Full contact details after unlock",
       "AI candidate summaries",
-      "More features coming soon",
+      "Interview scheduling",
+      "Priority email support",
     ],
-    USD: { monthly: 149, annualTotal: 1426, annualSavings: 362 },
-    INR: { monthly: 7999, annualTotal: 71986, annualSavings: 24002 },
+    cta: "Grow with Growth",
+  },
+  {
+    id: PricingTierId.SCALE,
+    name: "Scale",
+    monthlyPrice: 799,
+    annualTotal: 7990,
+    annualSavings: 1598,
+    unlocks: null,
+    jobSlots: null,
+    highlighted: false,
+    isCustom: false,
+    features: [
+      "Unlimited engineer unlocks",
+      "Unlimited active job posts",
+      "5 team seats",
+      "Full contact details after unlock",
+      "AI candidate summaries",
+      "Dedicated onboarding",
+    ],
+    cta: "Scale your hiring",
   },
   {
     id: "custom",
-    name: "Custom",
-    description: "Flexible hiring workflows for teams with custom needs.",
-    cta: "Contact sales",
+    name: "Enterprise",
+    monthlyPrice: null,
+    annualTotal: null,
+    annualSavings: null,
+    unlocks: null,
+    jobSlots: null,
     highlighted: false,
     isCustom: true,
     features: [
-      "Everything in Pro",
+      "Everything in Scale",
       "Custom contract terms",
-      "Dedicated onboarding",
-      "SLA options",
-      "Priority support",
+      "SLA guarantees",
+      "Custom integrations",
+      "Dedicated account manager",
     ],
-    USD: null,
-    INR: null,
+    cta: "Contact sales",
   },
 ];
 
-export const CURRENCY_SYMBOL: Record<PricingCurrency, string> = {
-  USD: "$",
-  INR: "₹",
-};
+// Backward-compat alias — remove once pricing-client.tsx is updated
+export const PRICING_CONFIG = PLAN_TIERS;
+export const CURRENCY_SYMBOL = { USD: "$", INR: "₹" } as const;

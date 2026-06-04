@@ -34,6 +34,7 @@ export default async function SeekerOnboardingPage() {
       onboardingCompleted: true,
       onboardingStep: true,
       onboardingDraft: true,
+      verificationStatus: true,
       name: true,
       seekerProfile: {
         select: {
@@ -44,17 +45,31 @@ export default async function SeekerOnboardingPage() {
           currency: true,
           availability: true,
           resumeKey: true,
+          headline: true,
+          githubUrl: true,
+          topProjects: true,
           skills: { select: { skill: { select: { name: true } } } },
+          _count: { select: { workExperiences: true } },
         },
       },
     },
   });
-  if (user?.onboardingCompleted === true) {
+
+  // Only redirect if onboarding is complete AND the profile has been submitted for review
+  if (
+    user?.onboardingCompleted === true &&
+    user?.verificationStatus !== "NOT_SUBMITTED"
+  ) {
     redirect("/seeker/dashboard");
   }
 
   const profile = user?.seekerProfile;
   const draft = parseOnboardingDraft(user?.onboardingDraft);
+
+  // Determine whether the seeker has at least one project in topProjects
+  const topProjects = profile?.topProjects as unknown as Array<unknown> | null;
+  const hasProjects = Array.isArray(topProjects) && topProjects.length > 0;
+
   const initialStep: SeekerOnboardingStep = resolveSeekerOnboardingStep(
     user?.onboardingStep,
     profile
@@ -63,6 +78,11 @@ export default async function SeekerOnboardingPage() {
           primaryRole: profile.primaryRole,
           availability: profile.availability,
           skillsCount: profile.skills.length,
+          githubUrl: profile.githubUrl,
+          hasProjects,
+          workExperiencesCount: profile._count.workExperiences,
+          resumeKey: profile.resumeKey,
+          headline: profile.headline,
         }
       : null,
   );
