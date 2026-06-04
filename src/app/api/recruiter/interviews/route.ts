@@ -8,6 +8,7 @@ import { sendInterviewScheduledEmail } from "@/lib/email/interview-scheduled";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
 import { NextRequest, NextResponse } from "next/server";
+import { INDIA_TIMEZONE } from "@/modules/india-location";
 
 const ratelimit = new Ratelimit({
   redis,
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     meetLink: interview.meetLink,
     notes: interview.notes,
     scheduledTimeZone: interview.scheduledTimeZone ?? null,
-    viewerTimezone: application.seeker.timezone ?? null,
+    viewerTimezone: application.seeker.timezone ?? INDIA_TIMEZONE,
   }).catch((err: unknown) => {
     console.error("Failed to send interview scheduled email:", err);
   });

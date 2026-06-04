@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { InterviewStatus, UserRole } from '@/constants/enums';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { INDIA_TIMEZONE } from '@/modules/india-location';
 
 const rateLimiter = createRateLimiter('seeker-interviews', 30, '1 m');
 
@@ -64,7 +65,7 @@ export async function GET() {
     notes: interview.notes,
     status: interview.status,
     scheduledTimeZone: interview.scheduledTimeZone,
-    viewerTimezone: seekerUser?.timezone ?? null,
+    viewerTimezone: seekerUser?.timezone ?? INDIA_TIMEZONE,
     jobTitle: interview.application.job.title,
     companyName:
       interview.recruiter.recruiterProfile?.companyName ??
