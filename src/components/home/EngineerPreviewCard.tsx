@@ -3,11 +3,12 @@
  * Light-themed static preview card for the homepage hero card stack.
  * First card highlighted (purple border). Cards 2+ progressively blurred.
  * Avatar gradient unique per engineer initial. Shows verified badge, skills,
- * salary + green-dot availability, and locked unlock CTA.
+ * proof review, salary + green-dot availability, and locked unlock CTA.
  * No DB calls, no interaction — purely decorative trust signal.
  */
 
-import { Lock, DollarSign } from 'lucide-react'
+import { Lock, DollarSign, ShieldCheck } from 'lucide-react'
+import { HiretivoVerifiedBadge } from '@/components/shared/HiretivoVerifiedBadge'
 import { InitialsAvatar } from '@/components/shared/InitialsAvatar'
 import { cn } from '@/lib/utils'
 
@@ -18,7 +19,6 @@ interface EngineerPreviewCardProps {
   lastInitial: string
   image?: string | null
   isVerified: boolean
-  hiretivoScore: number
   role: string
   yearsExp: number
   skills: readonly string[]
@@ -45,7 +45,6 @@ export function EngineerPreviewCard({
   lastInitial,
   image,
   isVerified,
-  hiretivoScore,
   role,
   skills,
   salaryMin,
@@ -72,7 +71,7 @@ export function EngineerPreviewCard({
         className,
       )}
     >
-      {/* ── Row 1: Avatar + name/role/verified + score ── */}
+      {/* ── Row 1: Avatar + name/role/verified + proof status ── */}
       <div className="flex items-start gap-3">
         <InitialsAvatar
           name={nameLabel}
@@ -80,39 +79,30 @@ export function EngineerPreviewCard({
           fallbackSeed={seed}
           image={image}
           size="lg"
+          verified={isVerified}
           className="shrink-0 bg-brand-surface"
         />
 
         {/* Name + role + verified */}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-sm font-bold leading-tight tracking-tight text-brand-foreground">
-            {nameLabel}
-          </p>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="truncate font-display text-sm font-bold leading-tight tracking-tight text-brand-foreground">
+              {nameLabel}
+            </p>
+            {isVerified && <HiretivoVerifiedBadge variant="inline" size="sm" />}
+          </div>
           <p className="mt-0.5 truncate font-body text-[11px] leading-snug text-brand-foreground-muted">
             {role}
           </p>
-
-          {isVerified && (
-            <div className="mt-2 flex">
-              <span className="inline-flex items-center gap-1 rounded-md border border-brand-primary/20 bg-brand-primary/[0.08] px-2 py-0.5 text-[10px] font-bold leading-none text-brand-primary">
-                ✓ Hiretivo Verified
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Score */}
         <div className="flex shrink-0 flex-col items-end">
-          <div className="flex items-baseline gap-0.5 font-display leading-none">
-            <span className="text-xl font-bold tracking-tight text-brand-primary">
-              {hiretivoScore}
-            </span>
-            <span className="text-[10px] font-semibold text-brand-foreground-secondary">
-              /100
-            </span>
+          <div className="inline-flex items-center gap-1 rounded-lg border border-brand-primary/20 bg-brand-primary/[0.06] px-2 py-1 text-[10px] font-bold leading-none text-brand-primary">
+            <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden="true" />
+            Reviewed
           </div>
-          <span className="mt-0.5 font-body text-[8px] font-bold text-brand-foreground-secondary">
-            Score
+          <span className="mt-1 font-body text-[8px] font-bold text-brand-foreground-secondary">
+            Proof checked
           </span>
         </div>
       </div>

@@ -1,7 +1,9 @@
 'use client';
 
+import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 
+import { HiretivoVerifiedBadge } from '@/components/shared/HiretivoVerifiedBadge';
 import { getAvatarImageUrl, getDiceBearAvatarUrl } from '@/lib/avatar';
 import { getInitials } from '@/lib/initials';
 import { cn } from '@/lib/utils';
@@ -15,6 +17,7 @@ interface InitialsAvatarProps {
   image?: string | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
+  verified?: boolean;
 }
 
 const SIZE_CLASSES: Record<NonNullable<InitialsAvatarProps['size']>, string> = {
@@ -40,6 +43,7 @@ export function InitialsAvatar({
   image,
   size = 'md',
   className,
+  verified = false,
 }: InitialsAvatarProps) {
   const [uploadedImageFailed, setUploadedImageFailed] = useState(false);
   const [fallbackImageFailed, setFallbackImageFailed] = useState(false);
@@ -63,44 +67,60 @@ export function InitialsAvatar({
     setFallbackImageFailed(false);
   }, [fallbackImageUrl]);
 
+  const avatarClassName = cn(
+    'rounded-full object-cover',
+    SIZE_CLASSES[size],
+    className,
+    verified &&
+      'border-2 border-brand-primary ring-2 ring-brand-primary/15 group-hover:border-brand-primary',
+  );
+  const fallbackClassName = cn(
+    'inline-flex select-none items-center justify-center rounded-full bg-gray-100 font-semibold text-black',
+    SIZE_CLASSES[size],
+    className,
+    verified &&
+      'border-2 border-brand-primary ring-2 ring-brand-primary/15 group-hover:border-brand-primary',
+  );
+
+  let avatar: ReactElement;
   if (uploadedImageUrl && !uploadedImageFailed) {
-    return (
+    avatar = (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={uploadedImageUrl}
         alt={label}
         width={px}
         height={px}
-        className={cn('rounded-full object-cover', SIZE_CLASSES[size], className)}
+        className={avatarClassName}
         onError={() => setUploadedImageFailed(true)}
       />
     );
-  }
-
-  if (!fallbackImageFailed) {
-    return (
+  } else if (!fallbackImageFailed) {
+    avatar = (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={fallbackImageUrl}
         alt={label}
         width={px}
         height={px}
-        className={cn('rounded-full object-cover', SIZE_CLASSES[size], className)}
+        className={avatarClassName}
         onError={() => setFallbackImageFailed(true)}
       />
     );
+  } else {
+    avatar = (
+      <span className={fallbackClassName} aria-label={label}>
+        {initials}
+      </span>
+    );
   }
 
+  if (!verified) return avatar;
+
   return (
-    <span
-      className={cn(
-        'inline-flex select-none items-center justify-center rounded-full bg-gray-100 font-semibold text-black',
-        SIZE_CLASSES[size],
-        className,
-      )}
-      aria-label={label}
-    >
-      {initials}
+    <span className="relative inline-flex shrink-0 rounded-full">
+      {avatar}
+      <HiretivoVerifiedBadge variant="avatar" size={size} />
     </span>
   );
 }

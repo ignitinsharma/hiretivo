@@ -38,7 +38,7 @@ export function PaidFeatureModal() {
         if (!open) closePaidFeatureModal();
       }}
     >
-      <DialogContent className="rounded-xl backdrop-blur-sm sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-xl backdrop-blur-sm sm:max-w-md">
         <DialogHeader>
           <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
             <Lock className="h-6 w-6" />

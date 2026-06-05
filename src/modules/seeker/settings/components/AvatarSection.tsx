@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Upload } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
@@ -14,10 +15,16 @@ import { uploadService } from "@/services/upload.service";
 interface AvatarSectionProps {
   name: string | null | undefined;
   image: string | null | undefined;
+  verified?: boolean;
 }
 
-export function AvatarSection({ name, image }: AvatarSectionProps) {
+export function AvatarSection({
+  name,
+  image,
+  verified = false,
+}: AvatarSectionProps) {
   const queryClient = useQueryClient();
+  const { update } = useSession();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [currentImage, setCurrentImage] = useState<string | null | undefined>(
@@ -35,9 +42,8 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
     try {
       const compressed = await compressImage(file);
       const result = await uploadService.uploadAvatar(compressed);
-      setCurrentImage(
-        `/api/logo?key=${encodeURIComponent(result.key)}&v=${Date.now()}`,
-      );
+      setCurrentImage(result.key);
+      await update({ user: { image: result.key } });
       await queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
       toast.success("Avatar uploaded successfully.");
     } catch (error) {
@@ -59,7 +65,12 @@ export function AvatarSection({ name, image }: AvatarSectionProps) {
       </div>
       <div className="flex items-center justify-between gap-4 p-6">
         <div className="relative h-24 w-24">
-          <InitialsAvatar name={name} image={currentImage} size="xl" />
+          <InitialsAvatar
+            name={name}
+            image={currentImage}
+            size="xl"
+            verified={verified}
+          />
           {isUploading ? (
             <Skeleton className="absolute inset-0 rounded-full bg-muted/80" />
           ) : null}

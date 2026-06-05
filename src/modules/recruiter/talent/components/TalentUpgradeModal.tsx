@@ -71,7 +71,7 @@ export function TalentUpgradeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-xl border border-brand-border bg-white p-6 sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-xl border border-brand-border bg-white p-6 sm:max-w-2xl">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl font-bold tracking-tight text-brand-foreground">
             Unlock India&apos;s Verified Engineers

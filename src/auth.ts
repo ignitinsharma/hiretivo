@@ -101,6 +101,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           select: {
             role: true,
             plan: true,
+            image: true,
             emailVerified: true,
             onboardingCompleted: true,
             onboardingStep: true,
@@ -109,6 +110,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (dbUser) {
           token.role = dbUser.role;
           token.plan = dbUser.plan;
+          token.image = dbUser.image ?? null;
           token.emailVerified = dbUser.emailVerified ?? null;
           token.onboardingCompleted = dbUser.onboardingCompleted ?? null;
           token.onboardingStep = dbUser.onboardingStep ?? null;
@@ -119,6 +121,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         const u = session.user as {
           role?: Role;
           plan?: PlanTier;
+          image?: string | null;
           onboardingCompleted?: boolean | null;
           onboardingStep?: number | null;
         };
@@ -127,6 +130,9 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         }
         if (u.plan) {
           token.plan = u.plan;
+        }
+        if (typeof u.image === "string" || u.image === null) {
+          token.image = u.image;
         }
         if (typeof u.onboardingCompleted === "boolean" || u.onboardingCompleted === null) {
           token.onboardingCompleted = u.onboardingCompleted;
@@ -137,10 +143,13 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (token.sub) {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            select: { emailVerified: true },
+            select: { emailVerified: true, image: true },
           });
           if (dbUser) {
             token.emailVerified = dbUser.emailVerified ?? null;
+            if (token.image === undefined) {
+              token.image = dbUser.image ?? null;
+            }
           }
         }
       }
@@ -162,16 +171,18 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       if (!role || !plan) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { role: true, plan: true },
+          select: { role: true, plan: true, image: true },
         });
         if (dbUser) {
           role = dbUser.role;
           plan = dbUser.plan;
+          token.image = dbUser.image ?? null;
         }
       }
 
       session.user.role = role ?? Role.SEEKER;
       session.user.plan = plan ?? PlanTier.FREE;
+      session.user.image = (token.image as string | null | undefined) ?? null;
       session.user.emailVerified = (token.emailVerified as Date | null | undefined) ?? null;
       session.user.onboardingCompleted = (token.onboardingCompleted as boolean | null | undefined) ?? null;
       session.user.onboardingStep = (token.onboardingStep as number | null | undefined) ?? null;

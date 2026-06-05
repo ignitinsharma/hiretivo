@@ -16,6 +16,7 @@ import { signOut, useSession } from "next-auth/react";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { cn } from "@/lib/utils";
 import { SEEKER_NAV_ITEMS } from "@/constants/nav";
+import { useVerificationStatus } from "@/hooks/use-verification-status";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function SeekerHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const hiretivo = useVerificationStatus();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3">
@@ -86,6 +88,7 @@ export function SeekerHeader() {
                   image={session?.user?.image}
                   fallbackSeed="seeker-header"
                   size="md"
+                  verified={hiretivo.isVerified}
                   className="h-9 w-9 border-2 border-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-primary"
                 />
                 <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />

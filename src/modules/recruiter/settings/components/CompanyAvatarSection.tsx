@@ -24,7 +24,7 @@ export function CompanyAvatarSection({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [currentLogo, setCurrentLogo] = useState<string | null>(logo);
-  const target = "companyLogo";
+  const displayCompanyName = companyName.trim() || "Company";
 
   // Sync local state when logo prop changes; add cache-buster so browser refetches after upload
   useEffect(() => {
@@ -68,11 +68,8 @@ export function CompanyAvatarSection({
           </div>
           <div>
             <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
-              Company logo
+              {displayCompanyName}
             </h3>
-            <p className="text-sm font-semibold text-[#454745]">
-              Upload target: {target}
-            </p>
           </div>
         </div>
         <input

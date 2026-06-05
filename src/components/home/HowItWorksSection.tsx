@@ -24,7 +24,7 @@ const STEPS: Step[] = [
     icon: Search,
     title: "Browse",
     description:
-      "Filter by skills, salary, and timezone. See Match Score before any call. No resume noise.",
+      "Filter by skills, salary, and timezone. Review verified profile context before any call. No resume noise.",
     tone: "primary",
     positionClassName:
       "lg:-left-32 lg:top-20 lg:w-[300px] lg:-rotate-3 xl:-left-40",
@@ -44,7 +44,7 @@ const STEPS: Step[] = [
     icon: CheckCircle2,
     title: "Hire",
     description:
-      "Schedule interview directly. Rate after hire — Match Score updates from real feedback.",
+      "Schedule interview directly. Keep your shortlist focused on engineers with clear proof signals.",
     tone: "white",
     positionClassName:
       "lg:bottom-0 lg:-right-2 lg:w-[310px] lg:-rotate-2 xl:-right-6",

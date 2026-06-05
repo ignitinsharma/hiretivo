@@ -279,18 +279,6 @@ export function WorkExperienceSection() {
   const saveMutation = useMutation({
     mutationFn: (updatedEntries: WorkExperienceItem[]) =>
       seekerService.updateSettings({
-        name: profile?.name ?? "",
-        headline: profile?.headline ?? "",
-        bio: profile?.bio ?? "",
-        city: profile?.city ?? undefined,
-        state: profile?.state ?? undefined,
-        situation: profile?.situation ?? "",
-        primaryRole: profile?.primaryRole ?? "",
-        salaryMin: profile?.salaryMin ?? null,
-        salaryMax: profile?.salaryMax ?? null,
-        currency: profile?.currency ?? "",
-        availability: profile?.availability ?? "",
-        yearsExperience: profile?.yearsExperience ?? null,
         workExperiences: updatedEntries.map(
           ({ id: _id, positionType, ...rest }) => ({
             ...rest,

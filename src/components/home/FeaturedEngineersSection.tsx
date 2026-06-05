@@ -1,13 +1,14 @@
 /*
  * FeaturedEngineersSection
- * "Meet the top 1%" showcase — 3 manually curated engineer cards.
+ * Verified engineer showcase — 3 manually curated engineer cards.
  * Each card: avatar, name, role, location, skills, availability, salary,
- * and a Hiretivo Score with bar chart visualization.
+ * and proof signals.
  * Fully static — no props, no DB calls.
  */
 
 import Link from 'next/link'
-import { ShieldCheck } from 'lucide-react'
+import { CircleDollarSign, Clock3, ShieldCheck } from 'lucide-react'
+import { HiretivoVerifiedBadge } from '@/components/shared/HiretivoVerifiedBadge'
 import { InitialsAvatar } from '@/components/shared/InitialsAvatar'
 import { FEATURED_ENGINEERS } from '@/config/home-page'
 import type { FeaturedEngineer } from '@/config/home-page'
@@ -20,32 +21,10 @@ const ENGINEER_CARD_POSITIONS = [
 ] as const
 
 /*
- * ScoreBarChart
- * Renders the Hiretivo Score bar visualization — a series of vertical bars
- * at varying heights representing signal strength.
- * @param bars - array of heights (0–100) for each bar
- * @param score - score number (0–100) used for color intensity
- */
-function ScoreBarChart({ bars, score }: { bars: readonly number[]; score: number }) {
-  const baseOpacity = score >= 90 ? 1 : score >= 80 ? 0.85 : 0.7
-  return (
-    <div className="flex items-end gap-[3px]" aria-hidden="true">
-      {bars.map((h, i) => (
-        <div
-          key={i}
-          className="w-[4px] rounded-sm bg-brand-primary"
-          style={{ height: `${Math.max(5, (h / 100) * 36)}px`, opacity: baseOpacity * (0.4 + (h / 160)) }}
-        />
-      ))}
-    </div>
-  )
-}
-
-/*
  * FeaturedEngineerCard
- * Single engineer card in the "Meet the top 1%" grid.
+ * Single engineer card in the verified engineer grid.
  * Renders: avatar, name/years/verified, role, location, skills, availability,
- * salary, and Hiretivo Score with bar chart.
+ * salary, and proof signals.
  * @param engineer - FeaturedEngineer data object
  */
 function FeaturedEngineerCard({ engineer, index }: { engineer: FeaturedEngineer; index: number }) {
@@ -68,6 +47,7 @@ function FeaturedEngineerCard({ engineer, index }: { engineer: FeaturedEngineer;
           fallbackSeed={engineer.initials}
           image={engineer.image}
           size="lg"
+          verified={engineer.isVerified}
           className="shrink-0 bg-brand-surface"
         />
 
@@ -80,10 +60,7 @@ function FeaturedEngineerCard({ engineer, index }: { engineer: FeaturedEngineer;
               {engineer.yearsExp}+ years
             </span>
             {engineer.isVerified && (
-              <ShieldCheck
-                className="h-4 w-4 text-brand-primary shrink-0"
-                aria-label="Hiretivo Verified"
-              />
+              <HiretivoVerifiedBadge variant="inline" size="sm" />
             )}
           </div>
           <p className="mt-0.5 text-xs text-brand-foreground-muted">{engineer.role}</p>
@@ -116,19 +93,20 @@ function FeaturedEngineerCard({ engineer, index }: { engineer: FeaturedEngineer;
       {/* ── Salary ── */}
       <p className="-mt-1 break-words font-body text-xs font-semibold text-brand-foreground transition-transform duration-500 [transform:translateZ(18px)] group-hover:[transform:translate3d(0,-1px,28px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">{salaryLabel}</p>
 
-      {/* ── Hiretivo Score + bar chart ── */}
-      <div className="mt-auto flex min-w-0 items-center justify-between gap-4 border-t border-brand-border pt-4 transition-transform duration-500 [transform:translateZ(22px)] group-hover:[transform:translate3d(0,0,32px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
-        <div>
-          <p className="font-body text-[10px] font-bold uppercase tracking-[1.5px] text-brand-foreground-secondary">
-            Hiretivo Score
-          </p>
-          <p className="font-display text-2xl font-bold tracking-[-0.02em] text-brand-primary">
-            {engineer.hiretivoScore}
-          </p>
-        </div>
-        <div className="shrink-0">
-          <ScoreBarChart bars={engineer.scoreBars} score={engineer.hiretivoScore} />
-        </div>
+      {/* ── Verified proof signals ── */}
+      <div className="mt-auto grid min-w-0 gap-2 border-t border-brand-border pt-4 text-[10px] font-bold text-brand-foreground-muted transition-transform duration-500 [transform:translateZ(22px)] group-hover:[transform:translate3d(0,0,32px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
+        <span className="inline-flex items-center gap-1.5">
+          <ShieldCheck className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+          Manually reviewed
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <CircleDollarSign className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+          Salary visible
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Clock3 className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
+          Availability checked
+        </span>
       </div>
       </article>
     </div>
@@ -137,7 +115,7 @@ function FeaturedEngineerCard({ engineer, index }: { engineer: FeaturedEngineer;
 
 /*
  * FeaturedEngineersSection
- * Renders the "Meet the top 1%" section with header, "View all" link,
+ * Renders the verified engineer section with header, "View all" link,
  * and 3 featured engineer cards in a responsive grid.
  * @returns JSX section element — fully static
  */
@@ -153,7 +131,7 @@ export function FeaturedEngineersSection() {
               Featured Engineers
             </p>
             <h2 className="text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
-              Meet the top 1%.
+              Meet verified engineers.
             </h2>
           </div>
           <Link

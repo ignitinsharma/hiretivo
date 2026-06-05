@@ -11,7 +11,6 @@ export interface DemoEngineerProfile {
   name: string;
   headline: string;
   skills: string[];
-  hiretivoScore: number;
   salaryRange: string;
   timezoneOverlap: string;
   availability: string;
@@ -25,7 +24,6 @@ export const DEMO_ENGINEERS: DemoEngineerProfile[] = [
     name: 'Priya Sharma',
     headline: 'Senior React Engineer · 6 yrs',
     skills: ['React', 'Node.js', 'AWS', 'PostgreSQL'],
-    hiretivoScore: 88,
     salaryRange: '$80k–$120k/yr',
     timezoneOverlap: '6+ hrs US overlap',
     availability: 'Available immediately',
@@ -37,7 +35,6 @@ export const DEMO_ENGINEERS: DemoEngineerProfile[] = [
     name: 'Rahul Mehta',
     headline: 'Full-Stack Engineer · 4 yrs',
     skills: ['Python', 'Django', 'PostgreSQL', 'Redis'],
-    hiretivoScore: 79,
     salaryRange: '$60k–$90k/yr',
     timezoneOverlap: '5+ hrs US overlap',
     availability: 'Available Jun 2026',
@@ -49,7 +46,6 @@ export const DEMO_ENGINEERS: DemoEngineerProfile[] = [
     name: 'Ananya Krishnan',
     headline: 'Backend Engineer · 5 yrs',
     skills: ['Go', 'Kubernetes', 'GCP', 'gRPC'],
-    hiretivoScore: 91,
     salaryRange: '$90k–$130k/yr',
     timezoneOverlap: '4+ hrs EU overlap',
     availability: 'Available Jul 2026',
@@ -61,7 +57,6 @@ export const DEMO_ENGINEERS: DemoEngineerProfile[] = [
     name: 'Vikram Nair',
     headline: 'Java Microservices Engineer · 7 yrs',
     skills: ['Java', 'Spring Boot', 'Kafka', 'AWS'],
-    hiretivoScore: 84,
     salaryRange: '$85k–$125k/yr',
     timezoneOverlap: '5+ hrs US overlap',
     availability: 'Available immediately',
@@ -73,7 +68,6 @@ export const DEMO_ENGINEERS: DemoEngineerProfile[] = [
     name: 'Sneha Patel',
     headline: 'Mobile Engineer · 3 yrs',
     skills: ['Flutter', 'Dart', 'Firebase', 'REST APIs'],
-    hiretivoScore: 74,
     salaryRange: '$55k–$80k/yr',
     timezoneOverlap: '3+ hrs US overlap',
     availability: 'Available Jun 2026',
@@ -85,7 +79,6 @@ export const DEMO_ENGINEERS: DemoEngineerProfile[] = [
     name: 'Arjun Desai',
     headline: 'TypeScript / Next.js Engineer · 4 yrs',
     skills: ['TypeScript', 'Next.js', 'Prisma', 'Tailwind'],
-    hiretivoScore: 81,
     salaryRange: '$70k–$100k/yr',
     timezoneOverlap: '6+ hrs US overlap',
     availability: 'Available immediately',

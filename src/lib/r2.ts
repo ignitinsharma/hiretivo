@@ -39,8 +39,9 @@ export const R2_KEYS = {
   /** Seeker resume — always overwrites so no orphaned files */
   resume: (seekerId: string) => `resumes/${seekerId}/resume.pdf`,
 
-  /** Seeker profile photo */
-  avatar: (userId: string) => `avatars/${userId}/avatar.webp`,
+  /** Seeker profile photo — unique per upload so cached avatars refresh reliably */
+  avatar: (userId: string, uploadId: string) =>
+    `avatars/${userId}/${uploadId}.webp`,
 
   /** Recruiter / company logo — safe to serve publicly */
   companyLogo: (recruiterId: string) =>

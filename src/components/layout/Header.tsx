@@ -43,12 +43,20 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
   const isRecruiter = !!session && role === UserRole.RECRUITER;
 
   let companyLogoUrl: string | null = null;
+  let isSeekerVerified = false;
   if (isRecruiter && session?.user?.id) {
     const recruiter = await prisma.recruiterProfile.findUnique({
       where: { userId: session.user.id },
       select: { logo: true },
     });
     companyLogoUrl = resolveLogoUrl(recruiter?.logo);
+  }
+  if (isSeeker && session?.user?.id) {
+    const seeker = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { verificationStatus: true },
+    });
+    isSeekerVerified = seeker?.verificationStatus === "VERIFIED";
   }
 
   const userImage = session?.user?.image;
@@ -163,7 +171,8 @@ export async function Header({ className, variant = 'light' }: HeaderProps) {
                       image={avatarUrl}
                       fallbackSeed="header-avatar"
                       size="md"
-                      className="h-9 w-9 border-2 border-brand-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-black"
+                      verified={isSeekerVerified}
+                      className="h-9 w-9 border-2 border-brand-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-brand-primary"
                     />
                     <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </div>

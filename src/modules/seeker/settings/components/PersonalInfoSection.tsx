@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { IndiaStateCombobox } from "@/components/forms/IndiaStateCombobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,6 @@ import {
 } from "@/lib/validations/seeker.schema";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerSettingsData } from "@/services/seeker.service";
-import { INDIA_STATES } from "@/modules/india-location";
 
 const YEARS_OPTIONS = [
   { value: '0', label: '< 1 Year' },
@@ -280,20 +280,11 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-brand-foreground">State / Union Territory</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <>
-                  <Select
+                  <IndiaStateCombobox
                     value={form.watch("state") ?? ""}
                     onValueChange={(val) => form.setValue("state", val, { shouldValidate: true })}
                     disabled={isFormDisabled}
-                  >
-                    <SelectTrigger className="rounded-lg" aria-label="State or Union Territory">
-                      <SelectValue placeholder="Select state or UT" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {INDIA_STATES.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                   {form.formState.errors.city?.message?.includes("together") && (
                     <p className="text-xs text-red-500">Both city and state are required.</p>
                   )}

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { ArrowRight, ArrowLeft, Briefcase, Plus, X } from "lucide-react";
 
+import { MonthYearPicker } from "@/components/forms/MonthYearPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { validateSeekerStep4Experience } from "@/lib/validations/seeker-onboarding.schema";
 import type {
   WorkExperienceEntry,
@@ -23,22 +23,6 @@ import { saveExperience } from "@/app/actions/onboarding/seeker";
 interface StepExperienceProps {
   onNext: () => void;
   onBack: () => void;
-}
-
-/* Convert "MM/YYYY" stored string → "YYYY-MM" for <input type="month"> value */
-function toMonthInput(v: string | null | undefined): string {
-  if (!v) return "";
-  const [mm, yyyy] = v.split("/");
-  if (!mm || !yyyy) return "";
-  return `${yyyy}-${mm.padStart(2, "0")}`;
-}
-
-/* Convert "YYYY-MM" from <input type="month"> → "MM/YYYY" for storage */
-function fromMonthInput(v: string): string | null {
-  if (!v) return null;
-  const [yyyy, mm] = v.split("-");
-  if (!yyyy || !mm) return null;
-  return `${mm}/${yyyy}`;
 }
 
 const EMPTY_WORK: WorkExperienceEntry = {
@@ -122,28 +106,22 @@ function WorkExperienceRow({
           <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
             Start date <span className="text-brand-danger">*</span>
           </label>
-          <input
-            type="month"
-            value={toMonthInput(exp.startDate)}
-            onChange={(e) => onChange(index, { ...exp, startDate: fromMonthInput(e.target.value) ?? "" })}
-            className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+          <MonthYearPicker
+            value={exp.startDate}
+            onChange={(value) => onChange(index, { ...exp, startDate: value ?? "" })}
+            required
+            aria-label="Start month and year"
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
             End date
           </label>
-          <input
-            type="month"
-            value={toMonthInput(exp.endDate)}
+          <MonthYearPicker
+            value={exp.endDate}
             disabled={exp.isCurrent}
-            onChange={(e) =>
-              onChange(index, { ...exp, endDate: fromMonthInput(e.target.value) })
-            }
-            className={cn(
-              "w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary",
-              exp.isCurrent && "opacity-50 cursor-not-allowed",
-            )}
+            onChange={(value) => onChange(index, { ...exp, endDate: value })}
+            aria-label="End month and year"
           />
         </div>
       </div>
@@ -257,13 +235,12 @@ function EducationRow({ edu, index, onChange, onRemove }: EducationRowProps) {
         <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
           Graduation date
         </label>
-        <input
-          type="month"
-          value={toMonthInput(edu.graduationDate)}
-          onChange={(e) =>
-            onChange(index, { ...edu, graduationDate: fromMonthInput(e.target.value) })
+        <MonthYearPicker
+          value={edu.graduationDate}
+          onChange={(value) =>
+            onChange(index, { ...edu, graduationDate: value })
           }
-          className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+          aria-label="Graduation month and year"
         />
       </div>
     </div>
@@ -346,8 +323,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
     try {
       const result = await saveExperience({
         workExperiences: workToSave,
-        educations:
-          experience.educations.length > 0 ? experience.educations : undefined,
+        educations: experience.educations,
       });
 
       if (!result.success) {

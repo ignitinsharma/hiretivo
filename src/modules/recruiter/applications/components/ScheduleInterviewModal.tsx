@@ -308,7 +308,7 @@ export function ScheduleInterviewModal({
     } catch (error) {
       if (
         error instanceof Error &&
-        error.message.toLowerCase().includes("requires pro or enterprise")
+        error.message.toLowerCase().includes("requires pro")
       ) {
         closeScheduleModal();
         openPaidFeatureModal({ feature: "interview_scheduling" });
@@ -333,8 +333,8 @@ export function ScheduleInterviewModal({
         if (!open) closeScheduleModal();
       }}
     >
-      <DialogContent className="rounded-xl sm:max-w-140">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden rounded-xl p-0 sm:max-w-140">
+        <DialogHeader className="shrink-0 border-b border-brand-border px-6 py-5">
           <DialogTitle>
             {isReschedule ? "Reschedule Interview" : "Schedule Interview"}
           </DialogTitle>
@@ -344,7 +344,7 @@ export function ScheduleInterviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="min-h-0 space-y-4 overflow-y-auto px-6 py-5">
           {/* Date field — Calendar inside Popover */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Date</label>
@@ -476,7 +476,7 @@ export function ScheduleInterviewModal({
             />
           </div>
 
-          <div className="flex items-end gap-2 pt-2">
+          <div className="flex items-end justify-end gap-2 border-t border-brand-border pt-4">
             <Button
               type="button"
               variant="default"

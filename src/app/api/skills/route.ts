@@ -3,6 +3,10 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 import { z } from 'zod';
+import {
+  canonicalizeSkillName,
+  slugifySkillName,
+} from '@/lib/skills/canonicalize';
 
 /*
  * GET /api/skills
@@ -69,11 +73,27 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const canonicalName = canonicalizeSkillName(parsed.data.name);
+  const canonicalSlug = slugifySkillName(canonicalName);
+
+  const existingSkill = await prisma.skill.findFirst({
+    where: {
+      OR: [
+        { slug: canonicalSlug },
+        { name: { equals: canonicalName, mode: 'insensitive' } },
+      ],
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+  if (existingSkill) {
+    return NextResponse.json(existingSkill, { status: 200 });
+  }
+
   try {
     const skill = await prisma.skill.create({
       data: {
-        name: parsed.data.name,
-        slug: parsed.data.slug,
+        name: canonicalName,
+        slug: canonicalSlug,
         category: parsed.data.category,
       },
     });
@@ -82,7 +102,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
       return NextResponse.json(
-        { error: `Skill "${parsed.data.name}" already exists` },
+        { error: `Skill "${canonicalName}" already exists` },
         { status: 409 }
       );
     }

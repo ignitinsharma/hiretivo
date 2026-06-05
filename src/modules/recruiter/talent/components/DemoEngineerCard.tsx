@@ -2,6 +2,7 @@
 
 import type { ReactElement } from "react";
 
+import { HiretivoVerifiedBadge } from "@/components/shared/HiretivoVerifiedBadge";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
 import type { DemoEngineerProfile } from "@/constants/demo-engineers";
@@ -42,22 +43,23 @@ export function DemoEngineerCard({ profile, onUpgrade }: DemoEngineerCardProps):
             name={profile.name}
             fallbackSeed={profile.name}
             size="lg"
+            verified
           />
           <div className="min-w-0">
             {/* Full name visible — per D-02 — contrast with blurred real cards */}
-            <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">
-              {profile.name}
-            </h2>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">
+                {profile.name}
+              </h2>
+              <HiretivoVerifiedBadge variant="inline" size="sm" />
+            </div>
             <p className={MUTED_TEXT_CLASS}>{profile.headline}</p>
           </div>
         </div>
       </div>
 
-      {/* Hiretivo Score + seeking status dot */}
+      {/* Seeking status dot */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="rounded-md border border-brand-border bg-brand-surface px-2 py-0.5 text-xs font-bold text-brand-foreground">
-          {profile.hiretivoScore}/100
-        </span>
         <span
           className={`h-2 w-2 rounded-full ${profile.seekingStatus === "ACTIVELY_LOOKING" ? "bg-green-500" : "bg-yellow-400"}`}
           aria-label={profile.seekingStatus === "ACTIVELY_LOOKING" ? "Actively looking" : "Open to offers"}

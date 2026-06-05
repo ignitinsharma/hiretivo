@@ -146,7 +146,7 @@ export function ApplyJobModal() {
   if (showExternalConfirm) {
     return (
       <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
-        <DialogContent className="sm:max-w-md p-8">
+        <DialogContent className="max-h-[90vh] overflow-y-auto p-8 sm:max-w-md">
           <div className="flex flex-col items-center text-center">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10">
               <Briefcase className="h-8 w-8 text-brand-primary" />
@@ -186,7 +186,7 @@ export function ApplyJobModal() {
 
   return (
     <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader className="pt-2 pb-4">
           <DialogTitle className="text-2xl font-extrabold tracking-tight text-slate-900">
             Apply for {selectedJobTitle || "this position"}

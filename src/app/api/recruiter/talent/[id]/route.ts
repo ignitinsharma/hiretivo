@@ -24,6 +24,30 @@ async function resolveResumeUrl(resumeKey: string | null): Promise<string | null
   }
 }
 
+type TalentProject = {
+  title?: unknown;
+  url?: unknown;
+  description?: unknown;
+};
+
+function resolveTopProjects(rawProjects: unknown): Array<{
+  title: string | null;
+  url: string | null;
+  description: string | null;
+}> {
+  if (!Array.isArray(rawProjects)) return [];
+  return rawProjects
+    .filter((project): project is TalentProject => {
+      return typeof project === "object" && project !== null;
+    })
+    .map((project) => ({
+      title: typeof project.title === "string" ? project.title : null,
+      url: typeof project.url === "string" ? project.url : null,
+      description:
+        typeof project.description === "string" ? project.description : null,
+    }));
+}
+
 /*
  * GET /api/recruiter/talent/[id]
  * Returns engineer profile in locked or unlocked shape based on EngineerUnlock record.
@@ -80,6 +104,9 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
           currency: true,
           availability: true,
           resumeKey: true,
+          githubUsername: true,
+          videoIntroUrl: true,
+          topProjects: true,
           websiteUrl: true,
           linkedinUrl: true,
           githubUrl: true,
@@ -165,6 +192,9 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
         yearsExperience: profile.yearsExperience,
         primaryRole: profile.primaryRole,
         availability: profile.availability,
+        githubUsername: null,
+        videoIntroUrl: null,
+        topProjects: [],
         resumeKey: false,
         resumeUrl: null,
         skills,
@@ -173,9 +203,9 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
         educations: [],
         profile: {
           workPreference: profile.workPreference,
-          situation: null,
-          salaryMin: null,
-          salaryMax: null,
+          situation: profile.situation,
+          salaryMin: profile.salaryMin,
+          salaryMax: profile.salaryMax,
           currency: profile.currency,
         },
       },
@@ -197,6 +227,9 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
       yearsExperience: profile.yearsExperience,
       primaryRole: profile.primaryRole,
       availability: profile.availability,
+      githubUsername: profile.githubUsername,
+      videoIntroUrl: profile.videoIntroUrl,
+      topProjects: resolveTopProjects(profile.topProjects),
       resumeKey: Boolean(profile.resumeKey),
       resumeUrl,
       skills,

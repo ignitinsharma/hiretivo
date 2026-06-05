@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { AlertCircle, Clock, ShieldCheck, XCircle } from 'lucide-react';
+import { AlertCircle, Clock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { HiretivoVerifiedBadge } from '@/components/shared/HiretivoVerifiedBadge';
 
 /*
  * VerificationStatusCard
@@ -26,10 +27,7 @@ export function VerificationStatusCard({
     return (
       <div className="rounded-xl border border-green-200 bg-green-50 p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
-          <h3 className="font-semibold text-sm text-green-900">
-            Hiretivo Verified ✓
-          </h3>
+          <HiretivoVerifiedBadge />
         </div>
         <p className="text-xs text-green-800 leading-relaxed">
           You&apos;re visible to recruiters in the talent pool.

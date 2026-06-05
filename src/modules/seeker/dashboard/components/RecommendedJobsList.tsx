@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import { JobCard } from "@/components/shared/JobCard";
 import { Card } from "@/components/ui/card";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
+import {
+  useSaveJob,
+  useSavedJobs,
+  useUnsaveJob,
+} from "@/modules/seeker/saved-jobs/queries/use-saved-jobs";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
@@ -17,11 +22,22 @@ export function RecommendedJobsList() {
   const hiretivo = useVerificationStatus();
   const queryClient = useQueryClient();
   const [dismissingJobId, setDismissingJobId] = useState<string | null>(null);
+  const [savingJobIds, setSavingJobIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["seeker-feed"],
     queryFn: seekerService.getFeed,
   });
+  const { data: savedJobs } = useSavedJobs();
+  const saveMutation = useSaveJob();
+  const unsaveMutation = useUnsaveJob();
+
+  const savedJobIds = useMemo(
+    () => new Set(savedJobs?.map((savedJob) => savedJob.job.id) ?? []),
+    [savedJobs],
+  );
 
   const dismissMutation = useMutation({
     mutationFn: seekerService.dismissJob,
@@ -83,6 +99,48 @@ export function RecommendedJobsList() {
     externalApplyUrl?: string | null,
   ) => {
     openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
+  };
+
+  const setJobSaving = (jobId: string, isSaving: boolean): void => {
+    setSavingJobIds((current) => {
+      const next = new Set(current);
+      if (isSaving) {
+        next.add(jobId);
+      } else {
+        next.delete(jobId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSave = (jobId: string): void => {
+    const isSaved = savedJobIds.has(jobId);
+    setJobSaving(jobId, true);
+
+    if (isSaved) {
+      unsaveMutation.mutate(jobId, {
+        onSuccess: () => toast.success("Job removed from saved jobs."),
+        onError: (error) => {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to remove saved job.",
+          );
+        },
+        onSettled: () => setJobSaving(jobId, false),
+      });
+      return;
+    }
+
+    saveMutation.mutate(jobId, {
+      onSuccess: () => toast.success("Job saved."),
+      onError: (error) => {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save job.",
+        );
+      },
+      onSettled: () => setJobSaving(jobId, false),
+    });
   };
 
   if (isLoading) {
@@ -155,6 +213,10 @@ export function RecommendedJobsList() {
             <JobCard
               key={job.id}
               job={job}
+              isSaved={savedJobIds.has(job.id)}
+              saveActionPlacement="footer"
+              isSaving={savingJobIds.has(job.id)}
+              onToggleSave={() => handleToggleSave(job.id)}
               showDescription
               onNotInterested={() => dismissMutation.mutate(job.id)}
               isDismissing={dismissingJobId === job.id}

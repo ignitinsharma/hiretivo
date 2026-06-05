@@ -96,7 +96,7 @@ export function RecentApplicantsList({
       <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
         <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
         <Link
-          href="/recruiter/applicants"
+          href="/recruiter/applications"
           className="text-primary font-semibold text-sm hover:underline"
         >
           View all

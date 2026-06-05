@@ -52,7 +52,7 @@ export function HeroRecruiterSection() {
 
           {/* Subtext */}
           <p className="mb-5 max-w-115 break-words text-base leading-relaxed text-brand-foreground-muted">
-            Every engineer is manually reviewed, GitHub-scored, and
+            Every engineer is manually reviewed, proof-checked, and
             salary-transparent before you see them.
           </p>
 
@@ -69,7 +69,7 @@ export function HeroRecruiterSection() {
                 className="h-3.5 w-3.5 text-brand-primary"
                 aria-hidden="true"
               />
-              GitHub score
+              GitHub proof
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
               <CircleDollarSign
@@ -115,7 +115,6 @@ export function HeroRecruiterSection() {
                 lastInitial={primaryEngineer.lastInitial}
                 image={primaryEngineer.image}
                 isVerified={primaryEngineer.isVerified}
-                hiretivoScore={primaryEngineer.hiretivoScore}
                 role={primaryEngineer.role}
                 yearsExp={primaryEngineer.yearsExp}
                 skills={primaryEngineer.skills}
@@ -137,7 +136,6 @@ export function HeroRecruiterSection() {
                 lastInitial={secondaryEngineer.lastInitial}
                 image={secondaryEngineer.image}
                 isVerified={secondaryEngineer.isVerified}
-                hiretivoScore={secondaryEngineer.hiretivoScore}
                 role={secondaryEngineer.role}
                 yearsExp={secondaryEngineer.yearsExp}
                 skills={secondaryEngineer.skills}
@@ -159,7 +157,6 @@ export function HeroRecruiterSection() {
                 lastInitial={tertiaryEngineer.lastInitial}
                 image={tertiaryEngineer.image}
                 isVerified={tertiaryEngineer.isVerified}
-                hiretivoScore={tertiaryEngineer.hiretivoScore}
                 role={tertiaryEngineer.role}
                 yearsExp={tertiaryEngineer.yearsExp}
                 skills={tertiaryEngineer.skills}

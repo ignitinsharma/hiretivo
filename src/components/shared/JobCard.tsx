@@ -26,6 +26,8 @@ interface JobCardProps {
   isSaved?: boolean;
   onApply?: () => void;
   onToggleSave?: () => void;
+  saveActionPlacement?: "topRight" | "footer";
+  isSaving?: boolean;
   onNotInterested?: () => void;
   isDismissing?: boolean;
   variant?: "default" | "compact";
@@ -53,6 +55,8 @@ export function JobCard({
   isSaved = false,
   onApply,
   onToggleSave,
+  saveActionPlacement = "topRight",
+  isSaving = false,
   onNotInterested,
   isDismissing = false,
   variant = "default",
@@ -64,6 +68,7 @@ export function JobCard({
   const saveLabel = isSaved
     ? `Remove ${job.title} from saved jobs`
     : `Save ${job.title}`;
+  const showSaveAction = !isPreview && Boolean(onToggleSave);
 
   const companyDetails = [
     job.companyIndustry,
@@ -117,7 +122,7 @@ export function JobCard({
               {job.matchScore}% Match
             </span>
           )}
-          {!isPreview && onToggleSave && (
+          {showSaveAction && saveActionPlacement === "topRight" && (
             <button
               type="button"
               aria-label={saveLabel}
@@ -142,7 +147,24 @@ export function JobCard({
       salaryRange={job.salaryRange}
       footerRight={
         isPreview ? null : (
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {showSaveAction && saveActionPlacement === "footer" && (
+              <Button
+                type="button"
+                onClick={onToggleSave}
+                variant="secondary"
+                size="sm"
+                loading={isSaving}
+                loadingText={isSaved ? "Removing" : "Saving"}
+                aria-label={saveLabel}
+                aria-pressed={isSaved}
+              >
+                <Bookmark
+                  className={cn("h-4 w-4", isSaved && "fill-current")}
+                />
+                {isSaved ? "Saved" : "Save"}
+              </Button>
+            )}
             {onNotInterested && (
               <Button
                 type="button"

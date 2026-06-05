@@ -25,6 +25,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: Role;
     plan?: PlanTier;
+    image?: string | null;
     emailVerified?: Date | null;
     onboardingCompleted?: boolean | null;
     onboardingStep?: number | null;

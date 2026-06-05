@@ -116,20 +116,6 @@ export function SocialProfilesSection() {
   const saveMutation = useMutation({
     mutationFn: (data: SocialProfilesFormInput) =>
       seekerService.updateSettings({
-        // Pass through all existing profile fields so other fields are not cleared.
-        name: profile?.name ?? "",
-        headline: profile?.headline ?? "",
-        bio: profile?.bio ?? "",
-        city: profile?.city ?? undefined,
-        state: profile?.state ?? undefined,
-        situation: profile?.situation ?? "",
-        primaryRole: profile?.primaryRole ?? "",
-        salaryMin: profile?.salaryMin ?? null,
-        salaryMax: profile?.salaryMax ?? null,
-        currency: profile?.currency ?? "",
-        availability: profile?.availability ?? "",
-        yearsExperience: profile?.yearsExperience ?? null,
-        // Social URLs from this form.
         websiteUrl: data.websiteUrl || null,
         linkedinUrl: data.linkedinUrl || null,
         githubUrl: data.githubUrl || null,

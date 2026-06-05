@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   APPLY_TYPE_VALUES,
   ApplyType,
-  JobStatus,
   JOB_STATUS_VALUES,
   JOB_TYPE_VALUES,
   SKILL_LEVEL_VALUES,
@@ -20,7 +19,7 @@ const baseJobSchema = z.object({
   jobType: z.enum(JOB_TYPE_VALUES),
   applyType: z.enum(APPLY_TYPE_VALUES),
   workType: z.enum(WORK_TYPE_VALUES).optional(),
-  status: z.enum(JOB_STATUS_VALUES).default(JobStatus.DRAFT),
+  status: z.enum(JOB_STATUS_VALUES).optional(),
   salaryMin: z.number().int().nonnegative().optional(),
   salaryMax: z.number().int().nonnegative().optional(),
   currency: z.string().trim().length(3).optional(),

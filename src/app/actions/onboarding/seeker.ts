@@ -35,6 +35,25 @@ const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL ?? "Hiretivo <noreply@hiretivo.com>";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@hiretivo.com";
 
+const YEARS_EXPERIENCE_MAP: Record<string, number> = {
+  "<1": 0,
+  UNDER_1: 0,
+  LESS_THAN_1: 0,
+  "1_TO_3": 2,
+  "3_TO_5": 4,
+  "5_TO_10": 7,
+  MORE_THAN_10: 10,
+};
+
+/*
+ * mapYearsOfExperience
+ * Converts onboarding range selections into the numeric profile field.
+ */
+function mapYearsOfExperience(value: string | null): number | null {
+  if (!value) return null;
+  return YEARS_EXPERIENCE_MAP[value] ?? null;
+}
+
 /*
  * saveStep1
  * Persists step 1 data: situation (to SeekerProfile), experienceLevel (to draft),
@@ -124,8 +143,15 @@ export async function saveStep2(data: {
 
     const profile = await tx.seekerProfile.upsert({
       where: { userId: session.user.id },
-      create: { userId: session.user.id, primaryRole: parsed.data.primaryRole },
-      update: { primaryRole: parsed.data.primaryRole },
+      create: {
+        userId: session.user.id,
+        primaryRole: parsed.data.primaryRole,
+        yearsExperience: mapYearsOfExperience(parsed.data.yearsOfExperience),
+      },
+      update: {
+        primaryRole: parsed.data.primaryRole,
+        yearsExperience: mapYearsOfExperience(parsed.data.yearsOfExperience),
+      },
       select: { id: true },
     });
 
@@ -464,21 +490,23 @@ export async function saveExperience(data: {
       })),
     });
 
-    // Replace educations if provided
-    if (parsed.data.educations && parsed.data.educations.length > 0) {
+    // Replace educations whenever provided, including an empty array.
+    if (parsed.data.educations !== undefined) {
       await tx.education.deleteMany({
         where: { seekerProfileId: profile.id },
       });
 
-      await tx.education.createMany({
-        data: parsed.data.educations.map((edu) => ({
-          seekerProfileId: profile.id,
-          institution: edu.institution,
-          graduationDate: edu.graduationDate ?? null,
-          degree: edu.degree ?? null,
-          major: edu.major ?? null,
-        })),
-      });
+      if (parsed.data.educations.length > 0) {
+        await tx.education.createMany({
+          data: parsed.data.educations.map((edu) => ({
+            seekerProfileId: profile.id,
+            institution: edu.institution,
+            graduationDate: edu.graduationDate ?? null,
+            degree: edu.degree ?? null,
+            major: edu.major ?? null,
+          })),
+        });
+      }
     }
 
     await tx.user.update({

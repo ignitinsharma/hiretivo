@@ -4,7 +4,7 @@
  * HOMEPAGE_STATS: quality metrics shown in hero inline stats
  * STATS_BAR: full-width stats bar data with icons
  * MOCK_ENGINEER_CARDS: blurred hero preview cards (no DB call)
- * FEATURED_ENGINEERS: top-1% showcase cards with score visualization
+ * FEATURED_ENGINEERS: verified engineer showcase cards
  * TESTIMONIALS: social proof quotes from hiring managers
  */
 
@@ -38,7 +38,6 @@ export interface MockEngineerCard {
   lastInitial: string;
   image?: string | null;
   isVerified: boolean;
-  hiretivoScore: number;
   role: string;
   yearsExp: number;
   skills: readonly string[];
@@ -57,7 +56,6 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
     firstName: 'Arjun',
     lastInitial: 'N.',
     isVerified: true,
-    hiretivoScore: 84,
     role: 'Senior React Engineer',
     yearsExp: 7,
     skills: ['React', 'Node.js', 'AWS', 'TypeScript'],
@@ -71,7 +69,6 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
     firstName: 'Priya',
     lastInitial: 'S.',
     isVerified: true,
-    hiretivoScore: 79,
     role: 'Full Stack Engineer',
     yearsExp: 6,
     skills: ['Python', 'Django', 'PostgreSQL', 'AWS'],
@@ -85,7 +82,6 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
     firstName: 'Rahul',
     lastInitial: 'V.',
     isVerified: true,
-    hiretivoScore: 76,
     role: 'Backend Engineer',
     yearsExp: 5,
     skills: ['Node.js', 'Express', 'MongoDB', 'AWS'],
@@ -96,7 +92,7 @@ export const MOCK_ENGINEER_CARDS: readonly MockEngineerCard[] = [
 ] as const;
 
 /**
- * Featured engineer interface for the "Meet the top 1%" section
+ * Featured engineer interface for the verified engineer showcase section
  */
 export interface FeaturedEngineer {
   id: string;
@@ -110,14 +106,11 @@ export interface FeaturedEngineer {
   skills: readonly string[];
   salaryMin: number;
   salaryMax: number;
-  hiretivoScore: number;
-  scoreBars: readonly number[];
   initials: string;
 }
 
 /**
- * Top-1% featured engineers shown in dedicated showcase section
- * scoreBars: array of heights (0-100) for the score bar visualization
+ * Featured verified engineers shown in dedicated showcase section
  */
 export const FEATURED_ENGINEERS: readonly FeaturedEngineer[] = [
   {
@@ -131,8 +124,6 @@ export const FEATURED_ENGINEERS: readonly FeaturedEngineer[] = [
     skills: ['React', 'TypeScript', 'Next.js', 'Tailwind', 'AWS'],
     salaryMin: 80000,
     salaryMax: 110000,
-    hiretivoScore: 91,
-    scoreBars: [35, 50, 65, 75, 85, 92, 88, 95, 90, 82],
     initials: 'AS',
   },
   {
@@ -146,8 +137,6 @@ export const FEATURED_ENGINEERS: readonly FeaturedEngineer[] = [
     skills: ['Python', 'Django', 'PostgreSQL', 'AWS', 'Redis'],
     salaryMin: 70000,
     salaryMax: 100000,
-    hiretivoScore: 88,
-    scoreBars: [30, 48, 60, 72, 82, 88, 85, 90, 86, 78],
     initials: 'PS',
   },
   {
@@ -161,8 +150,6 @@ export const FEATURED_ENGINEERS: readonly FeaturedEngineer[] = [
     skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD'],
     salaryMin: 65000,
     salaryMax: 95000,
-    hiretivoScore: 86,
-    scoreBars: [28, 44, 58, 70, 80, 86, 84, 88, 83, 74],
     initials: 'RK',
   },
 ] as const;
@@ -187,7 +174,7 @@ export const TESTIMONIALS: readonly Testimonial[] = [
   {
     id: 'test-1',
     quote:
-      'We hired a senior backend engineer in 4 days. The Hiretivo Score saved us 3 rounds of screening.',
+      'We hired a senior backend engineer in 4 days. The verified profile context saved us 3 rounds of screening.',
     name: 'Sarah K.',
     title: 'CTO at a fintech startup',
     initials: 'SK',

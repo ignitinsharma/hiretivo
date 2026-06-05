@@ -152,7 +152,7 @@ export function SeekerJobBaseCard({
         </p>
       ) : null}
 
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-brand-border pt-4">
+      <div className="mt-5 flex flex-col gap-3 border-t border-brand-border pt-4 sm:flex-row sm:items-center sm:justify-between">
         {salaryRange ? (
           <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-brand-foreground">
             <Building2 className="h-4 w-4 shrink-0 text-brand-foreground-muted" />

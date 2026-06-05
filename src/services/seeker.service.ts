@@ -84,7 +84,7 @@ export const seekerService = {
     return data;
   },
 
-  updateSettings: async (payload: SeekerSettingsInput): Promise<void> => {
+  updateSettings: async (payload: Partial<SeekerSettingsInput>): Promise<void> => {
     await apiClient.patch('/seeker/settings', payload);
   },
 

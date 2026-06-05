@@ -13,7 +13,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 export const metadata = generatePageMetadata({
   title: "Hire Verified Indian Engineers",
   description:
-    "Browse verified Indian engineers with Hiretivo scores, salary transparency, and profile unlocks for serious recruiter outreach.",
+    "Browse verified Indian engineers with salary transparency, proof signals, and profile unlocks for serious recruiter outreach.",
   path: "/hire-talent",
 });
 

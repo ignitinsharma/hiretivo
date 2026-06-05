@@ -30,7 +30,12 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
       await queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });
       setIsEditing(false);
     },
-    onError: () => toast.error("Failed to update skills. Try again."),
+    onError: (error) =>
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update skills. Try again.",
+      ),
   });
 
   useEffect(() => {
@@ -50,20 +55,7 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
       return;
     }
 
-    mutation.mutate({
-      name: settings.name,
-      headline: settings.headline ?? "",
-      bio: settings.bio ?? "",
-      city: settings.city ?? undefined,
-      state: settings.state ?? undefined,
-      situation: settings.situation ?? "",
-      primaryRole: settings.primaryRole ?? "",
-      salaryMin: settings.salaryMin,
-      salaryMax: settings.salaryMax,
-      currency: settings.currency ?? "",
-      availability: settings.availability ?? "",
-      skillNames: skills,
-    });
+    mutation.mutate({ skillNames: skills });
   };
 
   return (

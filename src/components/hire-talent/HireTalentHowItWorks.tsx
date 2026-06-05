@@ -19,7 +19,7 @@ const WORK_STEPS: WorkStep[] = [
     step: "02",
     title: "Unlock full profile",
     description:
-      "Reveal the engineer's full name and contact details when the Hiretivo score and profile fit look right.",
+      "Reveal the engineer's full name and contact details when the verified profile context and role fit look right.",
     icon: Unlock,
   },
   {

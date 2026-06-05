@@ -135,7 +135,7 @@ export function ExternalApplyConfirmationDialog({
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="rounded-xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-[26px] font-semibold leading-[1.23] tracking-[-0.39px] text-foreground ">
               Did you apply on the company site?

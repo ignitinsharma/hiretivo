@@ -13,14 +13,20 @@ import { AvatarSection } from '@/modules/seeker/settings/components/AvatarSectio
 import { SocialProfilesSection } from '@/modules/seeker/settings/components/SocialProfilesSection';
 import { WorkExperienceSection } from '@/modules/seeker/settings/components/WorkExperienceSection';
 import { EducationSection } from '@/modules/seeker/settings/components/EducationSection';
+import { useVerificationStatus } from '@/hooks/use-verification-status';
 
 function SeekerSettingsPanels() {
   const { data, isLoading } = useSeekerSettingsData();
+  const hiretivo = useVerificationStatus();
   const settings = data?.data;
 
   return (
     <main className="flex-1 space-y-8">
-      <AvatarSection name={settings?.name} image={settings?.image} />
+      <AvatarSection
+        name={settings?.name}
+        image={settings?.image}
+        verified={hiretivo.isVerified}
+      />
       <PersonalInfoSection />
       <SocialProfilesSection />
       <SkillsSection settings={settings} isLoading={isLoading} />

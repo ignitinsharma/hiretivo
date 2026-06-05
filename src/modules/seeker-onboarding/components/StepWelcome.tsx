@@ -3,15 +3,9 @@
 import { useState } from "react";
 import { ArrowRight, Hand } from "lucide-react";
 
+import { IndiaStateCombobox } from "@/components/forms/IndiaStateCombobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   SITUATION_OPTIONS,
@@ -22,7 +16,6 @@ import type {
   SeekerSituation,
   ExperienceLevel,
 } from "@/lib/validations/seeker-onboarding.schema";
-import { INDIA_STATES } from "@/modules/india-location";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
 import { saveStep1 } from "@/app/actions/onboarding/seeker";
 
@@ -222,22 +215,14 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
             <label className="text-sm font-semibold text-brand-foreground">
               State / Union Territory
             </label>
-            <Select
+            <IndiaStateCombobox
               value={step1.state ?? ""}
-              onValueChange={(val) => setState(val)}
+              onValueChange={(val) => {
+                setState(val);
+                setErrors([]);
+              }}
               disabled={isSaving}
-            >
-              <SelectTrigger className="rounded-lg" aria-label="State or Union Territory">
-                <SelectValue placeholder="Select state or UT" />
-              </SelectTrigger>
-              <SelectContent>
-                {INDIA_STATES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {getErrorMessage() && (

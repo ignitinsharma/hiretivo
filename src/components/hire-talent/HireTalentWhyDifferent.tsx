@@ -10,7 +10,7 @@ const DIFFERENCES: DifferenceItem[] = [
   {
     title: "Verified before you see them",
     description:
-      "Profiles are built around verified skills, public work signals, and a Hiretivo score recruiters can scan quickly.",
+      "Profiles are built around verified skills, public work signals, salary context, and availability recruiters can scan quickly.",
     icon: BadgeCheck,
   },
   {

@@ -157,18 +157,6 @@ export function EducationSection() {
   const saveMutation = useMutation({
     mutationFn: (updatedEntries: EducationItem[]) =>
       seekerService.updateSettings({
-        name: profile?.name ?? "",
-        headline: profile?.headline ?? "",
-        bio: profile?.bio ?? "",
-        city: profile?.city ?? undefined,
-        state: profile?.state ?? undefined,
-        situation: profile?.situation ?? "",
-        primaryRole: profile?.primaryRole ?? "",
-        salaryMin: profile?.salaryMin ?? null,
-        salaryMax: profile?.salaryMax ?? null,
-        currency: profile?.currency ?? "",
-        availability: profile?.availability ?? "",
-        yearsExperience: profile?.yearsExperience ?? null,
         educations: updatedEntries.map(({ id: _id, ...rest }) => rest),
       }),
     onSuccess: () => {

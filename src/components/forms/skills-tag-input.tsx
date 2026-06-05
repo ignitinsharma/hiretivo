@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { skillService } from "@/services/skill.service";
 import type { SkillItem } from "@/services/skill.service";
+import { canonicalizeSkillName, slugifySkillName } from "@/lib/skills/canonicalize";
 
 interface SkillsTagInputProps {
   value: string[];
@@ -19,8 +20,9 @@ interface SkillsTagInputProps {
 }
 
 function hasSkill(skills: string[], nextSkill: string): boolean {
+  const nextKey = slugifySkillName(canonicalizeSkillName(nextSkill));
   return skills.some(
-    (skill) => skill.trim().toLowerCase() === nextSkill.trim().toLowerCase(),
+    (skill) => slugifySkillName(canonicalizeSkillName(skill)) === nextKey,
   );
 }
 
@@ -53,9 +55,9 @@ export function SkillsTagInput({
     : [];
 
   const addSkillByName = (name: string) => {
-    const trimmed = name.trim();
-    if (trimmed && !hasSkill(value, trimmed) && value.length < maxTags) {
-      onChange([...value, trimmed]);
+    const canonicalName = canonicalizeSkillName(name);
+    if (canonicalName && !hasSkill(value, canonicalName) && value.length < maxTags) {
+      onChange([...value, canonicalName]);
       setInputValue("");
       setShowDropdown(false);
     }

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (max 2 MB)' }, { status: 400 });
   }
 
-  const key = R2_KEYS.avatar(session.user.id);
+  const key = R2_KEYS.avatar(session.user.id, crypto.randomUUID());
   const { url } = await uploadFile(file, key);
 
   await prisma.user.update({

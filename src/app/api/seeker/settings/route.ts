@@ -9,8 +9,39 @@ import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
 import { parseLegacyLocation, isValidState, isValidCity, formatLocation } from "@/modules/india-location";
 import type { IndiaState } from "@/modules/india-location";
 import type { Prisma } from "@prisma/client";
+import {
+  canonicalizeSkillName,
+  slugifySkillName as slugifyCanonicalSkillName,
+  uniqueCanonicalSkillNames,
+} from "@/lib/skills/canonicalize";
 
 const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
+
+const SITUATION_VALUE_MAP: Record<string, string> = {
+  ACTIVELY_LOOKING: "ACTIVELY_LOOKING",
+  "ACTIVELY LOOKING": "ACTIVELY_LOOKING",
+  "OPEN_TO_OFFERS": "OPEN_TO_OFFERS",
+  "OPEN TO OFFERS": "OPEN_TO_OFFERS",
+  EXPLORING_OPTIONS: "EXPLORING_OPTIONS",
+  "EXPLORING OPTIONS": "EXPLORING_OPTIONS",
+  STUDENT_FRESH_GRAD: "STUDENT_FRESH_GRAD",
+  "STUDENT FRESH GRAD": "STUDENT_FRESH_GRAD",
+  "STUDENT / FRESH GRAD": "STUDENT_FRESH_GRAD",
+  "STUDENT/FRESH GRAD": "STUDENT_FRESH_GRAD",
+};
+
+const AVAILABILITY_VALUE_MAP: Record<string, string> = {
+  IMMEDIATELY: "IMMEDIATELY",
+  TWO_WEEKS: "TWO_WEEKS",
+  "TWO WEEKS": "TWO_WEEKS",
+  "2 WEEKS": "TWO_WEEKS",
+  "2 WEEKS NOTICE": "TWO_WEEKS",
+  ONE_MONTH_PLUS: "ONE_MONTH_PLUS",
+  "ONE MONTH PLUS": "ONE_MONTH_PLUS",
+  "1 MONTH": "ONE_MONTH_PLUS",
+  "1 MONTH+": "ONE_MONTH_PLUS",
+  "1 MONTH PLUS": "ONE_MONTH_PLUS",
+};
 
 interface SkillCandidate {
   id: string;
@@ -19,12 +50,31 @@ interface SkillCandidate {
 }
 
 /*
+ * normalizeProfileSelectValue
+ * Converts legacy display labels into canonical enum-like strings.
+ * Returns null for blank values and preserves unknown non-blank values.
+ */
+function normalizeProfileSelectValue(
+  value: string | null | undefined,
+  valueMap: Record<string, string>,
+): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return null;
+
+  const lookupKey = trimmedValue.replace(/[_-]+/g, " ").toUpperCase();
+  return valueMap[trimmedValue.toUpperCase()] ?? valueMap[lookupKey] ?? trimmedValue;
+}
+
+/*
  * normalizeSkillName
  * Trims and collapses whitespace in user-entered skill names.
  * Returns the canonical display name used for matching and creation.
  */
 function normalizeSkillName(name: string): string {
-  return name.trim().replace(/\s+/g, " ");
+  return canonicalizeSkillName(name);
 }
 
 /*
@@ -33,18 +83,7 @@ function normalizeSkillName(name: string): string {
  * Returns a fallback slug for names without alphanumeric characters.
  */
 function slugifySkillName(name: string): string {
-  const normalizedName = normalizeSkillName(name);
-  const slug = normalizedName
-    .toLowerCase()
-    .replace(/\+/g, " plus ")
-    .replace(/#/g, " sharp ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return slug || `skill-${Array.from(normalizedName)
-    .map((character) => character.codePointAt(0)?.toString(36) ?? "")
-    .filter(Boolean)
-    .join("-")}`;
+  return slugifyCanonicalSkillName(name);
 }
 
 /*
@@ -53,16 +92,7 @@ function slugifySkillName(name: string): string {
  * Returns normalized names in the original input order.
  */
 function uniqueSkillNames(names: string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  names.forEach((name) => {
-    const normalized = normalizeSkillName(name);
-    const key = normalized.toLowerCase();
-    if (!normalized || seen.has(key)) return;
-    seen.add(key);
-    result.push(normalized);
-  });
-  return result;
+  return uniqueCanonicalSkillNames(names);
 }
 
 /*
@@ -137,6 +167,19 @@ function isPrismaUniqueConstraintError(error: unknown): boolean {
     error !== null &&
     "code" in error &&
     error.code === "P2002"
+  );
+}
+
+/*
+ * isPrismaForeignKeyConstraintError
+ * Detects stale relation ids that cannot be connected during profile saves.
+ */
+function isPrismaForeignKeyConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2003"
   );
 }
 
@@ -284,6 +327,14 @@ export async function GET() {
       ...userFields,
       image: resolveLogoUrl(image),
       ...profileFields,
+      situation: normalizeProfileSelectValue(
+        profileFields.situation,
+        SITUATION_VALUE_MAP,
+      ),
+      availability: normalizeProfileSelectValue(
+        profileFields.availability,
+        AVAILABILITY_VALUE_MAP,
+      ),
       city,
       state: derivedState,
       skills: skills.map((s) => s.skill),
@@ -332,111 +383,174 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const nextSkillIds = skillNames
-    ? await resolveSkillIdsFromNames(skillNames)
-    : skillIds;
+  try {
+    const nextSkillIds = skillNames
+      ? await resolveSkillIdsFromNames(skillNames)
+      : skillIds;
 
-  const transactionOperations: Prisma.PrismaPromise<unknown>[] = [];
+    const transactionOperations: Prisma.PrismaPromise<unknown>[] = [];
 
-  if (name !== undefined) {
-    transactionOperations.push(
-      prisma.user.update({
-        where: { id: session.user.id },
-        data: { name },
-      }),
-    );
-  }
-
-  transactionOperations.push(
-    prisma.seekerProfile.update({
-      where: { userId: session.user.id },
-      data: {
-        headline: profileData.headline || null,
-        bio: profileData.bio || null,
-        ...(profileData.city && profileData.state && isValidCity(profileData.city) && isValidState(profileData.state)
-          ? { location: formatLocation(profileData.city, profileData.state as IndiaState) }
-          : (!profileData.city && !profileData.state)
-            ? { location: null }
-            : {}),
-        situation: profileData.situation || null,
-        primaryRole: profileData.primaryRole || null,
-        ...(profileData.salaryMin !== undefined ? { salaryMin: profileData.salaryMin } : {}),
-        ...(profileData.salaryMax !== undefined ? { salaryMax: profileData.salaryMax } : {}),
-        currency: profileData.currency || null,
-        availability: profileData.availability || null,
-        websiteUrl: profileData.websiteUrl !== undefined ? (profileData.websiteUrl || null) : undefined,
-        linkedinUrl: profileData.linkedinUrl !== undefined ? (profileData.linkedinUrl || null) : undefined,
-        githubUrl: profileData.githubUrl !== undefined ? (profileData.githubUrl || null) : undefined,
-        twitterUrl: profileData.twitterUrl !== undefined ? (profileData.twitterUrl || null) : undefined,
-        yearsExperience: profileData.yearsExperience !== undefined ? profileData.yearsExperience : undefined,
-      },
-    }),
-  );
-
-  if (nextSkillIds) {
-    transactionOperations.push(
-      prisma.seekerSkill.deleteMany({
-        where: { seekerProfileId: seekerProfile.id },
-      }),
-      ...nextSkillIds.map((skillId) =>
-        prisma.seekerSkill.create({
-          data: {
-            seekerProfileId: seekerProfile.id,
-            skillId,
-            level: SkillLevel.INTERMEDIATE,
-          },
+    if (name !== undefined) {
+      transactionOperations.push(
+        prisma.user.update({
+          where: { id: session.user.id },
+          data: { name },
         }),
-      ),
-    );
-  }
+      );
+    }
 
-  if (parsed.data.workExperiences !== undefined) {
-    transactionOperations.push(
-      prisma.workExperience.deleteMany({
-        where: { seekerProfileId: seekerProfile.id },
-      }),
-      ...parsed.data.workExperiences.map((exp) =>
-        prisma.workExperience.create({
-          data: {
-            seekerProfileId: seekerProfile.id,
-            company: exp.company,
-            title: exp.title,
-            startDate: exp.startDate,
-            endDate: exp.endDate ?? null,
-            isCurrent: exp.isCurrent,
-            description: exp.description ?? null,
-            positionType: exp.positionType ?? null,
-            skills: exp.skills,
-          },
+    const profileUpdateData: Prisma.SeekerProfileUpdateInput = {};
+
+    if (profileData.headline !== undefined) {
+      profileUpdateData.headline = profileData.headline || null;
+    }
+    if (profileData.bio !== undefined) {
+      profileUpdateData.bio = profileData.bio || null;
+    }
+    if (profileData.city !== undefined || profileData.state !== undefined) {
+      if (
+        profileData.city &&
+        profileData.state &&
+        isValidCity(profileData.city) &&
+        isValidState(profileData.state)
+      ) {
+        profileUpdateData.location = formatLocation(
+          profileData.city,
+          profileData.state as IndiaState,
+        );
+      } else if (!profileData.city && !profileData.state) {
+        profileUpdateData.location = null;
+      }
+    }
+    if (profileData.situation !== undefined) {
+      profileUpdateData.situation = normalizeProfileSelectValue(
+        profileData.situation,
+        SITUATION_VALUE_MAP,
+      );
+    }
+    if (profileData.primaryRole !== undefined) {
+      profileUpdateData.primaryRole = profileData.primaryRole || null;
+    }
+    if (profileData.salaryMin !== undefined) {
+      profileUpdateData.salaryMin = profileData.salaryMin;
+    }
+    if (profileData.salaryMax !== undefined) {
+      profileUpdateData.salaryMax = profileData.salaryMax;
+    }
+    if (profileData.currency !== undefined) {
+      profileUpdateData.currency = profileData.currency || null;
+    }
+    if (profileData.availability !== undefined) {
+      profileUpdateData.availability = normalizeProfileSelectValue(
+        profileData.availability,
+        AVAILABILITY_VALUE_MAP,
+      );
+    }
+    if (profileData.websiteUrl !== undefined) {
+      profileUpdateData.websiteUrl = profileData.websiteUrl || null;
+    }
+    if (profileData.linkedinUrl !== undefined) {
+      profileUpdateData.linkedinUrl = profileData.linkedinUrl || null;
+    }
+    if (profileData.githubUrl !== undefined) {
+      profileUpdateData.githubUrl = profileData.githubUrl || null;
+    }
+    if (profileData.twitterUrl !== undefined) {
+      profileUpdateData.twitterUrl = profileData.twitterUrl || null;
+    }
+    if (profileData.yearsExperience !== undefined) {
+      profileUpdateData.yearsExperience = profileData.yearsExperience;
+    }
+
+    if (Object.keys(profileUpdateData).length > 0) {
+      transactionOperations.push(
+        prisma.seekerProfile.update({
+          where: { userId: session.user.id },
+          data: profileUpdateData,
         }),
-      ),
-    );
-  }
+      );
+    }
 
-  if (parsed.data.educations !== undefined) {
-    transactionOperations.push(
-      prisma.education.deleteMany({
-        where: { seekerProfileId: seekerProfile.id },
-      }),
-      ...parsed.data.educations.map((edu) =>
-        prisma.education.create({
-          data: {
-            seekerProfileId: seekerProfile.id,
-            institution: edu.institution,
-            graduationDate: edu.graduationDate ?? null,
-            degree: edu.degree ?? null,
-            major: edu.major ?? null,
-          },
+    if (nextSkillIds) {
+      transactionOperations.push(
+        prisma.seekerSkill.deleteMany({
+          where: { seekerProfileId: seekerProfile.id },
         }),
-      ),
-    );
+        ...nextSkillIds.map((skillId) =>
+          prisma.seekerSkill.create({
+            data: {
+              seekerProfileId: seekerProfile.id,
+              skillId,
+              level: SkillLevel.INTERMEDIATE,
+            },
+          }),
+        ),
+      );
+    }
+
+    if (parsed.data.workExperiences !== undefined) {
+      transactionOperations.push(
+        prisma.workExperience.deleteMany({
+          where: { seekerProfileId: seekerProfile.id },
+        }),
+        ...parsed.data.workExperiences.map((exp) =>
+          prisma.workExperience.create({
+            data: {
+              seekerProfileId: seekerProfile.id,
+              company: exp.company,
+              title: exp.title,
+              startDate: exp.startDate,
+              endDate: exp.endDate ?? null,
+              isCurrent: exp.isCurrent,
+              description: exp.description ?? null,
+              positionType: exp.positionType ?? null,
+              skills: exp.skills,
+            },
+          }),
+        ),
+      );
+    }
+
+    if (parsed.data.educations !== undefined) {
+      transactionOperations.push(
+        prisma.education.deleteMany({
+          where: { seekerProfileId: seekerProfile.id },
+        }),
+        ...parsed.data.educations.map((edu) =>
+          prisma.education.create({
+            data: {
+              seekerProfileId: seekerProfile.id,
+              institution: edu.institution,
+              graduationDate: edu.graduationDate ?? null,
+              degree: edu.degree ?? null,
+              major: edu.major ?? null,
+            },
+          }),
+        ),
+      );
+    }
+
+    await prisma.$transaction(transactionOperations);
+
+    if (nextSkillIds) {
+      await invalidateSeekerCache(seekerProfile.id);
+    }
+
+    return NextResponse.json({ data: { success: true } }, { status: 200 });
+  } catch (error) {
+    console.error("[seeker-settings] update failed:", error);
+    if (isPrismaUniqueConstraintError(error)) {
+      return NextResponse.json(
+        { error: "One or more selected skills were duplicated. Please refresh and try again." },
+        { status: 409 },
+      );
+    }
+    if (isPrismaForeignKeyConstraintError(error)) {
+      return NextResponse.json(
+        { error: "One or more selected skills no longer exist. Please refresh and try again." },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ error: "Failed to update profile settings" }, { status: 500 });
   }
-
-  await prisma.$transaction(transactionOperations);
-
-  if (nextSkillIds) {
-    await invalidateSeekerCache(seekerProfile.id);
-  }
-
-  return NextResponse.json({ data: { success: true } }, { status: 200 });
 }

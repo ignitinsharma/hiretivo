@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   RecruiterProfileSettingsSchema,
   type RecruiterProfileSettingsInput,
@@ -28,6 +30,7 @@ export function RecruiterProfileSection({
     resolver: zodResolver(RecruiterProfileSettingsSchema),
     defaultValues: settings,
   });
+  const isEmailVerified = Boolean(settings.emailVerified);
 
   useEffect(() => {
     form.reset(settings);
@@ -51,9 +54,24 @@ export function RecruiterProfileSection({
       className="rounded-xl border border-gray-200 bg-white p-6"
     >
       <div className="mb-5 flex items-start justify-between gap-4">
-        <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
-          Recruiter profile
-        </h3>
+        <div>
+          <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
+            Recruiter profile
+          </h3>
+          <p
+            className={cn(
+              "mt-1 flex items-center gap-1.5 text-sm font-semibold",
+              isEmailVerified ? "text-brand-success" : "text-brand-danger",
+            )}
+          >
+            {isEmailVerified ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            {isEmailVerified ? "Email verified" : "Email not verified"}
+          </p>
+        </div>
         {isEditing ? (
           <div className="flex items-center gap-2">
             <Button

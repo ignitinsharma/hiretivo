@@ -1,11 +1,12 @@
 "use client";
 
-import { Mail, Search, X } from "lucide-react";
+import { Copy, Mail, Search, X } from "lucide-react";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { HiretivoVerifiedBadge } from "@/components/shared/HiretivoVerifiedBadge";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DEMO_ENGINEERS, DEMO_THRESHOLD } from "@/constants/demo-engineers";
+import { cn } from "@/lib/utils";
 import type { DemoEngineerProfile } from "@/constants/demo-engineers";
 import { useFetchTalent } from "@/modules/recruiter/talent/queries/use-fetch-talent";
 import { formatProfileLabel } from "@/modules/recruiter/talent/utils/format-profile-label";
@@ -102,23 +104,36 @@ function TalentCard({
 }): ReactElement {
   const visibleSkills = talent.skills.slice(0, MAX_CARD_SKILLS);
   const hiddenSkillCount = Math.max(talent.skills.length - MAX_CARD_SKILLS, 0);
+  const copyEmail = async () => {
+    if (!talent.email) return;
+    try {
+      await navigator.clipboard.writeText(talent.email);
+      toast.success("Email copied.");
+    } catch {
+      toast.error("Could not copy email.");
+    }
+  };
 
   return (
     <article className={`${TALENT_CARD_CLASS} flex h-full min-h-64 flex-col`}>
       <div className="mb-4 flex min-h-14 items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="grid min-w-0 flex-1 grid-cols-[3rem_minmax(0,1fr)] items-center gap-3">
           <InitialsAvatar
             name={talent.name}
             email={talent.email}
             userId={talent.id}
             image={talent.image}
             size="lg"
+            verified
           />
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">
-              {talent.name ?? "Unnamed talent"}
-            </h2>
-            <p className={MUTED_TEXT_CLASS}>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">
+                {talent.name ?? "Unnamed talent"}
+              </h2>
+              <HiretivoVerifiedBadge variant="inline" size="sm" />
+            </div>
+            <p className={cn(MUTED_TEXT_CLASS, "truncate")}>
               {talent.headline ?? talent.primaryRole ?? "Candidate profile"}
             </p>
           </div>
@@ -170,14 +185,25 @@ function TalentCard({
               View Profile
             </Button>
             {talent.email && (
-              <Button asChild variant="primary" size="icon">
-                <a
-                  href={`mailto:${talent.email}`}
-                  aria-label={`Email ${talent.name ?? "talent"}`}
+              <>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="icon"
+                  onClick={copyEmail}
+                  aria-label={`Copy email for ${talent.name ?? "talent"}`}
                 >
-                  <Mail className="h-4 w-4" />
-                </a>
-              </Button>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button asChild variant="primary" size="icon">
+                  <a
+                    href={`mailto:${talent.email}`}
+                    aria-label={`Email ${talent.name ?? "talent"}`}
+                  >
+                    <Mail className="h-4 w-4" />
+                  </a>
+                </Button>
+              </>
             )}
           </>
         )}
@@ -261,7 +287,7 @@ export function TalentPoolClient(): ReactElement {
    * openUpgrade
    * Opens TalentUpgradeModal with an optional engineer teaser string.
    * Called from: disabled search bar click, Unlock Profile on real blurred card, Unlock Now on demo card.
-   * @param teaser - Optional string, e.g. "Priya S. • 88/100 • React, Node.js"
+   * @param teaser - Optional string, e.g. "Priya S. • React, Node.js"
    */
   function openUpgrade(teaser?: string) {
     setUpgradeTeaser(teaser);
@@ -391,7 +417,7 @@ export function TalentPoolClient(): ReactElement {
               profile={profile}
               onUpgrade={() =>
                 openUpgrade(
-                  `${profile.name} • ${profile.hiretivoScore}/100 • ${profile.skills.slice(0, 3).join(", ")}`
+                  `${profile.name} • ${profile.skills.slice(0, 3).join(", ")}`
                 )
               }
             />

@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 interface EngineerCard {
   name: string;
   role: string;
-  score: number;
   skills: string[];
   salary: string;
   availability: string;
@@ -25,7 +24,6 @@ const ENGINEER_CARDS: EngineerCard[] = [
   {
     name: "Priya S.",
     role: "Senior React Engineer",
-    score: 92,
     skills: ["React", "TypeScript", "Node.js"],
     salary: "$55k-$70k",
     availability: "Available in 2 weeks",
@@ -34,7 +32,6 @@ const ENGINEER_CARDS: EngineerCard[] = [
   {
     name: "Arjun M.",
     role: "Backend Platform Engineer",
-    score: 88,
     skills: ["Go", "Postgres", "AWS"],
     salary: "$60k-$78k",
     availability: "Open now",
@@ -63,12 +60,10 @@ function EngineerCardPreview({ engineer }: { engineer: EngineerCard }) {
             {engineer.role}
           </p>
         </div>
-        <div className="shrink-0 rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-center">
-          <p className="text-lg font-bold leading-none text-brand-foreground">
-            {engineer.score}
-          </p>
-          <p className="mt-1 text-[11px] font-medium text-brand-foreground-muted">
-            score
+        <div className="shrink-0 rounded-lg border border-brand-primary/20 bg-brand-primary/[0.06] px-3 py-2 text-center">
+          <ShieldCheck className="mx-auto h-4 w-4 text-brand-primary" aria-hidden="true" />
+          <p className="mt-1 text-[11px] font-bold text-brand-primary">
+            Reviewed
           </p>
         </div>
       </div>

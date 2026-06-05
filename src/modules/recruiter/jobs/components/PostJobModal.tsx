@@ -39,6 +39,10 @@ import { skillService } from "@/services/skill.service";
 import type { SkillItem } from "@/services/skill.service";
 import { useEmailVerificationStatus } from "@/hooks/use-email-verification-status";
 import type { JobListItem } from "@/modules/jobs/types/job.types";
+import {
+  canonicalizeSkillName,
+  slugifySkillName,
+} from "@/lib/skills/canonicalize";
 
 import { JdGeneratorPanel } from "./JdGeneratorPanel";
 import { SkillSuggestChips } from "./SkillSuggestChips";
@@ -121,6 +125,21 @@ function toTitleCase(value: string): string {
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+}
+
+function isRichTextEmpty(value: string): boolean {
+  return value
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim().length === 0;
+}
+
+function isExternalUrlValid(value: string): boolean {
+  return /^https?:\/\/.+/i.test(value.trim());
+}
+
+function getSkillKey(name: string): string {
+  return slugifySkillName(name);
 }
 
 function ConfirmDeleteModal({
@@ -275,9 +294,11 @@ export function PostJobModal() {
     control,
     watch,
     setValue,
+    getValues,
     reset,
     formState: { errors },
   } = useForm<JobFormValues>({
+    mode: "onChange",
     defaultValues: {
       title: "",
       category: "",
@@ -294,6 +315,7 @@ export function PostJobModal() {
   });
 
   const selectedSkillIds = watch("selectedSkillIds");
+  const formValues = watch();
 
   const { data: skills = [], isLoading: skillsLoading } = useQuery({
     queryKey: ["skills"],
@@ -314,15 +336,22 @@ export function PostJobModal() {
 
   const createSkillMutation = useMutation({
     mutationFn: async (name: string) => {
-      const slug = name
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
-      return skillService.createSkill({ name, slug, category: "Other" });
+      const canonicalName = canonicalizeSkillName(name);
+      return skillService.createSkill({
+        name: canonicalName,
+        slug: slugifySkillName(canonicalName),
+        category: "Other",
+      });
     },
     onSuccess: (newSkill) => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
-      setValue("selectedSkillIds", [...selectedSkillIds, newSkill.id]);
+      const currentSkillIds = getValues("selectedSkillIds") ?? [];
+      if (!currentSkillIds.includes(newSkill.id)) {
+        setValue("selectedSkillIds", [...currentSkillIds, newSkill.id], {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
       setSkillSearch("");
       setShowSkillDropdown(false);
       toast.success(`"${newSkill.name}" added to skills`);
@@ -370,6 +399,47 @@ export function PostJobModal() {
       });
     }
   }, [editJob, editJobId, reset]);
+
+  const addSelectedSkill = (skill: Pick<SkillItem, "id" | "name">) => {
+    if (selectedSkillIds.includes(skill.id)) {
+      setSkillSearch("");
+      setShowSkillDropdown(false);
+      return;
+    }
+
+    setValue("selectedSkillIds", [...selectedSkillIds, skill.id], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setSkillSearch("");
+    setShowSkillDropdown(false);
+  };
+
+  const handleAddSkillFromSearch = () => {
+    const trimmedSearch = skillSearch.trim();
+    if (!trimmedSearch || skillsLoading || createSkillMutation.isPending) {
+      return;
+    }
+
+    const searchKey = getSkillKey(trimmedSearch);
+    const exactMatch = (skills as SkillItem[]).find(
+      (skill) => getSkillKey(skill.name) === searchKey,
+    );
+    if (exactMatch) {
+      addSelectedSkill(exactMatch);
+      return;
+    }
+
+    const firstVisibleSkill = filteredSkills.find(
+      (skill: SkillItem) => !selectedSkillIds.includes(skill.id),
+    );
+    if (firstVisibleSkill) {
+      addSelectedSkill(firstVisibleSkill);
+      return;
+    }
+
+    createSkillMutation.mutate(trimmedSearch);
+  };
 
   const onSubmit = async (data: JobFormValues) => {
     if (!editJobId && verificationStatus?.requiresVerification) {
@@ -435,9 +505,20 @@ export function PostJobModal() {
     }
   };
 
-  const filteredSkills = skills.filter((s: { name: string }) =>
-    s.name.toLowerCase().includes(skillSearch.toLowerCase()),
-  );
+  const normalizedSkillSearch = skillSearch.trim().toLowerCase();
+  const searchSkillKey = normalizedSkillSearch
+    ? getSkillKey(normalizedSkillSearch)
+    : "";
+  const filteredSkills = skills.filter((s: { name: string }) => {
+    if (!normalizedSkillSearch) return true;
+    const skillName = s.name.toLowerCase();
+    const skillKey = getSkillKey(s.name);
+    return (
+      skillName.includes(normalizedSkillSearch) ||
+      skillKey.includes(searchSkillKey) ||
+      searchSkillKey.includes(skillKey)
+    );
+  });
 
   const selectedSkillsData = selectedSkillIds
     .map((id: string) => skills.find((s: { id: string }) => s.id === id))
@@ -477,6 +558,27 @@ export function PostJobModal() {
     hasError
       ? "border-red-500 focus:border-red-500 focus-visible:ring-red-500"
       : "";
+
+  const salaryMinValue = Number.parseInt(formValues.salaryMin || "", 10);
+  const salaryMaxValue = Number.parseInt(formValues.salaryMax || "", 10);
+  const hasValidSalary =
+    Number.isFinite(salaryMinValue) &&
+    Number.isFinite(salaryMaxValue) &&
+    salaryMinValue >= 0 &&
+    salaryMaxValue >= 0 &&
+    salaryMinValue <= salaryMaxValue;
+  const canSubmitJob =
+    !isSubmitting &&
+    !(isEditJobLoading && editJobId) &&
+    formValues.title.trim().length > 0 &&
+    formValues.category.trim().length > 0 &&
+    formValues.jobType.trim().length > 0 &&
+    formValues.experienceLevel.trim().length > 0 &&
+    hasValidSalary &&
+    !isRichTextEmpty(formValues.description) &&
+    selectedSkillIds.length > 0 &&
+    (formValues.applyType !== ApplyType.EXTERNAL ||
+      isExternalUrlValid(formValues.externalApplyUrl));
 
   return (
     <Dialog
@@ -870,6 +972,10 @@ export function PostJobModal() {
                         selectedSkillIds.filter(
                           (id: string) => id !== skill.id,
                         ),
+                        {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        },
                       )
                     }
                   />
@@ -893,6 +999,13 @@ export function PostJobModal() {
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary  flex items-center"
+                onClick={handleAddSkillFromSearch}
+                disabled={
+                  !skillSearch.trim() ||
+                  skillsLoading ||
+                  createSkillMutation.isPending
+                }
+                aria-label="Add searched skill"
               >
                 <PlusCircle className="w-5 h-5" />
               </button>
@@ -915,14 +1028,7 @@ export function PostJobModal() {
                             key={skill.id}
                             type="button"
                             className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
-                            onClick={() => {
-                              setValue("selectedSkillIds", [
-                                ...selectedSkillIds,
-                                skill.id,
-                              ]);
-                              setSkillSearch("");
-                              setShowSkillDropdown(false);
-                            }}
+                            onClick={() => addSelectedSkill(skill)}
                           >
                             {skill.name}{" "}
                             <span className="text-slate-400 text-xs">
@@ -967,14 +1073,17 @@ export function PostJobModal() {
                   name: string;
                 }>;
                 const match = allSkillsArr.find(
-                  (s) => s.name.toLowerCase() === skillName.toLowerCase(),
+                  (s) => getSkillKey(s.name) === getSkillKey(skillName),
                 );
                 if (match) {
                   if (!selectedSkillIds.includes(match.id)) {
                     setValue("selectedSkillIds", [
                       ...selectedSkillIds,
                       match.id,
-                    ]);
+                    ], {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
                   }
                 } else {
                   // Skill doesn't exist in DB yet — create it automatically
@@ -1030,12 +1139,14 @@ export function PostJobModal() {
             <Button
               type="submit"
               className="font-bold bg-brand-primary text-white hover:bg-brand-primary-dark"
-              disabled={isSubmitting}
+              disabled={!canSubmitJob}
             >
-              {editJobId
-                ? "Update Job"
-                : isSubmitting
-                  ? "Publishing..."
+              {isSubmitting
+                ? editJobId
+                  ? "Updating..."
+                  : "Publishing..."
+                : editJobId
+                  ? "Update Job"
                   : "Publish Post"}
             </Button>
           </div>
@@ -1047,7 +1158,10 @@ export function PostJobModal() {
           prefillTitle={watch("title")}
           prefillDescription={watch("description")}
           onGenerated={(jd) => {
-            setValue("description", jd);
+            setValue("description", jd, {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
             setIsJdPanelOpen(false);
             // Auto-trigger skill suggestions after JD is generated
             setAutoSuggestTrigger((prev) => prev + 1);

@@ -132,6 +132,7 @@ export async function GET(req: NextRequest) {
           meetLink: true,
           notes: true,
           status: true,
+          scheduledTimeZone: true,
         },
       },
       seeker: {

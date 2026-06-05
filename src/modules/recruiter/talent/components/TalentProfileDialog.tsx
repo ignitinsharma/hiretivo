@@ -4,8 +4,8 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   BriefcaseBusiness,
-  Calendar,
   Check,
+  Copy,
   ExternalLink,
   FileText,
   Github,
@@ -13,12 +13,13 @@ import {
   GraduationCap,
   Linkedin,
   Mail,
-  MapPin,
   Quote,
   Twitter,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
+import { HiretivoVerifiedBadge } from "@/components/shared/HiretivoVerifiedBadge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import { formatProfileLabel } from "@/modules/recruiter/talent/utils/format-prof
 import type {
   TalentDetail,
   TalentEducation,
+  TalentProject,
   TalentProfileLinks,
   TalentSkill,
   TalentWorkExperience,
@@ -63,7 +65,8 @@ interface OpportunityChip {
 }
 
 const SECTION_LABEL_CLASS = "text-sm font-medium text-brand-foreground-muted";
-const BODY_TEXT_CLASS = "text-[15px] leading-relaxed text-brand-foreground-muted";
+const BODY_TEXT_CLASS =
+  "text-[15px] leading-relaxed text-brand-foreground-muted";
 const MAX_VISIBLE_EXPERIENCE = 2;
 const MAX_VISIBLE_SKILLS = 12;
 
@@ -110,8 +113,14 @@ function formatSalaryRange(talent: TalentDetail): string | null {
   }
 
   const currencyLabel = currency ?? "USD";
-  const formattedMin = salaryMin !== null ? `${currencyLabel} ${salaryMin.toLocaleString()}` : null;
-  const formattedMax = salaryMax !== null ? `${currencyLabel} ${salaryMax.toLocaleString()}` : null;
+  const formattedMin =
+    salaryMin !== null
+      ? `${currencyLabel} ${salaryMin.toLocaleString()}`
+      : null;
+  const formattedMax =
+    salaryMax !== null
+      ? `${currencyLabel} ${salaryMax.toLocaleString()}`
+      : null;
 
   if (formattedMin && formattedMax) {
     return `${formattedMin} / ${formattedMax}`;
@@ -123,8 +132,12 @@ function formatSalaryRange(talent: TalentDetail): string | null {
 /**
  * Formats freeform month/year dates stored on profile entries.
  */
-function formatDateRange(startDate: string, endDate: string | null, isCurrent: boolean): string {
-  return `${startDate} to ${isCurrent ? "Present" : endDate ?? "Present"}`;
+function formatDateRange(
+  startDate: string,
+  endDate: string | null,
+  isCurrent: boolean,
+): string {
+  return `${startDate} to ${isCurrent ? "Present" : (endDate ?? "Present")}`;
 }
 
 /**
@@ -155,7 +168,10 @@ function getOpportunityChips(talent: TalentDetail): OpportunityChip[] {
   const salary = formatSalaryRange(talent);
 
   return [
-    { label: formatProfileLabel(talent.profile.workPreference), tone: "primary" },
+    {
+      label: formatProfileLabel(talent.profile.workPreference),
+      tone: "primary",
+    },
     { label: talent.location ?? "Location not provided", tone: "primary" },
     { label: talent.primaryRole ?? "Role open", tone: "primary" },
     ...(salary ? [{ label: salary, tone: "neutral" as const }] : []),
@@ -187,7 +203,11 @@ function TalentProfileSkeleton(): ReactElement {
 /**
  * Renders the reference-style candidate identity header.
  */
-function TalentProfileHeader({ talent }: { talent: TalentDetail }): ReactElement {
+function TalentProfileHeader({
+  talent,
+}: {
+  talent: TalentDetail;
+}): ReactElement {
   const visibleLinks = talent.links ? getVisibleLinks(talent.links) : [];
   const statusLabel = formatAvailability(talent.availability);
 
@@ -201,11 +221,15 @@ function TalentProfileHeader({ talent }: { talent: TalentDetail }): ReactElement
             userId={talent.id}
             image={talent.image}
             size="lg"
+            verified
           />
           <div className="min-w-0">
-            <DialogTitle className="text-2xl font-bold capitalize leading-tight tracking-tight text-brand-foreground">
-              {talent.name ?? "Unnamed talent"}
-            </DialogTitle>
+            <div className="flex min-w-0 items-center gap-2">
+              <DialogTitle className="truncate text-2xl font-bold capitalize leading-tight tracking-tight text-brand-foreground">
+                {talent.name ?? "Unnamed talent"}
+              </DialogTitle>
+              <HiretivoVerifiedBadge variant="inline" />
+            </div>
             <DialogDescription className="mt-1 text-base font-medium leading-relaxed text-brand-foreground-muted">
               {getProfileMeta(talent)}
             </DialogDescription>
@@ -267,19 +291,92 @@ function LookingForSection({ bio }: { bio: string | null }): ReactElement {
 }
 
 /**
+ * Renders safe profile summary fields available in locked and unlocked states.
+ */
+function ProfileSummarySection({ talent }: { talent: TalentDetail }): ReactElement {
+  const summaryItems = [
+    {
+      label: "Professional Headline",
+      value: talent.headline ?? "Not specified",
+    },
+    {
+      label: "Primary Role",
+      value: talent.primaryRole ?? "Not specified",
+    },
+    {
+      label: "Job Search Status",
+      value: formatProfileLabel(talent.profile.situation),
+    },
+    {
+      label: "Availability",
+      value: formatAvailability(talent.availability),
+    },
+    {
+      label: "Location",
+      value: talent.location ?? "Location not provided",
+    },
+    {
+      label: "Years Experience",
+      value: formatExperience(talent.yearsExperience),
+    },
+    {
+      label: "Salary",
+      value: formatSalaryRange(talent) ?? "Not specified",
+    },
+    {
+      label: "Work Preference",
+      value: formatProfileLabel(talent.profile.workPreference),
+    },
+  ];
+
+  return (
+    <section>
+      <p className={SECTION_LABEL_CLASS}>Profile summary</p>
+      <dl className="mt-3 grid grid-cols-1 overflow-hidden rounded-xl border border-brand-border bg-white sm:grid-cols-2">
+        {summaryItems.map((item) => (
+          <div
+            key={item.label}
+            className="border-b border-brand-border p-4 last:border-b-0 sm:border-r sm:[&:nth-child(2n)]:border-r-0 sm:[&:nth-last-child(-n+2)]:border-b-0"
+          >
+            <dt className="text-xs font-medium uppercase tracking-wider text-brand-foreground-muted">
+              {item.label}
+            </dt>
+            <dd className="mt-1 text-sm font-semibold leading-relaxed text-brand-foreground">
+              {item.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/**
  * Renders one compact work experience row.
  */
-function ExperienceRow({ experience }: { experience: TalentWorkExperience }): ReactElement {
+function ExperienceRow({
+  experience,
+}: {
+  experience: TalentWorkExperience;
+}): ReactElement {
   return (
     <article className="flex gap-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand-border bg-brand-surface text-brand-foreground-muted">
         <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <h3 className="text-sm font-bold text-brand-foreground">{experience.title}</h3>
-        <p className="mt-0.5 text-sm font-medium text-brand-foreground-muted">{experience.company}</p>
+        <h3 className="capitalize text-sm font-bold text-brand-foreground">
+          {experience.title}
+        </h3>
+        <p className="mt-0.5 text-sm font-medium capitalize text-brand-foreground-muted">
+          {experience.company}
+        </p>
         <p className="mt-1 text-sm text-brand-foreground-muted">
-          {formatDateRange(experience.startDate, experience.endDate, experience.isCurrent)}
+          {formatDateRange(
+            experience.startDate,
+            experience.endDate,
+            experience.isCurrent,
+          )}
         </p>
         {experience.description && (
           <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-brand-foreground-muted">
@@ -300,12 +397,18 @@ function ExperienceSection({
   workExperiences: TalentWorkExperience[];
 }): ReactElement {
   const visibleExperiences = workExperiences.slice(0, MAX_VISIBLE_EXPERIENCE);
-  const hiddenCount = Math.max(workExperiences.length - MAX_VISIBLE_EXPERIENCE, 0);
+  const hiddenCount = Math.max(
+    workExperiences.length - MAX_VISIBLE_EXPERIENCE,
+    0,
+  );
 
   return (
     <section>
       <p className={SECTION_LABEL_CLASS}>
-        Experience {hiddenCount > 0 && <span className="text-brand-primary">- {hiddenCount} more</span>}
+        Experience{" "}
+        {hiddenCount > 0 && (
+          <span className="text-brand-primary">- {hiddenCount} more</span>
+        )}
       </p>
       {visibleExperiences.length > 0 ? (
         <div className="mt-3 space-y-4">
@@ -323,30 +426,122 @@ function ExperienceSection({
 /**
  * Renders education in one line per record.
  */
-function EducationSection({ educations }: { educations: TalentEducation[] }): ReactElement {
+function EducationRow({ education }: { education: TalentEducation }): ReactElement {
+  const program = [education.degree, education.major].filter(Boolean).join(", ");
+
+  return (
+    <article className="flex gap-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand-border bg-brand-surface text-brand-foreground-muted">
+        <GraduationCap className="h-5 w-5" aria-hidden="true" />
+      </div>
+      <div className="min-w-0">
+        <h3 className="text-sm font-bold text-brand-foreground">
+          {program || education.institution}
+        </h3>
+        {program ? (
+          <p className="mt-0.5 text-sm font-medium text-brand-foreground-muted">
+            {education.institution}
+          </p>
+        ) : null}
+        {education.graduationDate ? (
+          <p className="mt-1 text-sm text-brand-foreground-muted">
+            {education.graduationDate}
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function EducationSection({
+  educations,
+}: {
+  educations: TalentEducation[];
+}): ReactElement {
   return (
     <section>
       <p className={SECTION_LABEL_CLASS}>Education</p>
       {educations.length > 0 ? (
-        <div className="mt-3 space-y-2">
-          {educations.map((education) => {
-            const program = [education.degree, education.major].filter(Boolean).join(", ");
-            return (
-              <div key={education.id} className="flex gap-3">
-                <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-brand-foreground-muted" aria-hidden="true" />
-                <p className="text-sm leading-relaxed text-brand-foreground-muted">
-                  {program && <span className="font-bold text-brand-foreground">{program}</span>}
-                  {program && " • "}
-                  {education.institution}
-                  {education.graduationDate && ` • ${education.graduationDate}`}
-                </p>
-              </div>
-            );
-          })}
+        <div className="mt-3 space-y-4">
+          {educations.map((education) => (
+            <EducationRow key={education.id} education={education} />
+          ))}
         </div>
       ) : (
         <p className={cn("mt-3", BODY_TEXT_CLASS)}>No education added.</p>
       )}
+    </section>
+  );
+}
+
+/**
+ * Renders proof-of-work profile details that are visible after unlock.
+ */
+function ProofOfWorkSection({
+  projects,
+  videoIntroUrl,
+  githubUsername,
+}: {
+  projects: TalentProject[];
+  videoIntroUrl: string | null;
+  githubUsername: string | null;
+}): ReactElement {
+  if (projects.length === 0 && !videoIntroUrl && !githubUsername) {
+    return (
+      <section>
+        <p className={SECTION_LABEL_CLASS}>Proof of work</p>
+        <p className={cn("mt-3", BODY_TEXT_CLASS)}>
+          No proof-of-work links added.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <p className={SECTION_LABEL_CLASS}>Proof of work</p>
+      <div className="mt-3 space-y-3">
+        {githubUsername ? (
+          <p className={BODY_TEXT_CLASS}>GitHub username: {githubUsername}</p>
+        ) : null}
+        {videoIntroUrl ? (
+          <a
+            href={videoIntroUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-brand-primary hover:underline"
+          >
+            Video intro
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+          </a>
+        ) : null}
+        {projects.map((project, index) => (
+          <article
+            key={`${project.title ?? "project"}-${index}`}
+            className="rounded-xl border border-brand-border bg-brand-surface p-4"
+          >
+            <h3 className="text-sm font-bold text-brand-foreground">
+              {project.title ?? "Untitled project"}
+            </h3>
+            {project.url ? (
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-brand-primary hover:underline"
+              >
+                {project.url}
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </a>
+            ) : null}
+            {project.description ? (
+              <p className="mt-2 text-sm leading-relaxed text-brand-foreground-muted">
+                {project.description}
+              </p>
+            ) : null}
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
@@ -387,7 +582,11 @@ function SkillsSection({ skills }: { skills: TalentSkill[] }): ReactElement {
 /**
  * Renders ideal next opportunity chips from existing profile fields.
  */
-function IdealOpportunitySection({ talent }: { talent: TalentDetail }): ReactElement {
+function IdealOpportunitySection({
+  talent,
+}: {
+  talent: TalentDetail;
+}): ReactElement {
   const chips = getOpportunityChips(talent);
 
   return (
@@ -404,7 +603,9 @@ function IdealOpportunitySection({ talent }: { talent: TalentDetail }): ReactEle
                 : "bg-brand-surface text-brand-foreground",
             )}
           >
-            {chip.tone === "primary" && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+            {chip.tone === "primary" && (
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
             {chip.label}
           </span>
         ))}
@@ -416,41 +617,79 @@ function IdealOpportunitySection({ talent }: { talent: TalentDetail }): ReactEle
 /**
  * Renders the full expanded candidate profile for Talent Pool discovery.
  */
-function TalentProfileContent({ talent }: { talent: TalentDetail }): ReactElement {
+function TalentProfileContent({
+  talent,
+}: {
+  talent: TalentDetail;
+}): ReactElement {
+  const hasFooterActions = Boolean(talent.resumeUrl || talent.email);
+  const copyEmail = async () => {
+    if (!talent.email) return;
+    try {
+      await navigator.clipboard.writeText(talent.email);
+      toast.success("Email copied.");
+    } catch {
+      toast.error("Could not copy email.");
+    }
+  };
+
   return (
     <>
       <TalentProfileHeader talent={talent} />
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
         <div className="space-y-7">
-          <LookingForSection bio={talent.bio} />
-          <ExperienceSection workExperiences={talent.workExperiences} />
-          <EducationSection educations={talent.educations} />
+          <ProfileSummarySection talent={talent} />
+          {talent.isUnlocked ? (
+            <>
+              <LookingForSection bio={talent.bio} />
+              <ProofOfWorkSection
+                projects={talent.topProjects}
+                videoIntroUrl={talent.videoIntroUrl}
+                githubUsername={talent.githubUsername}
+              />
+              <ExperienceSection workExperiences={talent.workExperiences} />
+              <EducationSection educations={talent.educations} />
+            </>
+          ) : null}
           <SkillsSection skills={talent.skills} />
-          <IdealOpportunitySection talent={talent} />
+          {talent.isUnlocked ? <IdealOpportunitySection talent={talent} /> : null}
         </div>
       </div>
-      <div className="shrink-0 border-t border-brand-border px-6 py-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            {talent.resumeUrl && (
-              <Button asChild variant="default" className="w-full sm:w-auto">
-                <a href={talent.resumeUrl} target="_blank" rel="noreferrer">
-                  <FileText className="h-4 w-4" />
-                  Resume
-                </a>
-              </Button>
-            )}
-            {talent.email && (
-              <Button asChild variant="primary" className="w-full sm:w-auto">
-                <a href={`mailto:${talent.email}`}>
-                  <Mail className="h-4 w-4" />
-                  Email
-                </a>
-              </Button>
-            )}
+      {hasFooterActions ? (
+        <div className="shrink-0 border-t border-brand-border px-6 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              {talent.resumeUrl && (
+                <Button asChild variant="default" className="w-full sm:w-auto">
+                  <a href={talent.resumeUrl} target="_blank" rel="noreferrer">
+                    <FileText className="h-4 w-4" />
+                    Resume
+                  </a>
+                </Button>
+              )}
+              {talent.email && (
+                <>
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="w-full sm:w-auto"
+                    onClick={copyEmail}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy email
+                  </Button>
+                  <Button asChild variant="primary" className="w-full sm:w-auto">
+                    <a href={`mailto:${talent.email}`}>
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </a>
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </>
   );
 }
@@ -463,7 +702,11 @@ export function TalentProfileDialog({
   open,
   onOpenChange,
 }: TalentProfileDialogProps): ReactElement {
-  const { data: talent, isError, isLoading } = useFetchTalentDetail(open ? seekerId : null);
+  const {
+    data: talent,
+    isError,
+    isLoading,
+  } = useFetchTalentDetail(open ? seekerId : null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -37,9 +37,12 @@ export default async function AdminVerificationDetailPage({
           headline: true,
           bio: true,
           location: true,
+          yearsExperience: true,
+          workPreference: true,
           githubUrl: true,
           githubUsername: true,
           linkedinUrl: true,
+          twitterUrl: true,
           websiteUrl: true,
           videoIntroUrl: true,
           topProjects: true,
@@ -151,6 +154,16 @@ export default async function AdminVerificationDetailPage({
                 <dt className="text-brand-foreground-muted font-medium">Availability</dt>
                 <dd className="text-brand-foreground">{profile?.availability ?? "—"}</dd>
               </div>
+              <div>
+                <dt className="text-brand-foreground-muted font-medium">Years experience</dt>
+                <dd className="text-brand-foreground">
+                  {profile?.yearsExperience != null ? profile.yearsExperience : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-brand-foreground-muted font-medium">Work preference</dt>
+                <dd className="text-brand-foreground">{profile?.workPreference ?? "—"}</dd>
+              </div>
               {profile?.salaryMinUsd != null && (
                 <div>
                   <dt className="text-brand-foreground-muted font-medium">Salary (USD)</dt>
@@ -214,6 +227,19 @@ export default async function AdminVerificationDetailPage({
                   </a>
                 </li>
               )}
+              {profile?.twitterUrl && (
+                <li>
+                  <span className="text-brand-foreground-muted mr-2">Twitter/X</span>
+                  <a
+                    href={profile.twitterUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-primary hover:underline break-all"
+                  >
+                    {profile.twitterUrl}
+                  </a>
+                </li>
+              )}
               {profile?.videoIntroUrl && (
                 <li>
                   <span className="text-brand-foreground-muted mr-2">Video intro</span>
@@ -230,9 +256,14 @@ export default async function AdminVerificationDetailPage({
               <li>
                 <span className="text-brand-foreground-muted mr-2">Resume</span>
                 {profile?.resumeKey ? (
-                  <span className="text-brand-foreground text-xs bg-brand-surface rounded px-2 py-0.5">
-                    {profile.resumeKey}
-                  </span>
+                  <a
+                    href={`/api/admin/verification/${user.id}/resume`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-lg border border-brand-border bg-brand-surface px-3 py-1 text-xs font-semibold text-brand-primary hover:bg-white"
+                  >
+                    Open resume
+                  </a>
                 ) : (
                   <span className="text-brand-foreground-secondary">Not uploaded</span>
                 )}

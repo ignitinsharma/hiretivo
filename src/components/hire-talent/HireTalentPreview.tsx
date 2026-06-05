@@ -2,7 +2,6 @@ import { BadgeCheck, Lock, Unlock } from "lucide-react";
 
 interface TalentPreview {
   name: string;
-  score: number;
   skills: string[];
   salary: string;
   availability: string;
@@ -12,7 +11,6 @@ interface TalentPreview {
 const TALENT_PREVIEW: TalentPreview[] = [
   {
     name: "Priya S.",
-    score: 92,
     skills: ["React", "TypeScript", "Node.js"],
     salary: "$55k-$70k",
     availability: "2 weeks",
@@ -20,7 +18,6 @@ const TALENT_PREVIEW: TalentPreview[] = [
   },
   {
     name: "Arjun M.",
-    score: 88,
     skills: ["Go", "Postgres", "AWS"],
     salary: "$60k-$78k",
     availability: "Now",
@@ -28,7 +25,6 @@ const TALENT_PREVIEW: TalentPreview[] = [
   },
   {
     name: "Neha R.",
-    score: 84,
     skills: ["Python", "Django", "Data"],
     salary: "$48k-$62k",
     availability: "30 days",
@@ -36,7 +32,6 @@ const TALENT_PREVIEW: TalentPreview[] = [
   },
   {
     name: "Kabir V.",
-    score: 81,
     skills: ["Java", "Spring", "Kafka"],
     salary: "$58k-$74k",
     availability: "Now",
@@ -64,9 +59,9 @@ export function HireTalentPreview() {
         </div>
 
         <div className="min-w-0 overflow-hidden rounded-xl border border-brand-border bg-white">
-          <div className="hidden grid-cols-[1.2fr_0.6fr_1.4fr_0.9fr_0.8fr_0.75fr] gap-4 border-b border-brand-border bg-brand-surface px-5 py-3 text-xs font-bold uppercase tracking-normal text-brand-foreground-muted md:grid">
+          <div className="hidden grid-cols-[1.2fr_0.75fr_1.4fr_0.9fr_0.8fr_0.75fr] gap-4 border-b border-brand-border bg-brand-surface px-5 py-3 text-xs font-bold uppercase tracking-normal text-brand-foreground-muted md:grid">
             <span>Engineer</span>
-            <span>Score</span>
+            <span>Proof</span>
             <span>Skills</span>
             <span>Salary</span>
             <span>Available</span>
@@ -81,7 +76,7 @@ export function HireTalentPreview() {
               return (
                 <article
                   key={engineer.name}
-                  className="grid min-w-0 gap-4 px-5 py-5 md:grid-cols-[1.2fr_0.6fr_1.4fr_0.9fr_0.8fr_0.75fr] md:items-center"
+                  className="grid min-w-0 gap-4 px-5 py-5 md:grid-cols-[1.2fr_0.75fr_1.4fr_0.9fr_0.8fr_0.75fr] md:items-center"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -91,13 +86,13 @@ export function HireTalentPreview() {
                       <BadgeCheck className="h-4 w-4 text-brand-primary" aria-hidden="true" />
                     </div>
                     <p className="mt-1 text-xs text-brand-foreground-muted md:hidden">
-                      Hiretivo score {engineer.score}/100
+                      Verified profile
                     </p>
                   </div>
 
                   <div className="hidden md:block">
-                    <span className="rounded-lg border border-brand-border bg-brand-surface px-2.5 py-1 text-sm font-bold text-brand-foreground">
-                      {engineer.score}
+                    <span className="rounded-lg border border-brand-primary/20 bg-brand-primary/[0.06] px-2.5 py-1 text-xs font-bold text-brand-primary">
+                      Verified
                     </span>
                   </div>
 

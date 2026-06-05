@@ -26,6 +26,7 @@ export async function GET() {
     select: {
       name: true,
       email: true,
+      emailVerified: true,
       image: true,
       plan: true,
       billingCustomerId: true,
@@ -55,6 +56,7 @@ export async function GET() {
     data: {
       name: user.name ?? "",
       email: user.email ?? "",
+      emailVerified: user.emailVerified?.toISOString() ?? null,
       image: resolveLogoUrl(user.image),
       plan: user.plan,
       billingCustomerId: user.billingCustomerId,

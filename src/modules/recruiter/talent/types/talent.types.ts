@@ -58,6 +58,12 @@ export interface TalentEducation {
   major: string | null;
 }
 
+export interface TalentProject {
+  title: string | null;
+  url: string | null;
+  description: string | null;
+}
+
 export interface TalentDetail {
   id: string;
   isUnlocked: boolean;
@@ -70,6 +76,9 @@ export interface TalentDetail {
   yearsExperience: number | null;
   primaryRole: string | null;
   availability: string | null;
+  githubUsername: string | null;
+  videoIntroUrl: string | null;
+  topProjects: TalentProject[];
   resumeKey: boolean;
   resumeUrl: string | null;
   skills: TalentSkill[];
