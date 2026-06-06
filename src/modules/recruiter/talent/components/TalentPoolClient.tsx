@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Mail, Search, X } from "lucide-react";
+import { Copy, Loader2, Mail, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
@@ -280,11 +280,14 @@ function TalentCardSkeleton(): ReactElement {
  *   - Engineer count banner shown above card grid.
  *   - Real blurred cards (API isFreePlan=true) show "Unlock Profile" → Pricing.
  *   - Demo cards pad the grid when realCount < DEMO_THRESHOLD (mix-mode, D-05).
+ *   - No Load More button (blurred grid is fixed size).
  *
- * Paid plan behavior (unchanged):
- *   - Search bar fully functional.
- *   - Real full cards show "View Profile" → TalentProfileDialog + email button if email present.
- *   - No demo cards, no banner.
+ * Paid plan behavior:
+ *   - Search bar fully functional; search change resets to page 1.
+ *   - 12 candidates per page; Load More appends next page.
+ *   - "Showing N of M verified candidates" / "N of M match 'query'" count.
+ *   - Stale results shown with opacity fade during search transitions.
+ *   - Load More error shows retry button without clearing existing results.
  */
 export function TalentPoolClient(): ReactElement {
   const router = useRouter();
@@ -295,10 +298,30 @@ export function TalentPoolClient(): ReactElement {
   const queryClient = useQueryClient();
 
   const talentQuery = useFetchTalent({ q: debouncedSearch });
-  const isFreePlan = talentQuery.data?.isFreePlan ?? false;
-  const demoCount = talentQuery.data?.demoCount ?? 0;
-  const talentItems = talentQuery.data?.items ?? [];
-  const showTalentSkeleton = talentQuery.isLoading || talentQuery.isFetching;
+
+  // Derive flat item list from all loaded pages.
+  const allPages = talentQuery.data?.pages ?? [];
+  const firstPage = allPages[0];
+  const isFreePlan = firstPage?.isFreePlan ?? false;
+  const demoCount = firstPage?.demoCount ?? 0;
+  const total = firstPage?.total ?? 0;
+  const talentItems = allPages.flatMap((page) => page.items);
+
+  // Loading state: true only on first fetch (no data yet).
+  // isFetchingNextPage is handled separately at the Load More button.
+  const showTalentSkeleton = talentQuery.isLoading;
+
+  // Search transition: new query firing but stale data exists (keepPreviousData).
+  // Show grid with reduced opacity so the user knows results are refreshing.
+  const isSearchRefreshing =
+    talentQuery.isFetching &&
+    !talentQuery.isFetchingNextPage &&
+    !talentQuery.isLoading;
+
+  // Error on initial load (no data) vs error after partial load (keep existing cards).
+  const hasLoadedSome = allPages.length > 0;
+  const isInitialError = talentQuery.isError && !hasLoadedSome;
+  const isLoadMoreError = talentQuery.isError && hasLoadedSome;
 
   /*
    * goToPricing
@@ -312,6 +335,8 @@ export function TalentPoolClient(): ReactElement {
   /*
    * handleUnlock
    * Calls POST /api/recruiter/talent/[id]/unlock and refetches the talent list.
+   * Invalidating an infinite query refetches all loaded pages — intentional,
+   * keeps unlock state consistent across all visible cards.
    * Idempotent — re-unlocking returns 200 without consuming quota.
    */
   async function handleUnlock(engineerId: string) {
@@ -331,6 +356,19 @@ export function TalentPoolClient(): ReactElement {
     } finally {
       setUnlockingId(null);
     }
+  }
+
+  /*
+   * buildCountLabel
+   * Returns the "Showing N of M …" line for paid plan.
+   * Uses total from page 1 (stable for the current search session).
+   */
+  function buildCountLabel(): string {
+    const loaded = talentItems.length;
+    if (debouncedSearch.trim()) {
+      return `${loaded} of ${total} candidates match "${debouncedSearch.trim()}"`;
+    }
+    return `Showing ${loaded} of ${total} verified candidates`;
   }
 
   // Compute demo cards for mix-mode — only for FREE plan (D-05)
@@ -373,21 +411,28 @@ export function TalentPoolClient(): ReactElement {
             </TooltipTrigger>
             {isFreePlan && (
               <TooltipContent>
-                <p>Upgrade to search 47+ verified engineers</p>
+                <p>Upgrade to search {demoCount}+ verified engineers</p>
               </TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>
       </div>
 
-      {/* Card grid — loading skeleton | error | empty (paid only) | real + demo cards */}
+      {/* Count label — paid plan only, shown once data arrives */}
+      {!isFreePlan && !showTalentSkeleton && total > 0 && (
+        <p className="text-sm font-semibold text-brand-foreground-muted">
+          {buildCountLabel()}
+        </p>
+      )}
+
+      {/* Card grid — loading skeleton | initial error | empty (paid only) | real + demo cards */}
       {showTalentSkeleton ? (
         <div className="grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <TalentCardSkeleton key={index} />
           ))}
         </div>
-      ) : talentQuery.isError ? (
+      ) : isInitialError ? (
         <div className="rounded-xl border border-brand-border bg-white p-8 text-center text-sm font-semibold text-brand-danger">
           Talent pool could not be loaded.
         </div>
@@ -396,7 +441,12 @@ export function TalentPoolClient(): ReactElement {
           No matching talent found.
         </div>
       ) : (
-        <div className="grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div
+          className={cn(
+            "grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3",
+            isSearchRefreshing && "opacity-60 transition-opacity duration-200",
+          )}
+        >
           {/* Real cards — blurred for FREE plan ("Unlock Profile"), full for paid ("View Profile") */}
           {talentItems.map((talent) => (
             <TalentCard
@@ -421,6 +471,39 @@ export function TalentPoolClient(): ReactElement {
               onUpgrade={goToPricing}
             />
           ))}
+        </div>
+      )}
+
+      {/* Load More — paid plan only; hidden when all candidates loaded or FREE plan */}
+      {!isFreePlan && !showTalentSkeleton && (
+        <div className="flex flex-col items-center gap-3 pt-2">
+          {/* Load-more error: keep existing cards, show retry */}
+          {isLoadMoreError && (
+            <p className="text-sm font-semibold text-brand-danger">
+              Failed to load more candidates.
+            </p>
+          )}
+          {/* Show Load More when more pages exist OR when previous load failed (retry) */}
+          {(talentQuery.hasNextPage || isLoadMoreError) && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => talentQuery.fetchNextPage()}
+              disabled={talentQuery.isFetchingNextPage}
+              className="min-w-36"
+            >
+              {talentQuery.isFetchingNextPage ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading…
+                </>
+              ) : isLoadMoreError ? (
+                "Retry"
+              ) : (
+                "Load more"
+              )}
+            </Button>
+          )}
         </div>
       )}
 
