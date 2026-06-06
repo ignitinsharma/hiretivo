@@ -79,10 +79,12 @@ export const billingService = {
   changePlan: async (planId: string): Promise<{
     direction: "upgrade" | "downgrade";
     scheduledChangeAt?: string;
+    upgradedPlan?: string;
   }> => {
     const { data } = await apiClient.post<DataResponse<{
       direction: "upgrade" | "downgrade";
       scheduledChangeAt?: string;
+      upgradedPlan?: string;
     }>>('/billing/change-plan', { planId });
     return data.data;
   },

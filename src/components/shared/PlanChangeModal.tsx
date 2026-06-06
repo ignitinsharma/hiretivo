@@ -90,14 +90,20 @@ export function PlanChangeModal({
   async function handleConfirm() {
     setConfirming(true)
     try {
-      await billingService.changePlan(targetPlanId)
+      const result = await billingService.changePlan(targetPlanId)
       const msg =
         mode === "upgrade"
           ? `Plan upgraded to ${targetPlan}!`
           : `Downgrade to ${targetPlan} scheduled.`
       toast.success(msg)
-      // Force JWT refresh so sidebar plan badge reflects the change immediately
-      await update()
+      // Optimistically update the JWT so the sidebar reflects the new plan immediately.
+      // For upgrades, pass the plan returned by the server (avoids a DB race with the webhook).
+      // The webhook (subscription.active) remains the authoritative DB writer.
+      await update(
+        result.upgradedPlan
+          ? { user: { plan: result.upgradedPlan } }
+          : undefined
+      )
       onSuccess?.()
       onOpenChange(false)
     } catch {

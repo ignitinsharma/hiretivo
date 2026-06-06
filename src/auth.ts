@@ -150,9 +150,12 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             if (token.image === undefined) {
               token.image = dbUser.image ?? null;
             }
-            // Always sync plan from DB on update trigger so the JWT reflects
-            // plan changes (e.g. after an in-app upgrade via changePlan)
-            token.plan = dbUser.plan;
+            // Only sync plan from DB if the caller didn't explicitly provide one.
+            // When a plan is provided (e.g. optimistic upgrade in PlanChangeModal),
+            // we trust it — the webhook remains the authoritative DB writer.
+            if (!u.plan) {
+              token.plan = dbUser.plan;
+            }
           }
         }
       }

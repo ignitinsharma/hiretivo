@@ -156,28 +156,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Eagerly update user.plan + clear any queued downgrade in one transaction.
-    // Webhook (subscription.active) will reconcile — this write is idempotent with it.
-    // Doing it here so the JWT refresh in the client reflects the new plan immediately,
-    // without racing against the async webhook delivery.
-    const upgradePlan = DODO_PRODUCT_TO_PLAN[targetProductId];
+    // Clear any queued downgrade — non-fatal, webhook will reconcile
+    // NOTE: user.plan is intentionally NOT updated here. The subscription.active
+    // webhook (cryptographically signed by Dodo) is the sole authoritative writer
+    // of user.plan. The client uses optimistic JWT update for immediate UI feedback.
     try {
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: session.user.id },
-          data: { plan: upgradePlan },
-        }),
-        prisma.subscription.update({
-          where: { userId: session.user.id },
-          data: { scheduledPlan: null, scheduledChangeAt: null },
-        }),
-      ]);
+      await prisma.subscription.update({
+        where: { userId: session.user.id },
+        data: { scheduledPlan: null, scheduledChangeAt: null },
+      });
     } catch (err) {
-      console.error("[change-plan] Failed to eagerly update plan after upgrade:", err);
+      console.error("[change-plan] Failed to clear scheduled downgrade after upgrade:", err);
     }
 
+    const upgradedPlan = DODO_PRODUCT_TO_PLAN[targetProductId];
     return NextResponse.json(
-      { data: { direction: "upgrade" } },
+      { data: { direction: "upgrade", upgradedPlan } },
       { status: 200 },
     );
   }
