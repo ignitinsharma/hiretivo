@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
+import { billingService } from "@/services/billing.service";
 import { toast } from "sonner";
 import { CircleCheck } from "lucide-react";
 import Link from "next/link";
@@ -267,7 +269,10 @@ function PricingCard({
         <Button
           variant={isHighlighted ? "primary" : "secondary"}
           size="lg"
-          className="w-full mt-auto"
+          className={cn(
+            "w-full mt-auto",
+            isHighlighted && "transition-all hover:px-10",
+          )}
           loading={isPending}
           loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
           onClick={() => onCtaClick(tier.id)}
@@ -371,7 +376,15 @@ export function PricingClient() {
   const searchParams = useSearchParams();
   const { openLoginModal } = useUIStore();
 
-  const userPlan = session?.user?.plan as PlanTier | undefined;
+  // Read plan from subscription-status (DB-backed) so the cards reflect upgrades
+  // immediately after a plan change without a stale JWT causing wrong "Current plan" badge.
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: billingService.getSubscriptionStatus,
+    staleTime: 60_000,
+    enabled: !!session?.user,
+  });
+  const userPlan = (subscriptionStatus?.plan ?? session?.user?.plan) as PlanTier | undefined;
   const requestedReturnTo = searchParams.get("returnTo");
   const returnTo =
     requestedReturnTo && isAllowedCheckoutReturnTo(requestedReturnTo)
