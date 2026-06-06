@@ -156,18 +156,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Clear any queued downgrade — upgrade supersedes it
-    // DB failure here is non-fatal; the webhook will reconcile
+    // Eagerly update user.plan + clear any queued downgrade in one transaction.
+    // Webhook (subscription.active) will reconcile — this write is idempotent with it.
+    // Doing it here so the JWT refresh in the client reflects the new plan immediately,
+    // without racing against the async webhook delivery.
+    const upgradePlan = DODO_PRODUCT_TO_PLAN[targetProductId];
     try {
-      await prisma.subscription.update({
-        where: { userId: session.user.id },
-        data: { scheduledPlan: null, scheduledChangeAt: null },
-      });
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: session.user.id },
+          data: { plan: upgradePlan },
+        }),
+        prisma.subscription.update({
+          where: { userId: session.user.id },
+          data: { scheduledPlan: null, scheduledChangeAt: null },
+        }),
+      ]);
     } catch (err) {
-      console.error("[change-plan] Failed to clear scheduled downgrade after upgrade:", err);
+      console.error("[change-plan] Failed to eagerly update plan after upgrade:", err);
     }
 
-    // user.plan is NOT updated here — the subscription.active webhook handles it
     return NextResponse.json(
       { data: { direction: "upgrade" } },
       { status: 200 },
