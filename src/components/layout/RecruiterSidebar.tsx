@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import { LifeBuoy, Plus, LogOut, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
@@ -13,6 +14,7 @@ import { signOut } from "next-auth/react";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
 import { apiClient } from "@/lib/axios";
+import { billingService } from "@/services/billing.service";
 import {
   Tooltip,
   TooltipContent,
@@ -90,7 +92,16 @@ function RecruiterSidebarInner({
   const pathname = usePathname();
   const { data: session } = useSession();
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
-  const currentPlan = session?.user?.plan ?? PlanTier.FREE;
+
+  // Read plan from subscription-status (DB-backed) so the badge stays accurate
+  // after in-app plan changes without requiring a logout/login cycle.
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: billingService.getSubscriptionStatus,
+    staleTime: 60_000,
+    enabled: !!session?.user,
+  });
+  const currentPlan = subscriptionStatus?.plan ?? (session?.user?.plan as PlanTier | undefined) ?? PlanTier.FREE;
   const planLabel =
     currentPlan === PlanTier.SCALE ? "Scale"
     : currentPlan === PlanTier.GROWTH ? "Growth"

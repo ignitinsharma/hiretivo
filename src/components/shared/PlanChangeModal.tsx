@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
+import { useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { AlertCircle } from "lucide-react"
@@ -52,6 +53,7 @@ export function PlanChangeModal({
   onSuccess,
 }: PlanChangeModalProps) {
   const { update } = useSession()
+  const queryClient = useQueryClient()
   const [preview, setPreview] = useState<PreviewData | null>(null)
   const [previewError, setPreviewError] = useState(false)
   const [loadingPreview, setLoadingPreview] = useState(false)
@@ -90,20 +92,16 @@ export function PlanChangeModal({
   async function handleConfirm() {
     setConfirming(true)
     try {
-      const result = await billingService.changePlan(targetPlanId)
+      await billingService.changePlan(targetPlanId)
       const msg =
         mode === "upgrade"
           ? `Plan upgraded to ${targetPlan}!`
           : `Downgrade to ${targetPlan} scheduled.`
       toast.success(msg)
-      // Optimistically update the JWT so the sidebar reflects the new plan immediately.
-      // For upgrades, pass the plan returned by the server (avoids a DB race with the webhook).
-      // The webhook (subscription.active) remains the authoritative DB writer.
-      await update(
-        result.upgradedPlan
-          ? { user: { plan: result.upgradedPlan } }
-          : undefined
-      )
+      // Invalidate subscription-status so sidebar + billing tab refetch from DB immediately.
+      // Also refresh the JWT so plan-gated server checks stay consistent.
+      void queryClient.invalidateQueries({ queryKey: ["subscription-status"] })
+      await update()
       onSuccess?.()
       onOpenChange(false)
     } catch {

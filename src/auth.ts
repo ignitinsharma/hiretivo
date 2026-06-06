@@ -128,9 +128,6 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (u.role) {
           token.role = u.role;
         }
-        if (u.plan) {
-          token.plan = u.plan;
-        }
         if (typeof u.image === "string" || u.image === null) {
           token.image = u.image;
         }
@@ -150,12 +147,11 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             if (token.image === undefined) {
               token.image = dbUser.image ?? null;
             }
-            // Only sync plan from DB if the caller didn't explicitly provide one.
-            // When a plan is provided (e.g. optimistic upgrade in PlanChangeModal),
-            // we trust it — the webhook remains the authoritative DB writer.
-            if (!u.plan) {
-              token.plan = dbUser.plan;
-            }
+            // Always derive plan from DB — never trust a client-supplied plan value.
+            // A client-provided u.plan is only used to short-circuit IF it matches DB,
+            // preventing privilege escalation (e.g. caller claiming SCALE when DB says STARTER).
+            // The webhook (subscription.active) is the authoritative writer of user.plan in DB.
+            token.plan = dbUser.plan;
           }
         }
       }
