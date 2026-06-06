@@ -194,9 +194,12 @@ export async function POST(req: NextRequest) {
 
   // Write scheduled change to our DB optimistically — the webhook will overwrite at renewal
   // DB failure here is non-fatal; log and return success to the user
-  const targetPlan =
-    DODO_PRODUCT_TO_PLAN[targetProductId] ??
-    (targetPricingTierId.toUpperCase() as PlanTier);
+  const targetPlan = DODO_PRODUCT_TO_PLAN[targetProductId];
+  if (!targetPlan) {
+    // Should never happen — getDodoProductId and DODO_PRODUCT_TO_PLAN share the same source
+    console.error("[change-plan] Product ID not in DODO_PRODUCT_TO_PLAN:", targetProductId);
+    return NextResponse.json({ error: "Could not process plan change" }, { status: 502 });
+  }
 
   try {
     await prisma.subscription.update({
