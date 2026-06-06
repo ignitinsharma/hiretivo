@@ -450,6 +450,8 @@ model Subscription {
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
   cancelAtPeriodEnd  Boolean   @default(false)
+  scheduledPlan      PlanTier?
+  scheduledChangeAt  DateTime?
   userId             String    @unique
   user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt          DateTime  @default(now())

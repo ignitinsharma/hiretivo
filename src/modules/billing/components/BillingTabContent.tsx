@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { AlertCircle, Check, Clock, CreditCard, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ import { billingService } from "@/services/billing.service";
 import type { SubscriptionStatusData } from "@/services/billing.service";
 
 type SubscriptionStatus = "ACTIVE" | "PAST_DUE" | "CANCELED";
+
+const PLAN_LABEL = { STARTER: "Starter", GROWTH: "Growth", SCALE: "Scale" } as const;
 
 const FREE_FEATURES = [
   "1 active job post",
@@ -95,6 +98,7 @@ function PaidPlanCard({
   plan: PlanTier.STARTER | PlanTier.GROWTH | PlanTier.SCALE;
   subscription: SubscriptionStatusData["subscription"];
 }) {
+  const router = useRouter();
   const portalMutation = useMutation({
     mutationFn: billingService.createPortalSession,
     onSuccess: (url) => {
@@ -146,13 +150,41 @@ function PaidPlanCard({
           </div>
         )}
 
-        <Button
-          className="bg-brand-primary text-white hover:bg-brand-primary-dark"
-          onClick={() => portalMutation.mutate()}
-          disabled={portalMutation.isPending}
-        >
-          {portalMutation.isPending ? "Opening..." : "Manage billing"}
-        </Button>
+        {subscription?.scheduledPlan && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <div>
+              <p className="font-medium">
+                Downgrade to{" "}
+                {PLAN_LABEL[subscription.scheduledPlan as keyof typeof PLAN_LABEL] ??
+                  subscription.scheduledPlan}{" "}
+                scheduled
+                {subscription.scheduledChangeAt
+                  ? ` for ${format(new Date(subscription.scheduledChangeAt), "MMM d, yyyy")}`
+                  : ""}
+              </p>
+              <p className="mt-0.5 text-amber-700">
+                Your current plan stays active until then.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3">
+          <Button
+            className="bg-brand-primary text-white hover:bg-brand-primary-dark"
+            onClick={() => portalMutation.mutate()}
+            disabled={portalMutation.isPending}
+          >
+            {portalMutation.isPending ? "Opening..." : "Manage billing"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => router.push("/pricing")}
+          >
+            Change plan
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -34,6 +34,7 @@ export function useFetchTalent(filters: TalentFilters) {
     queryKey: [TALENT_QUERY_KEY, filters],
     queryFn: () => recruiterService.getTalent(toTalentParams(filters)),
     placeholderData: (previousData) => previousData,
+    staleTime: 30_000,
   });
 }
 
@@ -48,6 +49,7 @@ export function useFetchTalentDetail(seekerId: string | null) {
       if (!seekerId) throw new Error('Missing seeker id.');
       return recruiterService.getTalentDetail(seekerId);
     },
+    staleTime: 30_000,
   });
 }
 

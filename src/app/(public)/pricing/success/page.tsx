@@ -3,11 +3,12 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ArrowRight, CheckCircle2, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlanTier } from "@/constants/enums";
+import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
 import { billingService } from "@/services/billing.service";
 
 const MAX_ATTEMPTS = 5;
@@ -16,8 +17,14 @@ const POLL_INTERVAL_MS = 2000;
 type PollState = "loading" | "success" | "timeout" | "error";
 
 function PricingSuccessContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const requestedReturnTo = searchParams.get("returnTo");
+  const returnTo =
+    requestedReturnTo && isAllowedCheckoutReturnTo(requestedReturnTo)
+      ? requestedReturnTo
+      : undefined;
   const { update } = useSession();
   const [state, setState] = useState<PollState>("loading");
 
@@ -44,8 +51,9 @@ function PricingSuccessContent() {
             },
           }).catch(() => {
             // Billing status is already persisted in the database. Session
-            // refresh is best-effort so the success screen never gets stuck.
+            // refresh is best-effort so redirect never gets stuck.
           });
+          router.replace(returnTo ?? "/recruiter/dashboard");
           return;
         }
 
@@ -71,7 +79,7 @@ function PricingSuccessContent() {
       cancelled = true;
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [update]);
+  }, [returnTo, router, update]);
 
   const title =
     state === "success"
@@ -123,8 +131,8 @@ function PricingSuccessContent() {
 
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Button asChild size="lg" variant="primary">
-            <Link href="/recruiter/dashboard">
-              Go to Dashboard
+            <Link href={returnTo ?? "/recruiter/dashboard"}>
+              Continue
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>

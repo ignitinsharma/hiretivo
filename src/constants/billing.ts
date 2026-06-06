@@ -43,3 +43,64 @@ export function getDodoProductId(
   const key = `${planId.toUpperCase()}_${periodKey}_USD` as keyof typeof DODO_PRODUCT_IDS;
   return DODO_PRODUCT_IDS[key] || null;
 }
+
+/*
+ * PLAN_RANK
+ * Numeric rank for each PlanTier — used to determine upgrade vs downgrade direction.
+ * FREE=0, STARTER=1, GROWTH=2, SCALE=3.
+ */
+export const PLAN_RANK: Record<PlanTier, number> = {
+  [PlanTier.FREE]: 0,
+  [PlanTier.STARTER]: 1,
+  [PlanTier.GROWTH]: 2,
+  [PlanTier.SCALE]: 3,
+};
+
+/*
+ * getPlanChangeDirection
+ * Compares current and target PlanTier ranks and returns the direction of change.
+ * Returns "upgrade" | "downgrade" | "same".
+ * Always computed server-side — the client cannot spoof this.
+ */
+export function getPlanChangeDirection(
+  current: PlanTier,
+  target: PlanTier,
+): "upgrade" | "downgrade" | "same" {
+  const currentRank = PLAN_RANK[current];
+  const targetRank = PLAN_RANK[target];
+  if (targetRank > currentRank) return "upgrade";
+  if (targetRank < currentRank) return "downgrade";
+  return "same";
+}
+
+/*
+ * getProductPeriod
+ * Reverse-lookup: given a Dodo product ID, returns the BillingPeriod it belongs to.
+ * Iterates DODO_PRODUCT_IDS keys — key contains _MONTHLY_ or _ANNUAL_ — and matches
+ * against the productId param. Returns null if no match is found.
+ */
+export function getProductPeriod(productId: string): BillingPeriod | null {
+  for (const [key, value] of Object.entries(DODO_PRODUCT_IDS)) {
+    if (value === productId) {
+      if (key.includes("_ANNUAL_")) return BillingPeriod.ANNUAL;
+      if (key.includes("_MONTHLY_")) return BillingPeriod.MONTHLY;
+    }
+  }
+  return null;
+}
+
+/*
+ * getPlanTierId
+ * Maps a PlanTier enum value to the corresponding PricingTierId.
+ * Used with getDodoProductId when only a PlanTier is available.
+ * PlanTier.STARTER → PricingTierId.STARTER, etc. FREE → PricingTierId.FREE.
+ */
+export function getPlanTierId(plan: PlanTier): PricingTierId {
+  const map: Record<PlanTier, PricingTierId> = {
+    [PlanTier.FREE]: PricingTierId.FREE,
+    [PlanTier.STARTER]: PricingTierId.STARTER,
+    [PlanTier.GROWTH]: PricingTierId.GROWTH,
+    [PlanTier.SCALE]: PricingTierId.SCALE,
+  };
+  return map[plan];
+}

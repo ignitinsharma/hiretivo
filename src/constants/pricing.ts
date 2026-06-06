@@ -92,7 +92,6 @@ export const PLAN_TIERS: PlanTierConfig[] = [
     features: [
       "Unlimited engineer unlocks",
       "Unlimited active job posts",
-      "5 team seats",
       "Full contact details after unlock",
       "AI candidate summaries",
       "Dedicated onboarding",

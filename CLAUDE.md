@@ -94,6 +94,10 @@ interface JobCardProps {
   matchScore?: number
   onApply?: () => void
 }
+
+// ALWAYS use enums, never string literal unions
+// ❌ const direction: "upgrade" | "downgrade" = "upgrade"
+// ✅ const direction = PlanDirection.UPGRADE
 ```
 
 ### State
@@ -597,7 +601,27 @@ if (!data?.length) return <EmptyState />
 return <Content data={data} />
 ```
 
-### 6.5 Component Size — Break Into Sub-Components
+### 6.5 Use Enums, Not String Literal Unions
+
+```ts
+// ❌ WRONG — hardcoded string literal union
+function getPlanChangeDirection(): "upgrade" | "downgrade" | "same"
+const direction: "upgrade" | "downgrade" = "upgrade"
+
+// ✅ CORRECT — define and use an enum in src/constants/enums.ts
+export enum PlanDirection {
+  UPGRADE = "upgrade",
+  DOWNGRADE = "downgrade",
+  SAME = "same",
+}
+
+function getPlanChangeDirection(): PlanDirection
+const direction = PlanDirection.UPGRADE
+```
+
+**Rule:** Any value that belongs to a fixed set of string options must be defined as a TypeScript enum in `src/constants/enums.ts`. Never inline string literal unions in type annotations. This applies to return types, parameter types, variable annotations, and response shapes.
+
+### 6.6 Component Size — Break Into Sub-Components
 
 Keep components under ~80 lines JSX. Break large files into smaller, focused sub-components.
 
@@ -626,7 +650,7 @@ CandidateDrawer.tsx (1198 lines)
 - If only used in one file, co-locate in same folder as `SubComponentName.tsx`
 - If extracted for reuse, follow the 2+ rule above
 
-### 6.6 Pre-commit Checklist
+### 6.7 Pre-commit Checklist
 
 - [ ] No JSX repeated — use `.map()`
 - [ ] No className repeated — use `cn()` or const
@@ -636,9 +660,10 @@ CandidateDrawer.tsx (1198 lines)
 - [ ] Mobile-first responsive (`sm:` → `md:` → `lg:`)
 - [ ] aria-* on interactive elements
 - [ ] No console.log or TODO
+- [ ] No string literal unions — use enum in src/constants/enums.ts
 - [ ] All functions/API routes have descriptive comments
 
-### 6.8 Bug Fix Standards (MANDATORY)
+### 6.9 Bug Fix Standards (MANDATORY)
 
 When fixing bugs, do not apply patch-only fixes. Follow this exact process:
 
@@ -664,7 +689,7 @@ When fixing bugs, do not apply patch-only fixes. Follow this exact process:
 
 ---
 
-## 6.7 Mandatory Comments
+## 6.8 Mandatory Comments
 
 Every function, API route, server action, and component must have a multi-line comment using `/* */`:
 

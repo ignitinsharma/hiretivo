@@ -321,6 +321,7 @@ export function PostJobModal() {
     queryKey: ["skills"],
     queryFn: skillService.getSkills,
     enabled: isPostJobModalOpen,
+    staleTime: 5 * 60_000,
   });
 
   const { data: editJob, isLoading: isEditJobLoading } = useQuery({
@@ -329,9 +330,14 @@ export function PostJobModal() {
     enabled: isPostJobModalOpen && !!editJobId,
   });
   const { data: recruiterSettings } = useQuery({
-    queryKey: ["recruiter-settings", "preview"],
+    queryKey: ["recruiter-settings"],
     queryFn: recruiterService.getSettings,
     enabled: isPostJobModalOpen,
+    staleTime: 60_000,
+    select: (data) => ({
+      companyName: data.data?.companyName,
+      logo: data.data?.logo,
+    }),
   });
 
   const createSkillMutation = useMutation({
@@ -528,8 +534,8 @@ export function PostJobModal() {
     id: "preview",
     title: watch("title") ? toTitleCase(watch("title")) : "Job Title Preview",
     companyName:
-      recruiterSettings?.data.companyName?.trim() || "Your Company",
-    companyLogoUrl: recruiterSettings?.data.logo ?? undefined,
+      recruiterSettings?.companyName?.trim() || "Your Company",
+    companyLogoUrl: recruiterSettings?.logo ?? undefined,
     location: workType.toLowerCase(),
     salaryRange: formatSalaryRangePreview(
       watch("salaryMin"),

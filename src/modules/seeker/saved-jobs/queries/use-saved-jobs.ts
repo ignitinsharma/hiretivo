@@ -48,6 +48,7 @@ export function useSavedJobs(options?: UseSavedJobsOptions) {
     queryKey: SAVED_JOBS_QUERY_KEY,
     queryFn: fetchSavedJobs,
     enabled: options?.enabled ?? true,
+    staleTime: 5 * 60_000,
   });
 }
 

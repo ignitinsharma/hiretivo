@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
-              variant="default"
+              variant="primary"
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting ? (

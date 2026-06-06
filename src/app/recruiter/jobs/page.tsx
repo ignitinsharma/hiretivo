@@ -379,6 +379,7 @@ export default function RecruiterJobsPage() {
             ? categoryFilter
             : undefined,
       }),
+    staleTime: 5 * 60_000,
   });
 
   const jobs = data?.jobs ?? [];

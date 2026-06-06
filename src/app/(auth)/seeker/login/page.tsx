@@ -15,13 +15,14 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { AuthLastUsedBadge, OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { UserRole } from "@/constants/enums";
+import { AuthErrorCode, OAuthIntentSource, UserRole } from "@/constants/enums";
 import { trackEvent } from "@/lib/analytics";
 import {
   getLastUsedAuthMethodFromDocument,
   setBrowserLastUsedAuthMethodCookie,
   type AuthMethod,
 } from "@/lib/auth/last-used-method";
+import { setBrowserOAuthIntentCookie } from "@/lib/auth/oauth-intent";
 import {
   seekerLoginSchema,
   type SeekerLoginInput,
@@ -105,6 +106,8 @@ function SeekerLoginContent() {
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
     authError === "wrong_role_oauth" && accountRole === UserRole.RECRUITER;
+  const hasOAuthAccountNotLinked =
+    authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
   React.useEffect(() => {
     setLastUsedAuthMethod(getLastUsedAuthMethodFromDocument("seeker"));
@@ -210,6 +213,7 @@ function SeekerLoginContent() {
       stage: "attempt",
     });
     const next = encodeURIComponent(redirectPath);
+    setBrowserOAuthIntentCookie(OAuthIntentSource.SEEKER_LOGIN, redirectPath);
     await signIn("google", {
       callbackUrl: `/auth/oauth/resolve?entryRole=${UserRole.SEEKER}&source=seeker-login&next=${next}`,
     });
@@ -234,6 +238,22 @@ function SeekerLoginContent() {
               >
                 Please use the Recruiter login
               </Link>
+            </p>
+          </div>
+        )}
+
+        {hasOAuthAccountNotLinked && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-800">
+              This email is already registered with email and password. Sign in
+              with your password, or{" "}
+              <Link
+                href="/forgot-password"
+                className="font-bold text-black underline underline-offset-4"
+              >
+                reset it
+              </Link>{" "}
+              if you do not remember it.
             </p>
           </div>
         )}

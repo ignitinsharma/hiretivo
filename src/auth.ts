@@ -28,6 +28,10 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  pages: {
+    signIn: "/auth/error",
+    error: "/auth/error",
+  },
   providers: [
     ...(googleConfigured
       ? [
@@ -128,9 +132,6 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (u.role) {
           token.role = u.role;
         }
-        if (u.plan) {
-          token.plan = u.plan;
-        }
         if (typeof u.image === "string" || u.image === null) {
           token.image = u.image;
         }
@@ -143,13 +144,18 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (token.sub) {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            select: { emailVerified: true, image: true },
+            select: { emailVerified: true, image: true, plan: true },
           });
           if (dbUser) {
             token.emailVerified = dbUser.emailVerified ?? null;
             if (token.image === undefined) {
               token.image = dbUser.image ?? null;
             }
+            // Always derive plan from DB — never trust a client-supplied plan value.
+            // A client-provided u.plan is only used to short-circuit IF it matches DB,
+            // preventing privilege escalation (e.g. caller claiming SCALE when DB says STARTER).
+            // The webhook (subscription.active) is the authoritative writer of user.plan in DB.
+            token.plan = dbUser.plan;
           }
         }
       }

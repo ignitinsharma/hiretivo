@@ -15,13 +15,14 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { AuthLastUsedBadge, OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { UserRole } from "@/constants/enums";
+import { AuthErrorCode, OAuthIntentSource, UserRole } from "@/constants/enums";
 import { trackEvent } from "@/lib/analytics";
 import {
   getLastUsedAuthMethodFromDocument,
   setBrowserLastUsedAuthMethodCookie,
   type AuthMethod,
 } from "@/lib/auth/last-used-method";
+import { setBrowserOAuthIntentCookie } from "@/lib/auth/oauth-intent";
 import {
   recruiterLoginSchema,
   type RecruiterLoginInput,
@@ -112,6 +113,8 @@ function RecruiterLoginContent() {
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
     authError === "wrong_role_oauth" && accountRole === UserRole.SEEKER;
+  const hasOAuthAccountNotLinked =
+    authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
   React.useEffect(() => {
     setLastUsedAuthMethod(getLastUsedAuthMethodFromDocument("recruiter"));
@@ -216,6 +219,7 @@ function RecruiterLoginContent() {
       auth_method: "google",
       stage: "attempt",
     });
+    setBrowserOAuthIntentCookie(OAuthIntentSource.RECRUITER_LOGIN);
     await signIn("google", {
       callbackUrl: `/auth/oauth/resolve?entryRole=${UserRole.RECRUITER}&source=recruiter-login`,
     });
@@ -240,6 +244,22 @@ function RecruiterLoginContent() {
               >
                 Please use the Seeker login
               </Link>
+            </p>
+          </div>
+        )}
+
+        {hasOAuthAccountNotLinked && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-800">
+              This email is already registered with email and password. Sign in
+              with your password, or{" "}
+              <Link
+                href="/forgot-password"
+                className="font-bold text-black underline underline-offset-4"
+              >
+                reset it
+              </Link>{" "}
+              if you do not remember it.
             </p>
           </div>
         )}

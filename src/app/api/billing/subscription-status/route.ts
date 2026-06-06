@@ -27,6 +27,8 @@ export async function GET() {
           status: true,
           currentPeriodEnd: true,
           cancelAtPeriodEnd: true,
+          scheduledPlan: true,
+          scheduledChangeAt: true,
         },
       },
     },
@@ -43,6 +45,8 @@ export async function GET() {
               status: user.subscription.status,
               currentPeriodEnd: user.subscription.currentPeriodEnd.toISOString(),
               cancelAtPeriodEnd: user.subscription.cancelAtPeriodEnd,
+              scheduledPlan: user.subscription.scheduledPlan ?? null,
+              scheduledChangeAt: user.subscription.scheduledChangeAt?.toISOString() ?? null,
             }
           : null,
       },

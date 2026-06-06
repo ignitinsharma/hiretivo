@@ -7,6 +7,26 @@ export enum UserRole {
 
 export const USER_ROLE_VALUES = [UserRole.SEEKER, UserRole.RECRUITER] as const;
 
+export enum OAuthIntentSource {
+  SEEKER_LOGIN = "seeker-login",
+  SEEKER_REGISTER = "seeker-register",
+  RECRUITER_LOGIN = "recruiter-login",
+  RECRUITER_REGISTER = "recruiter-register",
+}
+
+export const OAUTH_INTENT_SOURCE_VALUES = [
+  OAuthIntentSource.SEEKER_LOGIN,
+  OAuthIntentSource.SEEKER_REGISTER,
+  OAuthIntentSource.RECRUITER_LOGIN,
+  OAuthIntentSource.RECRUITER_REGISTER,
+] as const;
+
+export enum AuthErrorCode {
+  WRONG_ROLE_OAUTH = "wrong_role_oauth",
+  OAUTH_ACCOUNT_NOT_LINKED = "oauth_account_not_linked",
+  OAUTH_SIGNIN_FAILED = "oauth_signin_failed",
+}
+
 export enum JobStatus {
   DRAFT = "DRAFT",
   OPEN = "OPEN",

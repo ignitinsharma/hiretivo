@@ -54,7 +54,7 @@ function formatSalaryRange(min: string, max: string, currency: string): string {
  */
 export function AdminJobPreview({ values }: Props) {
   const { data: skills } = useQuery({
-    queryKey: ["skills-all"],
+    queryKey: ["skills"],
     queryFn: skillService.getSkills,
     staleTime: 5 * 60 * 1000,
   });

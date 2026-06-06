@@ -1,18 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import { LifeBuoy, Plus, LogOut, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { signOut } from "next-auth/react";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
-import { apiClient } from "@/lib/axios";
+import { billingService } from "@/services/billing.service";
+import { recruiterService } from "@/services/recruiter.service";
 import {
   Tooltip,
   TooltipContent,
@@ -88,9 +90,42 @@ function RecruiterSidebarInner({
   toggle: () => void;
 }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
-  const currentPlan = session?.user?.plan ?? PlanTier.FREE;
+  const { data: session, status: sessionStatus } = useSession();
+
+  // Read plan from subscription-status (DB-backed) so the badge stays accurate
+  // after in-app plan changes without requiring a logout/login cycle.
+  const { data: subscriptionStatus, isLoading: planLoading } = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: billingService.getSubscriptionStatus,
+    staleTime: 60_000,
+    enabled: !!session?.user,
+  });
+
+  // Share cache with RecruiterSettingsClient — same key avoids redundant network call.
+  const { data: settingsData } = useQuery({
+    queryKey: ["recruiter-settings"],
+    queryFn: recruiterService.getSettings,
+    staleTime: 60_000,
+    enabled: !!session?.user,
+  });
+
+  const companyLogo = settingsData?.data?.logo ?? null;
+
+  /*
+   * currentPlan derivation — three phases must all resolve before showing a label:
+   * 1. sessionStatus === 'loading'  → session not yet hydrated, query is disabled (planLoading=false) → show skeleton
+   * 2. session loaded, planLoading  → query in-flight → show skeleton
+   * 3. both settled                 → prefer DB plan, fall back to JWT, then FREE
+   * Without tracking sessionStatus, phase 1 falls through to FREE because the query
+   * is disabled (planLoading=false) when session hasn't resolved yet — causing the
+   * Free → Starter → Scale flicker on every reload.
+   */
+  const currentPlan: PlanTier | null =
+    sessionStatus === "loading" || planLoading
+      ? null
+      : (subscriptionStatus?.plan as PlanTier | undefined)
+          ?? (session?.user?.plan as PlanTier | undefined)
+          ?? PlanTier.FREE;
   const planLabel =
     currentPlan === PlanTier.SCALE ? "Scale"
     : currentPlan === PlanTier.GROWTH ? "Growth"
@@ -98,20 +133,6 @@ function RecruiterSidebarInner({
     : "Free";
   const isPaidPlan =
     currentPlan === PlanTier.STARTER || currentPlan === PlanTier.GROWTH || currentPlan === PlanTier.SCALE;
-
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const { data } = await apiClient.get<{
-          data: { logo: string | null; companyName: string };
-        }>("/recruiter/settings");
-        if (data?.data?.logo) {
-          setCompanyLogo(data.data.logo);
-        }
-      } catch {}
-    }
-    fetchSettings();
-  }, []);
 
   const userName = session?.user?.name ?? "Recruiter";
   const initials =
@@ -156,16 +177,20 @@ function RecruiterSidebarInner({
                 className="flex min-w-0 flex-1 flex-col items-start gap-2"
               >
                 <Logo />
-                <span
-                  className={cn(
-                    "inline-flex max-w-full items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
-                    isPaidPlan
-                      ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
-                      : "border-brand-border bg-brand-surface text-brand-foreground-muted",
-                  )}
-                >
-                  {planLabel}
-                </span>
+                {currentPlan === null ? (
+                  <span className="h-4 w-14 animate-pulse rounded-md bg-brand-surface" aria-hidden />
+                ) : (
+                  <span
+                    className={cn(
+                      "inline-flex max-w-full items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
+                      isPaidPlan
+                        ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
+                        : "border-brand-border bg-brand-surface text-brand-foreground-muted",
+                    )}
+                  >
+                    {planLabel}
+                  </span>
+                )}
               </Link>
               <SidebarToggle className="shrink-0" />
             </>

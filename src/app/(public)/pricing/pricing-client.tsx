@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
+import { billingService } from "@/services/billing.service";
 import { toast } from "sonner";
 import { CircleCheck } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +24,8 @@ import {
 } from "@/constants/enums";
 import { useUIStore } from "@/store/use-ui-store";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
+import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
+import { PlanChangeModal } from "@/components/shared/PlanChangeModal";
 
 // ─── Table cell class constants ───────────────────────────────────────────────
 
@@ -53,7 +57,6 @@ const FEATURE_ROWS: FeatureRow[] = [
   { feature: "Interview scheduling", free: true, starter: true, growth: true, scale: true },
   { feature: "Talent pool access", free: null, starter: true, growth: true, scale: true },
   { feature: "Priority support", free: null, starter: true, growth: true, scale: true },
-  { feature: "Team seats", free: "1", starter: "1", growth: "3", scale: "5" },
 ];
 
 // ─── FAQ data ─────────────────────────────────────────────────────────────────
@@ -266,7 +269,10 @@ function PricingCard({
         <Button
           variant={isHighlighted ? "primary" : "secondary"}
           size="lg"
-          className="w-full mt-auto"
+          className={cn(
+            "w-full mt-auto",
+            isHighlighted && "transition-all duration-200 hover:px-14",
+          )}
           loading={isPending}
           loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
           onClick={() => onCtaClick(tier.id)}
@@ -358,11 +364,32 @@ function PricingFaqSection() {
 export function PricingClient() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [pendingTier, setPendingTier] = useState<string | null>(null);
+  const [planChangeModal, setPlanChangeModal] = useState<{
+    open: boolean;
+    mode: "upgrade" | "downgrade";
+    targetPlan: string;
+    targetPlanId: string;
+    period: BillingPeriod;
+  } | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { openLoginModal } = useUIStore();
 
-  const userPlan = session?.user?.plan as PlanTier | undefined;
+  // Read plan from subscription-status (DB-backed) so the cards reflect upgrades
+  // immediately after a plan change without a stale JWT causing wrong "Current plan" badge.
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: billingService.getSubscriptionStatus,
+    staleTime: 60_000,
+    enabled: !!session?.user,
+  });
+  const userPlan = (subscriptionStatus?.plan ?? session?.user?.plan) as PlanTier | undefined;
+  const requestedReturnTo = searchParams.get("returnTo");
+  const returnTo =
+    requestedReturnTo && isAllowedCheckoutReturnTo(requestedReturnTo)
+      ? requestedReturnTo
+      : undefined;
 
   async function handleCtaClick(tierId: string) {
     if (tierId === PricingTierId.FREE) {
@@ -405,8 +432,29 @@ export function PricingClient() {
       return;
     }
 
+    // Paid user clicking a different paid tier → open plan change modal
+    if (isPaidTier && userPlan && userPlan !== PlanTier.FREE) {
+      const TIER_NAMES: Record<string, string> = {
+        starter: "Starter", growth: "Growth", scale: "Scale",
+      };
+      // Determine direction client-side for UX (server will revalidate)
+      const PLAN_RANK: Record<string, number> = { FREE: 0, STARTER: 1, GROWTH: 2, SCALE: 3 };
+      const currentRank = PLAN_RANK[userPlan] ?? 0;
+      const targetRank = PLAN_RANK[tierId.toUpperCase()] ?? 0;
+      const mode = targetRank > currentRank ? "upgrade" : "downgrade";
+      setPlanChangeModal({
+        open: true,
+        mode,
+        targetPlan: TIER_NAMES[tierId] ?? tierId,
+        targetPlanId: tierId,
+        period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
+      });
+      return;
+    }
+
     if (!isPaidTier) return;
 
+    // FREE user clicking a paid tier → initiate checkout
     setPendingTier(tierId);
     try {
       const res = await fetch("/api/billing/checkout", {
@@ -416,6 +464,7 @@ export function PricingClient() {
           planId: tierId,
           period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
           currency: "USD",
+          ...(returnTo ? { returnTo } : {}),
         }),
       });
       const json = await res.json();
@@ -486,6 +535,22 @@ export function PricingClient() {
           ))}
         </div>
       </section>
+
+      {planChangeModal && (
+        <PlanChangeModal
+          open={planChangeModal.open}
+          onOpenChange={(open) => setPlanChangeModal(prev => prev ? { ...prev, open } : null)}
+          mode={planChangeModal.mode}
+          targetPlan={planChangeModal.targetPlan}
+          targetPlanId={planChangeModal.targetPlanId}
+          period={planChangeModal.period}
+          onSuccess={() => {
+            setPlanChangeModal(null);
+            // Refresh session so userPlan updates
+            void router.refresh();
+          }}
+        />
+      )}
 
       <PricingCompareTable />
       <PricingFaqSection />

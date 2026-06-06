@@ -6,6 +6,12 @@ import {
   setLastUsedAuthMethodResponseCookie,
   type AuthSurface,
 } from "@/lib/auth/last-used-method";
+import {
+  clearOAuthIntentResponseCookie,
+  getOAuthIntentSourceAuthPath,
+  getSafeOAuthNextPath,
+  parseOAuthIntentSource,
+} from "@/lib/auth/oauth-intent";
 import { prisma } from "@/lib/prisma";
 
 /*
@@ -15,11 +21,7 @@ import { prisma } from "@/lib/prisma";
  * @returns Safe relative path or null.
  */
 function getSafeNextPath(value: string | null): string | null {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-
-  return value;
+  return getSafeOAuthNextPath(value);
 }
 
 /*
@@ -43,12 +45,7 @@ function getEntryRole(value: string | null): UserRole | null {
  * @returns Source auth path or null.
  */
 function getSourceAuthPath(value: string | null): string | null {
-  if (value === "seeker-login") return "/seeker/login";
-  if (value === "seeker-register") return "/seeker/register";
-  if (value === "recruiter-login") return "/recruiter/login";
-  if (value === "recruiter-register") return "/recruiter/register";
-
-  return null;
+  return getOAuthIntentSourceAuthPath(parseOAuthIntentSource(value));
 }
 
 /*
@@ -72,6 +69,7 @@ function buildSuccessfulOAuthRedirectResponse(
   role: Role,
 ): NextResponse {
   const response = buildRedirectResponse(req, path);
+  clearOAuthIntentResponseCookie(response);
   setLastUsedAuthMethodResponseCookie(
     response,
     getAuthSurfaceForRole(role),
@@ -130,7 +128,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     user.role !== (entryRole as Role)
   ) {
     const mismatchPath = `${sourcePath}?authError=wrong_role_oauth&accountRole=${encodeURIComponent(user.role)}`;
-    return buildRedirectResponse(req, mismatchPath);
+    const response = buildRedirectResponse(req, mismatchPath);
+    clearOAuthIntentResponseCookie(response);
+    return response;
   }
 
   if (entryRole && isLikelyFirstGoogleUser) {
@@ -152,7 +152,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   if (!entryRole && isLikelyFirstGoogleUser) {
-    return buildRedirectResponse(req, "/auth/select-role");
+    const response = buildRedirectResponse(req, "/auth/select-role");
+    clearOAuthIntentResponseCookie(response);
+    return response;
   }
 
   if (user.onboardingCompleted === true) {
