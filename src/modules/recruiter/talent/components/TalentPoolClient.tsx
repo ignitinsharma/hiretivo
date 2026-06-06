@@ -116,7 +116,7 @@ function TalentCard({
   };
 
   return (
-    <article className={`${TALENT_CARD_CLASS} flex h-full min-h-64 flex-col`}>
+    <article className={cn(TALENT_CARD_CLASS, "flex h-full min-h-64 flex-col")}>
       <div className="mb-4 flex min-h-14 items-start justify-between gap-3">
         <div className="grid min-w-0 flex-1 grid-cols-[3rem_minmax(0,1fr)] items-center gap-3">
           <InitialsAvatar
@@ -184,7 +184,7 @@ function TalentCard({
             <Button
               type="button"
               onClick={() => onView(talent.id)}
-              variant="default"
+              variant="primary"
               className="flex-1"
             >
               View Profile
@@ -195,7 +195,7 @@ function TalentCard({
                   <TooltipTrigger asChild>
                     <Button
                       type="button"
-                      variant="default"
+                      variant="primary"
                       size="icon"
                       onClick={copyEmail}
                       aria-label={`Copy email for ${talent.name ?? "talent"}`}
@@ -237,7 +237,7 @@ function TalentCard({
  */
 function TalentCardSkeleton(): ReactElement {
   return (
-    <article className={`${TALENT_CARD_CLASS} flex h-full min-h-64 flex-col`}>
+    <article className={cn(TALENT_CARD_CLASS, "flex h-full min-h-64 flex-col")}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Skeleton className="h-12 w-12 rounded-full" />
@@ -392,7 +392,7 @@ export function TalentPoolClient(): ReactElement {
                     if (isFreePlan) goToPricing();
                   }}
                   placeholder="Search candidates by name, role, skill, location, availability, company, or education"
-                  className={`pr-10 pl-10 ${isFreePlan ? "cursor-not-allowed opacity-50" : ""}`}
+                  className={cn("pr-10 pl-10", isFreePlan && "cursor-not-allowed opacity-50")}
                   readOnly={isFreePlan}
                 />
                 {searchInput && !isFreePlan && (
