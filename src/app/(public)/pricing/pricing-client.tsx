@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { CircleCheck } from "lucide-react";
@@ -22,6 +22,8 @@ import {
 } from "@/constants/enums";
 import { useUIStore } from "@/store/use-ui-store";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
+import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
+import { PlanChangeModal } from "@/components/shared/PlanChangeModal";
 
 // ─── Table cell class constants ───────────────────────────────────────────────
 
@@ -358,11 +360,23 @@ function PricingFaqSection() {
 export function PricingClient() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [pendingTier, setPendingTier] = useState<string | null>(null);
+  const [planChangeModal, setPlanChangeModal] = useState<{
+    open: boolean;
+    mode: "upgrade" | "downgrade";
+    targetPlan: string;
+    targetPlanId: string;
+  } | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { openLoginModal } = useUIStore();
 
   const userPlan = session?.user?.plan as PlanTier | undefined;
+  const requestedReturnTo = searchParams.get("returnTo");
+  const returnTo =
+    requestedReturnTo && isAllowedCheckoutReturnTo(requestedReturnTo)
+      ? requestedReturnTo
+      : undefined;
 
   async function handleCtaClick(tierId: string) {
     if (tierId === PricingTierId.FREE) {
@@ -405,8 +419,28 @@ export function PricingClient() {
       return;
     }
 
+    // Paid user clicking a different paid tier → open plan change modal
+    if (isPaidTier && userPlan && userPlan !== PlanTier.FREE) {
+      const TIER_NAMES: Record<string, string> = {
+        starter: "Starter", growth: "Growth", scale: "Scale",
+      };
+      // Determine direction client-side for UX (server will revalidate)
+      const PLAN_RANK: Record<string, number> = { FREE: 0, STARTER: 1, GROWTH: 2, SCALE: 3 };
+      const currentRank = PLAN_RANK[userPlan] ?? 0;
+      const targetRank = PLAN_RANK[tierId.toUpperCase()] ?? 0;
+      const mode = targetRank > currentRank ? "upgrade" : "downgrade";
+      setPlanChangeModal({
+        open: true,
+        mode,
+        targetPlan: TIER_NAMES[tierId] ?? tierId,
+        targetPlanId: tierId,
+      });
+      return;
+    }
+
     if (!isPaidTier) return;
 
+    // FREE user clicking a paid tier → initiate checkout
     setPendingTier(tierId);
     try {
       const res = await fetch("/api/billing/checkout", {
@@ -416,6 +450,7 @@ export function PricingClient() {
           planId: tierId,
           period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
           currency: "USD",
+          ...(returnTo ? { returnTo } : {}),
         }),
       });
       const json = await res.json();
@@ -486,6 +521,21 @@ export function PricingClient() {
           ))}
         </div>
       </section>
+
+      {planChangeModal && (
+        <PlanChangeModal
+          open={planChangeModal.open}
+          onOpenChange={(open) => setPlanChangeModal(prev => prev ? { ...prev, open } : null)}
+          mode={planChangeModal.mode}
+          targetPlan={planChangeModal.targetPlan}
+          targetPlanId={planChangeModal.targetPlanId}
+          onSuccess={() => {
+            setPlanChangeModal(null);
+            // Refresh session so userPlan updates
+            void router.refresh();
+          }}
+        />
+      )}
 
       <PricingCompareTable />
       <PricingFaqSection />
