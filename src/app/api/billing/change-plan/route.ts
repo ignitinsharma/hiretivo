@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     where: { id: session.user.id },
     select: {
       plan: true,
-      Subscription: {
+      subscription: {
         select: {
           dodoSubscriptionId: true,
           productId: true,
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const subscription = user.Subscription;
+  const subscription = user.subscription;
 
   if (!subscription || subscription.status !== "ACTIVE") {
     return NextResponse.json(
