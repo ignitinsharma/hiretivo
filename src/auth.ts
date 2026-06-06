@@ -28,6 +28,10 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  pages: {
+    signIn: "/auth/error",
+    error: "/auth/error",
+  },
   providers: [
     ...(googleConfigured
       ? [

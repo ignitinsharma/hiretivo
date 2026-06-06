@@ -16,8 +16,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { OAuthButton } from "@/components/auth/OAuthButton";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { UserRole } from "@/constants/enums";
+import { AuthErrorCode, OAuthIntentSource, UserRole } from "@/constants/enums";
 import { trackEvent } from "@/lib/analytics";
+import { setBrowserOAuthIntentCookie } from "@/lib/auth/oauth-intent";
 import {
   seekerRegisterSchema,
   type SeekerRegisterInput,
@@ -108,6 +109,8 @@ function SeekerRegisterContent() {
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
     authError === "wrong_role_oauth" && accountRole === UserRole.RECRUITER;
+  const hasOAuthAccountNotLinked =
+    authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
   React.useEffect(() => {
     if (!hasOAuthRoleMismatch) return;
@@ -213,6 +216,7 @@ function SeekerRegisterContent() {
       auth_method: "google",
       stage: "attempt",
     });
+    setBrowserOAuthIntentCookie(OAuthIntentSource.SEEKER_REGISTER);
     await signIn("google", {
       callbackUrl: `/auth/oauth/resolve?entryRole=${UserRole.SEEKER}&source=seeker-register`,
     });
@@ -237,6 +241,28 @@ function SeekerRegisterContent() {
               >
                 Please use the Recruiter login
               </Link>
+            </p>
+          </div>
+        )}
+
+        {hasOAuthAccountNotLinked && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-800">
+              This email already has an account.{" "}
+              <Link
+                href="/seeker/login"
+                className="font-bold text-black underline underline-offset-4"
+              >
+                Sign in with email and password instead
+              </Link>
+              , or{" "}
+              <Link
+                href="/forgot-password"
+                className="font-bold text-black underline underline-offset-4"
+              >
+                reset your password
+              </Link>{" "}
+              if needed.
             </p>
           </div>
         )}

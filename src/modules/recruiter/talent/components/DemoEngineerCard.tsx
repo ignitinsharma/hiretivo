@@ -21,9 +21,9 @@ interface DemoEngineerCardProps {
  * Renders a static demo engineer profile card for FREE-plan recruiters.
  * Full name is intentionally visible (contrast with blurred real cards) — per D-02.
  * "Preview" chip in top-right signals this is a sample, not a real unlocked engineer.
- * "Unlock Now" button opens TalentUpgradeModal — no profile dialog, no save — per D-08.
+ * "Unlock Profile" button opens pricing — no profile dialog, no save.
  * @param profile - DemoEngineerProfile static data
- * @param onUpgrade - Callback to open TalentUpgradeModal
+ * @param onUpgrade - Callback to open pricing
  */
 export function DemoEngineerCard({ profile, onUpgrade }: DemoEngineerCardProps): ReactElement {
   const visibleSkills = profile.skills.slice(0, MAX_CARD_SKILLS);
@@ -94,15 +94,15 @@ export function DemoEngineerCard({ profile, onUpgrade }: DemoEngineerCardProps):
         <span>{profile.timezoneOverlap}</span>
       </div>
 
-      {/* CTA: Unlock Now only — no email, no save — per D-08 */}
+      {/* CTA: Unlock Profile only — no email, no save */}
       <div className="mt-auto">
         <Button
           type="button"
-          variant="primary"
+          variant="secondary"
           className="w-full"
           onClick={onUpgrade}
         >
-          Unlock Now
+          Unlock Profile
         </Button>
       </div>
     </article>

@@ -271,7 +271,7 @@ function PricingCard({
           size="lg"
           className={cn(
             "w-full mt-auto",
-            isHighlighted && "transition-all hover:px-10",
+            isHighlighted && "transition-all duration-200 hover:px-14",
           )}
           loading={isPending}
           loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}

@@ -90,7 +90,7 @@ function RecruiterSidebarInner({
   toggle: () => void;
 }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
 
   // Read plan from subscription-status (DB-backed) so the badge stays accurate
@@ -101,11 +101,22 @@ function RecruiterSidebarInner({
     staleTime: 60_000,
     enabled: !!session?.user,
   });
-  // Prefer DB-backed plan; fall back to JWT plan; null = still resolving (show skeleton)
+
+  /*
+   * currentPlan derivation — three phases must all resolve before showing a label:
+   * 1. sessionStatus === 'loading'  → session not yet hydrated, query is disabled (planLoading=false) → show skeleton
+   * 2. session loaded, planLoading  → query in-flight → show skeleton
+   * 3. both settled                 → prefer DB plan, fall back to JWT, then FREE
+   * Without tracking sessionStatus, phase 1 falls through to FREE because the query
+   * is disabled (planLoading=false) when session hasn't resolved yet — causing the
+   * Free → Starter → Scale flicker on every reload.
+   */
   const currentPlan: PlanTier | null =
-    subscriptionStatus?.plan
-    ?? (session?.user?.plan as PlanTier | undefined)
-    ?? (planLoading && session?.user ? null : PlanTier.FREE);
+    sessionStatus === "loading" || planLoading
+      ? null
+      : (subscriptionStatus?.plan as PlanTier | undefined)
+          ?? (session?.user?.plan as PlanTier | undefined)
+          ?? PlanTier.FREE;
   const planLabel =
     currentPlan === PlanTier.SCALE ? "Scale"
     : currentPlan === PlanTier.GROWTH ? "Growth"

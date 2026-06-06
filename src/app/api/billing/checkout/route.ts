@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { planId, period } = parsed.data;
+  const { planId, period, returnTo } = parsed.data;
 
   const productId = getDodoProductId(planId, period);
   if (!productId) {
@@ -76,6 +76,10 @@ export async function POST(req: NextRequest) {
   }
 
   const appUrl = getAppUrl(req);
+  const returnUrl = new URL("/pricing/success", appUrl);
+  if (returnTo) {
+    returnUrl.searchParams.set("returnTo", returnTo);
+  }
 
   const customerPayload = user.billingCustomerId
     ? ({ customer_id: user.billingCustomerId } as const)
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
     product_id: productId,
     quantity: 1,
     payment_link: true,
-    return_url: `${appUrl}/pricing/success`,
+    return_url: returnUrl.toString(),
     metadata: {
       userId: session.user.id,
       plan: DODO_PRODUCT_TO_PLAN[productId] ?? PlanTier.FREE,

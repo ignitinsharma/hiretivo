@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Mail, Search, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,12 +27,12 @@ import type { TalentListItem } from "@/modules/recruiter/talent/types/talent.typ
 
 import { DemoEngineerCard } from "./DemoEngineerCard";
 import { TalentProfileDialog } from "./TalentProfileDialog";
-import { TalentUpgradeModal } from "./TalentUpgradeModal";
 
 const TALENT_CARD_CLASS = "rounded-xl border border-brand-border bg-white p-5";
 const MUTED_TEXT_CLASS = "text-sm font-semibold text-brand-foreground-muted";
 const SEARCH_DEBOUNCE_MS = 300;
 const MAX_CARD_SKILLS = 4;
+const TALENT_PRICING_URL = `/pricing?returnTo=${encodeURIComponent("/recruiter/talent")}`;
 
 /*
  * useDebouncedValue
@@ -158,7 +159,11 @@ function TalentCard({
 
       <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-2 text-sm font-semibold text-brand-foreground-muted">
         <span>{talent.location ?? "Location not provided"}</span>
-        <span>{talent.availability ? formatProfileLabel(talent.availability) : "Availability unknown"}</span>
+        <span>
+          {talent.availability
+            ? formatProfileLabel(talent.availability)
+            : "Availability unknown"}
+        </span>
         <span>{formatCardExperience(talent.yearsExperience)}</span>
         <span>{talent.resumeKey ? "Resume available" : "No resume"}</span>
       </div>
@@ -185,25 +190,39 @@ function TalentCard({
               View Profile
             </Button>
             {talent.email && (
-              <>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="icon"
-                  onClick={copyEmail}
-                  aria-label={`Copy email for ${talent.name ?? "talent"}`}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button asChild variant="primary" size="icon">
-                  <a
-                    href={`mailto:${talent.email}`}
-                    aria-label={`Email ${talent.name ?? "talent"}`}
-                  >
-                    <Mail className="h-4 w-4" />
-                  </a>
-                </Button>
-              </>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="icon"
+                      onClick={copyEmail}
+                      aria-label={`Copy email for ${talent.name ?? "talent"}`}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy email</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button asChild variant="primary" size="icon">
+                      <a
+                        href={`mailto:${talent.email}`}
+                        aria-label={`Email ${talent.name ?? "talent"}`}
+                      >
+                        <Mail className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Email candidate</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </>
         )}
@@ -252,7 +271,6 @@ function TalentCardSkeleton(): ReactElement {
     </article>
   );
 }
-
 /*
  * TalentPoolClient
  * Talent Pool search and profile discovery experience for recruiters.
@@ -260,7 +278,7 @@ function TalentCardSkeleton(): ReactElement {
  * FREE plan behavior:
  *   - Search bar is disabled (readOnly, opacity-50, cursor-not-allowed) with tooltip.
  *   - Engineer count banner shown above card grid.
- *   - Real blurred cards (API isFreePlan=true) show "Unlock Profile" → TalentUpgradeModal.
+ *   - Real blurred cards (API isFreePlan=true) show "Unlock Profile" → Pricing.
  *   - Demo cards pad the grid when realCount < DEMO_THRESHOLD (mix-mode, D-05).
  *
  * Paid plan behavior (unchanged):
@@ -269,11 +287,10 @@ function TalentCardSkeleton(): ReactElement {
  *   - No demo cards, no banner.
  */
 export function TalentPoolClient(): ReactElement {
+  const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [upgradeTeaser, setUpgradeTeaser] = useState<string | undefined>(undefined);
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -284,14 +301,12 @@ export function TalentPoolClient(): ReactElement {
   const showTalentSkeleton = talentQuery.isLoading || talentQuery.isFetching;
 
   /*
-   * openUpgrade
-   * Opens TalentUpgradeModal with an optional engineer teaser string.
-   * Called from: disabled search bar click, Unlock Profile on real blurred card, Unlock Now on demo card.
-   * @param teaser - Optional string, e.g. "Priya S. • React, Node.js"
+   * goToPricing
+   * Sends free-plan upgrade intent through the canonical pricing page.
+   * Called from: disabled search bar click, Unlock Profile on real blurred card, Unlock Profile on demo card.
    */
-  function openUpgrade(teaser?: string) {
-    setUpgradeTeaser(teaser);
-    setUpgradeModalOpen(true);
+  function goToPricing() {
+    router.push(TALENT_PRICING_URL);
   }
 
   /*
@@ -336,7 +351,7 @@ export function TalentPoolClient(): ReactElement {
                     if (!isFreePlan) setSearchInput(event.target.value);
                   }}
                   onClick={() => {
-                    if (isFreePlan) openUpgrade();
+                    if (isFreePlan) goToPricing();
                   }}
                   placeholder="Search candidates by name, role, skill, location, availability, company, or education"
                   className={`pr-10 pl-10 ${isFreePlan ? "cursor-not-allowed opacity-50" : ""}`}
@@ -365,15 +380,6 @@ export function TalentPoolClient(): ReactElement {
         </TooltipProvider>
       </div>
 
-      {/* Engineer count banner — FREE plan only, above card grid (D-06) */}
-      {isFreePlan && (
-        <div className="rounded-xl border border-brand-border bg-brand-surface px-5 py-4 text-sm font-semibold text-brand-foreground-muted">
-          {demoCount > 0
-            ? `${demoCount} verified engineer${demoCount === 1 ? "" : "s"} in the pool — upgrade to see them all`
-            : "India's top verified engineers — be first to discover them"}
-        </div>
-      )}
-
       {/* Card grid — loading skeleton | error | empty (paid only) | real + demo cards */}
       {showTalentSkeleton ? (
         <div className="grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -400,13 +406,10 @@ export function TalentPoolClient(): ReactElement {
               isUnlocking={unlockingId === talent.id}
               onUnlock={
                 isFreePlan
-                  ? () =>
-                      openUpgrade(
-                        `${talent.name} • ${talent.skills.slice(0, 3).join(", ")}`
-                      )
+                  ? goToPricing
                   : !talent.isUnlocked
-                  ? () => handleUnlock(talent.id)
-                  : undefined
+                    ? () => handleUnlock(talent.id)
+                    : undefined
               }
             />
           ))}
@@ -415,11 +418,7 @@ export function TalentPoolClient(): ReactElement {
             <DemoEngineerCard
               key={profile.id}
               profile={profile}
-              onUpgrade={() =>
-                openUpgrade(
-                  `${profile.name} • ${profile.skills.slice(0, 3).join(", ")}`
-                )
-              }
+              onUpgrade={goToPricing}
             />
           ))}
         </div>
@@ -432,13 +431,6 @@ export function TalentPoolClient(): ReactElement {
         onOpenChange={(open) => {
           if (!open) setSelectedTalentId(null);
         }}
-      />
-
-      {/* TalentUpgradeModal — FREE plan upgrade gate, triggered by demo cards + real blurred cards + search */}
-      <TalentUpgradeModal
-        open={upgradeModalOpen}
-        onOpenChange={setUpgradeModalOpen}
-        engineerTeaser={upgradeTeaser}
       />
     </section>
   );

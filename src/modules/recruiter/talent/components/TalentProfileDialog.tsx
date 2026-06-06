@@ -174,7 +174,6 @@ function getOpportunityChips(talent: TalentDetail): OpportunityChip[] {
     },
     { label: talent.location ?? "Location not provided", tone: "primary" },
     { label: talent.primaryRole ?? "Role open", tone: "primary" },
-    ...(salary ? [{ label: salary, tone: "neutral" as const }] : []),
   ];
 }
 
@@ -293,7 +292,11 @@ function LookingForSection({ bio }: { bio: string | null }): ReactElement {
 /**
  * Renders safe profile summary fields available in locked and unlocked states.
  */
-function ProfileSummarySection({ talent }: { talent: TalentDetail }): ReactElement {
+function ProfileSummarySection({
+  talent,
+}: {
+  talent: TalentDetail;
+}): ReactElement {
   const summaryItems = [
     {
       label: "Professional Headline",
@@ -426,8 +429,14 @@ function ExperienceSection({
 /**
  * Renders education in one line per record.
  */
-function EducationRow({ education }: { education: TalentEducation }): ReactElement {
-  const program = [education.degree, education.major].filter(Boolean).join(", ");
+function EducationRow({
+  education,
+}: {
+  education: TalentEducation;
+}): ReactElement {
+  const program = [education.degree, education.major]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <article className="flex gap-4">
@@ -652,7 +661,9 @@ function TalentProfileContent({
             </>
           ) : null}
           <SkillsSection skills={talent.skills} />
-          {talent.isUnlocked ? <IdealOpportunitySection talent={talent} /> : null}
+          {talent.isUnlocked ? (
+            <IdealOpportunitySection talent={talent} />
+          ) : null}
         </div>
       </div>
       {hasFooterActions ? (
@@ -678,7 +689,11 @@ function TalentProfileContent({
                     <Copy className="h-4 w-4" />
                     Copy email
                   </Button>
-                  <Button asChild variant="primary" className="w-full sm:w-auto">
+                  <Button
+                    asChild
+                    variant="primary"
+                    className="w-full sm:w-auto"
+                  >
                     <a href={`mailto:${talent.email}`}>
                       <Mail className="h-4 w-4" />
                       Email

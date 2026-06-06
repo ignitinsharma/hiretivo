@@ -134,44 +134,46 @@ export function OnboardingContainer({
     }
   };
 
+  if (currentStep === 4) {
+    return <StepComplete onComplete={handleComplete} isLoading={isNavigating} />;
+  }
+
   return (
     <OnboardingShell>
-      {currentStep < 4 && (
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-foreground">
-              Step {currentStep} of 4
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {Math.round(progressPercent)}% Complete
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4].map((step) => (
-              <div
-                key={step}
-                className={cn(
-                  'flex-1 h-2 rounded-full transition-colors',
-                  step <= currentStep ? 'bg-primary' : 'bg-muted'
-                )}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between mt-2">
-            {stepLabels.map((label, index) => (
-              <p
-                key={label}
-                className={cn(
-                  'text-xs',
-                  index + 1 <= currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
-                )}
-              >
-                {label}
-              </p>
-            ))}
-          </div>
+      <div className="max-w-2xl mx-auto mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-medium text-foreground">
+            Step {currentStep} of 4
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {Math.round(progressPercent)}% Complete
+          </p>
         </div>
-      )}
+        <div className="flex gap-2">
+          {[1, 2, 3, 4].map((step) => (
+            <div
+              key={step}
+              className={cn(
+                'flex-1 h-2 rounded-full transition-colors',
+                step <= currentStep ? 'bg-primary' : 'bg-muted'
+              )}
+            />
+          ))}
+        </div>
+        <div className="flex justify-between mt-2">
+          {stepLabels.map((label, index) => (
+            <p
+              key={label}
+              className={cn(
+                'text-xs',
+                index + 1 <= currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
+              )}
+            >
+              {label}
+            </p>
+          ))}
+        </div>
+      </div>
 
       <div className="animate-in fade-in duration-300">{renderStep()}</div>
     </OnboardingShell>
