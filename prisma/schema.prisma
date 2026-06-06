@@ -1,6 +1,3 @@
-// Hiretivo — PostgreSQL (Neon) + Prisma
-// Auth.js adapter models: Account, Session, VerificationToken
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,158 +6,385 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  SEEKER
-  RECRUITER
-}
-
-enum JobType {
-  FULL_TIME
-  PART_TIME
-  CONTRACT
-  INTERNSHIP
-}
-
-enum ApplyType {
-  INTERNAL
-  EXTERNAL
-}
-
-enum JobStatus {
-  DRAFT
-  OPEN
-  PAUSED
-  CLOSED
-  UNPUBLISHED
-  DELETED
-}
-
-enum SkillLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-  EXPERT
-}
-
-enum AppStatus {
-  APPLIED
-  REVIEWING
-  INTERVIEW
-  OFFER
-  HIRED
-  REJECTED
-}
-
-enum WorkType {
-  REMOTE
-  HYBRID
-  ONSITE
-}
-
-enum PlanTier {
-  FREE
-  STARTER
-  GROWTH
-  SCALE
-}
-
-enum VerificationStatus {
-  NOT_SUBMITTED
-  PENDING
-  IN_REVIEW
-  VERIFIED
-  REJECTED
-}
-
-enum SeekingStatus {
-  ACTIVELY_LOOKING
-  OPEN_TO_OFFERS
-  NOT_LOOKING
-}
-
-enum SubStatus {
-  ACTIVE
-  PAST_DUE
-  CANCELED
-}
-
-enum InterviewStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-  NO_SHOW
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  role              Role      @default(SEEKER)
-  plan              PlanTier  @default(FREE)
-  billingCustomerId String?
-  timezone          String?
-  onboardingCompleted Boolean @default(false)
-  onboardingStep      Int?
-  onboardingDraft     Json?
-  verificationStatus   VerificationStatus @default(NOT_SUBMITTED)
-  seekingStatus        SeekingStatus      @default(OPEN_TO_OFFERS)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  accounts Account[]
-  sessions Session[]
-
-  seekerProfile   SeekerProfile?
-  recruiterProfile RecruiterProfile?
-
-  jobsPosted Job[] @relation("RecruiterJobs")
-
-  applications Application[]
-
-  interviewsAsRecruiter Interview[] @relation("InterviewRecruiter")
-  interviewsAsSeeker    Interview[] @relation("InterviewSeeker")
-
-  clickEvents ClickEvent[]
-
-  boostedJobs BoostedJob[] @relation("BoostedJobs")
-  savedJobs            SavedJob[]
-  dismissedJobs        DismissedJob[]
-  subscription         Subscription?
-  verificationReviews  VerificationReview[]
-  engineerUnlocksAsRecruiter EngineerUnlock[] @relation("RecruiterUnlocks")
-  engineerUnlocksAsEngineer  EngineerUnlock[] @relation("EngineerUnlocks")
-}
-
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
 }
 
+model Application {
+  id          String      @id
+  jobId       String
+  seekerId    String
+  status      AppStatus   @default(APPLIED)
+  matchScore  Int
+  coverLetter String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime
+  aiSummary   String?
+  Job         Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User        User        @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  Interview   Interview[]
+
+  @@unique([jobId, seekerId])
+  @@index([jobId, status])
+  @@index([seekerId])
+  @@index([status])
+}
+
+model BoostedJob {
+  id          String   @id
+  jobId       String   @unique
+  recruiterId String
+  paymentId   String?
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  Job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User        User     @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([recruiterId])
+}
+
+model ClickEvent {
+  id        String   @id
+  jobId     String?
+  userId    String?
+  source    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  Job       Job?     @relation(fields: [jobId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([jobId])
+  @@index([userId])
+}
+
+model DismissedJob {
+  id        String   @id
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+  Job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([jobId])
+  @@index([userId])
+}
+
+model EarlyAccessEmail {
+  id        String   @id
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Education {
+  id              String        @id
+  seekerProfileId String
+  institution     String
+  graduationDate  String?
+  degree          String?
+  major           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  SeekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([seekerProfileId])
+}
+
+model EngineerUnlock {
+  id                                    String   @id
+  recruiterId                           String
+  engineerId                            String
+  source                                String   @default("talent_pool")
+  createdAt                             DateTime @default(now())
+  User_EngineerUnlock_engineerIdToUser  User     @relation("EngineerUnlock_engineerIdToUser", fields: [engineerId], references: [id], onDelete: Cascade)
+  User_EngineerUnlock_recruiterIdToUser User     @relation("EngineerUnlock_recruiterIdToUser", fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, engineerId])
+  @@index([createdAt])
+  @@index([engineerId])
+  @@index([recruiterId])
+  @@index([source])
+}
+
+model Interview {
+  id                               String          @id
+  applicationId                    String
+  recruiterId                      String
+  seekerId                         String
+  status                           InterviewStatus @default(SCHEDULED)
+  startsAt                         DateTime?
+  endsAt                           DateTime?
+  meetLink                         String?
+  notes                            String?
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime
+  scheduledTimeZone                String?
+  Application                      Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  User_Interview_recruiterIdToUser User            @relation("Interview_recruiterIdToUser", fields: [recruiterId], references: [id], onDelete: Cascade)
+  User_Interview_seekerIdToUser    User            @relation("Interview_seekerIdToUser", fields: [seekerId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([recruiterId])
+  @@index([seekerId])
+  @@index([startsAt])
+}
+
+model Job {
+  id               String         @id
+  recruiterId      String
+  title            String
+  description      String
+  jobType          JobType
+  applyType        ApplyType
+  workType         WorkType?
+  status           JobStatus      @default(DRAFT)
+  salaryMin        Int?
+  salaryMax        Int?
+  currency         String?
+  externalApplyUrl String?
+  publishedAt      DateTime?
+  closedAt         DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  category         String?
+  companyName      String?
+  companyLogoUrl   String?
+  companyWebsite   String?
+  companySize      String?
+  companyIndustry  String?
+  companyFunding   String?
+  isAdminPosted    Boolean        @default(false)
+  experienceLevel  String?
+  Application      Application[]
+  BoostedJob       BoostedJob?
+  ClickEvent       ClickEvent[]
+  DismissedJob     DismissedJob[]
+  User             User           @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  JobMatch         JobMatch[]
+  JobSkill         JobSkill[]
+  SavedJob         SavedJob[]
+
+  @@index([createdAt])
+  @@index([isAdminPosted])
+  @@index([recruiterId])
+  @@index([status, createdAt])
+  @@index([status])
+}
+
+model JobMatch {
+  id              String        @id
+  jobId           String
+  seekerProfileId String
+  score           Int
+  computedAt      DateTime      @default(now())
+  Job             Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  SeekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, seekerProfileId])
+  @@index([score])
+  @@index([seekerProfileId])
+}
+
+model JobSkill {
+  id      String     @id
+  jobId   String
+  skillId String
+  level   SkillLevel
+  Job     Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Skill   Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+  @@index([skillId])
+}
+
+model RecruiterProfile {
+  id                     String   @id
+  userId                 String   @unique
+  companyName            String
+  website                String?
+  bio                    String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime
+  companySize            String?
+  industry               String?
+  fundingType            String?
+  isFullyRemote          Boolean  @default(false)
+  logo                   String?
+  applicationAlerts      Boolean  @default(true)
+  emailNotifications     Boolean  @default(true)
+  interviewNotifications Boolean  @default(true)
+  User                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SavedJob {
+  id        String   @id
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+  Job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([jobId])
+  @@index([userId])
+}
+
+model SeekerProfile {
+  id                     String           @id
+  userId                 String           @unique
+  headline               String?
+  bio                    String?
+  location               String?
+  yearsExperience        Int?
+  workPreference         WorkType?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime
+  situation              String?
+  salaryMin              Int?
+  salaryMax              Int?
+  currency               String?
+  availability           String?
+  primaryRole            String?
+  resumeKey              String?
+  digestEnabled          Boolean          @default(false)
+  githubUrl              String?
+  linkedinUrl            String?
+  twitterUrl             String?
+  websiteUrl             String?
+  githubUsername         String?
+  salaryMaxUsd           Int?
+  salaryMinUsd           Int?
+  submittedForReviewAt   DateTime?
+  topProjects            Json?
+  verificationNotes      String?
+  verificationReviewedAt DateTime?
+  verificationReviewedBy String?
+  videoIntroUrl          String?
+  Education              Education[]
+  JobMatch               JobMatch[]
+  User                   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  SeekerSkill            SeekerSkill[]
+  WorkExperience         WorkExperience[]
+}
+
+model SeekerSkill {
+  id              String        @id
+  seekerProfileId String
+  skillId         String
+  level           SkillLevel
+  SeekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+  Skill           Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([seekerProfileId, skillId])
+  @@index([skillId])
+}
+
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+model Skill {
+  id          String        @id
+  name        String        @unique
+  slug        String        @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  category    String
+  JobSkill    JobSkill[]
+  SeekerSkill SeekerSkill[]
+}
+
+model Subscription {
+  id                 String    @id
+  dodoSubscriptionId String    @unique
+  productId          String
+  status             SubStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean   @default(false)
+  scheduledPlan      PlanTier?
+  scheduledChangeAt  DateTime?
+  userId             String    @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime
+  User               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([dodoSubscriptionId])
+  @@index([userId])
+}
+
+model User {
+  id                                              String               @id
+  name                                            String?
+  email                                           String?              @unique
+  emailVerified                                   DateTime?
+  image                                           String?
+  passwordHash                                    String?
+  role                                            Role                 @default(SEEKER)
+  plan                                            PlanTier             @default(FREE)
+  createdAt                                       DateTime             @default(now())
+  updatedAt                                       DateTime
+  billingCustomerId                               String?
+  timezone                                        String?
+  onboardingCompleted                             Boolean              @default(false)
+  onboardingStep                                  Int?
+  onboardingDraft                                 Json?
+  seekingStatus                                   SeekingStatus        @default(OPEN_TO_OFFERS)
+  verificationStatus                              VerificationStatus   @default(NOT_SUBMITTED)
+  Account                                         Account[]
+  Application                                     Application[]
+  BoostedJob                                      BoostedJob[]
+  ClickEvent                                      ClickEvent[]
+  DismissedJob                                    DismissedJob[]
+  EngineerUnlock_EngineerUnlock_engineerIdToUser  EngineerUnlock[]     @relation("EngineerUnlock_engineerIdToUser")
+  EngineerUnlock_EngineerUnlock_recruiterIdToUser EngineerUnlock[]     @relation("EngineerUnlock_recruiterIdToUser")
+  Interview_Interview_recruiterIdToUser           Interview[]          @relation("Interview_recruiterIdToUser")
+  Interview_Interview_seekerIdToUser              Interview[]          @relation("Interview_seekerIdToUser")
+  Job                                             Job[]
+  RecruiterProfile                                RecruiterProfile?
+  SavedJob                                        SavedJob[]
+  SeekerProfile                                   SeekerProfile?
+  Session                                         Session[]
+  Subscription                                    Subscription?
+  VerificationReview                              VerificationReview[]
+}
+
+model VerificationReview {
+  id         String             @id
+  userId     String
+  reviewedBy String?
+  status     VerificationStatus
+  scoreGiven Int?
+  notes      Json?
+  createdAt  DateTime           @default(now())
+  User       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([status])
   @@index([userId])
 }
 
@@ -172,387 +396,102 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model SeekerProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  headline       String?
-  bio            String?  @db.Text
-  location       String?
-  yearsExperience Int?
-  workPreference WorkType?
-
-  situation       String?
-  primaryRole     String?
-  salaryMin       Int?
-  salaryMax       Int?
-  currency        String?
-  availability    String?
-  resumeKey       String?
-
-  websiteUrl      String?
-  linkedinUrl     String?
-  githubUrl       String?
-  twitterUrl      String?
-
-  githubUsername         String?
-  videoIntroUrl          String?
-  topProjects            Json?
-  salaryMinUsd           Int?
-  salaryMaxUsd           Int?
-  verificationNotes      String?   @db.Text
-  verificationReviewedAt DateTime?
-  verificationReviewedBy String?
-  submittedForReviewAt   DateTime?
-
-  digestEnabled Boolean @default(false)
-
-  skills          SeekerSkill[]
-  jobMatches      JobMatch[]
-  workExperiences WorkExperience[]
-  educations      Education[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Skill {
-  id       String @id @default(cuid())
-  name     String @unique
-  slug     String @unique
-  category String
-
-  seekerSkills SeekerSkill[]
-  jobSkills    JobSkill[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model SeekerSkill {
-  id              String @id @default(cuid())
-  seekerProfileId String
-  skillId         String
-  level           SkillLevel
-
-  seekerProfile SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
-  skill           Skill         @relation(fields: [skillId], references: [id], onDelete: Cascade)
-
-  @@unique([seekerProfileId, skillId])
-  @@index([skillId])
-}
-
-model RecruiterProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  companyName String
-  website     String?
-  bio         String? @db.Text
-  companySize String?
-  industry    String?
-  fundingType String?
-  isFullyRemote Boolean  @default(false)
-  logo        String?
-
-  emailNotifications     Boolean @default(true)
-  applicationAlerts      Boolean @default(true)
-  interviewNotifications Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Job {
-  id          String @id @default(cuid())
-  recruiterId String
-  recruiter   User   @relation("RecruiterJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  title       String
-  description String      @db.Text
-  jobType     JobType
-  applyType   ApplyType
-  workType    WorkType?
-  status      JobStatus   @default(DRAFT)
-
-  salaryMin Int?
-  salaryMax Int?
-  currency  String?
-
-  experienceLevel String?
-  category        String?
-
-  externalApplyUrl String?
-
-  // Admin-posted job company overrides — null on regular recruiter jobs.
-  // When non-null, take precedence over the recruiter's profile for display.
-  companyName     String?
-  companyLogoUrl  String?
-  companyWebsite  String?
-  companySize     String?
-  companyIndustry String?
-  companyFunding  String?
-  isAdminPosted   Boolean   @default(false)
-
-  publishedAt DateTime?
-  closedAt    DateTime?
-
-  skills        JobSkill[]
-  applications  Application[]
-  jobMatches    JobMatch[]
-  clickEvents   ClickEvent[]
-  boostedJob    BoostedJob?
-  savedBy       SavedJob[]
-  dismissedBy   DismissedJob[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([recruiterId])
-  @@index([status])
-  @@index([createdAt])
-  @@index([isAdminPosted])
-  @@index([status, createdAt])
-}
-
-model JobSkill {
-  id      String @id @default(cuid())
-  jobId   String
-  skillId String
-  level   SkillLevel
-
-  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
-
-  @@unique([jobId, skillId])
-  @@index([skillId])
-}
-
-model JobMatch {
-  id              String @id @default(cuid())
-  jobId           String
-  seekerProfileId String
-  score           Int
-
-  job           Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  seekerProfile SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
-
-  computedAt DateTime @default(now())
-
-  @@unique([jobId, seekerProfileId])
-  @@index([seekerProfileId])
-  @@index([score])
-}
-
-model Application {
-  id String @id @default(cuid())
-
-  jobId    String
-  seekerId String
-
-  status      AppStatus @default(APPLIED)
-  matchScore  Int
-
-  coverLetter String? @db.Text
-  aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
-
-  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
-
-  interviews Interview[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([jobId, seekerId])
-  @@index([seekerId])
-  @@index([status])
-  @@index([jobId, status])
-}
-
-model Interview {
-  id String @id @default(cuid())
-
-  applicationId String
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-  recruiterId String
-  recruiter   User   @relation("InterviewRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  seekerId String
-  seeker   User   @relation("InterviewSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
-
-  status   InterviewStatus @default(SCHEDULED)
-  startsAt DateTime?
-  endsAt   DateTime?
-  meetLink String?
-  notes             String? @db.Text
-  scheduledTimeZone String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([applicationId])
-  @@index([recruiterId])
-  @@index([seekerId])
-  @@index([startsAt])
-}
-
-model ClickEvent {
-  id String @id @default(cuid())
-
-  jobId  String?
-  job    Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  source   String
-  metadata Json?
-
-  createdAt DateTime @default(now())
-
-  @@index([jobId])
-  @@index([userId])
-  @@index([createdAt])
-}
-
-model EarlyAccessEmail {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-}
-
-model BoostedJob {
-  id          String   @id @default(cuid())
-  jobId       String   @unique
-  recruiterId String
-  paymentId   String?
-  startsAt    DateTime @default(now())
-  expiresAt   DateTime
-
-  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  recruiter User @relation("BoostedJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([recruiterId])
-}
-
-model Subscription {
-  id                 String    @id @default(cuid())
-  dodoSubscriptionId String    @unique
-  productId          String
-  status             SubStatus
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean   @default(false)
-  userId             String    @unique
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([dodoSubscriptionId])
-}
-
-model SavedJob {
-  id        String   @id @default(cuid())
-  userId    String
-  jobId     String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, jobId])
-  @@index([userId])
-  @@index([jobId])
-}
-
-model DismissedJob {
-  id        String   @id @default(cuid())
-  userId    String
-  jobId     String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, jobId])
-  @@index([userId])
-  @@index([jobId])
-}
-
 model WorkExperience {
-  id              String        @id @default(cuid())
+  id              String        @id
   seekerProfileId String
-  seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
-
-  company      String
-  title        String
-  startDate    String       // "MM/YYYY" — freeform display date, not a DateTime
-  endDate      String?      // "MM/YYYY" — null means currently working here
-  isCurrent    Boolean  @default(false)
-  description  String?  @db.Text
-  positionType String?      // "technical" | "non-technical" — validated at Zod layer, not a Prisma enum
-  skills       String[]     // denormalized skill name tags; not FK to Skill table
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  company         String
+  title           String
+  startDate       String
+  endDate         String?
+  isCurrent       Boolean       @default(false)
+  description     String?
+  positionType    String?
+  skills          String[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  SeekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
 
   @@index([seekerProfileId])
 }
 
-model Education {
-  id              String        @id @default(cuid())
-  seekerProfileId String
-  seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
-
-  institution    String
-  graduationDate String?      // "MM/YYYY" — freeform display date, not a DateTime
-  degree         String?
-  major          String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([seekerProfileId])
+enum AppStatus {
+  APPLIED
+  REVIEWING
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
 }
 
-model VerificationReview {
-  id         String             @id @default(cuid())
-  userId     String
-  reviewedBy String?
-  status     VerificationStatus
-  scoreGiven Int?
-  notes      Json?
-  createdAt  DateTime           @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
+enum ApplyType {
+  INTERNAL
+  EXTERNAL
 }
 
-model EngineerUnlock {
-  id          String   @id @default(cuid())
-  recruiterId String
-  engineerId  String
-  // "talent_pool" = counts against quota | "application_auto" = free, never counted
-  source      String   @default("talent_pool")
-  createdAt   DateTime @default(now())
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
 
-  recruiter User @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
-  engineer  User @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
+enum JobStatus {
+  OPEN
+  UNPUBLISHED
+  DELETED
+  DRAFT
+  PAUSED
+  CLOSED
+}
 
-  @@unique([recruiterId, engineerId])
-  @@index([recruiterId])
-  @@index([engineerId])
-  @@index([source])
-  @@index([createdAt])
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum PlanTier {
+  FREE
+  STARTER
+  GROWTH
+  SCALE
+}
+
+enum Role {
+  SEEKER
+  RECRUITER
+}
+
+enum SeekingStatus {
+  ACTIVELY_LOOKING
+  OPEN_TO_OFFERS
+  NOT_LOOKING
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum WorkType {
+  REMOTE
+  HYBRID
+  ONSITE
 }
