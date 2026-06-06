@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { AlertCircle } from "lucide-react"
@@ -50,6 +51,7 @@ export function PlanChangeModal({
   targetPlanId,
   onSuccess,
 }: PlanChangeModalProps) {
+  const { update } = useSession()
   const [preview, setPreview] = useState<PreviewData | null>(null)
   const [previewError, setPreviewError] = useState(false)
   const [loadingPreview, setLoadingPreview] = useState(false)
@@ -94,6 +96,8 @@ export function PlanChangeModal({
           ? `Plan upgraded to ${targetPlan}!`
           : `Downgrade to ${targetPlan} scheduled.`
       toast.success(msg)
+      // Force JWT refresh so sidebar plan badge reflects the change immediately
+      await update()
       onSuccess?.()
       onOpenChange(false)
     } catch {

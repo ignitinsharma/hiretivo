@@ -143,13 +143,16 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         if (token.sub) {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            select: { emailVerified: true, image: true },
+            select: { emailVerified: true, image: true, plan: true },
           });
           if (dbUser) {
             token.emailVerified = dbUser.emailVerified ?? null;
             if (token.image === undefined) {
               token.image = dbUser.image ?? null;
             }
+            // Always sync plan from DB on update trigger so the JWT reflects
+            // plan changes (e.g. after an in-app upgrade via changePlan)
+            token.plan = dbUser.plan;
           }
         }
       }
