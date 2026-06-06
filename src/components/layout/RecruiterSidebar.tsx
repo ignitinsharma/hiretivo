@@ -95,13 +95,17 @@ function RecruiterSidebarInner({
 
   // Read plan from subscription-status (DB-backed) so the badge stays accurate
   // after in-app plan changes without requiring a logout/login cycle.
-  const { data: subscriptionStatus } = useQuery({
+  const { data: subscriptionStatus, isLoading: planLoading } = useQuery({
     queryKey: ["subscription-status"],
     queryFn: billingService.getSubscriptionStatus,
     staleTime: 60_000,
     enabled: !!session?.user,
   });
-  const currentPlan = subscriptionStatus?.plan ?? (session?.user?.plan as PlanTier | undefined) ?? PlanTier.FREE;
+  // Prefer DB-backed plan; fall back to JWT plan; null = still resolving (show skeleton)
+  const currentPlan: PlanTier | null =
+    subscriptionStatus?.plan
+    ?? (session?.user?.plan as PlanTier | undefined)
+    ?? (planLoading && session?.user ? null : PlanTier.FREE);
   const planLabel =
     currentPlan === PlanTier.SCALE ? "Scale"
     : currentPlan === PlanTier.GROWTH ? "Growth"
@@ -167,16 +171,20 @@ function RecruiterSidebarInner({
                 className="flex min-w-0 flex-1 flex-col items-start gap-2"
               >
                 <Logo />
-                <span
-                  className={cn(
-                    "inline-flex max-w-full items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
-                    isPaidPlan
-                      ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
-                      : "border-brand-border bg-brand-surface text-brand-foreground-muted",
-                  )}
-                >
-                  {planLabel}
-                </span>
+                {currentPlan === null ? (
+                  <span className="h-4 w-14 animate-pulse rounded-md bg-brand-surface" aria-hidden />
+                ) : (
+                  <span
+                    className={cn(
+                      "inline-flex max-w-full items-center rounded-lg border px-2 py-px text-[10px] font-semibold uppercase tracking-wide",
+                      isPaidPlan
+                        ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary/90"
+                        : "border-brand-border bg-brand-surface text-brand-foreground-muted",
+                    )}
+                  >
+                    {planLabel}
+                  </span>
+                )}
               </Link>
               <SidebarToggle className="shrink-0" />
             </>
