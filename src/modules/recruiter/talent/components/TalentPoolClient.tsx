@@ -184,7 +184,7 @@ function TalentCard({
             <Button
               type="button"
               onClick={() => onView(talent.id)}
-              variant="primary"
+              variant="secondary"
               className="flex-1"
             >
               View Profile
@@ -195,7 +195,7 @@ function TalentCard({
                   <TooltipTrigger asChild>
                     <Button
                       type="button"
-                      variant="primary"
+                      variant="secondary"
                       size="icon"
                       onClick={copyEmail}
                       aria-label={`Copy email for ${talent.name ?? "talent"}`}
@@ -392,7 +392,10 @@ export function TalentPoolClient(): ReactElement {
                     if (isFreePlan) goToPricing();
                   }}
                   placeholder="Search candidates by name, role, skill, location, availability, company, or education"
-                  className={cn("pr-10 pl-10", isFreePlan && "cursor-not-allowed opacity-50")}
+                  className={cn(
+                    "pr-10 pl-10",
+                    isFreePlan && "cursor-not-allowed opacity-50",
+                  )}
                   readOnly={isFreePlan}
                 />
                 {searchInput && !isFreePlan && (
