@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (user?.passwordHash) {
-    sendPasswordResetEmail(parsed.data.email).catch((err: unknown) => {
+    await sendPasswordResetEmail(parsed.data.email).catch((err: unknown) => {
       console.error('[reset-password] send failed (non-fatal):', err);
     });
   }
