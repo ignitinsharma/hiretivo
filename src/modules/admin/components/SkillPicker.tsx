@@ -49,7 +49,7 @@ export function SkillPicker({
   }, []);
 
   const { data: skills = [], isLoading: skillsLoading } = useQuery({
-    queryKey: ["skills-all"],
+    queryKey: ["skills"],
     queryFn: skillService.getSkills,
     staleTime: 5 * 60 * 1000,
   });
@@ -79,7 +79,7 @@ export function SkillPicker({
       return skillService.createSkill({ name, slug, category: "Other" });
     },
     onSuccess: (newSkill) => {
-      queryClient.invalidateQueries({ queryKey: ["skills-all"] });
+      queryClient.invalidateQueries({ queryKey: ["skills"] });
       onChange([...selectedSkillIds, newSkill.id]);
       setSkillSearch("");
       setShowSkillDropdown(false);

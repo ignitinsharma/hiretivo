@@ -137,6 +137,7 @@ export default function RecruiterApplicationsPage() {
   const statsQuery = useQuery({
     queryKey: ["recruiter-application-stats", jobId],
     queryFn: () => fetchRecruiterStats(jobId),
+    staleTime: 5 * 60_000,
   });
 
   const applicationsQuery = useQuery({

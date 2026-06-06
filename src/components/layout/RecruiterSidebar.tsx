@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
@@ -13,8 +13,8 @@ import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { signOut } from "next-auth/react";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
-import { apiClient } from "@/lib/axios";
 import { billingService } from "@/services/billing.service";
+import { recruiterService } from "@/services/recruiter.service";
 import {
   Tooltip,
   TooltipContent,
@@ -91,7 +91,6 @@ function RecruiterSidebarInner({
 }) {
   const pathname = usePathname();
   const { data: session, status: sessionStatus } = useSession();
-  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
 
   // Read plan from subscription-status (DB-backed) so the badge stays accurate
   // after in-app plan changes without requiring a logout/login cycle.
@@ -101,6 +100,16 @@ function RecruiterSidebarInner({
     staleTime: 60_000,
     enabled: !!session?.user,
   });
+
+  // Share cache with RecruiterSettingsClient — same key avoids redundant network call.
+  const { data: settingsData } = useQuery({
+    queryKey: ["recruiter-settings"],
+    queryFn: recruiterService.getSettings,
+    staleTime: 60_000,
+    enabled: !!session?.user,
+  });
+
+  const companyLogo = settingsData?.data?.logo ?? null;
 
   /*
    * currentPlan derivation — three phases must all resolve before showing a label:
@@ -124,20 +133,6 @@ function RecruiterSidebarInner({
     : "Free";
   const isPaidPlan =
     currentPlan === PlanTier.STARTER || currentPlan === PlanTier.GROWTH || currentPlan === PlanTier.SCALE;
-
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const { data } = await apiClient.get<{
-          data: { logo: string | null; companyName: string };
-        }>("/recruiter/settings");
-        if (data?.data?.logo) {
-          setCompanyLogo(data.data.logo);
-        }
-      } catch {}
-    }
-    fetchSettings();
-  }, []);
 
   const userName = session?.user?.name ?? "Recruiter";
   const initials =

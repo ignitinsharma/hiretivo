@@ -67,7 +67,7 @@ export function AdminJobSection({ form }: Props) {
   const description = watch("description");
 
   const { data: skills = [] } = useQuery({
-    queryKey: ["skills-all"],
+    queryKey: ["skills"],
     queryFn: skillService.getSkills,
     staleTime: 5 * 60 * 1000,
   });
