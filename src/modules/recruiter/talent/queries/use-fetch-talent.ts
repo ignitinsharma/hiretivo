@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, keepPreviousData } from '@tanstack/react-query';
 
 import {
   recruiterService,
@@ -15,31 +15,49 @@ export interface TalentFilters {
 
 const TALENT_QUERY_KEY = 'recruiter-talent';
 
-/**
- * Converts UI filters into the API parameter shape.
+/*
+ * PAGE_LIMIT
+ * Candidates fetched per page. Matches backend DEFAULT_LIMIT.
+ * Changing this here is enough — no backend change needed.
  */
-function toTalentParams(filters: TalentFilters): RecruiterTalentParams {
-  const params: RecruiterTalentParams = { page: 1, limit: 24 };
+const PAGE_LIMIT = 12;
 
-  if (filters.q.trim()) params.q = filters.q.trim();
-
-  return params;
-}
-
-/**
- * Fetches the paid recruiter Talent Pool list.
+/*
+ * useFetchTalent
+ * Fetches the paid recruiter Talent Pool list with infinite Load More pagination.
+ * Data lives in data.pages[n] — flatten with pages.flatMap(p => p.items) in consumers.
+ * Query key includes filters — any filter change resets to page 1 automatically.
+ * FREE plan: getNextPageParam returns undefined (no pagination for blurred grid).
+ * @param filters - Current search/filter state
  */
 export function useFetchTalent(filters: TalentFilters) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: [TALENT_QUERY_KEY, filters],
-    queryFn: () => recruiterService.getTalent(toTalentParams(filters)),
-    placeholderData: (previousData) => previousData,
+    queryFn: ({ pageParam }) => {
+      const params: RecruiterTalentParams = {
+        page: pageParam,
+        limit: PAGE_LIMIT,
+      };
+      if (filters.q.trim()) params.q = filters.q.trim();
+      return recruiterService.getTalent(params);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // FREE plan returns isFreePlan:true — no pagination for blurred grid.
+      if (lastPage.isFreePlan) return undefined;
+      const fetched = lastPage.page * lastPage.limit;
+      return fetched < lastPage.total ? lastPage.page + 1 : undefined;
+    },
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 }
 
-/**
+/*
+ * useFetchTalentDetail
  * Fetches one expanded Talent Pool candidate profile.
+ * Unchanged — used by TalentProfileDialog.
+ * @param seekerId - Seeker ID or null (query disabled when null)
  */
 export function useFetchTalentDetail(seekerId: string | null) {
   return useQuery({
