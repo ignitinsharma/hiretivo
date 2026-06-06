@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
         data: {
           direction: "downgrade" as const,
           chargeToday: 0,
-          currency: "USD",
+          // currency omitted — chargeToday is always 0 for downgrades (do_not_bill mode)
           currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
         },
       },
