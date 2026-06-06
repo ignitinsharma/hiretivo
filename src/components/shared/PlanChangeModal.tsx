@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { billingService } from "@/services/billing.service"
+import type { BillingPeriod } from "@/constants/enums"
 
 interface PlanChangeModalProps {
   open: boolean
@@ -18,6 +19,7 @@ interface PlanChangeModalProps {
   mode: "upgrade" | "downgrade"
   targetPlan: string
   targetPlanId: string
+  period?: BillingPeriod
   onSuccess?: () => void
 }
 
@@ -50,6 +52,7 @@ export function PlanChangeModal({
   mode,
   targetPlan,
   targetPlanId,
+  period,
   onSuccess,
 }: PlanChangeModalProps) {
   const { update } = useSession()
@@ -63,7 +66,7 @@ export function PlanChangeModal({
     setLoadingPreview(true)
     setPreviewError(false)
     try {
-      const result = await billingService.previewPlanChange(targetPlanId)
+      const result = await billingService.previewPlanChange(targetPlanId, period)
       setPreview({
         chargeToday: result.chargeToday,
         currency: result.currency ?? "USD",
@@ -92,7 +95,7 @@ export function PlanChangeModal({
   async function handleConfirm() {
     setConfirming(true)
     try {
-      await billingService.changePlan(targetPlanId)
+      await billingService.changePlan(targetPlanId, period)
       const msg =
         mode === "upgrade"
           ? `Plan upgraded to ${targetPlan}!`

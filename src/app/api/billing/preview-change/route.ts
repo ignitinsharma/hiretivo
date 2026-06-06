@@ -5,7 +5,7 @@ import {
   getPlanChangeDirection,
   getProductPeriod,
 } from "@/constants/billing";
-import { PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { BillingPeriod, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -63,9 +63,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  /* ── 4. Validate query param ── */
+  /* ── 4. Validate query params ── */
   const planId = req.nextUrl.searchParams.get("planId");
-  const parsed = ChangePlanRequestSchema.safeParse({ planId });
+  const periodParam = req.nextUrl.searchParams.get("period");
+  const parsed = ChangePlanRequestSchema.safeParse({
+    planId,
+    period: periodParam ?? undefined,
+  });
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
@@ -73,6 +77,7 @@ export async function GET(req: NextRequest) {
     );
   }
   const targetPricingTierId: PricingTierId = parsed.data.planId;
+  const requestedPeriod: BillingPeriod | undefined = parsed.data.period;
 
   /* ── 5. Load user + active subscription from DB ── */
   const user = await prisma.user.findUnique({
@@ -103,22 +108,38 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  /* ── 6. Determine change direction ── */
-  // Convert PricingTierId (lowercase, e.g. "starter") → PlanTier (uppercase, e.g. "STARTER")
-  // Cast user.plan from Prisma's PlanTier to our constants PlanTier (same string values)
+  /* ── 6. Determine change direction + resolve target period ── */
+  // Prisma PlanTier and local PlanTier share identical string values — double-cast is safe.
   const currentPlanTier = user.plan as unknown as PlanTier;
   const targetPlanTier = targetPricingTierId.toUpperCase() as PlanTier;
-  const direction = getPlanChangeDirection(currentPlanTier, targetPlanTier);
+  const planDirection = getPlanChangeDirection(currentPlanTier, targetPlanTier);
 
-  if (direction === "same") {
+  const currentPeriod = getProductPeriod(subscription.productId);
+  if (!currentPeriod) {
+    return NextResponse.json(
+      { error: "Plan not available for your billing period" },
+      { status: 400 },
+    );
+  }
+  // For downgrades, always keep the current period — never let the UI toggle change
+  // the billing cycle on a downgrade, to avoid accidental commitment changes.
+  const targetPeriod: BillingPeriod =
+    planDirection === "downgrade" ? currentPeriod : (requestedPeriod ?? currentPeriod);
+  const isSamePeriod = targetPeriod === currentPeriod;
+
+  // Block only when BOTH plan AND period are unchanged.
+  // Same plan + different period = valid period switch → treat as upgrade.
+  if (planDirection === "same" && isSamePeriod) {
     return NextResponse.json(
       { error: "Already on this plan" },
       { status: 400 },
     );
   }
+  const effectiveDirection: "upgrade" | "downgrade" =
+    planDirection === "same" ? "upgrade" : planDirection;
 
   /* ── 7. Downgrade: no immediate charge ── */
-  if (direction === "downgrade") {
+  if (effectiveDirection === "downgrade") {
     return NextResponse.json(
       {
         data: {
@@ -134,16 +155,7 @@ export async function GET(req: NextRequest) {
 
   /* ── 8. Upgrade: call Dodo previewChangePlan ── */
 
-  // Determine which Dodo product to upgrade to by matching the current billing period
-  const currentPeriod = getProductPeriod(subscription.productId);
-  if (!currentPeriod) {
-    return NextResponse.json(
-      { error: "Plan not available for your billing period" },
-      { status: 400 },
-    );
-  }
-
-  const targetProductId = getDodoProductId(targetPricingTierId, currentPeriod);
+  const targetProductId = getDodoProductId(targetPricingTierId, targetPeriod);
   if (!targetProductId) {
     return NextResponse.json(
       { error: "Plan not available for your billing period" },

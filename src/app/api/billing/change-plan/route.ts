@@ -6,7 +6,7 @@ import {
   getPlanChangeDirection,
   getProductPeriod,
 } from "@/constants/billing";
-import { PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { BillingPeriod, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     );
   }
   const targetPricingTierId: PricingTierId = parsed.data.planId;
+  const requestedPeriod: BillingPeriod | undefined = parsed.data.period;
 
   /* ── 6. Load user + active subscription from DB ── */
   const user = await prisma.user.findUnique({
@@ -107,19 +108,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  /* ── 7. Determine direction — server-side only, never trust client ── */
+  /* ── 7. Determine direction + resolve target period — server-side only ── */
   const currentPlanTier = user.plan as unknown as PlanTier;
   const targetPlanTier = targetPricingTierId.toUpperCase() as PlanTier;
-  const direction = getPlanChangeDirection(currentPlanTier, targetPlanTier);
+  const planDirection = getPlanChangeDirection(currentPlanTier, targetPlanTier);
 
-  if (direction === "same") {
-    return NextResponse.json(
-      { error: "Already on this plan" },
-      { status: 400 },
-    );
-  }
-
-  /* ── 8. Resolve target Dodo product ID (keep same billing period) ── */
   const currentPeriod = getProductPeriod(subscription.productId);
   if (!currentPeriod) {
     return NextResponse.json(
@@ -127,8 +120,24 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  // Downgrades always keep the current period — never switch billing cycle on a downgrade.
+  const targetPeriod: BillingPeriod =
+    planDirection === "downgrade" ? currentPeriod : (requestedPeriod ?? currentPeriod);
+  const isSamePeriod = targetPeriod === currentPeriod;
 
-  const targetProductId = getDodoProductId(targetPricingTierId, currentPeriod);
+  // Block only when BOTH plan AND period are unchanged.
+  // Same plan + different period = valid period switch → treat as upgrade.
+  if (planDirection === "same" && isSamePeriod) {
+    return NextResponse.json(
+      { error: "Already on this plan" },
+      { status: 400 },
+    );
+  }
+  const direction: "upgrade" | "downgrade" =
+    planDirection === "same" ? "upgrade" : planDirection;
+
+  /* ── 8. Resolve target Dodo product ID ── */
+  const targetProductId = getDodoProductId(targetPricingTierId, targetPeriod);
   if (!targetProductId) {
     return NextResponse.json(
       { error: "Plan not available for your billing period" },

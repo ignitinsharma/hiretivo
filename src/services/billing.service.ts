@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios';
-import type { PlanTier, SubscriptionStatus } from '@/constants/enums';
+import type { BillingPeriod, PlanTier, SubscriptionStatus } from '@/constants/enums';
 import type { CheckoutRequestInput } from '@/lib/validations/checkout.schema';
 
 export interface SubscriptionStatusData {
@@ -55,18 +55,19 @@ export const billingService = {
    * @param planId - Target plan product ID
    * @returns Preview data including direction, chargeToday, currentPeriodEnd, optional currency
    */
-  previewPlanChange: async (planId: string): Promise<{
+  previewPlanChange: async (planId: string, period?: BillingPeriod): Promise<{
     direction: "upgrade" | "downgrade";
     chargeToday: number;
     currentPeriodEnd: string;
     currency?: string;
   }> => {
+    const url = `/billing/preview-change?planId=${planId}${period ? `&period=${period}` : ""}`;
     const { data } = await apiClient.get<DataResponse<{
       direction: "upgrade" | "downgrade";
       chargeToday: number;
       currentPeriodEnd: string;
       currency?: string;
-    }>>(`/billing/preview-change?planId=${planId}`);
+    }>>(url);
     return data.data;
   },
 
@@ -74,9 +75,10 @@ export const billingService = {
    * changePlan
    * Executes an immediate upgrade or schedules a downgrade at period end.
    * @param planId - Target plan product ID
+   * @param period - Optional billing period; when provided, the target product uses this period
    * @returns direction and optional scheduledChangeAt (ISO string) for downgrades
    */
-  changePlan: async (planId: string): Promise<{
+  changePlan: async (planId: string, period?: BillingPeriod): Promise<{
     direction: "upgrade" | "downgrade";
     scheduledChangeAt?: string;
     upgradedPlan?: string;
@@ -85,7 +87,7 @@ export const billingService = {
       direction: "upgrade" | "downgrade";
       scheduledChangeAt?: string;
       upgradedPlan?: string;
-    }>>('/billing/change-plan', { planId });
+    }>>('/billing/change-plan', { planId, ...(period ? { period } : {}) });
     return data.data;
   },
 };

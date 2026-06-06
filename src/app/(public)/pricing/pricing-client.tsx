@@ -55,7 +55,6 @@ const FEATURE_ROWS: FeatureRow[] = [
   { feature: "Interview scheduling", free: true, starter: true, growth: true, scale: true },
   { feature: "Talent pool access", free: null, starter: true, growth: true, scale: true },
   { feature: "Priority support", free: null, starter: true, growth: true, scale: true },
-  { feature: "Team seats", free: "1", starter: "1", growth: "3", scale: "5" },
 ];
 
 // ─── FAQ data ─────────────────────────────────────────────────────────────────
@@ -365,6 +364,7 @@ export function PricingClient() {
     mode: "upgrade" | "downgrade";
     targetPlan: string;
     targetPlanId: string;
+    period: BillingPeriod;
   } | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
@@ -434,6 +434,7 @@ export function PricingClient() {
         mode,
         targetPlan: TIER_NAMES[tierId] ?? tierId,
         targetPlanId: tierId,
+        period: isAnnual ? BillingPeriod.ANNUAL : BillingPeriod.MONTHLY,
       });
       return;
     }
@@ -529,6 +530,7 @@ export function PricingClient() {
           mode={planChangeModal.mode}
           targetPlan={planChangeModal.targetPlan}
           targetPlanId={planChangeModal.targetPlanId}
+          period={planChangeModal.period}
           onSuccess={() => {
             setPlanChangeModal(null);
             // Refresh session so userPlan updates

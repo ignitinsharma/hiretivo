@@ -27,6 +27,9 @@ export type CheckoutRequestInput = z.infer<typeof CheckoutRequestSchema>;
  */
 export const ChangePlanRequestSchema = z.object({
   planId: z.enum([PricingTierId.STARTER, PricingTierId.GROWTH, PricingTierId.SCALE]),
+  // Optional — when provided, the target Dodo product uses this period instead of
+  // the user's current subscription period. Omit to preserve current period.
+  period: z.enum(BILLING_PERIOD_VALUES).optional(),
 });
 
 export type ChangePlanRequestInput = z.infer<typeof ChangePlanRequestSchema>;
