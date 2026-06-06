@@ -8,6 +8,8 @@ export interface SubscriptionStatusData {
     status: SubscriptionStatus;
     currentPeriodEnd: string;
     cancelAtPeriodEnd: boolean;
+    scheduledPlan: string | null;
+    scheduledChangeAt: string | null;
   } | null;
 }
 
@@ -45,5 +47,43 @@ export const billingService = {
   createBoostCheckoutSession: async (jobId: string): Promise<string> => {
     const { data } = await apiClient.post<DataResponse<BillingSessionData>>('/billing/boost-checkout', { jobId });
     return getBillingUrl(data);
+  },
+
+  /*
+   * previewPlanChange
+   * Fetches a preview of switching to a given plan: direction, charge today, and period end.
+   * @param planId - Target plan product ID
+   * @returns Preview data including direction, chargeToday, currentPeriodEnd, optional currency
+   */
+  previewPlanChange: async (planId: string): Promise<{
+    direction: "upgrade" | "downgrade";
+    chargeToday: number;
+    currentPeriodEnd: string;
+    currency?: string;
+  }> => {
+    const { data } = await apiClient.get<DataResponse<{
+      direction: "upgrade" | "downgrade";
+      chargeToday: number;
+      currentPeriodEnd: string;
+      currency?: string;
+    }>>(`/billing/preview-change?planId=${planId}`);
+    return data.data;
+  },
+
+  /*
+   * changePlan
+   * Executes an immediate upgrade or schedules a downgrade at period end.
+   * @param planId - Target plan product ID
+   * @returns direction and optional scheduledChangeAt (ISO string) for downgrades
+   */
+  changePlan: async (planId: string): Promise<{
+    direction: "upgrade" | "downgrade";
+    scheduledChangeAt?: string;
+  }> => {
+    const { data } = await apiClient.post<DataResponse<{
+      direction: "upgrade" | "downgrade";
+      scheduledChangeAt?: string;
+    }>>('/billing/change-plan', { planId });
+    return data.data;
   },
 };
