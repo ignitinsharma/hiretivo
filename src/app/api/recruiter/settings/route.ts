@@ -30,6 +30,7 @@ export async function GET() {
       image: true,
       plan: true,
       billingCustomerId: true,
+      accounts: { select: { provider: true } },
       recruiterProfile: {
         select: {
           companyName: true,
@@ -52,11 +53,14 @@ export async function GET() {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
+  const hasGoogleAccount = user.accounts.some((a) => a.provider === "google");
+  const isEmailVerified = Boolean(user.emailVerified) || hasGoogleAccount;
+
   return NextResponse.json({
     data: {
       name: user.name ?? "",
       email: user.email ?? "",
-      emailVerified: user.emailVerified?.toISOString() ?? null,
+      isEmailVerified,
       image: resolveLogoUrl(user.image),
       plan: user.plan,
       billingCustomerId: user.billingCustomerId,

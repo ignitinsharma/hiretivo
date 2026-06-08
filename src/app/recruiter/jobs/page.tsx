@@ -551,16 +551,38 @@ export default function RecruiterJobsPage() {
                   </td>
                 </tr>
               ) : jobs.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-8 text-center text-slate-400 text-sm"
-                  >
-                    {debouncedSearch || statusFilter || categoryFilter
-                      ? "No jobs match your filters."
-                      : "No jobs posted yet. Click &quot;Post New Job&quot; to get started."}
-                  </td>
-                </tr>
+                debouncedSearch || statusFilter || categoryFilter ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-6 py-8 text-center text-slate-400 text-sm"
+                    >
+                      No jobs match your filters.
+                    </td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Briefcase className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            No jobs posted yet
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Click the button below to post your first job listing.
+                          </p>
+                        </div>
+                        <Button onClick={openPostJobModal}>
+                          <Plus className="w-4 h-4" />
+                          Post New Job
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                )
               ) : (
                 jobs.map((job) => (
                   <JobRow

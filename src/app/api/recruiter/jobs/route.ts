@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { UserRole } from '@/constants/enums';
+import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { dataFetchRateLimiter } from '@/lib/rate-limit';
 
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   }
 
   const jobs = await prisma.job.findMany({
-    where: { recruiterId: session.user.id },
+    where: { recruiterId: session.user.id, NOT: { status: JobStatus.DELETED } },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,

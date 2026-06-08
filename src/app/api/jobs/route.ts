@@ -39,7 +39,10 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
   const safeLimit = Math.min(Math.max(limit, 1), 100);
 
-  const where: Record<string, unknown> = { recruiterId: session.user.id };
+  const where: Record<string, unknown> = {
+    recruiterId: session.user.id,
+    NOT: { status: JobStatus.DELETED },
+  };
 
   if (status) where.status = status;
   if (category && category !== 'All') where.category = category;
@@ -64,7 +67,7 @@ export async function GET(req: NextRequest) {
       take: safeLimit,
     }),
     prisma.job.count({ where }),
-    prisma.job.count({ where: { recruiterId } }),
+    prisma.job.count({ where: { recruiterId, NOT: { status: JobStatus.DELETED } } }),
     prisma.job.count({ where: { recruiterId, status: JobStatus.OPEN } }),
     prisma.application.count({
       where: { job: { recruiterId } },

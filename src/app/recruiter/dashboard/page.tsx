@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ActiveJobsList } from "@/modules/recruiter/dashboard/components/ActiveJobsList";
@@ -122,6 +123,11 @@ function getGreeting(): string {
 export default function RecruiterDashboardPage() {
   const { data: session } = useSession();
   const { data, isLoading } = useFetchRecruiterDashboard();
+  const [greeting, setGreeting] = useState<string | null>(null);
+
+  useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
@@ -129,7 +135,6 @@ export default function RecruiterDashboardPage() {
     {
       label: "Active Jobs",
       value: data?.activeJobsCount ?? 0,
-      trend: "+5%",
       icon: <Briefcase className="w-5 h-5" />,
     },
     {
@@ -152,10 +157,17 @@ export default function RecruiterDashboardPage() {
 
   return (
     <div className="w-full p-8 space-y-8">
-      <PageHeader
-        title={`${getGreeting()}, ${firstName}.`}
-        subtitle="Here's what's happening with your recruitment pipeline today."
-      />
+      {greeting ? (
+        <PageHeader
+          title={`${greeting}, ${firstName}.`}
+          subtitle="Here's what's happening with your recruitment pipeline today."
+        />
+      ) : (
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+      )}
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {isLoading

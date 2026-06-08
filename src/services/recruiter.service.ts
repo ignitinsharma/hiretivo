@@ -45,7 +45,7 @@ export interface UpcomingInterviewItem {
 export interface RecruiterSettingsData {
   name: string;
   email: string;
-  emailVerified: string | null;
+  isEmailVerified: boolean;
   image: string | null;
   plan: PlanTier;
   billingCustomerId: string | null;

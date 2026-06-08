@@ -316,7 +316,8 @@ export function TalentPoolClient(): ReactElement {
   const isSearchRefreshing =
     talentQuery.isFetching &&
     !talentQuery.isFetchingNextPage &&
-    !talentQuery.isLoading;
+    !talentQuery.isLoading &&
+    unlockingId === null;
 
   // Error on initial load (no data) vs error after partial load (keep existing cards).
   const hasLoadedSome = allPages.length > 0;

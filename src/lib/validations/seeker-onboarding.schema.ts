@@ -161,6 +161,20 @@ export interface EducationEntry {
 // ---------------------------------------------------------------------------
 
 /*
+ * isValidHttpUrl
+ * Returns true if the given string is a valid http or https URL.
+ * Used by manual validation helpers to check optional link fields.
+ */
+function isValidHttpUrl(url: string): boolean {
+  try {
+    const { protocol } = new URL(url);
+    return protocol === 'https:' || protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+/*
  * httpUrl enforces http/https protocol — blocks javascript:, data:, and other XSS vectors
  * that z.string().url() alone allows.
  */
@@ -234,6 +248,7 @@ export interface Step3Input {
  */
 export function validateSeekerStep3(data: Step3Input): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
+
   if (!data.githubUrl?.trim()) {
     errors.push('GitHub profile URL is required');
   } else {
@@ -242,17 +257,37 @@ export function validateSeekerStep3(data: Step3Input): { valid: boolean; errors:
       errors.push('Please enter a valid GitHub profile URL (e.g. https://github.com/username)');
     }
   }
+
+  if (!data.linkedinUrl?.trim()) {
+    errors.push('LinkedIn URL is required');
+  } else if (!isValidHttpUrl(data.linkedinUrl.trim())) {
+    errors.push('LinkedIn URL must start with https:// (e.g. https://linkedin.com/in/yourname)');
+  }
+
+  if (!data.websiteUrl?.trim()) {
+    errors.push('Portfolio / Website URL is required');
+  } else if (!isValidHttpUrl(data.websiteUrl.trim())) {
+    errors.push('Portfolio URL must start with https:// (e.g. https://yourwebsite.com)');
+  }
+
+  if (!data.videoIntroUrl?.trim()) {
+    errors.push('Short intro video URL is required');
+  } else if (!isValidHttpUrl(data.videoIntroUrl.trim())) {
+    errors.push('Video URL must start with https:// (e.g. https://loom.com/share/...)');
+  }
+
   if (!data.projects || data.projects.length === 0) {
     errors.push('Add at least one project');
   } else {
-    for (const project of data.projects) {
+    data.projects.forEach((project, i) => {
       const result = projectEntrySchema.safeParse(project);
       if (!result.success) {
-        errors.push(result.error.issues[0]?.message ?? 'Invalid project entry');
-        break;
+        const msg = result.error.issues[0]?.message ?? 'Invalid project entry';
+        errors.push(`Project ${i + 1}: ${msg}`);
       }
-    }
+    });
   }
+
   return { valid: errors.length === 0, errors };
 }
 
@@ -262,7 +297,7 @@ export function validateSeekerStep3(data: Step3Input): { valid: boolean; errors:
  */
 export interface Step4Input {
   workExperiences: WorkExperienceEntry[];
-  educations?: EducationEntry[];
+  educations: EducationEntry[];
 }
 
 /*
@@ -273,6 +308,7 @@ export interface Step4Input {
  */
 export function validateSeekerStep4Experience(data: Step4Input): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
+
   if (!data.workExperiences || data.workExperiences.length === 0) {
     errors.push('Add at least one work experience');
   } else {
@@ -284,6 +320,19 @@ export function validateSeekerStep4Experience(data: Step4Input): { valid: boolea
       }
     }
   }
+
+  if (!data.educations || data.educations.length === 0) {
+    errors.push('Add at least one education entry');
+  } else {
+    for (const edu of data.educations) {
+      const result = educationEntrySchema.safeParse(edu);
+      if (!result.success) {
+        errors.push(result.error.issues[0]?.message ?? 'Invalid education entry');
+        break;
+      }
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }
 

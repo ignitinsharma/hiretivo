@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
-import { PageSkeleton } from "@/components/shared/PageSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationStatus, PlanTier } from "@/constants/enums";
 import { getStageLabel } from "@/lib/application-pipeline";
 import {
@@ -189,14 +189,6 @@ export default function RecruiterApplicationsPage() {
     [statsQuery.data],
   );
 
-  if (statsQuery.isLoading || applicationsQuery.isLoading) {
-    return (
-      <div className="w-full p-8">
-        <PageSkeleton lines={8} showHeader={true} showFilters={true} />
-      </div>
-    );
-  }
-
   const handleStageFilter = (stage: ApplicationStatus | null) => {
     setStageFilter(stage);
     setCursor(null);
@@ -272,7 +264,17 @@ export default function RecruiterApplicationsPage() {
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {metricCards.map((card) => {
+        {statsQuery.isLoading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="min-h-[170px] p-5 rounded-xl bg-white border border-slate-200 flex flex-col justify-between"
+              >
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <Skeleton className="h-10 w-16" />
+              </div>
+            ))
+          : metricCards.map((card) => {
           const isActive = stageFilter === card.stage;
           const isPrimary = card.variant === "primary";
           const showSparkline = card.value > 0;
@@ -360,7 +362,32 @@ export default function RecruiterApplicationsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {applications.map((application, index) => {
+              {applicationsQuery.isLoading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center space-x-4">
+                          <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-5 w-32" />
+                            <Skeleton className="h-3 w-40" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-8 py-6">
+                        <div className="flex gap-1.5">
+                          <Skeleton className="h-6 w-14 rounded" />
+                          <Skeleton className="h-6 w-14 rounded" />
+                          <Skeleton className="h-6 w-14 rounded" />
+                        </div>
+                      </td>
+                      <td className="px-8 py-6"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-8 py-6"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                      <td className="px-8 py-6 text-right"><Skeleton className="h-7 w-12 ml-auto" /></td>
+                    </tr>
+                  ))
+                : applications.map((application, index) => {
                 const isLocked = recruiterPlan === PlanTier.FREE && index >= 20;
                 const { visible, hiddenCount } = getVisibleSkills(
                   application.candidateProfile?.skills ?? [],

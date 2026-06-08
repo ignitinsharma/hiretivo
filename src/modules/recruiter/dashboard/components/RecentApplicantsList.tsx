@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ApplicationStatus } from "@/constants/enums";
@@ -118,9 +119,19 @@ export function RecentApplicantsList({
             </div>
           ))
         ) : applicants.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center py-8">
-            No applicants yet
-          </p>
+          <div className="flex flex-col items-center justify-center gap-3 h-full">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-slate-900">
+                No applicants yet
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Applications appear here once seekers apply.
+              </p>
+            </div>
+          </div>
         ) : (
           applicants.map((applicant) => (
             <ApplicantRow key={applicant.id} applicant={applicant} />

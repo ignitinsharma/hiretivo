@@ -30,7 +30,7 @@ export function RecruiterProfileSection({
     resolver: zodResolver(RecruiterProfileSettingsSchema),
     defaultValues: settings,
   });
-  const isEmailVerified = Boolean(settings.emailVerified);
+  const isEmailVerified = settings.isEmailVerified;
 
   useEffect(() => {
     form.reset(settings);
