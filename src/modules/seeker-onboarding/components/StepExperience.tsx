@@ -174,23 +174,26 @@ interface EducationRowProps {
   index: number;
   onChange: (index: number, updated: EducationEntry) => void;
   onRemove: (index: number) => void;
+  showRemove: boolean;
 }
 
-function EducationRow({ edu, index, onChange, onRemove }: EducationRowProps) {
+function EducationRow({ edu, index, onChange, onRemove, showRemove }: EducationRowProps) {
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-brand-foreground">
           Education {index + 1}
         </span>
-        <button
-          type="button"
-          onClick={() => onRemove(index)}
-          className="p-1 rounded-lg text-brand-foreground-muted hover:text-brand-danger hover:bg-brand-danger/10 transition-colors"
-          aria-label="Remove education"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {showRemove && (
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            className="p-1 rounded-lg text-brand-foreground-muted hover:text-brand-danger hover:bg-brand-danger/10 transition-colors"
+            aria-label="Remove education"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <div className="space-y-1.5">
@@ -260,14 +263,16 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
 
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [showEducation, setShowEducation] = useState(
-    experience.educations.length > 0
-  );
 
   const workExperiences =
     experience.workExperiences.length > 0
       ? experience.workExperiences
       : [{ ...EMPTY_WORK }];
+
+  const educations =
+    experience.educations.length > 0
+      ? experience.educations
+      : [{ ...EMPTY_EDUCATION }];
 
   const handleWorkChange = (index: number, updated: WorkExperienceEntry) => {
     if (index < experience.workExperiences.length) {
@@ -291,12 +296,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
   };
 
   const handleAddEducation = () => {
-    if (!showEducation) {
-      setShowEducation(true);
-      addEducation({ ...EMPTY_EDUCATION });
-    } else {
-      addEducation({ ...EMPTY_EDUCATION });
-    }
+    addEducation({ ...EMPTY_EDUCATION });
   };
 
   const handleContinue = async () => {
@@ -307,9 +307,12 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
         ? experience.workExperiences
         : workExperiences;
 
+    const eduToSave =
+      experience.educations.length > 0 ? experience.educations : educations;
+
     const validation = validateSeekerStep4Experience({
       workExperiences: workToSave,
-      educations: experience.educations,
+      educations: eduToSave,
     });
 
     if (!validation.valid) {
@@ -323,7 +326,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
     try {
       const result = await saveExperience({
         workExperiences: workToSave,
-        educations: experience.educations,
+        educations: eduToSave,
       });
 
       if (!result.success) {
@@ -382,28 +385,24 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
             </button>
           </div>
 
-          {/* Education */}
+          {/* Education — required */}
           <div className="space-y-3">
             <label className="text-sm font-medium text-brand-foreground">
-              Education{" "}
-              <span className="text-brand-foreground-secondary text-xs font-normal">
-                (optional)
-              </span>
+              Education <span className="text-brand-danger">*</span>
             </label>
 
-            {showEducation && experience.educations.length > 0 && (
-              <div className="space-y-3">
-                {experience.educations.map((edu, index) => (
-                  <EducationRow
-                    key={index}
-                    edu={edu}
-                    index={index}
-                    onChange={handleEduChange}
-                    onRemove={removeEducation}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="space-y-3">
+              {educations.map((edu, index) => (
+                <EducationRow
+                  key={index}
+                  edu={edu}
+                  index={index}
+                  onChange={handleEduChange}
+                  onRemove={removeEducation}
+                  showRemove={educations.length > 1}
+                />
+              ))}
+            </div>
 
             <button
               type="button"
@@ -416,9 +415,13 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
           </div>
 
           {errors.length > 0 && (
-            <p className="text-sm text-brand-danger text-center">
-              {errors[0]}
-            </p>
+            <div className="space-y-1">
+              {errors.map((err, i) => (
+                <p key={i} className="text-sm text-brand-danger text-center">
+                  {err}
+                </p>
+              ))}
+            </div>
           )}
         </div>
 
