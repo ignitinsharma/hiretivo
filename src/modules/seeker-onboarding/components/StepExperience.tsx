@@ -17,8 +17,8 @@ import { saveExperience } from "@/app/actions/onboarding/seeker";
 /*
  * StepExperience
  * Step 4 of seeker onboarding — Experience & Education.
- * Captures at least one work experience entry (required) and required education entries (≥1).
- * Save is stubbed — Task 7 will wire the real saveExperience action.
+ * Captures at least one work experience entry (required) and at least one education entry (required, ≥1).
+ * Calls the saveExperience server action on continue; advances to step 5 on success.
  */
 interface StepExperienceProps {
   onNext: () => void;

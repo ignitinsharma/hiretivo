@@ -668,6 +668,9 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
       primaryRole: true,
       availability: true,
       githubUrl: true,
+      linkedinUrl: true,
+      websiteUrl: true,
+      videoIntroUrl: true,
       topProjects: true,
       resumeKey: true,
       headline: true,
@@ -678,6 +681,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
         select: {
           skills: true,
           workExperiences: true,
+          educations: true,
         },
       },
     },
@@ -720,6 +724,11 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     };
   }
 
+  // Step 3 continued: LinkedIn, portfolio, and video intro are required
+  if (!profile.linkedinUrl || !profile.websiteUrl || !profile.videoIntroUrl) {
+    return { success: false, error: "Add your LinkedIn, portfolio, and video intro first.", missingStep: 3 };
+  }
+
   // Step 4: at least 1 work experience
   if (profile._count.workExperiences === 0) {
     return {
@@ -727,6 +736,11 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
       error: "Add at least one work experience first.",
       missingStep: 4,
     };
+  }
+
+  // Step 4 continued: at least 1 education entry required
+  if (profile._count.educations === 0) {
+    return { success: false, error: "Add at least one education entry first.", missingStep: 4 };
   }
 
   // Step 5: resume, headline, bio, availability, salaryMinUsd

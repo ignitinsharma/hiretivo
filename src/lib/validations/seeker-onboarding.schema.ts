@@ -234,9 +234,9 @@ export const educationEntrySchema = z.object({
  */
 export interface Step3Input {
   githubUrl: string;
-  linkedinUrl?: string | null;
-  websiteUrl?: string | null;
-  videoIntroUrl?: string | null;
+  linkedinUrl: string;
+  websiteUrl: string;
+  videoIntroUrl: string;
   projects: ProjectEntry[];
 }
 

@@ -152,9 +152,9 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
 
     const validation = validateSeekerStep3({
       githubUrl: proofOfWork.githubUrl,
-      linkedinUrl: proofOfWork.linkedinUrl,
-      websiteUrl: proofOfWork.websiteUrl,
-      videoIntroUrl: proofOfWork.videoIntroUrl,
+      linkedinUrl: proofOfWork.linkedinUrl ?? "",
+      websiteUrl: proofOfWork.websiteUrl ?? "",
+      videoIntroUrl: proofOfWork.videoIntroUrl ?? "",
       projects: projectsToSave,
     });
 
