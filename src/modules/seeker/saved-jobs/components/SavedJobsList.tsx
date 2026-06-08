@@ -22,6 +22,17 @@ export function SavedJobsList() {
   const { openApplyModal } = useUIStore();
   const { data: hiretvoStatus } = useHiretvoVerificationStatus();
   const { data: savedJobs, isLoading, isError } = useSavedJobs();
+
+  const getApplyLockedLabel = (): string | undefined => {
+    if (!hiretvoStatus) return undefined;
+    if (hiretvoStatus.isVerified) return undefined;
+    if (hiretvoStatus.notSubmitted) return "Submit for verification";
+    if (hiretvoStatus.isPending) return "Verification pending";
+    if (hiretvoStatus.isRejected) return "Verification rejected";
+    return undefined;
+  };
+
+  const applyLockedLabel = getApplyLockedLabel();
   const unsaveMutation = useUnsaveJob();
 
   const handleRemove = (jobId: string): void => {
@@ -101,6 +112,11 @@ export function SavedJobsList() {
             job={savedJob.job}
             isSaved
             showDescription
+            applyLockedLabel={
+              savedJob.application || savedJob.job.isClosed
+                ? undefined
+                : applyLockedLabel
+            }
             onApply={
               savedJob.application || savedJob.job.isClosed
                 ? undefined

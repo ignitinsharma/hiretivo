@@ -62,7 +62,7 @@ export async function GET() {
   }
 
   const savedJobs = await prisma.savedJob.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, job: { status: { not: JobStatus.DELETED } } },
     orderBy: { createdAt: "desc" },
     include: {
       job: {
