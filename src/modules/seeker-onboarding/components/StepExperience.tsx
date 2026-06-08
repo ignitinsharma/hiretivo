@@ -17,7 +17,7 @@ import { saveExperience } from "@/app/actions/onboarding/seeker";
 /*
  * StepExperience
  * Step 4 of seeker onboarding — Experience & Education.
- * Captures at least one work experience entry (required) and optional education entries.
+ * Captures at least one work experience entry (required) and required education entries (≥1).
  * Save is stubbed — Task 7 will wire the real saveExperience action.
  */
 interface StepExperienceProps {
@@ -288,6 +288,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
   };
 
   const handleEduChange = (index: number, updated: EducationEntry) => {
+    setErrors([]);
     if (index < experience.educations.length) {
       updateEducation(index, updated);
     } else {
@@ -307,8 +308,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
         ? experience.workExperiences
         : workExperiences;
 
-    const eduToSave =
-      experience.educations.length > 0 ? experience.educations : educations;
+    const eduToSave = educations;
 
     const validation = validateSeekerStep4Experience({
       workExperiences: workToSave,
