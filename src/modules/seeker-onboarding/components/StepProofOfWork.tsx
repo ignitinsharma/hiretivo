@@ -121,17 +121,6 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  /* Local state for optional fields — synced to store on blur */
-  const [linkedinInput, setLinkedinInput] = useState(
-    proofOfWork.linkedinUrl ?? ""
-  );
-  const [websiteInput, setWebsiteInput] = useState(
-    proofOfWork.websiteUrl ?? ""
-  );
-  const [videoInput, setVideoInput] = useState(
-    proofOfWork.videoIntroUrl ?? ""
-  );
-
   /* Ensure at least one empty project row on first render */
   const projects =
     proofOfWork.projects.length > 0
@@ -180,9 +169,9 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
     try {
       const result = await saveProofOfWork({
         githubUrl: proofOfWork.githubUrl,
-        linkedinUrl: proofOfWork.linkedinUrl ?? null,
-        websiteUrl: proofOfWork.websiteUrl ?? null,
-        videoIntroUrl: proofOfWork.videoIntroUrl ?? null,
+        linkedinUrl: proofOfWork.linkedinUrl!,
+        websiteUrl: proofOfWork.websiteUrl!,
+        videoIntroUrl: proofOfWork.videoIntroUrl!,
         projects: projectsToSave,
       });
 
@@ -228,57 +217,52 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             />
           </div>
 
-          {/* LinkedIn — optional */}
+          {/* LinkedIn — required */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-brand-foreground">
-              LinkedIn URL{" "}
-              <span className="text-brand-foreground-secondary text-xs font-normal">
-                (optional)
-              </span>
+              LinkedIn URL <span className="text-brand-danger">*</span>
             </label>
             <Input
               placeholder="https://linkedin.com/in/yourname"
-              value={linkedinInput}
-              onChange={(e) => setLinkedinInput(e.target.value)}
-              onBlur={() =>
-                setLinkedinUrl(linkedinInput.trim() || null)
-              }
+              value={proofOfWork.linkedinUrl ?? ""}
+              onChange={(e) => {
+                setLinkedinUrl(e.target.value || null);
+                setErrors([]);
+              }}
             />
           </div>
 
-          {/* Portfolio — optional */}
+          {/* Portfolio — required */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-brand-foreground">
-              Portfolio / Website{" "}
-              <span className="text-brand-foreground-secondary text-xs font-normal">
-                (optional)
-              </span>
+              Portfolio / Website <span className="text-brand-danger">*</span>
             </label>
             <Input
               placeholder="https://yourwebsite.com"
-              value={websiteInput}
-              onChange={(e) => setWebsiteInput(e.target.value)}
-              onBlur={() =>
-                setWebsiteUrl(websiteInput.trim() || null)
-              }
+              value={proofOfWork.websiteUrl ?? ""}
+              onChange={(e) => {
+                setWebsiteUrl(e.target.value || null);
+                setErrors([]);
+              }}
             />
           </div>
 
-          {/* Video intro — optional */}
+          {/* Video intro — required */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-brand-foreground">
               Short intro video{" "}
               <span className="text-brand-foreground-secondary text-xs font-normal">
-                (optional — Loom/YouTube)
-              </span>
+                (Loom/YouTube)
+              </span>{" "}
+              <span className="text-brand-danger">*</span>
             </label>
             <Input
               placeholder="https://loom.com/share/..."
-              value={videoInput}
-              onChange={(e) => setVideoInput(e.target.value)}
-              onBlur={() =>
-                setVideoIntroUrl(videoInput.trim() || null)
-              }
+              value={proofOfWork.videoIntroUrl ?? ""}
+              onChange={(e) => {
+                setVideoIntroUrl(e.target.value || null);
+                setErrors([]);
+              }}
             />
           </div>
 
@@ -318,9 +302,13 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
           </div>
 
           {errors.length > 0 && (
-            <p className="text-sm text-brand-danger text-center">
-              {errors[0]}
-            </p>
+            <div className="space-y-1">
+              {errors.map((err, i) => (
+                <p key={i} className="text-sm text-brand-danger text-center">
+                  {err}
+                </p>
+              ))}
+            </div>
           )}
         </div>
 
