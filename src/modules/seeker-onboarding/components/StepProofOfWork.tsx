@@ -14,9 +14,9 @@ import { saveProofOfWork } from "@/app/actions/onboarding/seeker";
 /*
  * StepProofOfWork
  * Step 3 of seeker onboarding — Proof of Work.
- * Captures GitHub URL (required), optional LinkedIn/portfolio/video links,
- * and at least one project entry (title, URL, description).
- * Save is stubbed — Task 7 will wire the real saveProofOfWork action.
+ * Captures GitHub URL, LinkedIn URL, portfolio/website URL, and video intro URL
+ * (all four are required), plus at least one project entry (title, URL, description).
+ * On submit, calls the real saveProofOfWork server action and advances to the next step.
  */
 interface StepProofOfWorkProps {
   onNext: () => void;
@@ -163,15 +163,23 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
       return;
     }
 
+    const linkedinUrl = proofOfWork.linkedinUrl?.trim() ?? "";
+    const websiteUrl = proofOfWork.websiteUrl?.trim() ?? "";
+    const videoIntroUrl = proofOfWork.videoIntroUrl?.trim() ?? "";
+    if (!linkedinUrl || !websiteUrl || !videoIntroUrl) {
+      setErrors(["Unexpected missing field — please re-enter all URLs."]);
+      return;
+    }
+
     setErrors([]);
 
     setIsSaving(true);
     try {
       const result = await saveProofOfWork({
         githubUrl: proofOfWork.githubUrl,
-        linkedinUrl: proofOfWork.linkedinUrl!,
-        websiteUrl: proofOfWork.websiteUrl!,
-        videoIntroUrl: proofOfWork.videoIntroUrl!,
+        linkedinUrl,
+        websiteUrl,
+        videoIntroUrl,
         projects: projectsToSave,
       });
 
