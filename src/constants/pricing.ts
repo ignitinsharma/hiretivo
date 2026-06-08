@@ -31,7 +31,7 @@ export const PLAN_TIERS: PlanTierConfig[] = [
     highlighted: false,
     isCustom: false,
     features: [
-      "Browse blurred talent pool",
+      "Browse talent pool",
       "Unlimited applicant views (inbound)",
       "AI candidate summaries",
       "Interview scheduling",
