@@ -333,16 +333,16 @@ export async function saveStep4(data: {
 
 /*
  * saveProofOfWork
- * Step 3 (6-step flow): saves GitHub URL, optional social/video links, and project entries.
+ * Step 3 (6-step flow): saves GitHub URL, required social/video links, and project entries.
  * Derives githubUsername from the provided URL.
  * Advances onboardingStep to 4.
  * @returns ActionResult
  */
 export async function saveProofOfWork(data: {
   githubUrl: string;
-  linkedinUrl?: string | null;
-  websiteUrl?: string | null;
-  videoIntroUrl?: string | null;
+  linkedinUrl: string;
+  websiteUrl: string;
+  videoIntroUrl: string;
   projects: Array<{ title: string; url: string; description: string }>;
 }): Promise<ActionResult> {
   const session = await auth();
@@ -359,9 +359,9 @@ export async function saveProofOfWork(data: {
 
   const schema = z.object({
     githubUrl: httpUrl.refine((u) => /github\.com\/[a-zA-Z0-9_-]+/.test(u), "Please enter a valid GitHub profile URL"),
-    linkedinUrl: httpUrl.nullable().optional(),
-    websiteUrl: httpUrl.nullable().optional(),
-    videoIntroUrl: httpUrl.nullable().optional(),
+    linkedinUrl: httpUrl,
+    websiteUrl: httpUrl,
+    videoIntroUrl: httpUrl,
     projects: projectEntrySchema.array().min(1, "At least one project is required"),
   });
 
@@ -411,7 +411,7 @@ export async function saveProofOfWork(data: {
 
 /*
  * saveExperience
- * Step 4 (6-step flow): saves work experience entries (required) and optional education entries.
+ * Step 4 (6-step flow): saves work experience entries (required) and education entries (required, min 1).
  * Replaces all existing WorkExperience and Education rows for this seeker profile within a transaction.
  * Advances onboardingStep to 5.
  * @returns ActionResult
@@ -425,7 +425,7 @@ export async function saveExperience(data: {
     isCurrent: boolean;
     description?: string | null;
   }>;
-  educations?: Array<{
+  educations: Array<{
     institution: string;
     graduationDate?: string | null;
     degree?: string | null;
@@ -449,7 +449,7 @@ export async function saveExperience(data: {
         major: z.string().trim().nullable().optional(),
       })
       .array()
-      .optional(),
+      .min(1, "At least one education entry is required"),
   });
 
   const parsed = schema.safeParse(data);
@@ -490,23 +490,21 @@ export async function saveExperience(data: {
       })),
     });
 
-    // Replace educations whenever provided, including an empty array.
-    if (parsed.data.educations !== undefined) {
-      await tx.education.deleteMany({
-        where: { seekerProfileId: profile.id },
-      });
+    // Replace all educations.
+    await tx.education.deleteMany({
+      where: { seekerProfileId: profile.id },
+    });
 
-      if (parsed.data.educations.length > 0) {
-        await tx.education.createMany({
-          data: parsed.data.educations.map((edu) => ({
-            seekerProfileId: profile.id,
-            institution: edu.institution,
-            graduationDate: edu.graduationDate ?? null,
-            degree: edu.degree ?? null,
-            major: edu.major ?? null,
-          })),
-        });
-      }
+    if (parsed.data.educations.length > 0) {
+      await tx.education.createMany({
+        data: parsed.data.educations.map((edu) => ({
+          seekerProfileId: profile.id,
+          institution: edu.institution,
+          graduationDate: edu.graduationDate ?? null,
+          degree: edu.degree ?? null,
+          major: edu.major ?? null,
+        })),
+      });
     }
 
     await tx.user.update({
