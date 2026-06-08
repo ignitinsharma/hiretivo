@@ -10,7 +10,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 export const metadata = generatePageMetadata({
   title: "How It Works",
   description:
-    "See how Hiretivo helps job seekers build verified profiles, understand match signals, and apply to better remote roles.",
+    "See how Hiretivo helps job seekers build verified profiles, review role context, and apply to better remote roles.",
   path: "/how",
 });
 

@@ -19,7 +19,7 @@ export function HowFinalCTASection() {
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-brand-foreground-muted md:text-lg">
           Create your free seeker profile and start reviewing roles with real
-          match context instead of guessing from job descriptions.
+          verified context instead of guessing from job descriptions.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" variant="primary">

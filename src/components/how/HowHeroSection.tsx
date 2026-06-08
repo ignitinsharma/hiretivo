@@ -7,12 +7,12 @@ const MATCHED_ROLES = [
   {
     title: "Senior React Engineer",
     company: "Remote SaaS team",
-    match: "86%",
+    signal: "Strong fit",
   },
   {
     title: "Frontend Platform Engineer",
     company: "US product studio",
-    match: "82%",
+    signal: "Skills aligned",
   },
 ] as const;
 
@@ -38,7 +38,7 @@ export function HowHeroSection() {
 
           <p className="mt-6 max-w-2xl text-lg leading-[1.75] text-brand-foreground-muted md:text-xl">
             Hiretivo turns your verified skills, salary expectations, and
-            availability into clear match signals before you apply.
+            availability into clear role context before you apply.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -92,7 +92,7 @@ export function HowHeroSection() {
                     Matched roles
                   </p>
                   <p className="text-xs text-brand-foreground-muted">
-                    Ranked by skill overlap and profile fit
+                    Explained by verified profile signals
                   </p>
                 </div>
                 <Send className="h-4 w-4 text-brand-primary" aria-hidden="true" />
@@ -112,8 +112,8 @@ export function HowHeroSection() {
                         {role.company}
                       </p>
                     </div>
-                    <span className="rounded-lg bg-brand-primary px-2.5 py-1 text-xs font-bold text-white">
-                      {role.match}
+                    <span className="whitespace-nowrap rounded-lg border border-brand-primary/20 bg-white px-2.5 py-1 text-xs font-bold text-brand-primary">
+                      {role.signal}
                     </span>
                   </div>
                 ))}

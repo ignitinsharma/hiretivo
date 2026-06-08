@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Check, Clock, DollarSign, Gauge, Layers, MapPin } from "lucide-react";
+import { Check, Clock, DollarSign, Layers, MapPin, ShieldCheck } from "lucide-react";
 
 interface SignalItem {
   title: string;
@@ -28,15 +28,15 @@ const SIGNALS: SignalItem[] = [
   },
 ] as const;
 
-const SCORE_ROWS = [
-  { label: "React + TypeScript", value: "Strong", width: "w-[88%]" },
-  { label: "Remote overlap", value: "5 hrs", width: "w-[74%]" },
-  { label: "Salary range fit", value: "Aligned", width: "w-[82%]" },
+const SIGNAL_ROWS = [
+  { label: "React + TypeScript", value: "Verified" },
+  { label: "Remote overlap", value: "5 hrs" },
+  { label: "Salary range fit", value: "Aligned" },
 ] as const;
 
 /*
  * HowMatchingSection
- * Explains how Hiretivo creates practical match signals for seekers.
+ * Explains how Hiretivo creates practical role context for seekers.
  */
 export function HowMatchingSection() {
   return (
@@ -47,11 +47,12 @@ export function HowMatchingSection() {
             How matching works
           </p>
           <h2 className="max-w-xl text-4xl font-bold leading-tight tracking-[-0.03em] text-brand-foreground md:text-5xl">
-            A match score should explain itself.
+            See why a role fits before you apply.
           </h2>
           <p className="mt-5 max-w-2xl text-base leading-[1.75] text-brand-foreground-muted md:text-lg">
-            The page should feel like a product, not a promise. Each role shows
-            why it fits, where it is weak, and what a recruiter will evaluate.
+            Each role shows the practical signals behind the fit: verified
+            skills, remote overlap, salary alignment, and what a recruiter will
+            evaluate.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -93,30 +94,32 @@ export function HowMatchingSection() {
               </span>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-[160px_1fr]">
-              <div className="rounded-xl border border-brand-border bg-brand-surface p-4 text-center">
-                <Gauge className="mx-auto mb-3 h-5 w-5 text-brand-primary" aria-hidden="true" />
-                <p className="text-4xl font-bold leading-none tracking-tight text-brand-foreground">
-                  84
+            <div className="mt-5 grid gap-4 md:grid-cols-[180px_1fr]">
+              <div className="rounded-xl border border-brand-primary/20 bg-brand-surface p-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-primary text-white">
+                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <p className="mt-4 text-lg font-bold leading-tight text-brand-foreground">
+                  Profile reviewed
                 </p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-[0.1em] text-brand-foreground-secondary">
-                  Match score
+                <p className="mt-2 text-xs leading-relaxed text-brand-foreground-muted">
+                  Skills, salary, and availability are visible before outreach.
                 </p>
               </div>
 
               <div className="space-y-4">
-                {SCORE_ROWS.map((row) => (
-                  <div key={row.label}>
-                    <div className="mb-2 flex items-center justify-between gap-4 text-sm">
+                {SIGNAL_ROWS.map((row) => (
+                  <div
+                    key={row.label}
+                    className="rounded-lg border border-brand-border bg-brand-surface p-3"
+                  >
+                    <div className="flex items-center justify-between gap-4 text-sm">
                       <span className="font-semibold text-brand-foreground">
                         {row.label}
                       </span>
-                      <span className="font-bold text-brand-primary">
+                      <span className="whitespace-nowrap rounded-md border border-brand-primary/20 bg-white px-2 py-1 text-xs font-bold text-brand-primary">
                         {row.value}
                       </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-brand-surface">
-                      <div className={`${row.width} h-2 rounded-full bg-brand-primary`} />
                     </div>
                   </div>
                 ))}

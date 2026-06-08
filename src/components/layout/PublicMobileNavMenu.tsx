@@ -1,20 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  LogIn,
+  Menu,
+  ShieldCheck,
+  UserPlus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const PUBLIC_MOBILE_NAV_ITEMS = [
-  { href: "/recruiter/register", label: "I'm a recruiter" },
-  { href: "/recruiter/login", label: "Recruiter sign in" },
-  { href: "/seeker/register", label: "Sign up" },
-  { href: "/seeker/login", label: "Seeker sign in" },
+  { href: "/recruiter/talent", label: "Verified Engineers" },
+  { href: "/how", label: "How it Works" },
+  { href: "/pricing", label: "Pricing" },
+] as const;
+
+const PUBLIC_MOBILE_RECRUITER_ITEMS = [
+  {
+    href: "/hire-talent",
+    label: "Hire Engineers",
+    description: "Access pre-verified talent",
+    icon: BriefcaseBusiness,
+  },
+  {
+    href: "/recruiter/login",
+    label: "Recruiter Login",
+    description: "Access your dashboard",
+    icon: LogIn,
+  },
+  {
+    href: "/recruiter/register",
+    label: "Recruiter Sign Up",
+    description: "Create your recruiter account",
+    icon: UserPlus,
+  },
 ] as const;
 
 /*
@@ -28,7 +55,7 @@ export function PublicMobileNavMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           aria-label="Open navigation menu"
-          className="sm:hidden"
+          className="lg:hidden"
           size="icon"
           variant="secondary"
         >
@@ -37,18 +64,69 @@ export function PublicMobileNavMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-64 rounded-xl border-brand-border bg-white p-2 shadow-none"
+        className="w-80 rounded-3xl border-brand-border bg-white p-2 shadow-[0_20px_50px_rgba(15,23,42,0.12)]"
       >
         {PUBLIC_MOBILE_NAV_ITEMS.map((item) => (
           <DropdownMenuItem asChild key={item.href}>
             <Link
-              className="cursor-pointer rounded-lg px-3 py-2.5 text-sm font-semibold text-brand-foreground focus:bg-brand-surface"
+              className="cursor-pointer rounded-2xl px-4 py-3 text-sm font-semibold text-brand-foreground focus:bg-brand-surface"
               href={item.href}
             >
               {item.label}
             </Link>
           </DropdownMenuItem>
         ))}
+        <DropdownMenuSeparator />
+        {PUBLIC_MOBILE_RECRUITER_ITEMS.map((item) => (
+          <DropdownMenuItem asChild key={item.href}>
+            <Link
+              className="flex cursor-pointer gap-3 rounded-2xl px-4 py-3 focus:bg-brand-surface"
+              href={item.href}
+            >
+              <item.icon
+                aria-hidden="true"
+                className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-brand-foreground">
+                  {item.label}
+                </span>
+                <span className="mt-0.5 block text-xs text-brand-foreground-muted">
+                  {item.description}
+                </span>
+              </span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link
+            className="flex cursor-pointer gap-3 rounded-2xl px-4 py-3 focus:bg-brand-surface"
+            href="/seeker/login"
+          >
+            <LogIn
+              aria-hidden="true"
+              className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary"
+            />
+            <span className="text-sm font-semibold text-brand-foreground">
+              Sign In
+            </span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            className="flex cursor-pointer gap-3 rounded-2xl px-4 py-3 focus:bg-brand-surface"
+            href="/seeker/register"
+          >
+            <ShieldCheck
+              aria-hidden="true"
+              className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary"
+            />
+            <span className="text-sm font-semibold text-brand-foreground">
+              Get Verified
+            </span>
+          </Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

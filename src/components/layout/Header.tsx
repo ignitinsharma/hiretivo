@@ -13,8 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { PublicMobileNavMenu } from "@/components/layout/PublicMobileNavMenu";
+import { PublicRecruiterDropdown } from "@/components/layout/PublicRecruiterDropdown";
 import { Logo } from "@/components/shared/Logo";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { prisma } from "@/lib/prisma";
@@ -36,11 +38,79 @@ const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
  * Renders the shared top navigation for public, seeker, and recruiter views.
  * Returns mobile-first public auth controls and role-specific desktop nav.
  */
-export async function Header({ className, variant = 'light' }: HeaderProps) {
+export async function Header({ className, variant = "light" }: HeaderProps) {
   const session = await auth();
   const role = session?.user?.role;
   const isSeeker = !!session && role === UserRole.SEEKER;
   const isRecruiter = !!session && role === UserRole.RECRUITER;
+
+  if (!session) {
+    return (
+      <header
+        className={cn(
+          "sticky top-0 z-50 w-full bg-brand-surface px-4 py-3 md:px-6 md:py-4",
+          className,
+        )}
+        data-purpose="main-navigation"
+      >
+        <div className="mx-auto max-w-440">
+          <div className="flex h-16 items-center justify-between gap-4 rounded-3xl border border-slate-100 bg-white px-5 shadow-[0_8px_40px_rgba(15,23,42,0.05)] md:px-7 lg:h-20">
+            <Link href="/" className="flex items-center" data-purpose="logo">
+              <Logo size="md" />
+            </Link>
+
+            <nav
+              className="hidden items-center gap-7 lg:flex xl:gap-10"
+              aria-label="Public navigation"
+            >
+              <Link
+                href="/recruiter/talent"
+                className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-900 transition-colors hover:text-brand-primary xl:text-base"
+              >
+                Verified Engineers
+              </Link>
+
+              <Link
+                href="/how"
+                className="whitespace-nowrap text-sm font-semibold text-slate-900 transition-colors hover:text-brand-primary xl:text-base"
+              >
+                How it Works
+              </Link>
+
+              <Link
+                href="/pricing"
+                className="whitespace-nowrap text-sm font-semibold text-slate-900 transition-colors hover:text-brand-primary xl:text-base"
+              >
+                Pricing
+              </Link>
+
+              <PublicRecruiterDropdown />
+            </nav>
+
+            <div className="flex items-center gap-4">
+              <Button
+                asChild
+                className="hidden h-11 rounded-2xl px-6 text-sm font-semibold lg:inline-flex xl:h-12 xl:px-7 xl:text-base"
+                variant="secondary"
+              >
+                <Link href="/seeker/login">Sign In</Link>
+              </Button>
+
+              <Button
+                asChild
+                className="hidden h-11 rounded-2xl px-6 text-sm font-semibold lg:inline-flex xl:h-12 xl:px-7 xl:text-base"
+                variant="primary"
+              >
+                <Link href="/seeker/register">Get Verified</Link>
+              </Button>
+
+              <PublicMobileNavMenu />
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   let companyLogoUrl: string | null = null;
   let isSeekerVerified = false;

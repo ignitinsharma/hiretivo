@@ -422,11 +422,11 @@ export function TalentPoolClient(): ReactElement {
       </div>
 
       {/* Count label — paid plan only, shown once data arrives */}
-      {!isFreePlan && !showTalentSkeleton && total > 0 && (
+      {/* {!isFreePlan && !showTalentSkeleton && total > 0 && (
         <p className="text-sm font-semibold text-brand-foreground-muted">
           {buildCountLabel()}
         </p>
-      )}
+      )} */}
 
       {/* Card grid — loading skeleton | initial error | empty (paid only) | real + demo cards */}
       {showTalentSkeleton ? (
