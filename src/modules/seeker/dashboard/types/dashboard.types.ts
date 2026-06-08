@@ -11,7 +11,7 @@ export interface ProfileStrengthSummary {
 
 export interface QuickStatsSummary {
   applied: number;
-  viewed: number;
+  activeApplications: number;
   interviews: number;
 }
 

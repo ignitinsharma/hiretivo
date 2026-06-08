@@ -54,7 +54,7 @@ export function SeekerDashboardSidebar() {
   const { data, isLoading, isError } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: seekerService.getDashboardSummary,
-    staleTime: 60_000,
+    staleTime: 0,
   });
 
   const digestMutation = useMutation({

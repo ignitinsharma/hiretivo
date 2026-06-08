@@ -1,5 +1,5 @@
 import React from "react";
-import { Send, Eye, MessageSquare } from "lucide-react";
+import { Send, Activity, MessageSquare } from "lucide-react";
 import type { QuickStatsSummary } from "../types/dashboard.types";
 
 interface QuickStatsCardProps {
@@ -21,10 +21,10 @@ const STAT_ROWS: StatRow[] = [
     colorClass: "text-orange-600 bg-orange-100",
   },
   {
-    id: "viewed",
-    label: "Viewed",
-    icon: <Eye className="w-5 h-5" />,
-    colorClass: "text-blue-600 bg-blue-100",
+    id: "activeApplications",
+    label: "Active Applications",
+    icon: <Activity className="w-5 h-5" />,
+    colorClass: "text-green-600 bg-green-100",
   },
   {
     id: "interviews",

@@ -114,7 +114,7 @@ export function MonthYearPicker({
         disabled={disabled}
         required={required}
       >
-        <SelectTrigger className="rounded-lg bg-white">
+        <SelectTrigger className="rounded-lg bg-white [&>span]:!flex [&>span]:items-center [&>span]:min-w-0">
           <span className="flex items-center gap-2 flex-1 min-w-0">
             <CalendarDays className="h-4 w-4 shrink-0 text-brand-foreground-secondary" />
             <SelectValue placeholder="Month" />

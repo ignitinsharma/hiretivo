@@ -103,7 +103,7 @@ export function ApplyJobModal() {
         coverLetter: "",
       });
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard"] });
+      await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard-summary"] });
       toast.success("Application confirmed!");
       trackEvent("apply_job", {
         apply_type: "external",
@@ -127,7 +127,7 @@ export function ApplyJobModal() {
         coverLetter,
       });
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard"] });
+      await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard-summary"] });
       toast.success("Application submitted!");
       trackEvent("apply_job", {
         apply_type: "internal",
