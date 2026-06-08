@@ -115,8 +115,10 @@ export function MonthYearPicker({
         required={required}
       >
         <SelectTrigger className="rounded-lg bg-white">
-          <CalendarDays className="h-4 w-4 text-brand-foreground-secondary" />
-          <SelectValue placeholder="Month" />
+          <span className="flex items-center gap-2 flex-1 min-w-0">
+            <CalendarDays className="h-4 w-4 shrink-0 text-brand-foreground-secondary" />
+            <SelectValue placeholder="Month" />
+          </span>
         </SelectTrigger>
         <SelectContent>
           {MONTHS.map((month) => (
@@ -135,7 +137,7 @@ export function MonthYearPicker({
         <SelectTrigger className="rounded-lg bg-white">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent position="item-aligned" className="max-h-60">
           {years.map((year) => (
             <SelectItem key={year} value={year}>
               {year}
