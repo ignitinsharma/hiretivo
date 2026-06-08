@@ -10,6 +10,7 @@ import {
   LogOut,
   User,
   Briefcase,
+  LayoutDashboard,
   Send,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
@@ -32,6 +33,7 @@ const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   briefcase: Briefcase,
+  'layout-dashboard': LayoutDashboard,
   send: Send,
 };
 
