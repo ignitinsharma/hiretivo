@@ -78,10 +78,10 @@ export function SeekerDashboardSidebar() {
 
   return (
     <aside className="w-full lg:w-80 space-y-6 shrink-0">
-      <VerificationStatusCard
+      {/* <VerificationStatusCard
         status={data.verification.status}
         verificationNotes={data.verification.verificationNotes}
-      />
+      /> */}
       <ProfileStrengthCard profileStrength={data.profileStrength} />
       <QuickStatsCard quickStats={data.quickStats} />
       <JobAlertsPromo

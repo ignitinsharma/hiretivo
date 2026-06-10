@@ -15,7 +15,15 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     if (axios.isAxiosError(error)) {
-      const responseData = error.response?.data;
+      let responseData = error.response?.data;
+      // Text-response endpoints (e.g. streaming JD) deliver error bodies as a JSON string — parse it.
+      if (typeof responseData === "string") {
+        try {
+          responseData = JSON.parse(responseData);
+        } catch {
+          // leave as-is; falls through to error.message below
+        }
+      }
       const message =
         typeof responseData === "object" &&
         responseData !== null &&

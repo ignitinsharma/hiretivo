@@ -2,6 +2,7 @@
 
 @config "../../tailwind.config.ts";
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @layer base {
   :root {

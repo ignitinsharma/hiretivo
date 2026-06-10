@@ -1,19 +1,21 @@
 import { AVATAR_MAX_BYTES } from "@/lib/validations/upload.schema";
 
-const MAX_DIMENSION = 800;
+const MAX_DIMENSION = 512;
 const TARGET_QUALITY = 0.8;
 
 /**
- * Compresses an image file client-side using Canvas API.
- * - Converts to WebP format
- * - Resizes if either dimension exceeds MAX_DIMENSION (800px)
- * - Reduces quality until under AVATAR_MAX_BYTES (2MB)
+ * Normalizes an image for display, client-side via Canvas API.
+ * - ALWAYS runs for raster images (png/jpeg/webp), regardless of input byte size:
+ *   a small-but-high-resolution file still gets shrunk, so avatars/logos rendered
+ *   at <=128px never ship megabytes over the wire on every view.
+ * - Resizes longest edge to MAX_DIMENSION (512px) and re-encodes to WebP.
+ * - Steps quality down until under AVATAR_MAX_BYTES (at 512px, passes first try).
  *
- * Returns the original file if already under limit and small enough.
+ * SVG is returned untouched — it is vector (already tiny, infinitely scalable);
+ * rasterizing it would destroy scalability and can inflate size.
  */
 export async function compressImage(file: File): Promise<File> {
-  // Already small enough and not huge dimensions — skip compression
-  if (file.size <= AVATAR_MAX_BYTES) {
+  if (file.type === "image/svg+xml") {
     return file;
   }
 
@@ -53,7 +55,9 @@ export async function compressImage(file: File): Promise<File> {
             }
 
             if (blob.size <= AVATAR_MAX_BYTES || quality <= 0.1) {
-              const compressed = new File([blob], file.name, {
+              // Match the filename to the encoding (bytes are now WebP).
+              const name = file.name.replace(/\.[^./\\]+$/, "") + ".webp";
+              const compressed = new File([blob], name, {
                 type: "image/webp",
               });
               resolve(compressed);

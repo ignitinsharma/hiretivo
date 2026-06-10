@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { ArrowRight, ArrowLeft, Upload, Camera, Globe, Check } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowRight, ArrowLeft, Upload, Camera, Globe, Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { compressImage } from '@/lib/image-compression';
+import { LOGO_MAX_BYTES, LOGO_MIME_TYPES } from '@/lib/validations/upload.schema';
+import { uploadService } from '@/services/upload.service';
 import type { CompanySize, Industry, FundingType } from '@/lib/validations/recruiter-onboarding.schema';
 import { useOnboardingStore } from '@/store/use-recruiter-onboarding-store';
 import { saveRecruiterProfile } from '@/app/actions/onboarding/recruiter';
-import { useSession } from 'next-auth/react';
 import { SUPPORT_URL } from '@/lib/config';
 import Link from 'next/link';
 
@@ -47,10 +49,27 @@ const fundingTypeOptions: { value: FundingType; label: string }[] = [
 
 export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) {
   const { step2, setCompanyName, setCompanyWebsite, setCompanySize, setIndustry, setFundingType, setIsFullyRemote, setLogoUrl } = useOnboardingStore();
-  const [logoPreview, setLogoPreview] = useState<string | null>(step2.logoUrl);
+  // Display URL: objectURL for a freshly-picked file, or /api/logo for an already-stored R2 key.
+  // Guard against legacy base64 (data:) values that may linger in a persisted store.
+  const [logoDisplayUrl, setLogoDisplayUrl] = useState<string | null>(() =>
+    step2.logoUrl && !step2.logoUrl.startsWith('data:')
+      ? `/api/logo?key=${encodeURIComponent(step2.logoUrl)}`
+      : null,
+  );
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
+  const [isProcessingLogo, setIsProcessingLogo] = useState(false);
+  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
+
+  // Revoke any outstanding objectURL on unmount to avoid leaking blob memory.
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
 
   const validateStep = (): boolean => {
     const newErrors: string[] = [];
@@ -72,45 +91,102 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
     return newErrors.length === 0;
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /*
+   * handleLogoUpload
+   * Validates type/size, compresses client-side, and holds the file for upload on Continue.
+   * No network call here — the R2 upload is deferred until the RecruiterProfile row exists
+   * (created by saveRecruiterProfile on Continue), since the upload route updates that row.
+   * Preview uses a local objectURL for instant feedback.
+   */
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setLogoPreview(result);
-        setLogoUrl(result);
-      };
-      reader.readAsDataURL(file);
+    // Reset the input so picking the same file again re-triggers onChange.
+    e.target.value = '';
+    if (!file) return;
+
+    setLogoUploadError(null);
+
+    if (!LOGO_MIME_TYPES.includes(file.type as (typeof LOGO_MIME_TYPES)[number])) {
+      setLogoUploadError('Use a PNG, JPEG, WebP, or SVG image');
+      return;
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      setLogoUploadError('File too large (max 2 MB)');
+      return;
+    }
+
+    setIsProcessingLogo(true);
+    try {
+      const compressed = await compressImage(file);
+      const previewUrl = URL.createObjectURL(compressed);
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = previewUrl;
+      setLogoDisplayUrl(previewUrl);
+      setPendingLogoFile(compressed);
+    } catch (error) {
+      setLogoUploadError(error instanceof Error ? error.message : 'Failed to process image');
+    } finally {
+      setIsProcessingLogo(false);
     }
   };
 
-  const handleContinue = async () => {
-    if (isSaving) return;
-    if (validateStep()) {
-      // Persist to DB before advancing (per D-06)
-      setIsSaving(true);
-      const result = await saveRecruiterProfile({
-        companyName: step2.companyName,
-        website: step2.companyWebsite || null,
-        companySize: step2.companySize,
-        bio: null,
-        industry: step2.industry,
-        fundingType: step2.fundingType,
-        isFullyRemote: step2.isFullyRemote,
-        logo: step2.logoUrl,
-      });
+  /*
+   * extractUploadError
+   * Pulls the server's friendly message ({ error }) out of an axios error,
+   * falling back to the error message or a generic string.
+   */
+  const extractUploadError = (error: unknown): string => {
+    const data = (error as { response?: { data?: { error?: string } } })?.response?.data;
+    if (data?.error) return data.error;
+    if (error instanceof Error) return error.message;
+    return 'Failed to upload logo';
+  };
 
-      if (!result.success) {
-        console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
-        setErrors([result.error]);
+  /*
+   * handleContinue
+   * Validates, persists the profile (which creates the RecruiterProfile row), then uploads
+   * the pending logo to R2 — in that order, because the upload route updates the now-existing
+   * row. Advances only after both succeed.
+   */
+  const handleContinue = async () => {
+    if (isSaving || isProcessingLogo) return;
+    if (!validateStep()) return;
+
+    // Persist to DB before advancing (per D-06)
+    setIsSaving(true);
+    const result = await saveRecruiterProfile({
+      companyName: step2.companyName,
+      website: step2.companyWebsite || null,
+      companySize: step2.companySize,
+      bio: null,
+      industry: step2.industry,
+      fundingType: step2.fundingType,
+      isFullyRemote: step2.isFullyRemote,
+      logo: step2.logoUrl,
+    });
+
+    if (!result.success) {
+      console.error("[StepCompanyProfile] saveRecruiterProfile failed:", result.error);
+      setErrors([result.error]);
+      setIsSaving(false);
+      return;
+    }
+
+    // Row now exists — upload the pending logo. Stay on this step if it fails (retry is idempotent).
+    if (pendingLogoFile) {
+      try {
+        const upload = await uploadService.uploadCompanyLogo(pendingLogoFile);
+        setLogoUrl(upload.key);
+        setPendingLogoFile(null);
+      } catch (error) {
+        setLogoUploadError(extractUploadError(error));
         setIsSaving(false);
         return;
       }
-
-      setIsSaving(false);
-      onNext();
     }
+
+    setIsSaving(false);
+    onNext();
   };
 
   const OptionButton = ({ 
@@ -159,12 +235,13 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
               onClick={() => fileInputRef.current?.click()}
               className="relative w-24 h-24 rounded-lg border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors overflow-hidden group"
             >
-              {logoPreview ? (
+              {logoDisplayUrl ? (
                 <>
                   <Image
-                    src={logoPreview}
+                    src={logoDisplayUrl}
                     alt="Company logo"
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -177,15 +254,23 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
                   <span className="text-xs">Upload</span>
                 </div>
               )}
+              {isProcessingLogo && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
               onChange={handleLogoUpload}
               className="hidden"
             />
             <p className="text-sm text-muted-foreground mt-2">Upload company logo</p>
+            {logoUploadError && (
+              <p className="text-sm text-destructive text-center mt-1">{logoUploadError}</p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -297,6 +382,7 @@ export function StepCompanyProfile({ onNext, onBack }: StepCompanyProfileProps) 
               className="w-full"
               loading={isSaving}
               loadingText="Saving..."
+              disabled={isProcessingLogo || isSaving}
             >
               Continue
               <ArrowRight className="w-4 h-4" />
