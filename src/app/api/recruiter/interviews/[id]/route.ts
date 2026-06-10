@@ -5,7 +5,6 @@ import { RescheduleInterviewSchema } from "@/lib/validations/interview.schema";
 import { sendInterviewRescheduledEmail } from "@/lib/email/interview";
 import { normalizeTimezone } from "@/lib/timezone";
 import { writeRateLimiter } from "@/lib/rate-limit";
-import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
 import { INDIA_TIMEZONE } from "@/modules/india-location";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -32,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
+  if (session.user.plan === PlanTier.FREE) {
     return NextResponse.json(
       { error: "Interview scheduling requires Pro plan. Upgrade to unlock." },
       { status: 403 },

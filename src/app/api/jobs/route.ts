@@ -5,7 +5,7 @@ import { createJobSchema } from '@/lib/validations/job';
 import { createRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
 import { JobStatus, PlanTier, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
-import { getRecruiterJobLimit } from '@/lib/recruiter-trial';
+import { getJobLimit } from '@/lib/billing/plan-access';
 
 const jobListRateLimiter = createRateLimiter("job-list", 60, "1 m");
 
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
   });
 
   const currentPlan = user?.plan ?? PlanTier.FREE;
-  const jobLimit = getRecruiterJobLimit(currentPlan);
+  const jobLimit = getJobLimit(currentPlan);
 
   if (jobLimit !== null) {
     const activeCount = await prisma.job.count({

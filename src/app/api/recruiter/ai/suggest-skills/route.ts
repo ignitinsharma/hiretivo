@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { AiMessageRole, UserRole, PlanTier } from '@/constants/enums';
+import { AiMessageRole, UserRole, PlanTier, AiFeature } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
-import { SkillSuggestSchema } from '@/lib/validations/skill-suggest.schema';
+import { SkillSuggestSchema, SkillSuggestOutputSchema } from '@/lib/validations/skill-suggest.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
-import { isRecruiterTrialActive } from '@/lib/recruiter-trial';
 import { isAdminSession } from '@/lib/admin/is-admin';
+import { consumeFreeDailyAiQuota } from '@/lib/billing/ai-daily-limit';
 
 const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 10, '1 m');
 
@@ -30,12 +30,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  // 4. Plan gate — FREE plan cannot access AI features (bypass during trial or for admin)
-  if (!admin && session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
-    return NextResponse.json(
-      { error: 'AI skill suggestions require a PRO or ENTERPRISE plan.' },
-      { status: 403 },
-    );
+  // 4. Plan gate — FREE plan gets 3 skill suggestions/day (admin bypasses; paid unlimited)
+  if (!admin && session.user.plan === PlanTier.FREE) {
+    const allowed = await consumeFreeDailyAiQuota(AiFeature.SKILLS, session.user.id);
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error:
+            "You've used your 3 free AI skill suggestions today. Upgrade to a paid plan for unlimited suggestions.",
+        },
+        { status: 403 },
+      );
+    }
   }
 
   // 5. Parse + Zod validate
@@ -50,24 +56,38 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const completion = await openrouter.chat.completions.create({
     model: getAIModel(),
     ...SKILL_SUGGEST_CONFIG,
+    response_format: { type: 'json_object' },
     messages: [
       { role: AiMessageRole.SYSTEM, content: system },
       { role: AiMessageRole.USER, content: user },
     ],
   });
 
-  // 7. Parse response — handle malformed JSON from model (T-13-11)
-  let skills: string[] = [];
+  // 7. Parse response — tiered {core, secondary} object; tolerate malformed/legacy shapes (T-13-11)
+  const toStringList = (value: unknown, cap: number): string[] =>
+    Array.isArray(value)
+      ? value.filter((s): s is string => typeof s === 'string').slice(0, cap)
+      : [];
+
+  let skills: { core: string[]; secondary: string[] } = { core: [], secondary: [] };
   try {
-    const raw = completion.choices[0]?.message?.content?.trim() ?? '[]';
+    const raw = completion.choices[0]?.message?.content?.trim() ?? '{}';
     // Strip markdown code fences if present
     const cleaned = raw.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '').trim();
-    const parsedSkills = JSON.parse(cleaned) as unknown;
-    if (Array.isArray(parsedSkills)) {
-      skills = parsedSkills.filter((s): s is string => typeof s === 'string').slice(0, 10);
+    const parsed = JSON.parse(cleaned) as unknown;
+
+    const tiered = SkillSuggestOutputSchema.safeParse(parsed);
+    if (tiered.success) {
+      skills = {
+        core: tiered.data.core.slice(0, 6),
+        secondary: tiered.data.secondary.slice(0, 6),
+      };
+    } else if (Array.isArray(parsed)) {
+      // Degraded fallback — legacy bare array → treat all as core
+      skills = { core: toStringList(parsed, 6), secondary: [] };
     }
   } catch {
-    skills = []; // safe fallback — return empty array, never 500
+    skills = { core: [], secondary: [] }; // safe fallback — never 500
   }
 
   // 8. Return

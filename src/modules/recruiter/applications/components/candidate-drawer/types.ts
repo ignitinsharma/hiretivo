@@ -57,6 +57,8 @@ export interface CandidateApplication {
   appliedAt?: string;
   updatedAt?: string;
   plan?: PlanTier;
+  /** FREE plan: true when applicant is beyond the visible 5/job window (PII redacted server-side). */
+  locked?: boolean;
   canScheduleInterviews?: boolean;
   canUseAi?: boolean;
   scheduledInterview?: {

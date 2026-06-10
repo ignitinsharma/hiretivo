@@ -201,6 +201,20 @@ export enum AiMessageRole {
   USER = "user",
 }
 
+/* Deterministic candidate verdict derived from fit level — drives the AI summary verdict line. */
+export enum VerdictLabel {
+  STRONG_FIT = "Strong fit",
+  WORTH_SCREENING = "Worth screening",
+  STRETCH_HIRE = "Stretch hire",
+}
+
+/* AI features subject to the free-plan daily usage quota. */
+export enum AiFeature {
+  JD = "jd",
+  SKILLS = "skills",
+  SUMMARY = "summary",
+}
+
 export enum ContactRequestType {
   CONTACT = "CONTACT",
   BOOK_CALL = "BOOK_CALL",

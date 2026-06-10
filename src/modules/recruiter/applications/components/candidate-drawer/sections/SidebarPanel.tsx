@@ -1,6 +1,5 @@
-import { Briefcase, Clock3, Github, Globe, Linkedin, MapPin, Star, TrendingUp, Twitter } from "lucide-react";
+import { Briefcase, Clock3, MapPin, Star, TrendingUp } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ApplicationStatus } from "@/constants/enums";
 import { getStageLabel } from "@/lib/application-pipeline";
@@ -8,6 +7,7 @@ import { getStageLabel } from "@/lib/application-pipeline";
 import type { CandidateApplication } from "../types";
 import { getExperienceLabel, getScoreColor } from "../utils";
 import { InterviewPanel } from "./InterviewPanel";
+import { SkillsMatchCard } from "./SkillsMatchCard";
 
 const STAGE_OPTIONS: ApplicationStatus[] = [
   ApplicationStatus.APPLIED,
@@ -21,6 +21,9 @@ const STAGE_OPTIONS: ApplicationStatus[] = [
 interface SidebarPanelProps {
   application: CandidateApplication;
   profileStrength: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  totalSkills: number;
   onStageChange: (value: ApplicationStatus) => void;
   isUpdatingStage: boolean;
   cancelConfirming: boolean;
@@ -60,6 +63,9 @@ function CircularProgress({ score }: { score: number }) {
 export function SidebarPanel({
   application,
   profileStrength,
+  matchedSkills,
+  missingSkills,
+  totalSkills,
   onStageChange,
   isUpdatingStage,
   cancelConfirming,
@@ -70,12 +76,6 @@ export function SidebarPanel({
   onScheduleInterview,
 }: SidebarPanelProps) {
   const profile = application.candidateProfile;
-  const links = [
-    { href: profile?.websiteUrl, label: "Website", Icon: Globe },
-    { href: profile?.linkedinUrl, label: "LinkedIn", Icon: Linkedin },
-    { href: profile?.githubUrl, label: "GitHub", Icon: Github },
-    { href: profile?.twitterUrl, label: "Twitter", Icon: Twitter },
-  ].filter((item): item is { href: string; label: string; Icon: typeof Globe } => Boolean(item.href));
 
   return (
     <aside className="space-y-4">
@@ -159,23 +159,12 @@ export function SidebarPanel({
         </Select>
       </article>
 
-      {links.length > 0 ? (
-        <article className="rounded-xl border border-brand-border bg-white p-3">
-          <div className="space-y-2">
-            {links.map(({ href, label, Icon }) => (
-              <Button key={label} variant="secondary" size="sm" className="w-full justify-between" asChild>
-                <a href={href} target="_blank" rel="noreferrer">
-                  <span className="inline-flex items-center gap-2">
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </span>
-                  <span className="text-xs text-brand-foreground-secondary">open</span>
-                </a>
-              </Button>
-            ))}
-          </div>
-        </article>
-      ) : null}
+      <SkillsMatchCard
+        matchedSkills={matchedSkills}
+        missingSkills={missingSkills}
+        totalSkills={totalSkills}
+        applicationId={application.id}
+      />
 
       <InterviewPanel
         application={application}

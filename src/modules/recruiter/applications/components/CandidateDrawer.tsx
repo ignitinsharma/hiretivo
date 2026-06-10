@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, FileText } from "lucide-react";
+import { Calendar, FileText, Github, Globe, Linkedin, Twitter } from "lucide-react";
 import { toast } from "sonner";
 
 import { ScheduleInterviewModal } from "@/modules/recruiter/applications/components/ScheduleInterviewModal";
@@ -17,7 +17,6 @@ import { formatRelativeTime } from "@/lib/utils";
 import { DrawerHeader } from "./candidate-drawer/sections/DrawerHeader";
 import { AiInsightsCard } from "./candidate-drawer/sections/AiInsightsCard";
 import { SidebarPanel } from "./candidate-drawer/sections/SidebarPanel";
-import { SkillsMatchCard } from "./candidate-drawer/sections/SkillsMatchCard";
 import { ProfileTabs } from "./candidate-drawer/sections/ProfileTabs";
 import { TabContentSummary } from "./candidate-drawer/sections/TabContentSummary";
 import { TabContentExperience } from "./candidate-drawer/sections/TabContentExperience";
@@ -46,13 +45,11 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
   const { isCandidateDrawerOpen, closeCandidateDrawer, openScheduleModal } = useUIStore();
   const [cancelConfirming, setCancelConfirming] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("summary");
-  const aiSummaryMutation = useFetchAiSummary();
+  const aiSummaryQuery = useFetchAiSummary(application?.id, isCandidateDrawerOpen);
 
   useEffect(() => {
     if (!isCandidateDrawerOpen || !application?.id) return;
-    aiSummaryMutation.mutate(application.id);
     setActiveTab("summary");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCandidateDrawerOpen, application?.id]);
 
   const updateStageMutation = useMutation({
@@ -136,15 +133,21 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
     candidateSkills,
   );
   const profileStrength = calculateProfileStrength(profile);
+  const profileLinks = [
+    { href: profile?.websiteUrl, label: "Website", Icon: Globe },
+    { href: profile?.linkedinUrl, label: "LinkedIn", Icon: Linkedin },
+    { href: profile?.githubUrl, label: "GitHub", Icon: Github },
+    { href: profile?.twitterUrl, label: "Twitter", Icon: Twitter },
+  ].filter((item): item is { href: string; label: string; Icon: typeof Globe } => Boolean(item.href));
 
   const aiState: AiState = {
-    isPending: aiSummaryMutation.isPending,
-    isError: aiSummaryMutation.isError,
+    isPending: aiSummaryQuery.isLoading,
+    isError: aiSummaryQuery.isError,
     errorMessage:
-      aiSummaryMutation.error instanceof Error ? aiSummaryMutation.error.message : undefined,
-    summary: aiSummaryMutation.data?.summary,
-    fitScore: aiSummaryMutation.data?.fitScore,
-    fitLevel: aiSummaryMutation.data?.fitLevel as FitLevel | undefined,
+      aiSummaryQuery.error instanceof Error ? aiSummaryQuery.error.message : undefined,
+    summary: aiSummaryQuery.data?.summary,
+    fitScore: aiSummaryQuery.data?.fitScore,
+    fitLevel: aiSummaryQuery.data?.fitLevel as FitLevel | undefined,
     isPlanGated: application.canUseAi !== true,
   };
 
@@ -154,10 +157,13 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
         <div className="h-full overflow-y-auto bg-white p-4 md:p-6">
           <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div className="space-y-4">
-              <DrawerHeader application={application} />
+              <DrawerHeader application={application} links={profileLinks} />
               <SidebarPanel
                 application={application}
                 profileStrength={profileStrength}
+                matchedSkills={matchedSkills}
+                missingSkills={missingSkills}
+                totalSkills={application.jobSkills.length}
                 onStageChange={(value) => updateStageMutation.mutate(value)}
                 isUpdatingStage={updateStageMutation.isPending}
                 cancelConfirming={cancelConfirming}
@@ -183,14 +189,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
                 ) : null}
               </div>
 
-              <AiInsightsCard state={aiState} />
-
-              <SkillsMatchCard
-                matchedSkills={matchedSkills}
-                missingSkills={missingSkills}
-                totalSkills={application.jobSkills.length}
-                applicationId={application.id}
-              />
+              {/* <AiInsightsCard state={aiState} /> */}
 
               <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

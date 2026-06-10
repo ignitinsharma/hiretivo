@@ -3,7 +3,7 @@ import { ApplicationStatus, InterviewStatus, PlanTier, UserRole } from "@/consta
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
-import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
+import { getFreeVisibleApplicationIds } from "@/lib/billing/applicant-visibility";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 20;
@@ -105,6 +105,13 @@ export async function GET(req: NextRequest) {
     select: { plan: true },
   });
 
+  // FREE recruiters see full PII for only the newest 5 applicants per job.
+  // visibleIds = the allowed set (null for paid plans = everyone visible).
+  const isFreePlan = (recruiter?.plan ?? PlanTier.FREE) === PlanTier.FREE;
+  const visibleIds = isFreePlan
+    ? await getFreeVisibleApplicationIds(session.user.id, jobId ?? undefined)
+    : null;
+
   const applications = await prisma.application.findMany({
     where,
     take: limit + 1,
@@ -171,8 +178,55 @@ export async function GET(req: NextRequest) {
     ? (pageItems[pageItems.length - 1]?.id ?? null)
     : null;
 
+  const recruiterPlan = recruiter?.plan ?? PlanTier.FREE;
+  const canScheduleInterviews = recruiterPlan !== PlanTier.FREE;
+  let lockedCount = 0;
+
   const result = await Promise.all(
     pageItems.map(async (app) => {
+      // Locked = FREE recruiter + applicant outside the visible 5/job window.
+      // Locked rows ship zero PII (redacted server-side), not just blurred.
+      const locked = visibleIds !== null && !visibleIds.has(app.id);
+      if (locked) {
+        lockedCount += 1;
+        return {
+          id: app.id,
+          jobId: app.jobId,
+          jobTitle: app.job.title,
+          jobSkills: app.job.skills.map((skill) => skill.skill.name),
+          candidateName: "Candidate",
+          candidateEmail: "",
+          candidateAvatar: null,
+          primaryRole: null,
+          headline: null,
+          location: null,
+          skills: [],
+          candidateProfile: {
+            primaryRole: null,
+            headline: null,
+            location: null,
+            skills: [],
+            yearsExperience: null,
+            websiteUrl: null,
+            linkedinUrl: null,
+            githubUrl: null,
+            twitterUrl: null,
+            workExperiences: [],
+            educations: [],
+          },
+          matchScore: app.matchScore,
+          status: app.status,
+          plan: recruiterPlan,
+          canScheduleInterviews,
+          canUseAi: true,
+          coverLetter: null,
+          resumeUrl: null,
+          appliedAt: app.createdAt.toISOString(),
+          scheduledInterview: null,
+          locked: true,
+        };
+      }
+
       const seeker = app.seeker;
       const profile = seeker.seekerProfile;
       let resumeUrl: string | null = null;
@@ -211,13 +265,14 @@ export async function GET(req: NextRequest) {
         },
         matchScore: app.matchScore,
         status: app.status,
-        plan: recruiter?.plan ?? PlanTier.FREE,
-        canScheduleInterviews: isRecruiterTrialActive() || recruiter?.plan !== PlanTier.FREE,
-        canUseAi: isRecruiterTrialActive() || recruiter?.plan !== PlanTier.FREE,
+        plan: recruiterPlan,
+        canScheduleInterviews,
+        canUseAi: true,
         coverLetter: app.coverLetter,
         resumeUrl,
         appliedAt: app.createdAt.toISOString(),
         scheduledInterview: app.interviews[0] ?? null,
+        locked: false,
       };
     }),
   );
@@ -225,10 +280,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     applications: result,
     meta: {
-      recruiterPlan: recruiter?.plan ?? PlanTier.FREE,
+      recruiterPlan,
       nextCursor,
       hasMore,
       limit,
+      lockedCount,
     },
   });
 }

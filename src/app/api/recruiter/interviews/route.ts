@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
 import { ScheduleInterviewSchema } from "@/lib/validations/interview.schema";
 import { normalizeTimezone } from "@/lib/timezone";
-import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
 import { sendInterviewScheduledEmail } from "@/lib/email/interview-scheduled";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
 
   const canAccessInterviewScheduling = (plan: string | null | undefined): boolean => {
-    return plan === PlanTier.STARTER || plan === PlanTier.GROWTH || plan === PlanTier.SCALE || isRecruiterTrialActive();
+    return plan === PlanTier.STARTER || plan === PlanTier.GROWTH || plan === PlanTier.SCALE;
   };
 
   if (!canAccessInterviewScheduling(recruiter.plan)) {

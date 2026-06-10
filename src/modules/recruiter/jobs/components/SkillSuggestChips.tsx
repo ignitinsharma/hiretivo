@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { stripHtml } from "@/lib/utils/html-sanitizer";
 import { recruiterService } from "@/services/recruiter.service";
+import type { SuggestedSkills } from "@/services/recruiter.service";
 
 interface SkillChipProps {
   name: string;
@@ -50,14 +51,17 @@ export function SkillSuggestChips({
   onAddSkill,
   autoTriggerTrigger = 0,
 }: SkillSuggestChipsProps) {
-  const [suggestedSkillNames, setSuggestedSkillNames] = useState<string[]>([]);
+  const [suggested, setSuggested] = useState<SuggestedSkills>({
+    core: [],
+    secondary: [],
+  });
 
   const suggestMutation = useMutation({
     mutationFn: recruiterService.suggestSkills,
     onSuccess: (skills) => {
-      setSuggestedSkillNames(skills);
-      // Auto-add skills that already exist in the DB and aren't selected yet
-      skills.forEach((skillName) => {
+      setSuggested(skills);
+      // Auto-add skills (both tiers) that already exist in the DB and aren't selected yet
+      [...skills.core, ...skills.secondary].forEach((skillName) => {
         const match = allSkills.find(
           (s) => s.name.toLowerCase() === skillName.toLowerCase(),
         );
@@ -66,8 +70,13 @@ export function SkillSuggestChips({
         }
       });
     },
-    onError: () => {
-      toast.error("Could not suggest skills. Try again.");
+    onError: (err) => {
+      // Surface server messages (e.g. daily free-limit / upgrade prompt) verbatim
+      toast.error(
+        err instanceof Error && err.message
+          ? err.message
+          : "Could not suggest skills. Try again.",
+      );
     },
   });
 
@@ -99,9 +108,28 @@ export function SkillSuggestChips({
         selectedSkillIds.includes(s.id),
     );
 
-  const unaddedSuggestions = suggestedSkillNames.filter(
-    (name) => !isSkillAdded(name),
-  );
+  const allSuggested = [...suggested.core, ...suggested.secondary];
+  const hasSuggestions = allSuggested.length > 0;
+  const unaddedSuggestions = allSuggested.filter((name) => !isSkillAdded(name));
+
+  const renderGroup = (label: string, names: string[]) =>
+    names.length > 0 ? (
+      <div className="space-y-1.5">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+          {label}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {names.map((name) => (
+            <SkillChip
+              key={name}
+              name={name}
+              isAdded={isSkillAdded(name)}
+              onClick={() => onAddSkill(name)}
+            />
+          ))}
+        </div>
+      </div>
+    ) : null;
 
   return (
     <div className="mt-3 space-y-2">
@@ -129,16 +157,10 @@ export function SkillSuggestChips({
         )}
       </div>
 
-      {suggestedSkillNames.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-1">
-          {suggestedSkillNames.map((name) => (
-            <SkillChip
-              key={name}
-              name={name}
-              isAdded={isSkillAdded(name)}
-              onClick={() => onAddSkill(name)}
-            />
-          ))}
+      {hasSuggestions && (
+        <div className="space-y-3 pt-1">
+          {renderGroup("Core skills", suggested.core)}
+          {renderGroup("Secondary skills", suggested.secondary)}
         </div>
       )}
     </div>

@@ -36,6 +36,31 @@ export function AiInsightsCard({ state }: AiInsightsCardProps) {
     );
   }
 
+  if (state.isError && state.errorMessage === "PLAN_GATED") {
+    return (
+      <section className="h-fit self-start rounded-xl border border-brand-border bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 p-5 text-white">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-lg font-bold">Daily free limit reached</p>
+            <p className="mt-1 text-sm text-white/80">
+              You have used all 3 of today&apos;s free AI candidate summaries. Upgrade to Pro for unlimited AI insights, interview scheduling, and more.
+            </p>
+          </div>
+          <a
+            href="/recruiter/settings?tab=billing"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-white/90"
+          >
+            Upgrade to Pro
+            <ChevronRight className="h-4 w-4" />
+          </a>
+        </div>
+      </section>
+    );
+  }
+
   if (state.isPending) {
     return (
       <section className={`h-fit self-start rounded-xl border border-brand-border p-5 ${HERO_GRADIENT}`}>
@@ -63,7 +88,7 @@ export function AiInsightsCard({ state }: AiInsightsCardProps) {
             AI Candidate Insights
           </p>
           <div
-            className="mt-3 text-sm leading-relaxed text-white/90 [&_.summary-container]:space-y-2 [&_.summary-skills_mark]:rounded [&_.summary-skills_mark]:bg-white/15 [&_.summary-skills_mark]:px-1"
+            className="mt-3 text-sm leading-relaxed text-white/90 [&_.summary-container]:space-y-2 [&_.summary-skills_mark]:rounded [&_.summary-skills_mark]:bg-white/15 [&_.summary-skills_mark]:px-1 [&_.summary-verdict]:mb-3 [&_.summary-verdict]:border-l-2 [&_.summary-verdict]:border-white/40 [&_.summary-verdict]:pl-2.5 [&_.screening-questions]:mt-4 [&_.screening-questions]:border-t [&_.screening-questions]:border-white/15 [&_.screening-questions]:pt-3 [&_.screening-questions_h3]:text-xs [&_.screening-questions_h3]:font-semibold [&_.screening-questions_h3]:uppercase [&_.screening-questions_h3]:tracking-wider [&_.screening-questions_h3]:text-white/70 [&_.screening-questions_ol]:mt-2 [&_.screening-questions_ol]:list-decimal [&_.screening-questions_ol]:space-y-1.5 [&_.screening-questions_ol]:pl-5 [&_.summary-gaps_em]:text-white"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(state.summary) }}
           />
         </div>

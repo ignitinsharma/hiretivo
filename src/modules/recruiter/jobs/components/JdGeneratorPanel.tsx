@@ -72,8 +72,13 @@ export function JdGeneratorPanel({
       const jd = await recruiterService.generateJobDescription(data);
       onGenerated(jd.trim());
       onOpenChange(false);
-    } catch {
-      toast.error("Failed to generate JD. Try again.");
+    } catch (err) {
+      // Surface server messages (e.g. daily free-limit / upgrade prompt) verbatim
+      toast.error(
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to generate JD. Try again.",
+      );
     } finally {
       setIsGenerating(false);
     }

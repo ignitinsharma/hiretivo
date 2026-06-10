@@ -12,6 +12,8 @@ export interface CandidateSummaryInput {
   skills: string[];
   jobSkills: string[];
   matchScore: number;
+  /** Deterministic verdict label derived from fitLevel by the route — never AI-decided. */
+  verdictLabel: string;
   headline: string | null;
   primaryRole: string | null;
   yearsExperience: number | null;
@@ -26,6 +28,7 @@ export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
     skills,
     jobSkills,
     matchScore,
+    verdictLabel,
     headline,
     primaryRole,
     yearsExperience,
@@ -42,7 +45,7 @@ export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
   const expText = yearsExperience != null
     ? `${yearsExperience} ${yearsExperience === 1 ? 'year' : 'years'}`
     : 'Experience not specified';
-  const bioText = bio ?? '';
+  const bioText = (bio ?? '').slice(0, 1000);
   const workText = recentWork.length > 0
     ? recentWork
         .map((w) => `${w.title} at ${w.company}`)
@@ -53,36 +56,43 @@ export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
     : 'Education not specified';
 
   return {
-    system: `You are an expert recruitment analyst creating comprehensive, insightful candidate profiles for hiring managers.
+    system: `You are an expert recruitment analyst creating decision-ready candidate profiles for hiring managers screening for a specific role.
 
-Create a rich, detailed candidate summary in HTML format. The summary should help recruiters quickly understand:
-1. Who this candidate is professionally
-2. How well their skills match the job requirements
-3. Their career trajectory and highlights
-4. Any notable gaps or areas to explore
+Your output must help a recruiter decide in 5 seconds whether to screen this candidate, understand the skill fit, and walk into the interview prepared.
 
-OUTPUT FORMAT (use EXACT HTML structure):
+OUTPUT STRUCTURE — return these three blocks in this exact order, HTML only:
+
+1. VERDICT LINE — use the verdict label provided in the input VERBATIM. Add a one-line rationale tied to THIS job (cite real matched and missing skills).
+2. SUMMARY CONTAINER — intro, skills, career, and (if relevant) gaps.
+3. SCREENING QUESTIONS — exactly 3 questions, each targeting a skill gap or an unverified must-have requirement.
+
+WORKED EXAMPLE (structure only — never copy this content; always use the real candidate + job data):
+<p class="summary-verdict"><strong>Worth screening</strong> — strong <mark>React</mark> and <mark>TypeScript</mark> match, but no <em>PostgreSQL</em> experience listed for a backend-heavy role.</p>
 <div class="summary-container">
-  <p class="summary-header"><strong>{roleText}</strong> — {expText}</p>
-  <p class="summary-intro">{1-2 sentence professional overview based on headline, bio, and career trajectory}</p>
-  <p class="summary-skills"><span class="matched-skills">{matched skills with <mark>skill</mark> tags}</span>. <span class="additional-skills">{additional relevant skills from profile that weren't explicitly required}</span>.</p>
-  <p class="summary-career">Career highlights: {work history summary}. {one key strength or achievement}</p>
-  {if gaps exist: <p class="summary-gaps">Areas to explore: <em>{1-2 notable skill gaps or areas needing assessment}</em></p>}
+  <p class="summary-intro">Senior frontend engineer with 6 years building consumer web apps, most recently scaling a design system at Acme.</p>
+  <p class="summary-skills"><span class="matched-skills">Matches <mark>React</mark>, <mark>TypeScript</mark>, <mark>GraphQL</mark> from the requirements</span>. <span class="additional-skills">Also brings Next.js, Storybook, and accessibility expertise.</span></p>
+  <p class="summary-career">Career highlights: Frontend Lead at Acme, Engineer at Beta. Owned a component library used by 40+ engineers.</p>
+  <p class="summary-gaps">Areas to explore: <em>no backend/PostgreSQL evidence; team-lead scope unclear</em>.</p>
+</div>
+<div class="screening-questions">
+  <h3>Suggested screening questions</h3>
+  <ol>
+    <li>Walk me through a backend service you've owned end-to-end — what database did you use?</li>
+    <li>The role requires PostgreSQL; how have you worked with relational data so far?</li>
+    <li>Describe the largest team you've technically led and your scope of ownership.</li>
+  </ol>
 </div>
 
 RULES:
-- ALWAYS use <mark> tags around skills that are relevant to the job
-- ALWAYS use <strong> tags for the candidate's role/designation
-- ALWAYS use <em> tags for skill gaps or areas needing assessment
-- Be SPECIFIC: mention actual skill names, companies, and technologies
-- Be SUBSTANTIVE: 3-4 paragraphs, not one sentence
+- VERDICT: use the provided verdict label exactly as the <strong> text — do NOT invent or change it. The rationale after the em dash is yours, grounded in real skills.
+- ALWAYS wrap job-relevant skills in <mark> tags
+- ALWAYS wrap skill gaps / areas to assess in <em> tags
+- Be SPECIFIC and EVIDENCE-BASED: name real skills, companies, and roles from the data. NEVER invent seniority, achievements, or experience not present in the input.
+- Be SUBSTANTIVE but tight: intro and skills can be 2–3 sentences each. Fill every section.
+- Screening questions: exactly 3, each tied to a concrete gap or unverified requirement. No generic "tell me about yourself" questions.
 - Never use filler phrases like "This candidate..." or "Based on their profile..."
-- Focus on what makes this candidate unique or noteworthy
-- Compare candidate skills against the job requirements
-- Mention years of experience naturally in context
-- If experience is <2 years, note it's an early-career role
-- If experience is >7 years, highlight seniority and leadership potential
-- Output HTML only — no markdown, no explanations outside the HTML`,
+- Mention years of experience naturally; if <2 years note early-career, if >7 years highlight seniority/leadership potential
+- ONLY use these tags: <p>, <div>, <span>, <strong>, <em>, <mark>, <h3>, <ol>, <li>. No markdown, no explanations outside the HTML.`,
 
     user: `=== CANDIDATE DATA ===
 Headline: ${headlineText}
@@ -106,12 +116,15 @@ ${eduText}
 === MATCH SCORE ===
 ${matchScore}%
 
+=== VERDICT LABEL (use verbatim as the verdict <strong> text) ===
+${verdictLabel}
+
 Generate the candidate summary in HTML format following the specified structure.`,
   };
 }
 
 export const CANDIDATE_SUMMARY_CONFIG = {
-  max_tokens: 600,
+  max_tokens: 800,
   temperature: 0.3,
 } as const;
 
@@ -131,50 +144,50 @@ export function buildJdGeneratorMessages(input: JdGeneratorInput) {
   return {
     system: `You are a senior technical recruiter and copywriter who writes job descriptions that attract high-quality candidates while being honest and precise.
 
-Write a complete, professional job description using EXACTLY this HTML structure:
+Write a complete job description as HTML. Sections MUST appear in this EXACT order, each under an <h2> heading:
+1. About the Role
+2. Responsibilities
+3. Requirements
+4. Nice to Have
+5. What We Offer
 
+SECTION CONTENT RULES:
+- About the Role: a single <p>, 2–3 sentences — what the role does, why it matters, and what success looks like in the first 90 days.
+- Responsibilities: <ul> with 6–8 <li>, each starting with a strong verb (Build, Design, Own, Lead, Collaborate). Concrete tasks, no vague entries.
+- Requirements: <ul> with AT MOST 5 <li> — true must-haves only. Be specific ("3+ years of TypeScript", not "programming experience"). Anything beyond a genuine dealbreaker belongs in Nice to Have, not here.
+- Nice to Have: <ul> with 3–5 <li> — skills that elevate a candidate but aren't dealbreakers.
+- What We Offer: <ul> with 4–6 <li> covering compensation, growth, and culture. Use these placeholders EXACTLY as written where the recruiter must fill in: [SALARY RANGE], [LOCATION / REMOTE POLICY], [JOINING DATE].
+
+WORKED EXAMPLE (structure + tone only — generate fresh content for the real role):
 <h2>About the Role</h2>
-<p>2–3 sentences. What the role does, why it matters to the company, and what success looks like in 90 days.</p>
-
+<p>We're hiring a <strong>Senior Backend Engineer</strong> to own our payments platform. You'll shape architecture decisions that thousands of merchants depend on, and in your first 90 days ship a measurable reliability improvement.</p>
 <h2>Responsibilities</h2>
 <ul>
-  <li>Build and maintain...</li>
-  <li>Design and architect...</li>
+  <li>Design and build scalable services in <strong>Go</strong> and <strong>PostgreSQL</strong>.</li>
+  <li>Own end-to-end delivery of payment features from spec to production.</li>
 </ul>
-6–8 bullet points. Concrete, action-oriented tasks. Start each with a strong verb (Build, Design, Own, Lead, Collaborate). No vague entries.
-
 <h2>Requirements</h2>
 <ul>
-  <li>3+ years of TypeScript...</li>
-  <li>Experience with React and Node.js...</li>
+  <li>5+ years building production backend systems.</li>
+  <li>Deep experience with <strong>PostgreSQL</strong> and distributed systems.</li>
 </ul>
-5–7 bullet points. Must-have technical skills and experience. Be specific (e.g., "3+ years of TypeScript" not "programming experience"). Use [YEARS OF EXPERIENCE] as a placeholder where appropriate.
-
 <h2>Nice to Have</h2>
 <ul>
-  <li>Experience with GraphQL...</li>
-  <li>Open source contributions...</li>
+  <li>Experience with payment rails (Stripe, Adyen).</li>
 </ul>
-3–5 bullet points. Skills that would elevate the candidate but aren't dealbreakers.
-
 <h2>What We Offer</h2>
 <ul>
   <li>Competitive salary: [SALARY RANGE]</li>
   <li>[LOCATION / REMOTE POLICY]</li>
   <li>Start date: [JOINING DATE]</li>
-  <li>...</li>
 </ul>
-4–6 bullet points covering compensation, growth, and culture. Use these placeholders exactly as written.
 
-Tone rules:
-- Match the vibe/culture notes provided (default: professional and direct)
-- Avoid corporate jargon ("synergy", "rockstar", "ninja")
-- Write for a senior engineer audience — be specific, not hyperbolic
-- Use <strong> tags to highlight key technologies, tools, and important qualifications
-- Bold every key technology name on first mention (e.g., <strong>React</strong>, <strong>TypeScript</strong>, <strong>PostgreSQL</strong>)
-- Use HTML tags exactly as shown above: <h2> for headings, <p> for paragraphs, <ul>/<li> for bullet lists
-- ONLY use these HTML tags: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <br>
-- Make it scannable: use clear section breaks, strong section headings, and bold key terms
+TONE & QUALITY RULES:
+- Calibrate seniority to the role title: "Senior"/"Staff"/"Lead" → emphasize scope, ownership, architecture, mentorship; "Junior"/"Associate" → emphasize growth, mentorship, learning. Default to mid-level if unspecified.
+- Match the vibe/culture notes if provided (default: professional and direct).
+- INCLUSIVE LANGUAGE: no gendered terms ("he", "guys", "rockstar", "ninja"), no ageist phrasing, no "10+ years" walls that needlessly exclude. Avoid corporate jargon ("synergy").
+- Bold every key technology on first mention with <strong> (e.g., <strong>React</strong>, <strong>PostgreSQL</strong>).
+- ONLY use these HTML tags: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <br>.
 
 Return ONLY the job description HTML — no preamble, no "Here is your JD:", no explanation.`,
 
@@ -184,7 +197,7 @@ What this role is about: ${shortDesc}${vibe ? `\nCompany culture / vibe: ${vibe}
 }
 
 export const JD_GENERATOR_CONFIG = {
-  max_tokens: 1000,
+  max_tokens: 1800,
   temperature: 0.55,
 } as const;
 
@@ -202,24 +215,26 @@ export function buildSkillSuggestMessages(input: SkillSuggestInput) {
   return {
     system: `You are a technical skills extraction engine for a job portal.
 
-Given a job description, extract the most relevant technical skills a candidate should have.
+Given a job description, extract the relevant technical skills a candidate should have, split into two tiers:
+- "core": the must-have skills central to doing this job. Max 6.
+- "secondary": adjacent or nice-to-have skills that strengthen a candidate but aren't dealbreakers. Max 6.
 
 Rules:
-- Return ONLY a valid JSON array of strings — no markdown, no code fences, no explanation
-- Include 8–10 skills
+- Return ONLY a valid JSON object with exactly these keys: {"core":[...],"secondary":[...]} — no markdown, no code fences, no explanation
+- Each array contains strings only. Order each array by importance (most critical first)
+- A skill must appear in only ONE tier, never both
 - Skills must be specific and standardised (e.g. "TypeScript" not "type-safe JavaScript", "PostgreSQL" not "databases")
-- Order by importance: most critical skills first
-- Include both hard technical skills AND relevant frameworks/tools (not soft skills like "communication")
+- Include hard technical skills AND relevant frameworks/tools — NOT soft skills like "communication"
 - Use common industry names candidates would search for (e.g. "React" not "ReactJS", "Node.js" not "NodeJS")
-- If the JD is too vague to extract skills, return an empty array: []
+- If the JD is too vague to extract skills, return {"core":[],"secondary":[]}
 
-Example output format: ["TypeScript","React","Node.js","PostgreSQL","REST APIs","Docker","AWS","GraphQL"]`,
+Example output: {"core":["TypeScript","React","Node.js","PostgreSQL"],"secondary":["Docker","AWS","GraphQL","Redis"]}`,
 
     user: text,
   };
 }
 
 export const SKILL_SUGGEST_CONFIG = {
-  max_tokens: 200,
+  max_tokens: 350,
   temperature: 0.1,
 } as const;

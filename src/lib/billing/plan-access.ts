@@ -36,7 +36,7 @@ export function canPostJob(
 ): boolean {
   if (plan === PlanTier.STARTER) return currentActiveJobCount < 2;
   if (plan === PlanTier.GROWTH || plan === PlanTier.SCALE) return true;
-  return false;
+  return currentActiveJobCount < 1; // FREE: 1 active job
 }
 
 /*
@@ -46,7 +46,7 @@ export function canPostJob(
 export function getJobLimit(plan: string | null | undefined): number | null {
   if (plan === PlanTier.STARTER) return 2;
   if (plan === PlanTier.GROWTH || plan === PlanTier.SCALE) return null;
-  return 0;
+  return 1; // FREE: 1 active job
 }
 
 export const TALENT_POOL_UPGRADE_COPY = {

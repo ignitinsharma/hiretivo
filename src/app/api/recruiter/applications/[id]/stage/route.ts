@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { ApplicationStatus, UserRole } from "@/constants/enums";
+import { ApplicationStatus, PlanTier, UserRole } from "@/constants/enums";
 import { isValidStageTransition } from "@/lib/application-pipeline";
 import { sendApplicationStatusEmail } from "@/lib/email/application-status";
 import { prisma } from "@/lib/prisma";
 import { updateApplicationStageSchema } from "@/lib/validations/application";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { isApplicationVisibleOnFree } from "@/lib/billing/applicant-visibility";
 
 const stageUpdateRateLimiter = createRateLimiter("stage-update", 30, "1 m");
 
@@ -58,6 +59,21 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   if (application.job.recruiterId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Locked-applicant gate — FREE recruiters can only manage their visible 5/job.
+  if (
+    session.user.plan === PlanTier.FREE &&
+    !(await isApplicationVisibleOnFree(
+      session.user.id,
+      application.id,
+      application.jobId,
+    ))
+  ) {
+    return NextResponse.json(
+      { error: "Upgrade to manage this candidate." },
+      { status: 403 },
+    );
   }
 
   const nextStage = parsed.data.stage;

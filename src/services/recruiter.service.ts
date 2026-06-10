@@ -110,6 +110,8 @@ export interface CandidateApplication {
   matchScore: number;
   status: ApplicationStatus;
   plan: PlanTier;
+  /** FREE plan: true when applicant is beyond the visible 5/job window (PII redacted server-side). */
+  locked: boolean;
   canScheduleInterviews: boolean;
   canUseAi: boolean;
   coverLetter: string | null;
@@ -141,6 +143,7 @@ export interface RecruiterApplicationsResponse {
     nextCursor: string | null;
     hasMore: boolean;
     limit: number;
+    lockedCount: number;
   };
 }
 
@@ -167,6 +170,12 @@ export interface AiSummaryResult {
   summary: string;
   fitScore: number;
   fitLevel: FitLevel;
+}
+
+/* Tiered AI skill suggestions: core = must-have, secondary = nice-to-have. */
+export interface SuggestedSkills {
+  core: string[];
+  secondary: string[];
 }
 
 export interface InterviewPayload {
@@ -233,8 +242,8 @@ export const recruiterService = {
     await apiClient.patch('/recruiter/settings', payload);
   },
 
-  suggestSkills: async (descriptionText: string): Promise<string[]> => {
-    const { data } = await apiClient.post<DataResponse<{ skills: string[] }>>('/recruiter/ai/suggest-skills', {
+  suggestSkills: async (descriptionText: string): Promise<SuggestedSkills> => {
+    const { data } = await apiClient.post<DataResponse<{ skills: SuggestedSkills }>>('/recruiter/ai/suggest-skills', {
       descriptionText,
     });
     return data.data.skills;

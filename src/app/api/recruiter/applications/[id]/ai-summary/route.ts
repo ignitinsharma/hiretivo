@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { AiMessageRole, UserRole, PlanTier } from "@/constants/enums";
+import { AiMessageRole, UserRole, PlanTier, VerdictLabel, AiFeature } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { openrouter, getAIModel } from "@/lib/openrouter";
 import { AiSummaryParamsSchema } from "@/lib/validations/ai-summary.schema";
@@ -9,7 +9,8 @@ import {
   buildCandidateSummaryMessages,
   CANDIDATE_SUMMARY_CONFIG,
 } from "@/lib/ai-prompts";
-import { isRecruiterTrialActive } from "@/lib/recruiter-trial";
+import { consumeFreeDailyAiQuota } from "@/lib/billing/ai-daily-limit";
+import { isApplicationVisibleOnFree } from "@/lib/billing/applicant-visibility";
 
 const aiSummaryRateLimiter = createRateLimiter("ai-summary", 10, "1 m");
 
@@ -20,6 +21,17 @@ function calculateFitLevel(score: number): FitLevel {
   if (score >= 70) return "good";
   if (score >= 50) return "moderate";
   return "low";
+}
+
+/*
+ * getVerdictLabel
+ * Maps the deterministic fit level to a recruiter-facing verdict label.
+ * Fed verbatim into the summary prompt so the verdict never disagrees with the fit badge.
+ */
+function getVerdictLabel(fitLevel: FitLevel): VerdictLabel {
+  if (fitLevel === "excellent") return VerdictLabel.STRONG_FIT;
+  if (fitLevel === "good") return VerdictLabel.WORTH_SCREENING;
+  return VerdictLabel.STRETCH_HIRE;
 }
 
 function calculateSkillMatchPercentage(
@@ -61,15 +73,7 @@ export async function POST(
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  // 4. Plan gate (D-07): FREE plan cannot access AI summaries (bypass during trial)
-  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
-    return NextResponse.json(
-      { error: "AI candidate summaries require a PRO or ENTERPRISE plan." },
-      { status: 403 },
-    );
-  }
-
-  // 5. Param validation
+  // 4. Param validation
   const { id } = await params;
   const parsed = AiSummaryParamsSchema.safeParse({ id });
   if (!parsed.success) {
@@ -85,6 +89,7 @@ export async function POST(
     select: {
       aiSummary: true,
       matchScore: true,
+      jobId: true,
       job: {
         select: {
           recruiterId: true,
@@ -136,6 +141,22 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  // 6b. Locked-applicant gate — FREE recruiters can only summarize their visible 5/job.
+  // Blocks summarizing a locked candidate's PII even when the application id is known.
+  if (
+    session.user.plan === PlanTier.FREE &&
+    !(await isApplicationVisibleOnFree(
+      session.user.id,
+      parsed.data.id,
+      application.jobId,
+    ))
+  ) {
+    return NextResponse.json(
+      { error: "Upgrade to view this candidate." },
+      { status: 403 },
+    );
+  }
+
   // 7. Build prompt inputs
   const skills = (application.seeker.seekerProfile?.skills ?? []).map(
     (s) => s.skill.name,
@@ -170,11 +191,27 @@ export async function POST(
     );
   }
 
+  // Daily quota: FREE plan gets FREE_AI_DAILY_LIMIT summaries/day (cache hits above don't count).
+  // Bypassed for all paid plans.
+  if (session.user.plan === PlanTier.FREE) {
+    const allowed = await consumeFreeDailyAiQuota(AiFeature.SUMMARY, session.user.id);
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error:
+            "AI candidate summaries require a paid plan once your 3 free summaries today are used. Upgrade to continue.",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
   // 9. Generate summary via OpenRouter
   const { system, user } = buildCandidateSummaryMessages({
     skills,
     jobSkills,
     matchScore,
+    verdictLabel: getVerdictLabel(fitLevel),
     headline,
     primaryRole: application.seeker.seekerProfile?.primaryRole ?? null,
     yearsExperience: application.seeker.seekerProfile?.yearsExperience ?? null,

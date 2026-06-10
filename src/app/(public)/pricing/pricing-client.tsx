@@ -51,11 +51,12 @@ interface FeatureRow {
 
 const FEATURE_ROWS: FeatureRow[] = [
   { feature: "Engineer unlocks/mo", free: "—", starter: "10", growth: "30", scale: "Unlimited" },
-  { feature: "Active job posts", free: "—", starter: "2", growth: "Unlimited", scale: "Unlimited" },
+  { feature: "Active job posts", free: "1", starter: "2", growth: "Unlimited", scale: "Unlimited" },
+  { feature: "Applicant views/job", free: "5", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
   { feature: "Full contact details", free: null, starter: true, growth: true, scale: true },
-  { feature: "AI candidate summaries", free: true, starter: true, growth: true, scale: true },
-  { feature: "Interview scheduling", free: true, starter: true, growth: true, scale: true },
-  { feature: "Talent pool access", free: null, starter: true, growth: true, scale: true },
+  { feature: "AI summaries, JD & skills", free: "3/day", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
+  { feature: "Interview scheduling", free: null, starter: true, growth: true, scale: true },
+  { feature: "Talent pool access", free: "Blurred", starter: true, growth: true, scale: true },
   { feature: "Priority support", free: null, starter: true, growth: true, scale: true },
 ];
 

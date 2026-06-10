@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
-import { AiMessageRole, UserRole, PlanTier } from '@/constants/enums';
+import { AiMessageRole, UserRole, PlanTier, AiFeature } from '@/constants/enums';
 import { openrouter, getAIModel } from '@/lib/openrouter';
 import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildJdGeneratorMessages, JD_GENERATOR_CONFIG } from '@/lib/ai-prompts';
-import { isRecruiterTrialActive } from '@/lib/recruiter-trial';
+import { consumeFreeDailyAiQuota } from '@/lib/billing/ai-daily-limit';
 
 const generateJdRateLimiter = createRateLimiter('generate-jd', 5, '1 m');
 
@@ -27,12 +27,18 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });
   }
 
-  // 4. Plan gate — FREE plan cannot access AI features (bypass during trial)
-  if (session.user.plan === PlanTier.FREE && !isRecruiterTrialActive()) {
-    return new Response(
-      JSON.stringify({ error: 'AI job description generation requires a PRO or ENTERPRISE plan.' }),
-      { status: 403 },
-    );
+  // 4. Plan gate — FREE plan gets 3 JD generations/day; paid plans unlimited
+  if (session.user.plan === PlanTier.FREE) {
+    const allowed = await consumeFreeDailyAiQuota(AiFeature.JD, session.user.id);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "You've used your 3 free AI job descriptions today. Upgrade to a paid plan for unlimited generations.",
+        }),
+        { status: 403 },
+      );
+    }
   }
 
   // 5. Parse + Zod validate

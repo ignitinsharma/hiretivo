@@ -47,7 +47,7 @@ type RecruiterStatsResponse = {
   hired: number;
 };
 
-const MAX_TABLE_SKILLS = 8;
+const MAX_TABLE_SKILLS = 2;
 
 async function fetchRecruiterStats(
   jobId?: string,
@@ -387,8 +387,8 @@ export default function RecruiterApplicationsPage() {
                       <td className="px-8 py-6 text-right"><Skeleton className="h-7 w-12 ml-auto" /></td>
                     </tr>
                   ))
-                : applications.map((application, index) => {
-                const isLocked = recruiterPlan === PlanTier.FREE && index >= 20;
+                : applications.map((application) => {
+                const isLocked = application.locked === true;
                 const { visible, hiddenCount } = getVisibleSkills(
                   application.candidateProfile?.skills ?? [],
                 );
@@ -499,13 +499,14 @@ export default function RecruiterApplicationsPage() {
           </table>
         </div>
 
-        {recruiterPlan === PlanTier.FREE && applications.length > 20 ? (
+        {recruiterPlan === PlanTier.FREE &&
+        applications.some((app) => app.locked) ? (
           <div className="absolute inset-x-10 bottom-8 bg-white/90 rounded-xl border border-gray-200 p-6 text-center">
             <h3 className="text-slate-900 font-bold">
               Upgrade to unlock all applicants
             </h3>
             <p className="text-slate-500 text-sm mt-1">
-              FREE plan shows full details for the first 20 candidates.
+              FREE plan shows full details for the first 5 candidates per job.
             </p>
             <Button variant="primary" className="mt-4">
               Upgrade Plan

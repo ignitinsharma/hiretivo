@@ -1,3 +1,4 @@
+import { type ComponentType, type SVGProps } from "react";
 import { Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -5,11 +6,18 @@ import { Button } from "@/components/ui/button";
 import type { CandidateApplication } from "../types";
 import { getInitials } from "../utils";
 
-interface DrawerHeaderProps {
-  application: CandidateApplication;
+interface DrawerHeaderLink {
+  href: string;
+  label: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-export function DrawerHeader({ application }: DrawerHeaderProps) {
+interface DrawerHeaderProps {
+  application: CandidateApplication;
+  links: DrawerHeaderLink[];
+}
+
+export function DrawerHeader({ application, links }: DrawerHeaderProps) {
   const profile = application.candidateProfile;
 
   return (
@@ -46,7 +54,22 @@ export function DrawerHeader({ application }: DrawerHeaderProps) {
           </a>
         </Button>
 
+        {links.length > 0 ? (
+          <div className="mt-3 flex items-center justify-center gap-1">
+            {links.map(({ href, label, Icon }) => (
+              <Button key={label} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-brand-foreground-muted hover:text-brand-foreground" asChild>
+                <a href={href} target="_blank" rel="noreferrer" title={label}>
+                  <Icon className="h-4 w-4" />
+                </a>
+              </Button>
+            ))}
+          </div>
+        ) : null}
+
       </div>
     </article>
   );
 }
+
+export type { DrawerHeaderLink };
+
