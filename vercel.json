@@ -11,19 +11,5 @@
   },
   "github": {
     "silent": false
-  },
-  "crons": [
-    {
-      "path": "/api/cron/match",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/stale-jobs",
-      "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-deleted-jobs",
-      "schedule": "0 3 * * *"
-    }
-  ]
+  }
 }
