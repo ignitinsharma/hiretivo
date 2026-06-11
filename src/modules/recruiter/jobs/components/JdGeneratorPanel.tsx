@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Check, RefreshCw, Wand2 } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { stripHtml } from "@/lib/utils/html-sanitizer";
+import { sanitizeHtml, stripHtml } from "@/lib/utils/html-sanitizer";
 
 import {
   JdGeneratorSchema,
@@ -31,6 +32,16 @@ interface JdGeneratorPanelProps {
   onGenerated: (jd: string) => void;
 }
 
+/*
+ * JdGeneratorPanel
+ * Renders the recruiter AI JD generation sheet with form inputs, preview,
+ * regeneration, and explicit accept flow.
+ * @param open - Whether the sheet is visible
+ * @param onOpenChange - Sheet visibility callback
+ * @param prefillTitle - Job title from the parent form
+ * @param prefillDescription - Existing job description used as generation context
+ * @param onGenerated - Receives the accepted generated JD HTML
+ */
 export function JdGeneratorPanel({
   open,
   onOpenChange,
@@ -39,6 +50,7 @@ export function JdGeneratorPanel({
   onGenerated,
 }: JdGeneratorPanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedJd, setGeneratedJd] = useState<string | null>(null);
   const shortDescRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
@@ -57,7 +69,10 @@ export function JdGeneratorPanel({
   useEffect(() => {
     setValue("title", prefillTitle);
     setValue("shortDesc", stripHtml(prefillDescription));
-  }, [prefillTitle, prefillDescription, setValue]);
+    if (open) {
+      setGeneratedJd(null);
+    }
+  }, [open, prefillTitle, prefillDescription, setValue]);
 
   useEffect(() => {
     const el = shortDescRef.current;
@@ -66,12 +81,17 @@ export function JdGeneratorPanel({
     el.style.height = `${Math.max(200, Math.min(el.scrollHeight, 400))}px`;
   }, [shortDescValue]);
 
-  const onSubmit = async (data: JdGeneratorInput) => {
+  const generateDraft = async (
+    data: JdGeneratorInput,
+    isRegeneration: boolean,
+  ) => {
     setIsGenerating(true);
     try {
-      const jd = await recruiterService.generateJobDescription(data);
-      onGenerated(jd.trim());
-      onOpenChange(false);
+      const jd = await recruiterService.generateJobDescription({
+        ...data,
+        isRegeneration,
+      });
+      setGeneratedJd(jd.trim());
     } catch (err) {
       // Surface server messages (e.g. daily free-limit / upgrade prompt) verbatim
       toast.error(
@@ -84,6 +104,18 @@ export function JdGeneratorPanel({
     }
   };
 
+  const onSubmit = (data: JdGeneratorInput) => generateDraft(data, false);
+
+  const handleRegenerate = () => {
+    void handleSubmit((data) => generateDraft(data, true))();
+  };
+
+  const handleUseGeneratedJd = () => {
+    if (!generatedJd) return;
+    onGenerated(generatedJd);
+    onOpenChange(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -93,7 +125,8 @@ export function JdGeneratorPanel({
         <SheetHeader>
           <SheetTitle>Generate Job Description</SheetTitle>
           <SheetDescription>
-            Fill in the basics — AI will write the full JD.
+            Fill in the basics. Generate a draft, review it, then choose whether
+            to use it.
           </SheetDescription>
         </SheetHeader>
 
@@ -101,9 +134,9 @@ export function JdGeneratorPanel({
           <div className="space-y-1.5">
             <Label
               htmlFor="jd-title"
-              className="text-sm font-semibold text-slate-700"
+              className="text-sm font-semibold text-brand-foreground"
             >
-              Job Title <span className="text-red-500">*</span>
+              Job Title <span className="text-brand-danger">*</span>
             </Label>
             <Input
               id="jd-title"
@@ -111,21 +144,24 @@ export function JdGeneratorPanel({
               {...register("title")}
             />
             {errors.title && (
-              <p className="text-xs text-red-500">{errors.title.message}</p>
+              <p className="text-xs text-brand-danger">
+                {errors.title.message}
+              </p>
             )}
           </div>
 
           <div className="space-y-1.5">
             <Label
               htmlFor="jd-shortdesc"
-              className="text-sm font-semibold text-slate-700"
+              className="text-sm font-semibold text-brand-foreground"
             >
-              What is this role about? <span className="text-red-500">*</span>
+              What is this role about?{" "}
+              <span className="text-brand-danger">*</span>
             </Label>
             <Textarea
               id="jd-shortdesc"
-              placeholder="Describe the core responsibilities and goals of this role (min 50 chars)..."
-              className="resize-none min-h-[200px] max-h-[400px] overflow-y-auto"
+              placeholder="Example: Frontend Developer with 5 years of experience. Strong React, TypeScript, and Node.js skills. Owns dashboard UI, API integration, performance, and component quality."
+              className="resize-none min-h-50 max-h-100 overflow-y-auto"
               {...(() => {
                 const { ref: rhfRef, ...rhfRest } = register("shortDesc", {
                   onChange: () => {
@@ -145,17 +181,21 @@ export function JdGeneratorPanel({
               })()}
             />
             {errors.shortDesc && (
-              <p className="text-xs text-red-500">{errors.shortDesc.message}</p>
+              <p className="text-xs text-brand-danger">
+                {errors.shortDesc.message}
+              </p>
             )}
           </div>
 
           <div className="space-y-1.5">
             <Label
               htmlFor="jd-vibe"
-              className="text-sm font-semibold text-slate-700"
+              className="text-sm font-semibold text-brand-foreground"
             >
               Culture / vibe{" "}
-              <span className="text-slate-400 font-normal">(optional)</span>
+              <span className="font-normal text-brand-foreground-secondary">
+                (optional)
+              </span>
             </Label>
             <Input
               id="jd-vibe"
@@ -163,18 +203,73 @@ export function JdGeneratorPanel({
               {...register("vibe")}
             />
             {errors.vibe && (
-              <p className="text-xs text-red-500">{errors.vibe.message}</p>
+              <p className="text-xs text-brand-danger">
+                {errors.vibe.message}
+              </p>
             )}
           </div>
+
+          <p className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-xs leading-relaxed text-brand-foreground-muted">
+            Each generate or regenerate action uses one AI JD credit on the free
+            plan. Paid plans can generate without the daily free limit.
+          </p>
 
           <Button
             type="submit"
             variant="primary"
             className="w-full"
+            loading={isGenerating && !generatedJd}
+            loadingText="Generating..."
             disabled={isGenerating}
           >
-            {isGenerating ? "Generating..." : "Generate Job Description"}
+            <Wand2 className="h-4 w-4" aria-hidden="true" />
+            Generate Preview
           </Button>
+
+          {generatedJd && (
+            <section className="space-y-4 rounded-xl border border-brand-border bg-white p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-brand-foreground">
+                    Generated preview
+                  </h3>
+                  <p className="text-xs leading-relaxed text-brand-foreground-muted">
+                    Review this draft before replacing the job description.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleRegenerate}
+                    loading={isGenerating}
+                    loadingText="Regenerating..."
+                    disabled={isGenerating}
+                  >
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                    Regenerate
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={handleUseGeneratedJd}
+                    disabled={isGenerating}
+                  >
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                    Use this JD
+                  </Button>
+                </div>
+              </div>
+              <div
+                className="prose prose-slate max-w-none rounded-lg border border-brand-border bg-brand-surface/40 p-4 text-sm"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(generatedJd),
+                }}
+              />
+            </section>
+          )}
         </form>
       </SheetContent>
     </Sheet>

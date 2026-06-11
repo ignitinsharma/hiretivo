@@ -130,7 +130,15 @@ function TalentCard({
           />
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-1.5">
-              <h2 className="truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground">
+              <h2
+                className={cn(
+                  "truncate text-lg font-bold capitalize leading-tight tracking-tight text-brand-foreground",
+                  !talent.isUnlocked && "select-none blur-[2px]", // Frosted blur is cosmetic — the name is already masked server-side when locked.
+                )}
+              >
+                {!talent.isUnlocked && (
+                  <span className="sr-only">Locked candidate. </span>
+                )}
                 {talent.name ?? "Unnamed talent"}
               </h2>
               <HiretivoVerifiedBadge variant="inline" size="sm" />

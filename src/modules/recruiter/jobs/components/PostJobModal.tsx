@@ -937,6 +937,11 @@ export function PostJobModal() {
                 Generate with AI
               </button>
             </div>
+            <p className="mb-2 text-xs leading-relaxed text-brand-foreground-muted">
+              Tip: add a rough brief like “Frontend Developer with 5 years of
+              experience, expert in React, Node.js, and TypeScript” then use
+              Generate with AI.
+            </p>
             <Controller
               control={control}
               name="description"

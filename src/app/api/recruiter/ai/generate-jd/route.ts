@@ -9,6 +9,12 @@ import { consumeFreeDailyAiQuota } from '@/lib/billing/ai-daily-limit';
 
 const generateJdRateLimiter = createRateLimiter('generate-jd', 5, '1 m');
 
+/*
+ * POST /api/recruiter/ai/generate-jd
+ * Generates or regenerates a recruiter job description as streamed HTML.
+ * Request body: { title, shortDesc, vibe?, isRegeneration? }
+ * Returns: text/html-compatible plain text stream or JSON error.
+ */
 export async function POST(req: NextRequest) {
   // 1. Auth check
   const session = await auth();
@@ -27,7 +33,14 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });
   }
 
-  // 4. Plan gate — FREE plan gets 3 JD generations/day; paid plans unlimited
+  // 4. Parse + Zod validate
+  const body = await req.json().catch(() => null);
+  const parsed = JdGeneratorSchema.safeParse(body);
+  if (!parsed.success) {
+    return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
+  }
+
+  // 5. Plan gate — FREE plan gets 3 JD generations/day; paid plans unlimited
   if (session.user.plan === PlanTier.FREE) {
     const allowed = await consumeFreeDailyAiQuota(AiFeature.JD, session.user.id);
     if (!allowed) {
@@ -39,13 +52,6 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       );
     }
-  }
-
-  // 5. Parse + Zod validate
-  const body = await req.json().catch(() => null);
-  const parsed = JdGeneratorSchema.safeParse(body);
-  if (!parsed.success) {
-    return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
   }
 
   // 6. Call OpenRouter with streaming for faster perceived response

@@ -184,10 +184,11 @@ export interface JdGeneratorInput {
   title: string;
   shortDesc: string;
   vibe?: string;
+  isRegeneration?: boolean;
 }
 
 export function buildJdGeneratorMessages(input: JdGeneratorInput) {
-  const { title, shortDesc, vibe } = input;
+  const { title, shortDesc, vibe, isRegeneration } = input;
 
   return {
     system: `You are a senior technical recruiter and copywriter who writes job descriptions that attract high-quality candidates while being honest and precise.
@@ -236,6 +237,7 @@ TONE & QUALITY RULES:
 - INCLUSIVE LANGUAGE: no gendered terms ("he", "guys", "rockstar", "ninja"), no ageist phrasing, no "10+ years" walls that needlessly exclude. Avoid corporate jargon ("synergy").
 - Bold every key technology on first mention with <strong> (e.g., <strong>React</strong>, <strong>PostgreSQL</strong>).
 - ONLY use these HTML tags: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <br>.
+- ${isRegeneration ? "This is a regeneration request. Write a fresh alternative draft with different phrasing and examples while preserving the same facts, constraints, section order, and HTML rules." : "This is the first draft request. Write the strongest complete JD from the provided role facts."}
 
 Return ONLY the job description HTML — no preamble, no "Here is your JD:", no explanation.`,
 

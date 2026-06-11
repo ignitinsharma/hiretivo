@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { UserRole, VerificationStatus } from "@/constants/enums";
 import { canAccessTalentPool } from "@/lib/billing/plan-access";
+import { coarseLocation, redactName } from "@/lib/billing/talent-redaction";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
@@ -165,13 +166,6 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
   const isUnlocked = unlock !== null;
   const profile = engineer.seekerProfile;
 
-  // Build name for locked shape: "Priya S."
-  const nameParts = (engineer.name ?? "").trim().split(/\s+/);
-  const lockedName =
-    nameParts.length >= 2
-      ? `${nameParts[0]} ${nameParts[nameParts.length - 1]!.charAt(0)}.`
-      : (nameParts[0] ?? "Engineer");
-
   const skills = profile.skills.map((item) => ({
     name: item.skill.name,
     category: item.skill.category,
@@ -185,12 +179,12 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
         isUnlocked: false,
         // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
         verificationStatus: VerificationStatus.VERIFIED,
-        name: lockedName,
-        image: null,
+        name: redactName(engineer.name), // server-side mask — real name never sent while locked
+        image: resolveLogoUrl(engineer.image), // real avatar shown on locked card (product decision)
         email: null,
         headline: profile.headline,
         bio: null,
-        location: profile.location,
+        location: coarseLocation(profile.location), // region only — no exact city while locked
         yearsExperience: profile.yearsExperience,
         primaryRole: profile.primaryRole,
         availability: profile.availability,

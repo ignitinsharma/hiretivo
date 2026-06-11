@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
 import { UserRole, VerificationStatus } from "@/constants/enums";
 import { canAccessTalentPool } from "@/lib/billing/plan-access";
+import { coarseLocation, redactName } from "@/lib/billing/talent-redaction";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { searchRateLimiter } from "@/lib/rate-limit";
@@ -88,9 +89,11 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         name: true,
+        image: true,
         seekerProfile: {
           select: {
             headline: true,
+            location: true,
             yearsExperience: true,
             primaryRole: true,
             availability: true,
@@ -108,22 +111,17 @@ export async function GET(req: NextRequest) {
       data: {
         items: blurredSeekers.map((seeker) => {
           const profile = seeker.seekerProfile;
-          // Blur name: "Priya Sharma" → "Priya S."
-          const nameParts = (seeker.name ?? "").trim().split(/\s+/);
-          const blurredName =
-            nameParts.length >= 2
-              ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
-              : (nameParts[0] ?? "Engineer");
           return {
             id: seeker.id,
-            name: blurredName,
+            isUnlocked: false, // FREE plan items are always locked
+            name: redactName(seeker.name), // server-side mask — real name never sent
             // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
             verificationStatus: VerificationStatus.VERIFIED,
             email: null,      // never expose email on FREE plan
-            image: null,      // never expose real avatar on FREE plan
+            image: resolveLogoUrl(seeker.image), // real avatar shown on locked card (product decision)
             headline: profile?.headline ?? null,
             bioExcerpt: null, // bio hidden on FREE plan
-            location: null,   // location hidden on FREE plan
+            location: coarseLocation(profile?.location), // region only — no exact city
             yearsExperience: profile?.yearsExperience ?? null,
             primaryRole: profile?.primaryRole ?? null,
             availability: profile?.availability ?? null,
@@ -275,23 +273,20 @@ export async function GET(req: NextRequest) {
         const profile = seeker.seekerProfile;
 
         const isUnlocked = unlockedSet.has(seeker.id);
-        const nameParts = (seeker.name ?? "").trim().split(/\s+/);
-        const lockedName =
-          nameParts.length >= 2
-            ? `${nameParts[0]} ${nameParts[nameParts.length - 1]!.charAt(0)}.`
-            : (nameParts[0] ?? "Engineer");
 
         return {
           id: seeker.id,
           isUnlocked,
           // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
           verificationStatus: VerificationStatus.VERIFIED,
-          name: isUnlocked ? seeker.name : lockedName,
+          // Locked: server-side mask — real name never sent until unlocked.
+          name: isUnlocked ? seeker.name : redactName(seeker.name),
           email: isUnlocked ? seeker.email : null,
-          image: isUnlocked ? resolveLogoUrl(seeker.image) : null,
+          // Real avatar shown in both states (product decision); residual reverse-image risk accepted.
+          image: resolveLogoUrl(seeker.image),
           headline: profile?.headline ?? null,
-          bioExcerpt: getBioExcerpt(profile?.bio),
-          location: profile?.location ?? null,
+          bioExcerpt: isUnlocked ? getBioExcerpt(profile?.bio) : null,
+          location: isUnlocked ? (profile?.location ?? null) : coarseLocation(profile?.location),
           yearsExperience: profile?.yearsExperience ?? null,
           primaryRole: profile?.primaryRole ?? null,
           availability: profile?.availability ?? null,
