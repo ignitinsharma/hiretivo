@@ -270,9 +270,8 @@ export function validateSeekerStep3(data: Step3Input): { valid: boolean; errors:
     errors.push('Portfolio URL must start with https:// (e.g. https://yourwebsite.com)');
   }
 
-  if (!data.videoIntroUrl?.trim()) {
-    errors.push('Short intro video URL is required');
-  } else if (!isValidHttpUrl(data.videoIntroUrl.trim())) {
+  // videoIntroUrl is optional — validate format only when provided
+  if (data.videoIntroUrl?.trim() && !isValidHttpUrl(data.videoIntroUrl.trim())) {
     errors.push('Video URL must start with https:// (e.g. https://loom.com/share/...)');
   }
 

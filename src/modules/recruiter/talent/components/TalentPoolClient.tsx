@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { HiretivoVerifiedBadge } from "@/components/shared/HiretivoVerifiedBadge";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
+import { VerificationStatus } from "@/constants/enums";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -125,7 +126,7 @@ function TalentCard({
             userId={talent.id}
             image={talent.image}
             size="lg"
-            verified
+            verified={talent.verificationStatus === VerificationStatus.VERIFIED}
           />
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-1.5">

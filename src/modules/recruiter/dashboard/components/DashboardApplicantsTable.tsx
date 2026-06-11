@@ -3,7 +3,8 @@
 import { ArrowRight, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ApplicationStatus } from '@/constants/enums';
+import { ApplicationStatus, VerificationStatus } from '@/constants/enums';
+import { InitialsAvatar } from '@/components/shared/InitialsAvatar';
 import { RECENT_APPLICANTS } from '../data/mock-dashboard-data';
 
 const STATUS_STYLES: Record<ApplicationStatus, { label: string; className: string }> = {
@@ -81,11 +82,18 @@ export function DashboardApplicantsTable() {
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-black/10 rounded-full flex items-center justify-center text-black text-sm font-semibold">
-                        {applicant.seekerName.split(' ').map((n) => n[0]).join('')}
-                      </div>
+                      <InitialsAvatar
+                        name={applicant.seekerName}
+                        image={applicant.seekerImage}
+                        size="md"
+                        verified={
+                          applicant.verificationStatus ===
+                          VerificationStatus.VERIFIED
+                        }
+                        className="h-9 w-9 shrink-0"
+                      />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="text-sm font-semibold text-gray-900 capitalize">
                           {applicant.seekerName}
                         </p>
                       </div>

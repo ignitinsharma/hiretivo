@@ -1,9 +1,12 @@
+import type { VerificationStatus } from "@/constants/enums";
+
 export interface TalentListItem {
   id: string;
   isUnlocked: boolean;
   name: string | null;
   email: string | null;
   image: string | null;
+  verificationStatus: VerificationStatus;
   headline: string | null;
   bioExcerpt: string | null;
   location: string | null;
@@ -70,6 +73,7 @@ export interface TalentDetail {
   name: string | null;
   email: string | null;
   image: string | null;
+  verificationStatus: VerificationStatus;
   headline: string | null;
   bio: string | null;
   location: string | null;

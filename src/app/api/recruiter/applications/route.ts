@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { ApplicationStatus, InterviewStatus, PlanTier, UserRole } from "@/constants/enums";
+import { ApplicationStatus, InterviewStatus, PlanTier, UserRole, VerificationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
@@ -148,6 +148,7 @@ export async function GET(req: NextRequest) {
           name: true,
           email: true,
           image: true,
+          verificationStatus: true,
           seekerProfile: {
             select: {
               resumeKey: true,
@@ -159,6 +160,7 @@ export async function GET(req: NextRequest) {
               linkedinUrl: true,
               githubUrl: true,
               twitterUrl: true,
+              videoIntroUrl: true,
               workExperiences: { orderBy: { startDate: 'asc' as const } },
               educations: true,
               skills: {
@@ -197,6 +199,7 @@ export async function GET(req: NextRequest) {
           candidateName: "Candidate",
           candidateEmail: "",
           candidateAvatar: null,
+          verificationStatus: VerificationStatus.NOT_SUBMITTED,
           primaryRole: null,
           headline: null,
           location: null,
@@ -211,6 +214,7 @@ export async function GET(req: NextRequest) {
             linkedinUrl: null,
             githubUrl: null,
             twitterUrl: null,
+            videoIntroUrl: null,
             workExperiences: [],
             educations: [],
           },
@@ -246,6 +250,7 @@ export async function GET(req: NextRequest) {
         candidateName: seeker.name ?? "Anonymous",
         candidateEmail: seeker.email ?? "",
         candidateAvatar: resolveLogoUrl(seeker.image),
+        verificationStatus: seeker.verificationStatus,
         primaryRole: profile?.primaryRole ?? null,
         headline: profile?.headline ?? null,
         location: profile?.location ?? null,
@@ -260,6 +265,7 @@ export async function GET(req: NextRequest) {
           linkedinUrl: profile?.linkedinUrl ?? null,
           githubUrl: profile?.githubUrl ?? null,
           twitterUrl: profile?.twitterUrl ?? null,
+          videoIntroUrl: profile?.videoIntroUrl ?? null,
           workExperiences: profile?.workExperiences ?? [],
           educations: profile?.educations ?? [],
         },

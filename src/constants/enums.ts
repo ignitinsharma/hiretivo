@@ -238,7 +238,21 @@ export enum PositionType {
   NON_TECHNICAL = "non-technical",
 }
 
+export enum VerificationStatus {
+  NOT_SUBMITTED = "NOT_SUBMITTED",
+  PENDING = "PENDING",
+  IN_REVIEW = "IN_REVIEW",
+  VERIFIED = "VERIFIED",
+  REJECTED = "REJECTED",
+}
+
 export const POSITION_TYPE_VALUES = [
   PositionType.TECHNICAL,
   PositionType.NON_TECHNICAL,
 ] as const;
+
+/** Visual style for the shared ProfileLinks icon row. */
+export enum ProfileLinkVariant {
+  GHOST = "ghost",
+  BORDERED = "bordered",
+}

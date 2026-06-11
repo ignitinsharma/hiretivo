@@ -255,14 +255,13 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             />
           </div>
 
-          {/* Video intro — required */}
+          {/* Video intro — optional */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-brand-foreground">
               Short intro video{" "}
               <span className="text-brand-foreground-secondary text-xs font-normal">
-                (Loom/YouTube)
-              </span>{" "}
-              <span className="text-brand-danger">*</span>
+                (Loom/YouTube · optional)
+              </span>
             </label>
             <Input
               placeholder="https://loom.com/share/..."

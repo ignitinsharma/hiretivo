@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
-import { UserRole } from "@/constants/enums";
+import { UserRole, VerificationStatus } from "@/constants/enums";
 import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
@@ -117,6 +117,8 @@ export async function GET(req: NextRequest) {
           return {
             id: seeker.id,
             name: blurredName,
+            // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
+            verificationStatus: VerificationStatus.VERIFIED,
             email: null,      // never expose email on FREE plan
             image: null,      // never expose real avatar on FREE plan
             headline: profile?.headline ?? null,
@@ -282,6 +284,8 @@ export async function GET(req: NextRequest) {
         return {
           id: seeker.id,
           isUnlocked,
+          // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
+          verificationStatus: VerificationStatus.VERIFIED,
           name: isUnlocked ? seeker.name : lockedName,
           email: isUnlocked ? seeker.email : null,
           image: isUnlocked ? resolveLogoUrl(seeker.image) : null,

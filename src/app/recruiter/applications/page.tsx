@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApplicationStatus, PlanTier } from "@/constants/enums";
+import { ApplicationStatus, PlanTier, VerificationStatus } from "@/constants/enums";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { getStageLabel } from "@/lib/application-pipeline";
 import {
   CandidateDrawer,
@@ -411,21 +412,17 @@ export default function RecruiterApplicationsPage() {
                   >
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gray-50 text-gray-700 flex items-center justify-center rounded-xl font-bold text-lg ring-4 ring-slate-50 group-hover:ring-gray-100 transition-all overflow-hidden shrink-0">
-                          {application.candidateAvatar ? (
-                            <img
-                              src={application.candidateAvatar}
-                              alt={application.candidateName}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            application.candidateName
-                              .split(" ")
-                              .map((part) => part[0])
-                              .join("")
-                              .slice(0, 2)
-                          )}
-                        </div>
+                        <InitialsAvatar
+                          name={application.candidateName}
+                          email={application.candidateEmail}
+                          image={application.candidateAvatar}
+                          size="lg"
+                          verified={
+                            application.verificationStatus ===
+                            VerificationStatus.VERIFIED
+                          }
+                          className="shrink-0"
+                        />
                         <div>
                           <p className="font-semibold capitalize text-slate-900 text-lg group-hover:text-gray-600 transition-colors">
                             {application.candidateName}

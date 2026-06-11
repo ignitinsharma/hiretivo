@@ -1,4 +1,4 @@
-import type { ApplicationStatus, InterviewStatus, PlanTier } from "@/constants/enums";
+import type { ApplicationStatus, InterviewStatus, PlanTier, VerificationStatus } from "@/constants/enums";
 import type { FitLevel } from "@/services/recruiter.service";
 
 export type TabKey = "summary" | "experience" | "education";
@@ -35,6 +35,8 @@ export interface CandidateApplication {
   candidateName: string;
   candidateEmail: string;
   candidateAvatar?: string | null;
+  /** Hiretivo verification state — drives the verified badge on recruiter surfaces. */
+  verificationStatus?: VerificationStatus;
   jobTitle: string;
   matchScore: number;
   status: ApplicationStatus;
@@ -51,6 +53,7 @@ export interface CandidateApplication {
     linkedinUrl?: string | null;
     githubUrl?: string | null;
     twitterUrl?: string | null;
+    videoIntroUrl?: string | null;
     workExperiences?: CandidateWorkExperience[];
     educations?: CandidateEducation[];
   };
@@ -82,7 +85,12 @@ export interface AiState {
   isPending: boolean;
   isError: boolean;
   errorMessage?: string;
+  /** Structured AI insight sections (undefined until the summary resolves). */
   summary?: string;
+  skillMatch?: string;
+  whyFit?: string;
+  areasToExplore?: string;
+  screeningQuestions?: string[];
   fitScore?: number;
   fitLevel?: FitLevel;
   isPlanGated: boolean;

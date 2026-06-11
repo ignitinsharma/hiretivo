@@ -1,4 +1,4 @@
-import { ApplicationStatus, JobStatus } from '@/constants/enums';
+import { ApplicationStatus, JobStatus, VerificationStatus } from '@/constants/enums';
 import type { RecentApplicant } from '@/modules/recruiter/dashboard/types/dashboard.types';
 
 export type { RecentApplicant };
@@ -48,6 +48,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     id: '1',
     seekerName: 'Sarah Chen',
     seekerImage: null,
+    verificationStatus: VerificationStatus.VERIFIED,
     jobTitle: 'Senior Frontend Developer',
     matchScore: 92,
     appliedDate: '2024-01-15',
@@ -57,6 +58,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     id: '2',
     seekerName: 'Marcus Johnson',
     seekerImage: null,
+    verificationStatus: VerificationStatus.VERIFIED,
     jobTitle: 'Full Stack Engineer',
     matchScore: 85,
     appliedDate: '2024-01-14',
@@ -66,6 +68,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     id: '3',
     seekerName: 'Emily Rodriguez',
     seekerImage: null,
+    verificationStatus: VerificationStatus.VERIFIED,
     jobTitle: 'Senior Frontend Developer',
     matchScore: 78,
     appliedDate: '2024-01-13',
@@ -75,6 +78,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     id: '4',
     seekerName: 'David Kim',
     seekerImage: null,
+    verificationStatus: VerificationStatus.VERIFIED,
     jobTitle: 'Backend Developer',
     matchScore: 71,
     appliedDate: '2024-01-12',
@@ -84,6 +88,7 @@ export const RECENT_APPLICANTS: RecentApplicant[] = [
     id: '5',
     seekerName: 'Lisa Wang',
     seekerImage: null,
+    verificationStatus: VerificationStatus.VERIFIED,
     jobTitle: 'Full Stack Engineer',
     matchScore: 65,
     appliedDate: '2024-01-11',

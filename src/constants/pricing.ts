@@ -34,7 +34,7 @@ export const PLAN_TIERS: PlanTierConfig[] = [
       "1 active job post",
       "Browse talent pool (blurred preview)",
       "5 applicant views per job",
-      "AI summaries, JD & skills — 3/day",
+      "AI summaries, JD & skills — Limited",
       "Basic skill matching",
     ],
     cta: "Get started free",

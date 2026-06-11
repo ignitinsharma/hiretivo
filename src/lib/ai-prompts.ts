@@ -23,6 +23,53 @@ export interface CandidateSummaryInput {
   jobTitle: string;
 }
 
+/**
+ * Structured candidate-insight payload the model returns and the drawer renders.
+ * Section strings may carry inline <mark> (matched skills) / <em> (gaps) tags —
+ * they are sanitized before render. Persisted as a JSON string in Application.aiSummary.
+ */
+export interface AiSummaryData {
+  summary: string;
+  skillMatch: string;
+  whyFit: string;
+  areasToExplore: string;
+  screeningQuestions: string[];
+}
+
+/*
+ * parseCandidateSummary
+ * Defensively parses a stored/generated candidate-summary string into AiSummaryData.
+ * Strips optional ```json fences, validates the four section strings + questions array.
+ * @param raw - Raw model output or cached DB value (may be legacy HTML)
+ * @returns AiSummaryData when valid JSON of the expected shape, else null
+ */
+export function parseCandidateSummary(raw: string): AiSummaryData | null {
+  try {
+    const cleaned = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(cleaned) as Partial<AiSummaryData>;
+    if (
+      typeof parsed.summary !== "string" ||
+      typeof parsed.skillMatch !== "string" ||
+      typeof parsed.whyFit !== "string" ||
+      typeof parsed.areasToExplore !== "string" ||
+      !Array.isArray(parsed.screeningQuestions)
+    ) {
+      return null;
+    }
+    return {
+      summary: parsed.summary,
+      skillMatch: parsed.skillMatch,
+      whyFit: parsed.whyFit,
+      areasToExplore: parsed.areasToExplore,
+      screeningQuestions: parsed.screeningQuestions
+        .filter((q): q is string => typeof q === "string")
+        .slice(0, 3),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
   const {
     skills,
@@ -56,43 +103,44 @@ export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
     : 'Education not specified';
 
   return {
-    system: `You are an expert recruitment analyst creating decision-ready candidate profiles for hiring managers screening for a specific role.
+    system: `You are an expert recruitment analyst creating decision-ready candidate insights for hiring managers screening for a specific role.
 
 Your output must help a recruiter decide in 5 seconds whether to screen this candidate, understand the skill fit, and walk into the interview prepared.
 
-OUTPUT STRUCTURE — return these three blocks in this exact order, HTML only:
+OUTPUT FORMAT — return ONLY a valid JSON object (no markdown, no code fences, no prose outside the JSON) with EXACTLY these keys:
 
-1. VERDICT LINE — use the verdict label provided in the input VERBATIM. Add a one-line rationale tied to THIS job (cite real matched and missing skills).
-2. SUMMARY CONTAINER — intro, skills, career, and (if relevant) gaps.
-3. SCREENING QUESTIONS — exactly 3 questions, each targeting a skill gap or an unverified must-have requirement.
+{
+  "summary": "2 concise sentences on who this candidate is — background, current/most-recent role, level. Plain text, no tags.",
+  "skillMatch": "Which required skills they match and what extra they bring. Wrap each skill that appears in the job requirements in <mark>…</mark>. Mention additional non-required skills as plain text.",
+  "whyFit": "One-line rationale for the verdict, grounded in THIS job. Wrap missing / weak / must-verify skills in <em>…</em>.",
+  "areasToExplore": "What's unproven or absent for this role — gaps to probe in interview. Plain text.",
+  "screeningQuestions": ["exactly 3 questions, each targeting a skill gap or an unverified must-have requirement"]
+}
 
-WORKED EXAMPLE (structure only — never copy this content; always use the real candidate + job data):
-<p class="summary-verdict"><strong>Worth screening</strong> — strong <mark>React</mark> and <mark>TypeScript</mark> match, but no <em>PostgreSQL</em> experience listed for a backend-heavy role.</p>
-<div class="summary-container">
-  <p class="summary-intro">Senior frontend engineer with 6 years building consumer web apps, most recently scaling a design system at Acme.</p>
-  <p class="summary-skills"><span class="matched-skills">Matches <mark>React</mark>, <mark>TypeScript</mark>, <mark>GraphQL</mark> from the requirements</span>. <span class="additional-skills">Also brings Next.js, Storybook, and accessibility expertise.</span></p>
-  <p class="summary-career">Career highlights: Frontend Lead at Acme, Engineer at Beta. Owned a component library used by 40+ engineers.</p>
-  <p class="summary-gaps">Areas to explore: <em>no backend/PostgreSQL evidence; team-lead scope unclear</em>.</p>
-</div>
-<div class="screening-questions">
-  <h3>Suggested screening questions</h3>
-  <ol>
-    <li>Walk me through a backend service you've owned end-to-end — what database did you use?</li>
-    <li>The role requires PostgreSQL; how have you worked with relational data so far?</li>
-    <li>Describe the largest team you've technically led and your scope of ownership.</li>
-  </ol>
-</div>
+WORKED EXAMPLE (structure + tag usage only — NEVER copy this content; always use the real candidate + job data):
+{
+  "summary": "Senior frontend engineer with 6 years building consumer web apps, most recently scaling a design system at Acme. Strong product sensibility, no backend track record.",
+  "skillMatch": "Matches <mark>React</mark>, <mark>TypeScript</mark>, and <mark>GraphQL</mark> from the requirements. Also brings Next.js, Storybook, and accessibility expertise.",
+  "whyFit": "Worth screening — strong frontend match, but no <em>PostgreSQL</em> or <em>backend</em> experience listed for a full-stack role.",
+  "areasToExplore": "No evidence of backend or relational-database work; team-lead scope is unclear.",
+  "screeningQuestions": [
+    "Walk me through a backend service you've owned end-to-end — what database did you use?",
+    "The role requires PostgreSQL; how have you worked with relational data so far?",
+    "Describe the largest team you've technically led and your scope of ownership."
+  ]
+}
 
 RULES:
-- VERDICT: use the provided verdict label exactly as the <strong> text — do NOT invent or change it. The rationale after the em dash is yours, grounded in real skills.
-- ALWAYS wrap job-relevant skills in <mark> tags
-- ALWAYS wrap skill gaps / areas to assess in <em> tags
+- whyFit: BEGIN with the verdict label provided in the input VERBATIM (e.g. "Worth screening — …"). Do NOT invent or change the label. The rationale after the em dash is yours, grounded in real skills.
+- skillMatch: ALWAYS wrap job-relevant required skills in <mark> tags.
+- whyFit & areasToExplore: ALWAYS wrap skill gaps / things to assess in <em> tags.
 - Be SPECIFIC and EVIDENCE-BASED: name real skills, companies, and roles from the data. NEVER invent seniority, achievements, or experience not present in the input.
-- Be SUBSTANTIVE but tight: intro and skills can be 2–3 sentences each. Fill every section.
-- Screening questions: exactly 3, each tied to a concrete gap or unverified requirement. No generic "tell me about yourself" questions.
+- Be SUBSTANTIVE but tight. Fill every field — never leave one empty.
+- screeningQuestions: exactly 3, each tied to a concrete gap or unverified requirement. No generic "tell me about yourself" questions.
 - Never use filler phrases like "This candidate..." or "Based on their profile..."
-- Mention years of experience naturally; if <2 years note early-career, if >7 years highlight seniority/leadership potential
-- ONLY use these tags: <p>, <div>, <span>, <strong>, <em>, <mark>, <h3>, <ol>, <li>. No markdown, no explanations outside the HTML.`,
+- Mention years of experience naturally; if <2 years note early-career, if >7 years highlight seniority/leadership potential.
+- ONLY allowed HTML inside string values: <mark> and <em>. No other tags. The values are otherwise plain text.
+- Output the JSON object and NOTHING else.`,
 
     user: `=== CANDIDATE DATA ===
 Headline: ${headlineText}
@@ -119,7 +167,7 @@ ${matchScore}%
 === VERDICT LABEL (use verbatim as the verdict <strong> text) ===
 ${verdictLabel}
 
-Generate the candidate summary in HTML format following the specified structure.`,
+Generate the candidate insights as a single JSON object following the specified structure.`,
   };
 }
 

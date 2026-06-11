@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from '@/constants/enums';
+import type { ApplicationStatus, VerificationStatus } from '@/constants/enums';
 
 export interface DashboardStats {
   activeJobsCount: number;
@@ -11,6 +11,8 @@ export interface RecentApplicant {
   id: string;
   seekerName: string;
   seekerImage: string | null;
+  /** Hiretivo verification state — drives the verified badge. */
+  verificationStatus: VerificationStatus;
   jobTitle: string;
   matchScore: number;
   status: ApplicationStatus;

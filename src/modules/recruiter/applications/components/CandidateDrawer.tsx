@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, FileText, Github, Globe, Linkedin, Twitter } from "lucide-react";
+import { Calendar, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { ScheduleInterviewModal } from "@/modules/recruiter/applications/components/ScheduleInterviewModal";
@@ -22,7 +22,7 @@ import { TabContentSummary } from "./candidate-drawer/sections/TabContentSummary
 import { TabContentExperience } from "./candidate-drawer/sections/TabContentExperience";
 import { TabContentEducation } from "./candidate-drawer/sections/TabContentEducation";
 import type { AiState, CandidateApplication, TabKey } from "./candidate-drawer/types";
-import { calculateProfileStrength, getSkillsBreakdown } from "./candidate-drawer/utils";
+import { calculateProfileStrength, getSkillsBreakdown, getScoreColor } from "./candidate-drawer/utils";
 
 interface CandidateDrawerProps {
   application: CandidateApplication | null;
@@ -133,12 +133,6 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
     candidateSkills,
   );
   const profileStrength = calculateProfileStrength(profile);
-  const profileLinks = [
-    { href: profile?.websiteUrl, label: "Website", Icon: Globe },
-    { href: profile?.linkedinUrl, label: "LinkedIn", Icon: Linkedin },
-    { href: profile?.githubUrl, label: "GitHub", Icon: Github },
-    { href: profile?.twitterUrl, label: "Twitter", Icon: Twitter },
-  ].filter((item): item is { href: string; label: string; Icon: typeof Globe } => Boolean(item.href));
 
   const aiState: AiState = {
     isPending: aiSummaryQuery.isLoading,
@@ -146,6 +140,10 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
     errorMessage:
       aiSummaryQuery.error instanceof Error ? aiSummaryQuery.error.message : undefined,
     summary: aiSummaryQuery.data?.summary,
+    skillMatch: aiSummaryQuery.data?.skillMatch,
+    whyFit: aiSummaryQuery.data?.whyFit,
+    areasToExplore: aiSummaryQuery.data?.areasToExplore,
+    screeningQuestions: aiSummaryQuery.data?.screeningQuestions,
     fitScore: aiSummaryQuery.data?.fitScore,
     fitLevel: aiSummaryQuery.data?.fitLevel as FitLevel | undefined,
     isPlanGated: application.canUseAi !== true,
@@ -157,7 +155,7 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
         <div className="h-full overflow-y-auto bg-white p-4 md:p-6">
           <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div className="space-y-4">
-              <DrawerHeader application={application} links={profileLinks} />
+              <DrawerHeader application={application} resumeUrl={application.resumeUrl} />
               <SidebarPanel
                 application={application}
                 profileStrength={profileStrength}
@@ -180,16 +178,19 @@ export function CandidateDrawer({ application }: CandidateDrawerProps) {
             </div>
 
             <section className="space-y-4">
-              <div className="flex justify-start">
+              <div className="flex items-center gap-2">
                 {application.appliedAt ? (
                   <p className="inline-flex items-center gap-1.5 rounded-full border border-brand-border bg-brand-surface px-3 py-1.5 text-sm font-medium text-brand-foreground-muted">
                     <Calendar className="h-4 w-4" />
                     {formatRelativeTime(application.appliedAt)}
                   </p>
                 ) : null}
+                <p className={`inline-flex items-center rounded-full border border-brand-border bg-brand-surface px-3 py-1.5 text-sm font-medium ${getScoreColor(application.matchScore)}`}>
+                  {application.matchScore}% Match
+                </p>
               </div>
 
-              {/* <AiInsightsCard state={aiState} /> */}
+              <AiInsightsCard state={aiState} />
 
               <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

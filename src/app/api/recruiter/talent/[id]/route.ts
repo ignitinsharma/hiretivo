@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { UserRole } from "@/constants/enums";
+import { UserRole, VerificationStatus } from "@/constants/enums";
 import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
@@ -183,6 +183,8 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
       data: {
         id: engineer.id,
         isUnlocked: false,
+        // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
+        verificationStatus: VerificationStatus.VERIFIED,
         name: lockedName,
         image: null,
         email: null,
@@ -218,6 +220,8 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
     data: {
       id: engineer.id,
       isUnlocked: true,
+      // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
+      verificationStatus: VerificationStatus.VERIFIED,
       name: engineer.name,
       image: resolveLogoUrl(engineer.image),
       email: engineer.email,

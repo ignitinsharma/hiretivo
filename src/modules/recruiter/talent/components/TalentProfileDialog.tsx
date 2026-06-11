@@ -1,6 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   BriefcaseBusiness,
@@ -8,18 +7,16 @@ import {
   Copy,
   ExternalLink,
   FileText,
-  Github,
-  Globe,
   GraduationCap,
-  Linkedin,
   Mail,
   Quote,
-  Twitter,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { HiretivoVerifiedBadge } from "@/components/shared/HiretivoVerifiedBadge";
+import { ProfileLinks } from "@/components/shared/ProfileLinks";
+import { ProfileLinkVariant, VerificationStatus } from "@/constants/enums";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,7 +33,6 @@ import type {
   TalentDetail,
   TalentEducation,
   TalentProject,
-  TalentProfileLinks,
   TalentSkill,
   TalentWorkExperience,
 } from "@/modules/recruiter/talent/types/talent.types";
@@ -45,18 +41,6 @@ interface TalentProfileDialogProps {
   seekerId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface SocialLinkConfig {
-  key: keyof TalentProfileLinks;
-  label: string;
-  Icon: LucideIcon;
-}
-
-interface ResolvedSocialLink {
-  href: string;
-  label: string;
-  Icon: LucideIcon;
 }
 
 interface OpportunityChip {
@@ -69,13 +53,6 @@ const BODY_TEXT_CLASS =
   "text-[15px] leading-relaxed text-brand-foreground-muted";
 const MAX_VISIBLE_EXPERIENCE = 2;
 const MAX_VISIBLE_SKILLS = 12;
-
-const SOCIAL_LINKS: SocialLinkConfig[] = [
-  { key: "websiteUrl", label: "Website", Icon: Globe },
-  { key: "linkedinUrl", label: "LinkedIn", Icon: Linkedin },
-  { key: "githubUrl", label: "GitHub", Icon: Github },
-  { key: "twitterUrl", label: "Twitter", Icon: Twitter },
-];
 
 /**
  * Formats availability or notice period values for display.
@@ -141,16 +118,6 @@ function formatDateRange(
 }
 
 /**
- * Builds visible external profile links from the candidate profile.
- */
-function getVisibleLinks(links: TalentProfileLinks): ResolvedSocialLink[] {
-  return SOCIAL_LINKS.flatMap(({ key, label, Icon }) => {
-    const href = links[key];
-    return href ? [{ href, label, Icon }] : [];
-  });
-}
-
-/**
  * Builds the profile metadata sentence under the candidate name.
  */
 function getProfileMeta(talent: TalentDetail): string {
@@ -207,7 +174,6 @@ function TalentProfileHeader({
 }: {
   talent: TalentDetail;
 }): ReactElement {
-  const visibleLinks = talent.links ? getVisibleLinks(talent.links) : [];
   const statusLabel = formatAvailability(talent.availability);
 
   return (
@@ -220,7 +186,7 @@ function TalentProfileHeader({
             userId={talent.id}
             image={talent.image}
             size="lg"
-            verified
+            verified={talent.verificationStatus === VerificationStatus.VERIFIED}
           />
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
@@ -239,29 +205,16 @@ function TalentProfileHeader({
               <span className="rounded-full bg-brand-surface px-3 py-1 text-xs font-medium text-brand-foreground">
                 {statusLabel}
               </span>
-              {talent.resumeUrl && (
-                <a
-                  href={talent.resumeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg bg-brand-success/10 px-2.5 py-1 text-xs font-semibold text-brand-success"
-                >
-                  Resume
-                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                </a>
-              )}
-              {visibleLinks.map(({ href, label, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={label}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted transition-colors hover:border-brand-primary hover:text-brand-primary"
-                >
-                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                </a>
-              ))}
+              <ProfileLinks
+                variant={ProfileLinkVariant.BORDERED}
+                email={talent.email}
+                resumeUrl={talent.resumeUrl}
+                websiteUrl={talent.links?.websiteUrl}
+                linkedinUrl={talent.links?.linkedinUrl}
+                githubUrl={talent.links?.githubUrl}
+                twitterUrl={talent.links?.twitterUrl}
+                videoIntroUrl={talent.videoIntroUrl}
+              />
             </div>
           </div>
         </div>

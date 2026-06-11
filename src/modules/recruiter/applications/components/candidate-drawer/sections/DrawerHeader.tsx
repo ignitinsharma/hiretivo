@@ -1,75 +1,86 @@
-import { type ComponentType, type SVGProps } from "react";
-import { Mail } from "lucide-react";
+"use client";
 
-import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
+
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
+import { ProfileLinks } from "@/components/shared/ProfileLinks";
+import { ProfileLinkVariant, VerificationStatus } from "@/constants/enums";
 
 import type { CandidateApplication } from "../types";
-import { getInitials } from "../utils";
-
-interface DrawerHeaderLink {
-  href: string;
-  label: string;
-  Icon: ComponentType<SVGProps<SVGSVGElement>>;
-}
 
 interface DrawerHeaderProps {
   application: CandidateApplication;
-  links: DrawerHeaderLink[];
+  resumeUrl: string | null;
 }
 
-export function DrawerHeader({ application, links }: DrawerHeaderProps) {
+/*
+ * DrawerHeader
+ * Centered candidate identity header for the applications drawer.
+ * Renders avatar, name, headline, and the shared ProfileLinks icon row.
+ * @param application - the candidate application record
+ * @param resumeUrl - resolved resume URL (null when none)
+ */
+export function DrawerHeader({ application, resumeUrl }: DrawerHeaderProps) {
   const profile = application.candidateProfile;
+
+  /* Copies the candidate email to clipboard and blurs the button to dismiss focus. */
+  const copyEmail = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    try {
+      await navigator.clipboard.writeText(application.candidateEmail);
+      toast.success("Email copied.");
+    } catch {
+      toast.error("Could not copy email.");
+    }
+    e.currentTarget.blur();
+  };
 
   return (
     <article className="rounded-xl border border-brand-border bg-white p-5">
       <div className="flex flex-col items-center text-center">
-        <div className="relative h-20 w-20 overflow-hidden rounded-full border border-brand-border bg-brand-surface">
-          {application.candidateAvatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={application.candidateAvatar}
-              alt={application.candidateName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-brand-foreground">
-              {getInitials(application.candidateName)}
-            </span>
-          )}
-          <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
-        </div>
+        <InitialsAvatar
+          name={application.candidateName}
+          email={application.candidateEmail}
+          image={application.candidateAvatar}
+          size="xl"
+          verified={
+            application.verificationStatus === VerificationStatus.VERIFIED
+          }
+          className="h-20 w-20"
+        />
 
-        <h2 className="mt-4 text-2xl font-bold leading-tight tracking-tight text-brand-foreground">
+        <h2 className="capitalize mt-4 text-xl font-bold leading-tight tracking-tight text-brand-foreground">
           {application.candidateName}
         </h2>
-        <p className="mt-1 text-sm text-brand-foreground-muted">{application.candidateEmail}</p>
+
+        <div className="group flex items-center justify-center gap-1">
+          <button
+            onClick={copyEmail}
+            className="opacity-0 transition-opacity group-hover:opacity-100"
+            title="Copy email"
+          >
+            <Copy className="h-3.5 w-3.5 text-brand-foreground-secondary" />
+          </button>
+        </div>
+
         {profile?.headline ? (
-          <p className="mt-1 text-xs font-medium text-brand-primary">{profile.headline}</p>
+          <p className="text-xs font-medium text-brand-primary">
+            {profile.headline}
+          </p>
         ) : null}
 
-        <Button size="sm" variant="primary" className="mt-4 w-full" asChild>
-          <a href={`mailto:${application.candidateEmail}`}>
-            <Mail className="h-3.5 w-3.5" />
-            Email
-          </a>
-        </Button>
-
-        {links.length > 0 ? (
-          <div className="mt-3 flex items-center justify-center gap-1">
-            {links.map(({ href, label, Icon }) => (
-              <Button key={label} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-brand-foreground-muted hover:text-brand-foreground" asChild>
-                <a href={href} target="_blank" rel="noreferrer" title={label}>
-                  <Icon className="h-4 w-4" />
-                </a>
-              </Button>
-            ))}
-          </div>
-        ) : null}
-
+        <ProfileLinks
+          className="mt-3 justify-center"
+          variant={ProfileLinkVariant.GHOST}
+          email={application.candidateEmail}
+          resumeUrl={resumeUrl}
+          websiteUrl={profile?.websiteUrl}
+          linkedinUrl={profile?.linkedinUrl}
+          githubUrl={profile?.githubUrl}
+          twitterUrl={profile?.twitterUrl}
+          videoIntroUrl={profile?.videoIntroUrl}
+        />
       </div>
     </article>
   );
 }
-
-export type { DrawerHeaderLink };
-

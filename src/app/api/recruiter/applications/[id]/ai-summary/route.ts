@@ -7,7 +7,9 @@ import { AiSummaryParamsSchema } from "@/lib/validations/ai-summary.schema";
 import { createRateLimiter } from "@/lib/rate-limit";
 import {
   buildCandidateSummaryMessages,
+  parseCandidateSummary,
   CANDIDATE_SUMMARY_CONFIG,
+  type AiSummaryData,
 } from "@/lib/ai-prompts";
 import { consumeFreeDailyAiQuota } from "@/lib/billing/ai-daily-limit";
 import { isApplicationVisibleOnFree } from "@/lib/billing/applicant-visibility";
@@ -177,18 +179,17 @@ export async function POST(
     ? rawHeadline.replace(/<[^>]*>/g, "").slice(0, 200)
     : null;
 
-  // 8. Cache hit — return without calling OpenRouter
+  // 8. Cache hit — return without calling OpenRouter.
+  // Legacy rows store freeform HTML (not JSON); those fail parsing and fall through
+  // to regeneration, self-healing into the structured format with no DB migration.
   if (application.aiSummary !== null) {
-    return NextResponse.json(
-      {
-        data: {
-          summary: application.aiSummary,
-          fitScore,
-          fitLevel,
-        },
-      },
-      { status: 200 },
-    );
+    const cached = parseCandidateSummary(application.aiSummary);
+    if (cached) {
+      return NextResponse.json(
+        { data: { ...cached, fitScore, fitLevel } },
+        { status: 200 },
+      );
+    }
   }
 
   // Daily quota: FREE plan gets FREE_AI_DAILY_LIMIT summaries/day (cache hits above don't count).
@@ -230,23 +231,28 @@ export async function POST(
     ],
   });
 
-  const summary =
-    completion.choices[0]?.message?.content?.trim() ??
-    '<p class="summary-intro">Summary generation failed. Please try again.</p>';
+  const raw = completion.choices[0]?.message?.content?.trim() ?? "";
+  const insights: AiSummaryData = parseCandidateSummary(raw) ?? {
+    summary: "Summary generation failed. Please try again.",
+    skillMatch: "",
+    whyFit: "",
+    areasToExplore: "",
+    screeningQuestions: [],
+  };
 
-  // 10. Write-back (D-04): cache on Application — continue even if write fails
+  // 10. Write-back (D-04): cache structured JSON on Application — continue even if write fails
   try {
     await prisma.application.update({
       where: { id: parsed.data.id },
-      data: { aiSummary: summary },
+      data: { aiSummary: JSON.stringify(insights) },
     });
   } catch (err) {
     console.error("[ai-summary] write-back failed:", err);
   }
 
-  // 11. Return summary with fit score
+  // 11. Return structured insights with fit score
   return NextResponse.json(
-    { data: { summary, fitScore, fitLevel } },
+    { data: { ...insights, fitScore, fitLevel } },
     { status: 200 },
   );
 }

@@ -105,7 +105,7 @@ export async function GET() {
         matchScore: true,
         createdAt: true,
         seeker: {
-          select: { name: true, image: true },
+          select: { name: true, image: true, verificationStatus: true },
         },
         job: {
           select: { title: true },
@@ -135,6 +135,7 @@ export async function GET() {
         id: app.id,
         seekerName: app.seeker.name ?? "Anonymous",
         seekerImage: resolveLogoUrl(app.seeker.image),
+        verificationStatus: app.seeker.verificationStatus,
         jobTitle: app.job.title,
         matchScore: app.matchScore,
         status: app.status,

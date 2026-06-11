@@ -361,7 +361,8 @@ export async function saveProofOfWork(data: {
     githubUrl: httpUrl.refine((u) => /github\.com\/[a-zA-Z0-9_-]+/.test(u), "Please enter a valid GitHub profile URL"),
     linkedinUrl: httpUrl,
     websiteUrl: httpUrl,
-    videoIntroUrl: httpUrl,
+    // videoIntroUrl is optional — accept a valid http(s) URL or an empty string
+    videoIntroUrl: httpUrl.or(z.literal("")).optional(),
     projects: projectEntrySchema.array().min(1, "At least one project is required"),
   });
 
@@ -386,7 +387,7 @@ export async function saveProofOfWork(data: {
         githubUsername: githubUsername ?? null,
         linkedinUrl: parsed.data.linkedinUrl,
         websiteUrl: parsed.data.websiteUrl,
-        videoIntroUrl: parsed.data.videoIntroUrl,
+        videoIntroUrl: parsed.data.videoIntroUrl || null,
         topProjects: parsed.data.projects,
       },
       update: {
@@ -394,7 +395,7 @@ export async function saveProofOfWork(data: {
         githubUsername: githubUsername ?? null,
         linkedinUrl: parsed.data.linkedinUrl,
         websiteUrl: parsed.data.websiteUrl,
-        videoIntroUrl: parsed.data.videoIntroUrl,
+        videoIntroUrl: parsed.data.videoIntroUrl || null,
         topProjects: parsed.data.projects,
       },
     }),
@@ -724,9 +725,9 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     };
   }
 
-  // Step 3 continued: LinkedIn, portfolio, and video intro are required
-  if (!profile.linkedinUrl || !profile.websiteUrl || !profile.videoIntroUrl) {
-    return { success: false, error: "Add your LinkedIn, portfolio, and video intro first.", missingStep: 3 };
+  // Step 3 continued: LinkedIn and portfolio are required (video intro is optional)
+  if (!profile.linkedinUrl || !profile.websiteUrl) {
+    return { success: false, error: "Add your LinkedIn and portfolio first.", missingStep: 3 };
   }
 
   // Step 4: at least 1 work experience

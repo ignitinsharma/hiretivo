@@ -5,7 +5,7 @@ import { ApplicationStatus } from "@/constants/enums";
 import { getStageLabel } from "@/lib/application-pipeline";
 
 import type { CandidateApplication } from "../types";
-import { getExperienceLabel, getScoreColor } from "../utils";
+import { getExperienceLabel } from "../utils";
 import { InterviewPanel } from "./InterviewPanel";
 import { SkillsMatchCard } from "./SkillsMatchCard";
 
@@ -34,32 +34,6 @@ interface SidebarPanelProps {
   onScheduleInterview: (applicationId: string, interviewId?: string | null) => void;
 }
 
-function CircularProgress({ score }: { score: number }) {
-  const radius = 34;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (score / 100) * circumference;
-
-  return (
-    <div className="relative h-20 w-20">
-      <svg className="-rotate-90" viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r={radius} strokeWidth="6" className="fill-none text-brand-border" stroke="currentColor" />
-        <circle
-          cx="40"
-          cy="40"
-          r={radius}
-          strokeWidth="6"
-          className="fill-none text-brand-primary"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-brand-primary">{score}%</span>
-    </div>
-  );
-}
-
 export function SidebarPanel({
   application,
   profileStrength,
@@ -81,17 +55,6 @@ export function SidebarPanel({
     <aside className="space-y-4">
       <article className="overflow-hidden rounded-xl border border-brand-border bg-white">
         <div className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-foreground-secondary">Match Score</p>
-              <p className={`mt-1 text-4xl font-bold ${getScoreColor(application.matchScore)}`}>
-                {application.matchScore}%
-              </p>
-            </div>
-            <CircularProgress score={application.matchScore} />
-          </div>
-        </div>
-        <div className="border-t border-brand-border p-4">
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-brand-surface p-2"><Briefcase className="h-4 w-4 text-brand-primary" /></div>

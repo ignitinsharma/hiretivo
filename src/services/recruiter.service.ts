@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/axios';
-import type { ApplicationStatus, InterviewStatus, JobStatus, PlanTier } from '@/constants/enums';
+import type { AiSummaryData } from '@/lib/ai-prompts';
+import type { ApplicationStatus, InterviewStatus, JobStatus, PlanTier, VerificationStatus } from '@/constants/enums';
 import type { JdGeneratorInput } from '@/lib/validations/jd-generator.schema';
 import type {
   RecruiterProfileSettingsInput,
@@ -90,6 +91,8 @@ export interface CandidateApplication {
   candidateName: string;
   candidateEmail: string;
   candidateAvatar: string | null;
+  /** Hiretivo verification state — drives the verified badge on recruiter surfaces. */
+  verificationStatus: VerificationStatus;
   primaryRole: string | null;
   headline: string | null;
   location: string | null;
@@ -104,6 +107,7 @@ export interface CandidateApplication {
     linkedinUrl: string | null;
     githubUrl: string | null;
     twitterUrl: string | null;
+    videoIntroUrl: string | null;
     workExperiences: CandidateWorkExperience[];
     educations: CandidateEducation[];
   };
@@ -166,8 +170,10 @@ export interface RecruiterTalentParams {
 
 export type FitLevel = "excellent" | "good" | "moderate" | "low";
 
-export interface AiSummaryResult {
-  summary: string;
+export type { AiSummaryData };
+
+/* Structured AI candidate insights returned to the drawer: section strings + deterministic fit scoring. */
+export interface AiSummaryResult extends AiSummaryData {
   fitScore: number;
   fitLevel: FitLevel;
 }
