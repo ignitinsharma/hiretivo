@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Hand } from "lucide-react";
 
 import { IndiaStateCombobox } from "@/components/forms/IndiaStateCombobox";
@@ -33,8 +33,14 @@ interface StepWelcomeProps {
 }
 
 export function StepWelcome({ onNext }: StepWelcomeProps) {
-  const { step1, userName, setSituation, setExperienceLevel, setCity, setState } =
-    useSeekerOnboardingStore();
+  const {
+    step1,
+    userName,
+    setSituation,
+    setExperienceLevel,
+    setCity,
+    setState,
+  } = useSeekerOnboardingStore();
   const fe = useFieldErrors();
   const { revalidate } = fe;
   const [serverError, setServerError] = useState<string | null>(null);
@@ -51,9 +57,21 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
         state: step1.state ?? undefined,
       }).fieldErrors,
     );
-  }, [step1.situation, step1.experienceLevel, step1.city, step1.state, revalidate]);
+  }, [
+    step1.situation,
+    step1.experienceLevel,
+    step1.city,
+    step1.state,
+    revalidate,
+  ]);
 
-  const handleContinue = async () => {
+  /*
+   * handleSubmit
+   * Validates step 1, saves it to the server, and advances to the next step.
+   * Handles both button clicks and native Enter-key form submission.
+   */
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (isSaving) return;
     setServerError(null);
     const validation = validateSeekerStep1({
@@ -78,7 +96,6 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
     setIsSaving(false);
 
     if (!result.success) {
-      console.error("[StepWelcome] saveStep1 failed:", result.error);
       setServerError(result.error);
       return;
     }
@@ -87,44 +104,48 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto">
-      <div className="space-y-8">
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-primary/10 mb-4">
-            <Hand className="w-7 h-7 text-brand-primary" />
+    <div className="mx-auto w-full max-w-xl">
+      <div className="space-y-6">
+        <div className="space-y-2 text-center">
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary/10">
+            <Hand className="h-6 w-6 text-brand-primary" />
           </div>
-          <h2 className="text-3xl font-semibold text-brand-foreground">
+          <h2 className="text-2xl font-semibold text-brand-foreground">
             Welcome to Hiretivo, {userName}!
           </h2>
-          <p className="text-brand-foreground-muted text-lg">
-            Let&apos;s build your verified engineer profile. Takes about 5 minutes.
+          <p className="text-brand-foreground-muted">
+            Let&apos;s build your verified engineer profile. Takes about 5
+            minutes.
           </p>
         </div>
 
-        <div className="space-y-8">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Situation */}
           <div className="space-y-4">
-            <label className="text-base font-medium text-brand-foreground block">
+            <label className="block text-sm font-medium text-brand-foreground">
               What&apos;s your current situation?
             </label>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {SITUATION_OPTIONS.map((option) => {
                 const isSelected = step1.situation === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setSituation(option.value as SeekerSituation)}
+                    onClick={() =>
+                      setSituation(option.value as SeekerSituation)
+                    }
+                    aria-pressed={isSelected}
                     className={cn(
-                      "flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left",
+                      "min-h-28 rounded-xl border-2 p-3 text-left transition-all",
                       isSelected
                         ? "border-brand-primary bg-brand-primary/5"
-                        : "border-brand-border hover:border-brand-primary/50",
+                        : "border-brand-border bg-white hover:border-brand-primary/50",
                     )}
                   >
                     <div
                       className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0",
+                        "mb-3 flex h-8 w-8 items-center justify-center rounded-lg text-base",
                         isSelected
                           ? "bg-brand-primary text-white"
                           : "bg-brand-surface",
@@ -132,7 +153,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                     >
                       {isSelected ? (
                         <svg
-                          className="w-5 h-5"
+                          className="h-4 w-4"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -146,10 +167,10 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                         <span>{option.icon}</span>
                       )}
                     </div>
-                    <div className="flex-1">
+                    <div className="space-y-1.5">
                       <p
                         className={cn(
-                          "font-medium",
+                          "text-sm font-medium leading-snug",
                           isSelected
                             ? "text-brand-primary"
                             : "text-brand-foreground",
@@ -157,7 +178,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                       >
                         {option.label}
                       </p>
-                      <p className="text-sm text-brand-foreground-muted">
+                      <p className="text-xs leading-relaxed text-brand-foreground-muted">
                         {option.description}
                       </p>
                     </div>
@@ -171,20 +192,23 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
           </div>
 
           {/* Experience level */}
-          <div className="space-y-4">
-            <label className="text-base font-medium text-brand-foreground block">
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-brand-foreground">
               What&apos;s your experience level?
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {EXPERIENCE_LEVELS.map((option) => {
                 const isSelected = step1.experienceLevel === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setExperienceLevel(option.value as ExperienceLevel)}
+                    onClick={() =>
+                      setExperienceLevel(option.value as ExperienceLevel)
+                    }
+                    aria-pressed={isSelected}
                     className={cn(
-                      "flex items-center justify-center p-4 rounded-lg border-2 transition-all text-sm font-medium",
+                      "flex items-center justify-center rounded-lg border-2 p-3 text-sm font-medium transition-all",
                       isSelected
                         ? "border-brand-primary bg-brand-primary text-white"
                         : "border-brand-border hover:border-brand-primary/50 text-brand-foreground",
@@ -196,13 +220,15 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
               })}
             </div>
             {fe.errorFor("experienceLevel") && (
-              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("experienceLevel")}</p>
+              <p className={FIELD_ERROR_CLASS}>
+                {fe.errorFor("experienceLevel")}
+              </p>
             )}
           </div>
 
           {/* City */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-brand-foreground">
+            <label className="text-sm font-medium text-brand-foreground">
               City
             </label>
             <Input
@@ -217,7 +243,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
             {fe.errorFor("city") ? (
               <p className={FIELD_ERROR_CLASS}>{fe.errorFor("city")}</p>
             ) : (
-              <p className="text-xs text-brand-foreground-muted">
+              <p className="text-sm text-brand-foreground-muted">
                 Recruiters see this to evaluate timezone fit.
               </p>
             )}
@@ -225,7 +251,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
 
           {/* State / UT */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-brand-foreground">
+            <label className="text-sm font-medium text-brand-foreground">
               State / Union Territory
             </label>
             <IndiaStateCombobox
@@ -239,13 +265,14 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
           </div>
 
           {serverError && (
-            <p className="text-sm text-brand-danger text-center">{serverError}</p>
+            <p className="text-sm text-brand-danger text-center">
+              {serverError}
+            </p>
           )}
 
           <div className="flex flex-col gap-3 pt-4">
             <Button
-              type="button"
-              onClick={handleContinue}
+              type="submit"
               size="lg"
               variant="primary"
               className="w-full"
@@ -256,7 +283,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

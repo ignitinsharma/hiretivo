@@ -94,7 +94,9 @@ function ExperienceForm({
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-700">Company</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Company
+          </label>
           <Input
             {...form.register("company")}
             placeholder="Acme Inc."
@@ -378,7 +380,6 @@ export function WorkExperienceSection() {
                     isRemoving={saveMutation.isPending}
                   />
                 )}
-                <Separator className="mt-4" />
               </div>
             ))}
 
