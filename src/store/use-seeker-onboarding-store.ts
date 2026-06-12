@@ -84,6 +84,7 @@ interface SeekerOnboardingState {
   // ProofOfWork setters (new step 3)
   setGithubUrl: (url: string) => void;
   setLinkedinUrl: (url: string | null) => void;
+  setTwitterUrl: (url: string | null) => void;
   setWebsiteUrl: (url: string | null) => void;
   setVideoIntroUrl: (url: string | null) => void;
   addProject: (project: ProjectEntry) => void;
@@ -137,6 +138,7 @@ const initialStep4Data: Step4Data = {
 const initialProofOfWorkData: ProofOfWorkData = {
   githubUrl: '',
   linkedinUrl: null,
+  twitterUrl: null,
   websiteUrl: null,
   videoIntroUrl: null,
   projects: [],
@@ -312,6 +314,10 @@ export const useSeekerOnboardingStore = create<SeekerOnboardingState>()(
 
     setLinkedinUrl: (url) => set((state) => ({
       proofOfWork: { ...state.proofOfWork, linkedinUrl: url },
+    })),
+
+    setTwitterUrl: (url) => set((state) => ({
+      proofOfWork: { ...state.proofOfWork, twitterUrl: url },
     })),
 
     setWebsiteUrl: (url) => set((state) => ({

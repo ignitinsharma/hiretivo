@@ -56,12 +56,14 @@ export async function GET(req: NextRequest) {
 
   const allOk = db.status === "ok" && cache.status === "ok";
 
+  // Expose only up/down per dependency. Latency and internal error strings are
+  // withheld from this public endpoint to avoid leaking infra detail.
   return NextResponse.json(
     {
       status: allOk ? "ok" : "degraded",
       time: new Date().toISOString(),
       uptimeSec: Math.round(process.uptime()),
-      checks: { db, redis: cache },
+      checks: { db: db.status, redis: cache.status },
     },
     {
       status: allOk ? 200 : 503,

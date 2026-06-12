@@ -1,6 +1,7 @@
 import { getStageLabel } from "@/lib/application-pipeline";
 import { sendEmail } from "@/lib/resend";
 import { ApplicationStatus } from "@/constants/enums";
+import { escapeHtml } from "@/lib/email/escape-html";
 
 const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
 
@@ -24,8 +25,8 @@ export async function sendApplicationStatusEmail(
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Application Update</h2>
-        <p>Hi ${input.candidateName},</p>
-        <p>Your application for <strong>${input.jobTitle}</strong> has moved to <strong>${stageLabel}</strong>.</p>
+        <p>Hi ${escapeHtml(input.candidateName)},</p>
+        <p>Your application for <strong>${escapeHtml(input.jobTitle)}</strong> has moved to <strong>${stageLabel}</strong>.</p>
         <p>We will notify you again if there are further updates.</p>
       </div>
     `,

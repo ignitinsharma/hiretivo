@@ -18,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Hiretivo | Find Remote Work That Fits Your Life",
+  title: "Hiretivo: Hire Verified Indian Engineers",
   description:
-    "Skills-based remote job portal connecting talented professionals with remote-first companies worldwide.",
+    "Curated marketplace of pre-verified Indian engineers for US and EU startups. Browse talent, see real skills, hire faster.",
   icons: {
     icon: "/favicon.png",
   },

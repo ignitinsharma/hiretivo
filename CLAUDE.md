@@ -1,209 +1,69 @@
 # Hiretivo — Development Rules
 
-## Version: 3.0
-
-**Apply these rules across ALL development sessions, ALL tools, ALL phases.**
-**Reference this file at the start of every chat.**
+**Version 3.1** · Apply across ALL sessions, tools, and phases. Reference at the start of every chat.
 
 ---
 
-## QUICK REFERENCE (Most Used)
-
-### Before Building Anything
+## Golden Rules
 
 ```
-1. CHECK EXISTING CODE FIRST
-   - Search src/services/, src/lib/, src/modules/*/ for existing functions
-   - Search src/components/shared/ for reusable components
-   - Check src/app/api/ for existing API routes
-   - Never create duplicate functions or components
-
-2. IF EXISTS → use it
-3. IF NOT → build it
-```
-
-### Styling Priority Ladder
-
-```
-1. BRAND TOKENS    → bg-brand-primary, text-brand-foreground        [ALWAYS FIRST]
-2. NATIVE TAILWIND → bg-white, text-gray-500, rounded-lg         [PREFERRED]
-3. ARBITRARY      → bg-[#7560ff], text-[#0a0a0a]              [RARE - only if P1/P2 unavailable]
-4. GLOBAL CSS    → Add to globals.css / tailwind.config.ts      [THEN USE P1]
-5. style={{}}    → className="mt-4" NOT style={{marginTop:16}} [LAST RESORT ONLY]
-```
-
-### Arbitrary Value Rule (MANDATORY)
-
-Before writing `[Xpx]`, check if a canonical class exists:
-
-- **px divisible by 4** → use scale step: `max-w-[460px]` → `max-w-115` (460÷4=115)
-- **text sizes** → use named scale: `text-[60px]` → `text-6xl`
-- **leading ratios** → use named scale: `leading-[1.7]` → `leading-relaxed`
-- **tracking** → use named scale: `tracking-[-0.03em]` → `tracking-tight`
-
-```
-Arbitrary [X] is ONLY valid when:
-  - Value is NOT divisible by 4 (e.g. 310px, 132px)
-  - It's a ratio/em with no named Tailwind equivalent
-  - It's a CSS feature (perspective, translateZ, transform, blur)
-  - It's sub-pixel micro-typography (10px, 11px, 13px — between xs/sm)
-  - It's a color (must still follow brand token priority)
-```
-
-**Quick canonical lookup:**
-
-| Arbitrary | Canonical |
-|-----------|-----------|
-| `text-[60px]` | `text-6xl` |
-| `text-[48px]` | `text-5xl` |
-| `text-[36px]` | `text-4xl` |
-| `text-[30px]` | `text-3xl` |
-| `leading-[1.5]` | `leading-normal` |
-| `leading-[1.625]` | `leading-relaxed` |
-| `leading-[1.7]` | `leading-relaxed` |
-| `leading-[2]` | `leading-loose` |
-| `tracking-[-0.05em]` | `tracking-tighter` |
-| `tracking-[-0.025em]` | `tracking-tight` |
-| `tracking-[0.025em]` | `tracking-wide` |
-| `max-w-[Xpx]` where X÷4=N | `max-w-N` |
-| `w-[Xpx]` where X÷4=N | `w-N` |
-| `h-[Xpx]` where X÷4=N | `h-N` |
-| `gap-[Xpx]` where X÷4=N | `gap-N` |
-| `p-[Xpx]` where X÷4=N | `p-N` |
-
-### Imports
-
-```ts
-// Path aliases ALWAYS - never relative across folders
-import { Button } from "@/components/ui/button"     // ✅
-import { Button } from "../../../components/ui/button" // ❌
-
-// Same module = relative OK
-import { formatSalary } from "./format-job"
-```
-
-### Types
-
-```ts
-// NEVER any - use unknown + narrow
-const processJob = (job: JobListItem): ProcessedJob => { }
-
-// Props ALWAYS typed
-interface JobCardProps {
-  job: JobListItem
-  matchScore?: number
-  onApply?: () => void
-}
-
-// ALWAYS use enums, never string literal unions
-// ❌ const direction: "upgrade" | "downgrade" = "upgrade"
-// ✅ const direction = PlanDirection.UPGRADE
-```
-
-### State
-
-```ts
-// Server data → TanStack Query
-// Global UI → Zustand
-// Forms → React Hook Form + Zod
-// Local UI → useState
-```
-
-### Data Rendering
-
-```ts
-// NEVER repeat JSX - use .map()
-{JOBS.map(job => <JobCard key={job.id} job={job} />)}
-
-// ALWAYS handle all states
-if (isLoading) return <JobListSkeleton />
-if (isError) return <ErrorState />
-if (!data?.jobs.length) return <EmptyState />
-return <JobList jobs={data.jobs} />
+1. CHECK FIRST  → search services/, lib/, modules/*/, components/shared/, app/api/
+                  before building. Exists → use it. Not → build it. No duplicates.
+2. STYLING      → brand tokens → native tailwind → arbitrary (rare) → globals → style={{}} (last)
+3. TYPES        → never `any`. Path aliases, never ../../../. Enums, never string unions.
+4. RENDER       → DRY with .map(). Handle isLoading / isError / empty / data — every time.
+5. UI           → mobile-first base, then sm:/md:/lg:. No shadows. No dark mode. No rounded-full.
+6. COMMENTS     → every function, route, action, component gets a /* */ doc block.
 ```
 
 ---
 
-## 1. PROJECT IDENTITY & STACK
+## 1. Project & Stack
 
-### 1.1 Project Info
+### 1.1 Identity
 
-- **Project name:** Hiretivo
-- **Domain:** hiretivo.com
-- **What it is:** Skills-based remote job portal. Like Instahyre — NOT Naukri.
+- **Hiretivo** (hiretivo.com) — skills-based remote job portal. Like Instahyre, NOT Naukri.
 - **Core mechanic:** Match score = (seeker skills ∩ job required skills) / job required skills × 100
-- **Two user types:** Job Seeker (role: SEEKER) and Recruiter (role: RECRUITER)
-- **Auth gate:** Browse/search is public. Apply requires login — show LoginModal, not redirect.
+- **Users:** Job Seeker (`UserRole.SEEKER`), Recruiter (`UserRole.RECRUITER`)
+- **Auth gate:** Browse/search is public. Apply requires login — show LoginModal, do NOT redirect.
 
-### 1.2 Tech Stack
+### 1.2 Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 14+ App Router |
-| Language | TypeScript (strict mode) |
-| Package manager | pnpm only |
-| UI components | shadcn/ui |
-| Styling | TailwindCSS |
-| Icons | Lucide React |
-| Global state | Zustand |
-| Server state | TanStack Query |
-| Forms | React Hook Form |
-| Validation | Zod (shared client + server) |
-| ORM | Prisma |
-| Database | Neon (serverless PostgreSQL) |
-| Auth | Auth.js v5 |
-| File storage | Cloudflare R2 |
-| Cache/rate limit | Upstash Redis |
-| Email | Resend |
-| Date handling | date-fns |
-| Hosting | Vercel |
+| Layer | Tech | Layer | Tech |
+|-------|------|-------|------|
+| Framework | Next.js 14+ App Router | ORM | Prisma |
+| Language | TypeScript (strict) | Database | Neon (serverless Postgres) |
+| Package manager | pnpm only | Auth | Auth.js v5 |
+| UI | shadcn/ui | File storage | Cloudflare R2 |
+| Styling | TailwindCSS | Cache / rate limit | Upstash Redis |
+| Icons | Lucide React | Email | Resend |
+| Global state | Zustand | Dates | date-fns |
+| Server state | TanStack Query | Hosting | Vercel |
+| Forms | React Hook Form | Validation | Zod (client + server) |
 
-### 1.3 Date Handling — Use date-fns
+### 1.3 Dates — date-fns only
 
 ```ts
-// Use date-fns for ALL date operations
-import { format, addDays, isAfter } from 'date-fns'
-
-// ❌ WRONG
-new Date().toLocaleDateString()
-
-// ✅ CORRECT
-format(date, 'MMM d, yyyy')
-format(addDays(now, 7), 'MMM d, yyyy')
+import { format, addDays } from 'date-fns'
+format(date, 'MMM d, yyyy')        // ✅
+new Date().toLocaleDateString()    // ❌
 ```
 
 ---
 
-## 2. STYLING HIERARCHY (MANDATORY)
+## 2. Styling (canonical — all styling rules live here)
 
-### Priority Ladder — COPY THIS EXACTLY
+### Priority Ladder
 
 ```
-PRIORITY 1: BRAND TOKENS          [ALWAYS FIRST]
-↓ PRIORITY 2: NATIVE TAILWIND   [PREFERRED]
-  ↓ PRIORITY 3: ARBITRARY       [ONLY if P1+P2 unavailable]
-    ↓ PRIORITY 4: GLOBAL CSS   [ADD to config, then use P1]
-      ↓ PRIORITY 5: style={{}} [LAST RESORT ONLY]
+1. BRAND TOKENS    bg-brand-primary, text-brand-foreground   [ALWAYS FIRST]
+2. NATIVE TAILWIND bg-white, text-gray-500, rounded-lg       [PREFERRED]
+3. ARBITRARY       bg-[#7560ff]                              [RARE — only if 1+2 unavailable]
+4. GLOBAL CSS      add to globals.css / tailwind.config.ts, then use as token
+5. style={{}}      LAST RESORT ONLY — prefer className="mt-4"
 ```
 
-```ts
-// ✅ CORRECT - Priority 1: Brand tokens first
-className="bg-brand-primary text-brand-primary-foreground"
-
-// ✅ CORRECT - Priority 2: Native Tailwind
-className="bg-white text-gray-500 rounded-lg"
-
-// ✅ CORRECT - Priority 3: Arbitrary only if token unavailable
-className="bg-[#7560ff]"  // Only use if bg-brand-primary doesn't exist
-
-// ❌ WRONG - style={{}} inline
-style={{ marginTop: '16px', color: '#4F46E5' }}
-
-// ✅ FIX - Use className instead
-className="mt-4 text-purple-600"
-```
-
-### Brand Tokens (from DESIGN.md)
+### Brand Tokens
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -222,328 +82,176 @@ className="mt-4 text-purple-600"
 
 ```ts
 // Display / Hero
-className="font-bold text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight"
-
-// H1 / Page heading
-className="font-bold text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight"
-
-// H2 / Section heading
-className="font-bold text-2xl md:text-3xl leading-snug tracking-tight"
-
+"font-bold text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight"
+// H1 / Page
+"font-bold text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight"
+// H2 / Section
+"font-bold text-2xl md:text-3xl leading-snug tracking-tight"
 // H3 / Card title
-className="font-semibold text-xl leading-snug tracking-tight"
-
-// Body
-className="font-normal text-base leading-relaxed"
-
-// Body muted
-className="font-normal text-base text-muted-foreground leading-relaxed"
-
+"font-semibold text-xl leading-snug tracking-tight"
+// Body / Body muted
+"font-normal text-base leading-relaxed"  ·  add text-muted-foreground for muted
 // Label
-className="font-medium text-xs uppercase tracking-wider"
+"font-medium text-xs uppercase tracking-wider"
 ```
+
+### Arbitrary Values
+
+Before writing `[Xpx]`, use the canonical class. Arbitrary `[X]` is ONLY valid when: value NOT divisible by 4 (310px, 132px) · ratio/em with no named equivalent · CSS feature (perspective, translateZ, blur) · sub-pixel micro-typography (10/11/13px) · a color (still follow token priority).
+
+| Arbitrary | Canonical | Arbitrary | Canonical |
+|-----------|-----------|-----------|-----------|
+| `text-[60px]` | `text-6xl` | `leading-[1.5]` | `leading-normal` |
+| `text-[48px]` | `text-5xl` | `leading-[1.625]`/`[1.7]` | `leading-relaxed` |
+| `text-[36px]` | `text-4xl` | `leading-[2]` | `leading-loose` |
+| `text-[30px]` | `text-3xl` | `tracking-[-0.05em]` | `tracking-tighter` |
+| `max-w/w/h/gap/p-[Xpx]` where X÷4=N | `*-N` | `tracking-[-0.025em]` | `tracking-tight` |
 
 ### Component Patterns
 
 ```ts
-// Primary Button - ALWAYS use Button component with variant
 import { Button } from "@/components/ui/button"
-<Button variant="primary">Label</Button>
+<Button variant="primary">Label</Button>   // also: secondary | destructive | ghost | link
 
-// Secondary Button
-<Button variant="secondary">Label</Button>
-
-// Ghost Icon Button
-<Button variant="ghost" size="icon"><Mail /></Button>
-
-// Card
-className="rounded-xl border border-gray-200 bg-white p-6"
-
-// Input
-className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600"
-
-// Modal / Dialog
-className="rounded-xl border border-gray-200"
+// Card:  "rounded-xl border border-gray-200 bg-white p-6"
+// Input: "rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600"
+// Modal: "rounded-xl border border-gray-200"
 ```
 
-### Mobile-First UI (MANDATORY)
+| Variant | Use | Variant | Use |
+|---------|-----|---------|-----|
+| `primary` | Main CTA, submit | `destructive` | Delete, remove |
+| `secondary` | Secondary actions | `ghost` | Inline, nav |
+| `link` | Text links | | |
 
-Write every UI change with a mobile-first approach:
+### Mobile-First (mandatory)
 
 ```ts
-// ✅ CORRECT - mobile base first, larger screens enhance
-className="flex flex-col gap-4 lg:flex-row lg:gap-8"
-
-// ✅ CORRECT - desktop-only absolute positioning is gated behind lg:
-className="relative w-full lg:absolute lg:left-0 lg:top-0 lg:w-72"
-
-// ❌ WRONG - desktop layout applies to mobile and clips content
-className="absolute left-0 top-0 w-72"
+"flex flex-col gap-4 lg:flex-row lg:gap-8"                       // ✅ base mobile, enhance up
+"relative w-full lg:absolute lg:left-0 lg:top-0 lg:w-72"        // ✅ desktop positioning gated
+"absolute left-0 top-0 w-72"                                    // ❌ clips on mobile
 ```
 
-- Base classes must produce a usable mobile layout before adding `sm:`, `md:`, or `lg:` overrides.
-- Any absolute positioning, fixed width, or fixed height that can overflow must be desktop-gated with `lg:` and have mobile-safe base classes.
-- Header/navigation changes must expose all critical auth/actions on mobile through visible buttons or a menu.
-- Before finalizing UI work, verify the affected screen at approximately 390px wide and desktop width.
+- Base classes must produce a usable mobile layout before any `sm:`/`md:`/`lg:` override.
+- Absolute positioning / fixed width / fixed height that can overflow must be `lg:`-gated with mobile-safe base classes.
+- Header/nav must expose all critical auth/actions on mobile (visible buttons or menu).
+- Verify affected screens at ~390px and desktop before finishing.
 
-### Button Variants Reference
-
-| Variant | Use |
-|--------|-----|
-| `primary` | Main CTA, form submit |
-| `secondary` | Secondary actions |
-| `destructive` | Delete, remove |
-| `ghost` | Inline, nav items |
-| `link` | Text links |
-
-### NEVER Do These
+### NEVER
 
 ```ts
-// ❌ NEVER inline styles
-style={{ color: '#4F46E5' }}
-style={{ marginTop: '16px' }}
-
-// ❌ NEVER hardcoded hex in className (unless P3 rules applied)
-className="text-[#34332s]"
-className="bg-[#000000]"
-
-// ❌ NEVER old purple/indigo colors
-className="bg-indigo-600"
-className="bg-purple-500"
-className="bg-[#5952e5]"
-
-// ❌ NEVER use slate-*, gray-* when brand tokens exist
-className="text-slate-700"           // ✅ text-brand-foreground
-className="text-gray-400"            // ✅ text-brand-foreground-muted
-
-// ❌ NEVER shadows
-className="shadow-lg"
-className="shadow-md"
-
-// ❌ NEVER dark mode
-className="dark:bg-gray-900"
-className="dark:text-white"
-
-// ❌ NEVER font-extrabold (800+)
-className="font-extrabold text-7xl"   // ✅ font-bold
-
-// ❌ NEVER rounded-full on inputs/cards
-className="rounded-full"             // ✅ rounded-lg or rounded-xl
-
-// ❌ NEVER arbitrary pixel/rem values when canonical Tailwind class exists
-className="max-w-[460px]"           // ✅ max-w-md / max-w-lg / max-w-xl / max-w-2xl
-className="max-w-[520px]"           // ✅ max-w-xl or max-w-2xl
-className="leading-[1.7]"           // ✅ leading-7 or leading-relaxed
-className="h-[3.5rem]"             // ✅ h-14
-className="w-[3.5rem]"             // ✅ w-14
-className="gap-[1.5rem]"           // ✅ gap-6
-// Arbitrary [Xpx] ONLY for values with no canonical Tailwind equivalent
-// When in doubt: use the nearest standard Tailwind step, not an exact pixel match
-
-// ❌ NEVER skip comments on functions/routes
-// Every function needs: purpose, return value, key details
+style={{ color:'#4F46E5' }}                  // inline styles → use className
+className="text-[#000000]"                   // hardcoded hex (unless arbitrary rule applies)
+className="bg-indigo-600" / "bg-purple-500"  // old purple/indigo → brand tokens
+className="text-slate-700" / "text-gray-400" // → text-brand-foreground / -muted
+className="shadow-lg"                        // no shadows — borders only
+className="dark:bg-gray-900"                 // no dark mode
+className="font-extrabold"                   // → font-bold (no 800+)
+className="rounded-full"                     // on inputs/cards → rounded-lg / rounded-xl
+className="max-w-[460px]"                    // arbitrary when canonical exists → max-w-lg
 ```
 
 ---
 
-## 3. COMPONENT RULES
+## 3. Components
 
-### 3.1 File Structure
+### File Structure
 
 ```
-src/components/ui/               → shadcn/ui base only - NEVER customize
-src/components/forms/           → Reusable form inputs
-src/components/layout/          → Headers, Footer
-src/components/shared/         → Components used 2+ modules
-src/modules/[domain]/components/ → Domain-specific only
+src/components/ui/                → shadcn/ui base only — NEVER customize
+src/components/forms/             → reusable form inputs
+src/components/layout/            → headers, footer
+src/components/shared/            → used in 2+ modules
+src/modules/[domain]/components/  → domain-specific only
 ```
 
-### 3.2 The 2+ Rule
+**2+ Rule:** component used in more than one module → `src/components/shared/`. Never duplicate.
 
-Components used in more than one module → `src/components/shared/`. Do NOT duplicate.
+**Size:** keep components under ~80 lines JSX. Break files >~300 lines or with multiple visual sections into sub-components. Co-locate single-use sub-components in the same folder; reusable ones follow the 2+ rule.
 
-### 3.3 Server vs Client
+### `"use client"` only when
+
+useState/useEffect/useReducer · TanStack Query hooks · Zustand access · browser APIs · event handlers · third-party client libs. Otherwise default to Server Component.
+
+### Props — always typed
 
 ```ts
-// Server Component (default - no directive needed)
-// Add "use client" ONLY when:
-- useState, useEffect, useReducer
-- TanStack Query hooks
-- Zustand store access
-- Browser APIs (window, localStorage)
-- Event handlers
-- Third-party client libraries
+interface JobCardProps { job: JobListItem; matchScore?: number; onApply?: () => void }
+export function JobCard({ job, matchScore, onApply }: JobCardProps) { }
 ```
 
-### 3.4 Props — Always Typed
+### Import Order
 
 ```ts
-interface JobCardProps {
-  job: JobListItem
-  matchScore?: number
-  onApply?: () => void
-  variant?: 'default' | 'compact'
-}
-export function JobCard({ job, matchScore, onApply, variant = 'default' }: JobCardProps)
+'use client'                                              // 1. directive (first line if needed)
+import { useState } from 'react'                          // 2. React
+import { useRouter } from 'next/navigation'               // 3. Next.js
+import { useQuery } from '@tanstack/react-query'          // 4. third-party
+import { UserRole } from '@/constants/enums'              // 5. internal: lib/constants/store/hooks
+import { calculateMatchScore } from '@/modules/matching/utils/calculate-match' // 6. modules
+import { JobCard } from '@/components/shared/JobCard'      // 7. components (shared → local)
+import type { JobListItem } from '@/modules/jobs/types/job.types' // 8. types
+// 9. interfaces  10. component
 ```
 
-### 3.5 Component Import Order
-
-```ts
-'use client'  // if needed - must be first line
-
-// 1. React
-import { useState } from 'react'
-
-// 2. Next.js
-import { useRouter } from 'next/navigation'
-
-// 3. Third-party
-import { useQuery } from '@tanstack/react-query'
-
-// 4. Internal - lib, constants, store, hooks
-import { UserRole } from '@/constants/enums'
-import { useAuthStore } from '@/store/use-auth-store'
-
-// 5. Module imports
-import { calculateMatchScore } from '@/modules/matching/utils/calculate-match'
-
-// 6. Component imports - shared first, then local
-import { JobCard } from '@/components/shared/JobCard'
-
-// 7. Type imports
-import type { JobListItem } from '@/modules/jobs/types/job.types'
-
-// 8. Interface definitions
-interface Props { }
-
-// 9. Component
-export function MyComponent() { }
-```
-
-### 3.6 No Barrel Imports
-
-```ts
-// ❌ WRONG
-import { JobCard } from "@/components/shared"
-import { calculateMatchScore } from "@/modules/matching"
-
-// ✅ CORRECT
-import { JobCard } from "@/components/shared/JobCard"
-import { calculateMatchScore } from "@/modules/matching/utils/calculate-match"
-```
+**No barrel imports** — import from the exact file path, never `@/components/shared`.
 
 ---
 
-## 4. STATE & DATA
+## 4. State & Data
 
-### 4.1 State Layer
-
-| State Type | Tool | Example |
-|-----------|-----|---------|
+| State | Tool | Example |
+|-------|------|---------|
 | Server data | TanStack Query | jobs list, applicants |
 | Global UI | Zustand | modal, sidebar, auth |
-| Form state | React Hook Form | inputs, validation |
+| Form state | React Hook Form + Zod | inputs, validation |
 | Local UI | useState | toggle, transient |
-| URL/filter | useSearchParams | pagination |
+| URL / filter | useSearchParams | pagination |
 
-### 4.2 Zustand Stores
-
-```ts
-// One store per domain
-// use-auth-store.ts, use-ui-store.ts
-
-// Keep thin - only global state
-// Server data belongs in TanStack Query
-// Use persist only for auth store
-```
-
-### 4.3 TanStack Query
+- **Zustand:** one store per domain (`use-auth-store.ts`). Keep thin — global UI only, server data belongs in Query. `persist` only on auth store.
+- **TanStack Query:** array keys (`['jobs', filters]`). staleTime: static 5min, dynamic 30s. Invalidate after mutations: `queryClient.invalidateQueries({ queryKey: ['jobs'] })`.
 
 ```ts
-// Query keys as arrays
-const queryKey = ['jobs', filters]
-const queryKey = ['job', id]
-
-// staleTime: static = 5min, dynamic = 30s
-// Handle isLoading, isError, data
-
-// Invalidate after mutations
-queryClient.invalidateQueries({ queryKey: ['jobs'] })
-```
-
-### 4.4 Forms — React Hook Form + Zod
-
-```ts
-const form = useForm<CreateJobInput>({
-  resolver: zodResolver(CreateJobSchema),
-  defaultValues: { }
-})
-
-// Zod schema in lib/validations/
-// Validate in server actions too
+// Forms — schema in lib/validations/, validate on client AND server
+const form = useForm<CreateJobInput>({ resolver: zodResolver(CreateJobSchema), defaultValues: {} })
 const parsed = CreateJobSchema.safeParse(data)
 if (!parsed.success) return { error: parsed.error.flatten() }
 ```
 
 ---
 
-## 5. API & SERVER
+## 5. API & Server
 
-### 5.1 Route Rules
+### Route Rules
 
 ```ts
-// Always validate auth + role
 const session = await auth()
 if (!session?.user) return new Response('Unauthorized', { status: 401 })
 if (session.user.role !== UserRole.RECRUITER) return new Response('Forbidden', { status: 403 })
 
-// Validate request body with Zod
 const parsed = CreateJobSchema.safeParse(await req.json())
 if (!parsed.success) return Response.json({ error: parsed.error.flatten() }, { status: 400 })
 
-// Consistent response shape
-Response.json({ data: result }, { status: 200 })
+Response.json({ data: result }, { status: 200 })   // consistent shape
 Response.json({ error: 'message' }, { status: 500 })
 ```
 
-### 5.2 Rate Limiting (MANDATORY)
+### Rate Limiting (mandatory on ALL routes)
 
-**ALL API routes MUST have rate limiting applied.** Use Upstash Redis ratelimit.
+Use Upstash `Ratelimit` (sliding window). Key by IP for reads/auth, by userId for writes/uploads.
 
 ```ts
-import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
-
-// Rate limiter instance
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "60s"),
-})
-
-// Apply to any API route
-export async function GET(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "anonymous"
-  const { success } = await ratelimit.limit(ip)
-  if (!success) return new Response("Too Many Requests", { status: 429 })
-  // ... rest of handler
-}
+const ip = req.headers.get("x-forwarded-for") ?? "anonymous"
+const { success } = await ratelimit.limit(ip)
+if (!success) return new Response("Too Many Requests", { status: 429 })
 ```
 
-**Default rate limits:**
-| Endpoint Type | Limit |
-|--------------|-------|
-| Auth routes | 10 req/min per IP |
-| Write operations (POST/PUT/DELETE) | 5 req/min per user |
-| Read operations | 30 req/min per IP |
-| File uploads | 5 req/min per userId |
+| Endpoint | Limit | Endpoint | Limit |
+|----------|-------|----------|-------|
+| Auth | 10/min per IP | Reads | 30/min per IP |
+| Writes (POST/PUT/DELETE) | 5/min per user | File uploads | 5/min per userId |
 
-### 5.3 Server Actions
+### Server Actions
 
 ```ts
 "use server"
@@ -556,220 +264,82 @@ export async function createJobAction(data: unknown) {
 
 ---
 
-## 6. CODE QUALITY
+## 6. Code Quality
 
-### 6.1 DRY — Never Repeat JSX
+### DRY
 
 ```ts
-// ❌ WRONG - repeated JSX
-<tr><td className="py-4 px-4 text-sm">A</td></tr>
-<tr><td className="py-4 px-4 text-sm">B</td></tr>
-
-// ✅ CORRECT - data array + .map()
+// JSX → data array + .map(); never copy-paste rows/cards
 const ROWS = [{ label: 'A' }, { label: 'B' }]
 {ROWS.map(row => <tr key={row.label}><td className={CELL_BASE}>{row.label}</td></tr>)}
-```
 
-### 6.2 Extract Repeated Classes
-
-```ts
-// ❌ WRONG - repeated className
-className="py-4 px-4 text-sm text-gray-500"
-
-// ✅ CORRECT - named constant
+// Repeated className → named const.  Static data → typed config, not inline JSX.
 const CELL_BASE = 'py-4 px-4 text-sm'
-const CELL_MUTED = 'text-brand-foreground-muted'
 ```
 
-### 6.3 Static Data in Constants
-
-```ts
-// ❌ WRONG - hardcoded in JSX
-<PricingCard title="Pro" price="$49" />
-
-// ✅ CORRECT - typed config
-const PRICING_TIERS = [{ id: 'pro', title: 'Pro', price: 49 }] as const
-{PRICING_TIERS.map(tier => <PricingCard key={tier.id} tier={tier} />)}
-```
-
-### 6.4 Always Handle All States
+### Handle All States
 
 ```ts
 if (isLoading) return <Skeleton />
-if (isError) return <ErrorState onRetry={refetch} />
+if (isError)   return <ErrorState onRetry={refetch} />
 if (!data?.length) return <EmptyState />
 return <Content data={data} />
 ```
 
-### 6.5 Use Enums, Not String Literal Unions
+### Enums, Not String Unions
+
+Any value from a fixed set of strings → enum in `src/constants/enums.ts`. Applies to return types, params, variable annotations, response shapes.
 
 ```ts
-// ❌ WRONG — hardcoded string literal union
-function getPlanChangeDirection(): "upgrade" | "downgrade" | "same"
-const direction: "upgrade" | "downgrade" = "upgrade"
-
-// ✅ CORRECT — define and use an enum in src/constants/enums.ts
-export enum PlanDirection {
-  UPGRADE = "upgrade",
-  DOWNGRADE = "downgrade",
-  SAME = "same",
-}
-
-function getPlanChangeDirection(): PlanDirection
-const direction = PlanDirection.UPGRADE
+// ❌ function getDirection(): "upgrade" | "downgrade" | "same"
+export enum PlanDirection { UPGRADE = "upgrade", DOWNGRADE = "downgrade", SAME = "same" }
+function getDirection(): PlanDirection { }   // ✅
 ```
 
-**Rule:** Any value that belongs to a fixed set of string options must be defined as a TypeScript enum in `src/constants/enums.ts`. Never inline string literal unions in type annotations. This applies to return types, parameter types, variable annotations, and response shapes.
+### Mandatory Comments
 
-### 6.6 Component Size — Break Into Sub-Components
-
-Keep components under ~80 lines JSX. Break large files into smaller, focused sub-components.
-
-**When to break:**
-- File exceeds ~300 lines
-- Multiple distinct visual sections (header, stats, actions, etc.)
-- Repeated JSX patterns that can be extracted
-
-**Example:**
-```
-CandidateDrawer.tsx (1198 lines)
-  → CandidateDrawer.tsx (main container ~200 lines)
-  → components/
-    ├── CandidateDrawerHeader.tsx
-    ├── CandidateDrawerSidebar.tsx (match score, stats, actions)
-    ├── CandidateDrawerSkills.tsx
-    ├── CandidateDrawerTabs.tsx (summary/experience/education)
-    └── CandidateDrawerInterview.tsx
-```
-
-**Sub-component location:**
-- Used in 2+ modules → `src/components/shared/`
-- Used in 1 module only → `src/modules/[module]/components/`
-
-**Naming sub-components:**
-- If only used in one file, co-locate in same folder as `SubComponentName.tsx`
-- If extracted for reuse, follow the 2+ rule above
-
-### 6.7 Pre-commit Checklist
-
-- [ ] No JSX repeated — use `.map()`
-- [ ] No className repeated — use `cn()` or const
-- [ ] No hardcoded copy in JSX — constants or props
-- [ ] `any` type in props/handlers
-- [ ] isLoading / isError / empty handled
-- [ ] Mobile-first responsive (`sm:` → `md:` → `lg:`)
-- [ ] aria-* on interactive elements
-- [ ] No console.log or TODO
-- [ ] No string literal unions — use enum in src/constants/enums.ts
-- [ ] All functions/API routes have descriptive comments
-
-### 6.9 Bug Fix Standards (MANDATORY)
-
-When fixing bugs, do not apply patch-only fixes. Follow this exact process:
-
-1. Perform root-cause analysis before editing code
-   - Reproduce or trace the failure path
-   - Identify the exact failing contract/invariant
-   - Confirm why existing checks did not prevent it
-
-2. Validate cross-feature impact before finalizing
-   - Check adjacent flows that share the same function/action/component
-   - Verify API/action return shapes are consistent for all callers
-   - Ensure auth/session/cookie mutations run only in valid execution contexts
-
-3. Implement a root-cause fix, not a symptom workaround
-   - Fix the source contract/state mismatch
-   - Update types/interfaces so invalid states are not silently allowed
-   - Avoid "null/undefined guards only" unless the root cause is impossible to address
-
-4. Prove safety before completion
-   - Run relevant checks (at minimum TypeScript check)
-   - Add/update targeted tests when practical
-   - Document residual risk explicitly if something cannot be verified locally
-
----
-
-## 6.8 Mandatory Comments
-
-Every function, API route, server action, and component must have a multi-line comment using `/* */`:
+Every function, API route, server action, and component gets a `/* */` block: purpose, params, return, key behavior/side effects. Add inline comments for non-obvious logic.
 
 ```ts
-/*
- * POST /api/jobs
- * Creates a new job listing for recruiters
- * Request body: { title, description, requiredSkills, salary, location }
- * Returns: Created job object or validation errors
- */
-export async function POST(req: NextRequest) {
-  // ...
-}
-
 /*
  * calculateMatchScore
- * Calculates job-seeker match percentage based on skills overlap
- * @param required - Job required skills array
- * @param seeker - Seeker skills array
- * @returns number (0-100) or null if no skills match
+ * Job-seeker match % from skills overlap.
+ * @param required - job required skills
+ * @param seeker   - seeker skills
+ * @returns number 0-100, or null if no overlap
  */
-export function calculateMatchScore(required: string[], seeker: string[]): number | null {
-  // ...
-}
-
-/*
- * JobCard
- * Displays job listing with match score badge and apply button
- * @param job - JobListItem object
- * @param matchScore - Optional match percentage (0-100)
- * @param onApply - Optional callback for apply button
- */
-export function JobCard({ job, matchScore, onApply }: JobCardProps) {
-  // ...
-}
+export function calculateMatchScore(required: string[], seeker: string[]): number | null { }
 ```
 
-### Comment Requirements
+### Bug-Fix Standards (mandatory — no patch-only fixes)
 
-- **API Routes**: Method (GET/POST/etc), purpose, request body if applicable, response format
-- **Server Actions**: Purpose, input validation, return value, side effects
-- **Utility Functions**: What it calculates/transforms, inputs, outputs
-- **Components**: What it renders, props it accepts, key behaviors
-- **Complex Logic**: Add inline comments for non-obvious code blocks
+1. **Root-cause first** — trace the failure path, identify the broken contract/invariant, confirm why existing checks missed it.
+2. **Cross-feature impact** — check adjacent flows sharing the function/action/component; verify return shapes are consistent for all callers; ensure auth/session/cookie mutations run only in valid contexts.
+3. **Fix the source** — correct the contract/state mismatch and tighten types so invalid states can't recur. Avoid null/undefined guards as the only fix.
+4. **Prove safety** — run at minimum a TypeScript check; add targeted tests where practical; document residual risk if unverifiable locally.
+
+### Pre-commit Checklist
+
+- [ ] No repeated JSX (`.map()`) or className (`cn()`/const)
+- [ ] No hardcoded copy in JSX — constants or props
+- [ ] No `any` in props/handlers · no string-literal unions (use enums)
+- [ ] isLoading / isError / empty handled
+- [ ] Mobile-first responsive · aria-* on interactive elements
+- [ ] No `console.log` or `TODO`
+- [ ] All functions/routes have doc comments
 
 ---
 
-## 7. GIT & NAMING
-
-### 7.1 Commit Format
+## 7. Git & Naming
 
 ```
-type(scope): short description
+type(scope): short description        types: feat fix chore refactor style test docs
+  feat(jobs): add skills tag input
+  fix(auth): correct oauth redirect
 
-feat(jobs): add skills tag input
-fix(auth): correct oauth redirect
-chore(db): add status index
-refactor(matching): extract calculation
+branches:  feature/job-detail-page · fix/login-modal-redirect
+never commit:  .env* (with values) · node_modules/ · .next/ · keys/tokens/secrets
 ```
-
-Types: `feat`, `fix`, `chore`, `refactor`, `style`, `test`, `docs`
-
-### 7.2 Branch Naming
-
-```
-feature/phase-1-foundation
-feature/job-detail-page
-fix/login-modal-redirect
-```
-
-### 7.3 Never Commit
-
-```
-.env.local (any .env with values)
-node_modules/
-.next/
-API keys, tokens, secrets
-```
-
-### 7.4 File Naming
 
 | Type | Convention | Example |
 |------|-----------|---------|
@@ -781,55 +351,6 @@ API keys, tokens, secrets
 | Stores | use-kebab-store.ts | use-auth-store.ts |
 | Services | kebab-case.service.ts | job.service.ts |
 | Constants | kebab-case.ts | match-thresholds.ts |
-
----
-
-## 8. QUICK REFERENCE (Bottom)
-
-### Core Rules Summary
-
-```ts
-// CHECK FIRST - before building anything
-// 1. Search services/, lib/, modules/*/, components/shared/, app/api/
-// 2. If exists → use it. If not → build it
-// 3. Never create duplicate functions/components
-
-// STYLING - Priority ladder
-className="bg-brand-primary"           // 1st: brand tokens
-className="bg-gray-100"              // 2nd: native tailwind
-className="bg-[#7560ff]"            // 3rd: arbitrary (rare)
-className="mt-4" NOT style={{}}     // 5th: last resort
-
-// IMPORTS - path aliases
-import { X } from "@/path/folder"   // NEVER ../../../
-
-// TYPES - never any
-interface Props { job: Job; }
-function fn(item: Item): Output { }
-
-// STATE - right tool
-TanStack Query → server data
-Zustand → global UI
-RHF + Zod → forms
-useState → local
-
-// RENDER - DRY
-{JOBS.map(job => <JobCard />)}  // NEVER copy-paste JSX
-
-// ERRORS - all states
-if (isLoading) return <Skeleton />
-if (isError) return <Error />
-if (!data) return <Empty />
-// data rendering
-
-// DESIGN - match DESIGN.md
-bg-brand-primary = #7560ff (purple)
-text-brand-foreground = #0a0a0a
-rounded-lg = buttons/inputs
-rounded-xl = cards/modals
-NO shadows - borders only
-NO dark mode
-```
 
 ---
 

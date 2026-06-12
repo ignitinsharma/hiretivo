@@ -229,12 +229,26 @@ export const educationEntrySchema = z.object({
 // ---------------------------------------------------------------------------
 
 /*
+ * SeekerStepValidation
+ * Shared return shape for the seeker onboarding step validators.
+ * `errors` is the legacy flat list; `fieldErrors` maps a field key to its message
+ * so the UI can render per-field red states. Array-item keys use
+ * "<array>.<index>.<field>" (e.g. "projects.0.description").
+ */
+export interface SeekerStepValidation {
+  valid: boolean;
+  errors: string[];
+  fieldErrors: Record<string, string>;
+}
+
+/*
  * Step3Input
  * Input shape for step 3 (proof-of-work): GitHub profile, optional links, and projects.
  */
 export interface Step3Input {
   githubUrl: string;
   linkedinUrl: string;
+  twitterUrl: string;
   websiteUrl: string;
   videoIntroUrl: string;
   projects: ProjectEntry[];
@@ -246,48 +260,63 @@ export interface Step3Input {
  * Requires a valid GitHub profile URL and at least one valid project entry.
  * @returns { valid, errors }
  */
-export function validateSeekerStep3(data: Step3Input): { valid: boolean; errors: string[] } {
+export function validateSeekerStep3(data: Step3Input): SeekerStepValidation {
   const errors: string[] = [];
+  const fieldErrors: Record<string, string> = {};
 
   if (!data.githubUrl?.trim()) {
-    errors.push('GitHub profile URL is required');
+    const m = 'GitHub profile URL is required';
+    errors.push(m); fieldErrors.githubUrl = m;
   } else {
     const githubRegex = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/;
     if (!githubRegex.test(data.githubUrl.trim())) {
-      errors.push('Please enter a valid GitHub profile URL (e.g. https://github.com/username)');
+      const m = 'Please enter a valid GitHub profile URL (e.g. https://github.com/username)';
+      errors.push(m); fieldErrors.githubUrl = m;
     }
   }
 
-  if (!data.linkedinUrl?.trim()) {
-    errors.push('LinkedIn URL is required');
-  } else if (!isValidHttpUrl(data.linkedinUrl.trim())) {
-    errors.push('LinkedIn URL must start with https:// (e.g. https://linkedin.com/in/yourname)');
+  if (data.linkedinUrl?.trim() && !isValidHttpUrl(data.linkedinUrl.trim())) {
+    const m = 'LinkedIn URL must start with https:// (e.g. https://linkedin.com/in/yourname)';
+    errors.push(m); fieldErrors.linkedinUrl = m;
+  }
+
+  if (data.twitterUrl?.trim() && !isValidHttpUrl(data.twitterUrl.trim())) {
+    const m = 'X / Twitter URL must start with https:// (e.g. https://x.com/yourname)';
+    errors.push(m); fieldErrors.twitterUrl = m;
   }
 
   if (!data.websiteUrl?.trim()) {
-    errors.push('Portfolio / Website URL is required');
+    const m = 'Portfolio / Website URL is required';
+    errors.push(m); fieldErrors.websiteUrl = m;
   } else if (!isValidHttpUrl(data.websiteUrl.trim())) {
-    errors.push('Portfolio URL must start with https:// (e.g. https://yourwebsite.com)');
+    const m = 'Portfolio URL must start with https:// (e.g. https://yourwebsite.com)';
+    errors.push(m); fieldErrors.websiteUrl = m;
   }
 
   // videoIntroUrl is optional — validate format only when provided
   if (data.videoIntroUrl?.trim() && !isValidHttpUrl(data.videoIntroUrl.trim())) {
-    errors.push('Video URL must start with https:// (e.g. https://loom.com/share/...)');
+    const m = 'Video URL must start with https:// (e.g. https://loom.com/share/...)';
+    errors.push(m); fieldErrors.videoIntroUrl = m;
   }
 
   if (!data.projects || data.projects.length === 0) {
-    errors.push('Add at least one project');
+    const m = 'Add at least one project';
+    errors.push(m); fieldErrors.projects = m;
   } else {
     data.projects.forEach((project, i) => {
       const result = projectEntrySchema.safeParse(project);
       if (!result.success) {
+        for (const issue of result.error.issues) {
+          const key = `projects.${i}.${issue.path[0] as string}`;
+          if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+        }
         const msg = result.error.issues[0]?.message ?? 'Invalid project entry';
         errors.push(`Project ${i + 1}: ${msg}`);
       }
     });
   }
 
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, fieldErrors };
 }
 
 /*
@@ -305,34 +334,43 @@ export interface Step4Input {
  * Requires at least one valid work experience entry.
  * @returns { valid, errors }
  */
-export function validateSeekerStep4Experience(data: Step4Input): { valid: boolean; errors: string[] } {
+export function validateSeekerStep4Experience(data: Step4Input): SeekerStepValidation {
   const errors: string[] = [];
+  const fieldErrors: Record<string, string> = {};
 
   if (!data.workExperiences || data.workExperiences.length === 0) {
-    errors.push('Add at least one work experience');
+    const m = 'Add at least one work experience';
+    errors.push(m); fieldErrors.workExperiences = m;
   } else {
-    for (const exp of data.workExperiences) {
+    data.workExperiences.forEach((exp, i) => {
       const result = workExperienceEntrySchema.safeParse(exp);
       if (!result.success) {
+        for (const issue of result.error.issues) {
+          const key = `workExperiences.${i}.${issue.path[0] as string}`;
+          if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+        }
         errors.push(result.error.issues[0]?.message ?? 'Invalid work experience');
-        break;
       }
-    }
+    });
   }
 
   if (!data.educations || data.educations.length === 0) {
-    errors.push('Add at least one education entry');
+    const m = 'Add at least one education entry';
+    errors.push(m); fieldErrors.educations = m;
   } else {
-    for (const edu of data.educations) {
+    data.educations.forEach((edu, i) => {
       const result = educationEntrySchema.safeParse(edu);
       if (!result.success) {
+        for (const issue of result.error.issues) {
+          const key = `educations.${i}.${issue.path[0] as string}`;
+          if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+        }
         errors.push(result.error.issues[0]?.message ?? 'Invalid education entry');
-        break;
       }
-    }
+    });
   }
 
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, fieldErrors };
 }
 
 /*
@@ -354,18 +392,38 @@ export interface Step5Input {
  * Requires headline, bio, salary range, availability, and resume.
  * @returns { valid, errors }
  */
-export function validateSeekerStep5(data: Step5Input): { valid: boolean; errors: string[] } {
+export function validateSeekerStep5(data: Step5Input): SeekerStepValidation {
   const errors: string[] = [];
-  if (!data.headline?.trim()) errors.push('Professional headline is required');
-  if (!data.bio?.trim()) errors.push('Bio is required');
-  if (data.salaryMin === null) errors.push('Minimum salary is required');
-  if (data.salaryMax === null) errors.push('Maximum salary is required');
-  if (data.salaryMin !== null && data.salaryMax !== null && data.salaryMin > data.salaryMax) {
-    errors.push('Minimum salary cannot exceed maximum salary');
+  const fieldErrors: Record<string, string> = {};
+  if (!data.headline?.trim()) {
+    const m = 'Professional headline is required';
+    errors.push(m); fieldErrors.headline = m;
   }
-  if (!data.availability) errors.push('Please select your availability');
-  if (!data.resume) errors.push('Resume is required');
-  return { valid: errors.length === 0, errors };
+  if (!data.bio?.trim()) {
+    const m = 'Bio is required';
+    errors.push(m); fieldErrors.bio = m;
+  }
+  if (data.salaryMin === null) {
+    const m = 'Minimum salary is required';
+    errors.push(m); fieldErrors.salaryMin = m;
+  }
+  if (data.salaryMax === null) {
+    const m = 'Maximum salary is required';
+    errors.push(m); fieldErrors.salaryMax = m;
+  }
+  if (data.salaryMin !== null && data.salaryMax !== null && data.salaryMin > data.salaryMax) {
+    const m = 'Minimum salary cannot exceed maximum salary';
+    errors.push(m); fieldErrors.salaryMax = m;
+  }
+  if (!data.availability) {
+    const m = 'Please select your availability';
+    errors.push(m); fieldErrors.availability = m;
+  }
+  if (!data.resume) {
+    const m = 'Resume is required';
+    errors.push(m); fieldErrors.resume = m;
+  }
+  return { valid: errors.length === 0, errors, fieldErrors };
 }
 
 // ---------------------------------------------------------------------------
@@ -377,21 +435,26 @@ export function validateSeekerStep5(data: Step5Input): { valid: boolean; errors:
  * Validates step 1: requires situation, experience level, city, and Indian state/UT.
  * @returns { valid, errors }
  */
-export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors: string[] } {
+export function validateSeekerStep1(data: Step1Input): SeekerStepValidation {
   const errors: string[] = [];
+  const fieldErrors: Record<string, string> = {};
   if (!data.situation) {
-    errors.push('Please select your current situation');
+    const m = 'Please select your current situation';
+    errors.push(m); fieldErrors.situation = m;
   }
   if (!data.experienceLevel) {
-    errors.push('Please select your experience level');
+    const m = 'Please select your experience level';
+    errors.push(m); fieldErrors.experienceLevel = m;
   }
   if (!data.city || !isValidCity(data.city)) {
-    errors.push('Please enter your city');
+    const m = 'Please enter your city';
+    errors.push(m); fieldErrors.city = m;
   }
   if (!data.state || !isValidState(data.state)) {
-    errors.push('Please select your state or union territory');
+    const m = 'Please select your state or union territory';
+    errors.push(m); fieldErrors.state = m;
   }
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, fieldErrors };
 }
 
 /*
@@ -399,18 +462,22 @@ export function validateSeekerStep1(data: Step1Input): { valid: boolean; errors:
  * Validates step 2: requires primary role, years of experience, and at least one skill.
  * @returns { valid, errors }
  */
-export function validateSeekerStep2(data: Step2Input): { valid: boolean; errors: string[] } {
+export function validateSeekerStep2(data: Step2Input): SeekerStepValidation {
   const errors: string[] = [];
+  const fieldErrors: Record<string, string> = {};
   if (!data.primaryRole?.trim()) {
-    errors.push('Primary role is required');
+    const m = 'Primary role is required';
+    errors.push(m); fieldErrors.primaryRole = m;
   }
   if (!data.yearsOfExperience) {
-    errors.push('Please select years of experience');
+    const m = 'Please select years of experience';
+    errors.push(m); fieldErrors.yearsOfExperience = m;
   }
   if (!data.skills || data.skills.length === 0) {
-    errors.push('At least one skill is required');
+    const m = 'At least one skill is required';
+    errors.push(m); fieldErrors.skills = m;
   }
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, fieldErrors };
 }
 
 /*

@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
       id: true,
       name: true,
       email: true,
+      image: true,
       verificationStatus: true,
       seekerProfile: {
         select: {
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest) {
     userId: u.id,
     name: u.name,
     email: u.email,
+    image: u.image,
     primaryRole: u.seekerProfile?.primaryRole ?? null,
     githubUrl: u.seekerProfile?.githubUrl ?? null,
     submittedForReviewAt: u.seekerProfile?.submittedForReviewAt?.toISOString() ?? null,

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
   ArrowLeft,
   DollarSign,
+  Info,
   Upload,
   FileText,
   X,
@@ -19,8 +20,13 @@ import {
   AVAILABILITY_OPTIONS,
 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { useFieldErrors } from "@/modules/seeker-onboarding/hooks/use-field-errors";
 import type { ResumeFile } from "@/modules/seeker-onboarding/types/seeker-onboarding.types";
 import { saveCompensation } from "@/app/actions/onboarding/seeker";
+
+const FIELD_ERROR_CLASS = "text-sm text-brand-danger";
+const RAW_TEXTAREA_INVALID =
+  "aria-[invalid=true]:border-brand-danger aria-[invalid=true]:focus:ring-brand-danger/20";
 
 /*
  * StepCompensation
@@ -48,6 +54,29 @@ const WORK_PREFERENCE_OPTIONS = [
 
 type WorkPreferenceOption = (typeof WORK_PREFERENCE_OPTIONS)[number]["value"];
 
+const HEADLINE_TIP =
+  "Write a clear one-line pitch. Mention your role, experience, and the type of roles you want.";
+const BIO_TIP =
+  "Share what you are strong at, what you have built, and what kind of team or role fits you best.";
+const SALARY_TIP =
+  "Add your expected salary range so we can match you with roles that fit your expectations.";
+
+/*
+ * FieldTip
+ * Shows concise helper guidance above onboarding fields.
+ */
+function FieldTip({ children }: { children: string }) {
+  return (
+    <p className="flex items-start gap-2 text-sm leading-relaxed text-brand-foreground-muted">
+      <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-primary" />
+      <span>
+        <span className="font-medium text-brand-foreground">Tip:</span>{" "}
+        {children}
+      </span>
+    </p>
+  );
+}
+
 /*
  * formatFileSize
  * Converts bytes to a human-readable file size string.
@@ -69,7 +98,9 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     setCompensationResume,
   } = useSeekerOnboardingStore();
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const fe = useFieldErrors();
+  const { revalidate } = fe;
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -134,8 +165,31 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     setCompensationResume(null);
   }, [compensation.resume, setCompensationResume]);
 
+  // Recompute the live field-error map whenever any step 5 value changes.
+  useEffect(() => {
+    revalidate(
+      validateSeekerStep5({
+        headline: compensation.headline,
+        bio: compensation.bio,
+        salaryMin: compensation.salaryMin,
+        salaryMax: compensation.salaryMax,
+        availability: compensation.availability,
+        resume: compensation.resume,
+      }).fieldErrors,
+    );
+  }, [
+    compensation.headline,
+    compensation.bio,
+    compensation.salaryMin,
+    compensation.salaryMax,
+    compensation.availability,
+    compensation.resume,
+    revalidate,
+  ]);
+
   const handleContinue = async () => {
     if (isSaving) return;
+    setServerError(null);
 
     const validation = validateSeekerStep5({
       headline: compensation.headline,
@@ -147,11 +201,9 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     });
 
     if (!validation.valid) {
-      setErrors(validation.errors);
+      fe.setSubmitted(validation.fieldErrors);
       return;
     }
-
-    setErrors([]);
 
     // Build FormData so the File object transfers correctly to the server action
     const formData = new FormData();
@@ -178,7 +230,7 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
     try {
       const result = await saveCompensation(formData);
       if (!result.success) {
-        setErrors([result.error]);
+        setServerError(result.error);
         return;
       }
       onNext();
@@ -208,14 +260,17 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
             <label className="text-sm font-medium text-brand-foreground">
               Professional headline <span className="text-brand-danger">*</span>
             </label>
+            <FieldTip>{HEADLINE_TIP}</FieldTip>
             <Input
-              placeholder="e.g. Senior Full Stack Engineer • 5 years • React, Node.js"
+              placeholder="Full stack developer with 3 years of experience looking for remote SaaS roles"
               value={compensation.headline}
-              onChange={(e) => {
-                setHeadline(e.target.value);
-                setErrors([]);
-              }}
+              onChange={(e) => setHeadline(e.target.value)}
+              onBlur={() => fe.touch("headline")}
+              aria-invalid={fe.hasError("headline")}
             />
+            {fe.errorFor("headline") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("headline")}</p>
+            )}
           </div>
 
           {/* Bio */}
@@ -223,19 +278,30 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
             <label className="text-sm font-medium text-brand-foreground">
               Bio <span className="text-brand-danger">*</span>
             </label>
+            <FieldTip>{BIO_TIP}</FieldTip>
             <textarea
-              placeholder="Tell recruiters about yourself — your background, what you've built, what you're looking for"
+              placeholder="I build full stack web apps with React, Node.js, and PostgreSQL. I enjoy working on product teams where I can own features end to end."
               value={compensation.bio}
-              onChange={(e) => {
-                setBio(e.target.value);
-                setErrors([]);
+              onInput={(e) => {
+                e.currentTarget.style.height = "auto";
+                e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 240)}px`;
               }}
+              onChange={(e) => setBio(e.target.value)}
+              onBlur={() => fe.touch("bio")}
+              aria-invalid={fe.hasError("bio")}
               rows={4}
-              className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground placeholder:text-brand-foreground-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary resize-none"
+              className={cn(
+                "max-h-60 min-h-32 w-full resize-none overflow-y-auto rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground placeholder:text-brand-foreground-secondary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20",
+                RAW_TEXTAREA_INVALID,
+              )}
             />
-            <p className="text-xs text-brand-foreground-secondary">
-              {compensation.bio.length} chars (min 20)
-            </p>
+            {fe.errorFor("bio") ? (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("bio")}</p>
+            ) : (
+              <p className="text-xs text-brand-foreground-secondary">
+                {compensation.bio.length} chars (min 20)
+              </p>
+            )}
           </div>
 
           {/* Salary range */}
@@ -244,6 +310,7 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
               Annual salary expectation (USD){" "}
               <span className="text-brand-danger">*</span>
             </label>
+            <FieldTip>{SALARY_TIP}</FieldTip>
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-foreground-muted text-sm">
@@ -251,15 +318,16 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
                 </span>
                 <Input
                   type="number"
-                  placeholder="e.g. 80000"
+                  placeholder="40000"
                   value={compensation.salaryMin ?? ""}
-                  onChange={(e) => {
+                  onChange={(e) =>
                     setSalaryMinMax(
                       e.target.value ? parseInt(e.target.value, 10) : null,
                       compensation.salaryMax,
-                    );
-                    setErrors([]);
-                  }}
+                    )
+                  }
+                  onBlur={() => fe.touch("salaryMin")}
+                  aria-invalid={fe.hasError("salaryMin")}
                   className="pl-7"
                 />
               </div>
@@ -270,15 +338,16 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
                 </span>
                 <Input
                   type="number"
-                  placeholder="e.g. 120000"
+                  placeholder="60000"
                   value={compensation.salaryMax ?? ""}
-                  onChange={(e) => {
+                  onChange={(e) =>
                     setSalaryMinMax(
                       compensation.salaryMin,
                       e.target.value ? parseInt(e.target.value, 10) : null,
-                    );
-                    setErrors([]);
-                  }}
+                    )
+                  }
+                  onBlur={() => fe.touch("salaryMax")}
+                  aria-invalid={fe.hasError("salaryMax")}
                   className="pl-7"
                 />
               </div>
@@ -286,6 +355,11 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
                 USD
               </span>
             </div>
+            {(fe.errorFor("salaryMin") || fe.errorFor("salaryMax")) && (
+              <p className={FIELD_ERROR_CLASS}>
+                {fe.errorFor("salaryMin") ?? fe.errorFor("salaryMax")}
+              </p>
+            )}
           </div>
 
           {/* Availability */}
@@ -300,10 +374,7 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => {
-                      setCompensationAvailability(option.value);
-                      setErrors([]);
-                    }}
+                    onClick={() => setCompensationAvailability(option.value)}
                     className={cn(
                       "flex items-center justify-center p-3 rounded-lg border-2 transition-all text-sm font-medium",
                       isSelected
@@ -316,6 +387,9 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
                 );
               })}
             </div>
+            {fe.errorFor("availability") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("availability")}</p>
+            )}
           </div>
 
           {/* Work preference */}
@@ -424,12 +498,13 @@ export function StepCompensation({ onNext, onBack }: StepCompensationProps) {
             {uploadError && (
               <p className="text-sm text-brand-danger">{uploadError}</p>
             )}
+            {!uploadError && fe.errorFor("resume") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("resume")}</p>
+            )}
           </div>
 
-          {errors.length > 0 && (
-            <p className="text-sm text-brand-danger text-center">
-              {errors[0]}
-            </p>
+          {serverError && (
+            <p className="text-sm text-brand-danger text-center">{serverError}</p>
           )}
         </div>
 

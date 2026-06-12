@@ -171,6 +171,15 @@ export function StepReviewSubmit({ onBack, onComplete }: StepReviewSubmitProps) 
             {proofOfWork.linkedinUrl && (
               <ReviewRow label="LinkedIn" value={proofOfWork.linkedinUrl} />
             )}
+            {proofOfWork.twitterUrl && (
+              <ReviewRow label="X / Twitter" value={proofOfWork.twitterUrl} />
+            )}
+            {proofOfWork.websiteUrl && (
+              <ReviewRow label="Portfolio" value={proofOfWork.websiteUrl} />
+            )}
+            {proofOfWork.videoIntroUrl && (
+              <ReviewRow label="Video" value={proofOfWork.videoIntroUrl} />
+            )}
           </SectionCard>
 
           {/* Experience */}

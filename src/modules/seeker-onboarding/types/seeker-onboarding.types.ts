@@ -95,6 +95,7 @@ export interface Step2Data {
 export interface ProofOfWorkData {
   githubUrl: string;
   linkedinUrl: string | null;
+  twitterUrl: string | null;
   websiteUrl: string | null;
   videoIntroUrl: string | null;
   projects: ProjectEntry[];

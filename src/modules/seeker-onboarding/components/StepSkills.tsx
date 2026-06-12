@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Construction,
+  Info,
   Plus,
   X,
   PlusCircle,
@@ -19,21 +20,32 @@ import {
 } from "@/lib/validations/seeker-onboarding.schema";
 import type { YearsOfExperience } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { useFieldErrors } from "@/modules/seeker-onboarding/hooks/use-field-errors";
 import { saveStep2 } from "@/app/actions/onboarding/seeker";
-import { SkillLevel } from "@/constants/enums";
 import { skillService } from "@/services/skill.service";
 import type { SkillItem } from "@/services/skill.service";
+
+const SKILLS_MATCH_TIP =
+  "Add the skills you want to be matched for. We use them to personalize your job feed.";
+const FIELD_ERROR_CLASS = "text-sm text-brand-danger";
 
 interface StepSkillsProps {
   onNext: () => void;
   onBack: () => void;
 }
 
+/*
+ * StepSkills
+ * Renders the seeker onboarding role, experience, and skills step.
+ * Saves selected skills as intermediate-level profile skills before continuing.
+ */
 export function StepSkills({ onNext, onBack }: StepSkillsProps) {
   const { step2, setPrimaryRole, setYearsOfExperience, setSkills } =
     useSeekerOnboardingStore();
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const fe = useFieldErrors();
+  const { revalidate } = fe;
+  const [serverError, setServerError] = useState<string | null>(null);
   const [apiSkills, setApiSkills] = useState<SkillItem[]>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [skillSearch, setSkillSearch] = useState("");
@@ -63,8 +75,20 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Recompute the live field-error map whenever any step 2 value changes.
+  useEffect(() => {
+    revalidate(
+      validateSeekerStep2({
+        primaryRole: step2.primaryRole,
+        yearsOfExperience: step2.yearsOfExperience ?? undefined,
+        skills: step2.skills,
+      }).fieldErrors,
+    );
+  }, [step2.primaryRole, step2.yearsOfExperience, step2.skills, revalidate]);
+
   const handleContinue = async () => {
     if (isSaving) return;
+    setServerError(null);
     const validation = validateSeekerStep2({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience ?? undefined,
@@ -72,40 +96,21 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     });
 
     if (!validation.valid) {
-      setErrors(validation.errors);
+      fe.setSubmitted(validation.fieldErrors);
       return;
-    }
-
-    setErrors([]);
-
-    const unmatchedSkills: string[] = [];
-    const skillPayload = step2.skills
-      .map((name) => {
-        const found = apiSkills.find(
-          (s) => s.name.toLowerCase() === name.toLowerCase(),
-        );
-        if (!found) unmatchedSkills.push(name);
-        return found
-          ? { skillId: found.id, level: SkillLevel.INTERMEDIATE }
-          : null;
-      })
-      .filter((s): s is { skillId: string; level: SkillLevel } => s !== null);
-
-    if (unmatchedSkills.length > 0) {
-      console.warn("[StepSkills] Skills not found in DB:", unmatchedSkills);
     }
 
     setIsSaving(true);
     const result = await saveStep2({
       primaryRole: step2.primaryRole,
       yearsOfExperience: step2.yearsOfExperience,
-      skills: skillPayload,
+      skills: step2.skills,
     });
     setIsSaving(false);
 
     if (!result.success) {
       console.error("[StepSkills] saveStep2 failed:", result.error);
-      setErrors([result.error]);
+      setServerError(result.error);
       return;
     }
 
@@ -118,7 +123,6 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     }
     setSkillSearch("");
     setShowSkillDropdown(false);
-    setErrors([]);
   };
 
   const removeSkill = (skillName: string) => {
@@ -169,16 +173,6 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     filteredSkills.length === 0 &&
     !skillsLoading;
 
-  const getErrorMessage = () => {
-    if (errors.includes("Primary role is required"))
-      return "Primary role is required";
-    if (errors.includes("Please select years of experience"))
-      return "Please select years of experience";
-    if (errors.includes("At least one skill is required"))
-      return "At least one skill is required";
-    return errors[0] ?? null;
-  };
-
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="space-y-6">
@@ -203,11 +197,13 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
               <Input
                 placeholder="e.g. Frontend Developer"
                 value={step2.primaryRole}
-                onChange={(e) => {
-                  setPrimaryRole(e.target.value);
-                  setErrors([]);
-                }}
+                onChange={(e) => setPrimaryRole(e.target.value)}
+                onBlur={() => fe.touch("primaryRole")}
+                aria-invalid={fe.hasError("primaryRole")}
               />
+              {fe.errorFor("primaryRole") && (
+                <p className={FIELD_ERROR_CLASS}>{fe.errorFor("primaryRole")}</p>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -221,10 +217,9 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => {
-                        setYearsOfExperience(option.value as YearsOfExperience);
-                        setErrors([]);
-                      }}
+                      onClick={() =>
+                        setYearsOfExperience(option.value as YearsOfExperience)
+                      }
                       className={cn(
                         "flex items-center justify-center p-3 rounded-lg border-2 transition-all text-sm font-medium",
                         isSelected
@@ -237,12 +232,28 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                   );
                 })}
               </div>
+              {fe.errorFor("yearsOfExperience") && (
+                <p className={FIELD_ERROR_CLASS}>
+                  {fe.errorFor("yearsOfExperience")}
+                </p>
+              )}
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">
-                Top skills <span className="text-red-500">*</span>
-              </label>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">
+                  Top skills <span className="text-red-500">*</span>
+                </label>
+                <p className="flex items-start gap-2 text-sm leading-relaxed text-brand-foreground-muted">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-primary" />
+                  <span>
+                    <span className="font-medium text-brand-foreground">
+                      Tip:
+                    </span>{" "}
+                    {SKILLS_MATCH_TIP}
+                  </span>
+                </p>
+              </div>
 
               {step2.skills.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -347,11 +358,14 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                   </div>
                 )}
               </div>
+              {fe.errorFor("skills") && (
+                <p className={FIELD_ERROR_CLASS}>{fe.errorFor("skills")}</p>
+              )}
             </div>
 
-            {getErrorMessage() && (
+            {serverError && (
               <p className="text-sm text-destructive text-center">
-                {getErrorMessage()}
+                {serverError}
               </p>
             )}
           </div>

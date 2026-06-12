@@ -41,6 +41,7 @@ export function DrawerHeader({ application, resumeUrl }: DrawerHeaderProps) {
         <InitialsAvatar
           name={application.candidateName}
           email={application.candidateEmail}
+          userId={application.candidateId}
           image={application.candidateAvatar}
           size="xl"
           verified={

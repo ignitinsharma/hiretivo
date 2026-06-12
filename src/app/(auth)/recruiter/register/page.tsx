@@ -358,7 +358,7 @@ function RecruiterRegisterContent() {
             )}
           </div>
 
-          <div className="flex items-start space-x-3 pt-2">
+          <div className="flex items-start space-x-3">
             <Checkbox
               id="acceptTerms"
               className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"

@@ -415,6 +415,7 @@ export default function RecruiterApplicationsPage() {
                         <InitialsAvatar
                           name={application.candidateName}
                           email={application.candidateEmail}
+                          userId={application.candidateId}
                           image={application.candidateAvatar}
                           size="lg"
                           verified={
