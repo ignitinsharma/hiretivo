@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, ArrowLeft, Briefcase, Plus, X } from "lucide-react";
 
 import { MonthYearPicker } from "@/components/forms/MonthYearPicker";
@@ -12,7 +12,13 @@ import type {
   EducationEntry,
 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { useFieldErrors } from "@/modules/seeker-onboarding/hooks/use-field-errors";
 import { saveExperience } from "@/app/actions/onboarding/seeker";
+
+const FIELD_ERROR_CLASS = "text-sm text-brand-danger";
+
+type RowErrorFor = (field: string) => string | undefined;
+type RowBlurField = (field: string) => void;
 
 /*
  * StepExperience
@@ -51,6 +57,8 @@ interface WorkExperienceRowProps {
   onChange: (index: number, updated: WorkExperienceEntry) => void;
   onRemove: (index: number) => void;
   showRemove: boolean;
+  errorFor: RowErrorFor;
+  onBlurField: RowBlurField;
 }
 
 function WorkExperienceRow({
@@ -59,6 +67,8 @@ function WorkExperienceRow({
   onChange,
   onRemove,
   showRemove,
+  errorFor,
+  onBlurField,
 }: WorkExperienceRowProps) {
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface p-4 space-y-3">
@@ -87,7 +97,12 @@ function WorkExperienceRow({
             placeholder="e.g. Acme Corp"
             value={exp.company}
             onChange={(e) => onChange(index, { ...exp, company: e.target.value })}
+            onBlur={() => onBlurField("company")}
+            aria-invalid={Boolean(errorFor("company"))}
           />
+          {errorFor("company") && (
+            <p className={FIELD_ERROR_CLASS}>{errorFor("company")}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
@@ -97,7 +112,12 @@ function WorkExperienceRow({
             placeholder="e.g. Senior Engineer"
             value={exp.title}
             onChange={(e) => onChange(index, { ...exp, title: e.target.value })}
+            onBlur={() => onBlurField("title")}
+            aria-invalid={Boolean(errorFor("title"))}
           />
+          {errorFor("title") && (
+            <p className={FIELD_ERROR_CLASS}>{errorFor("title")}</p>
+          )}
         </div>
       </div>
 
@@ -112,6 +132,9 @@ function WorkExperienceRow({
             required
             aria-label="Start month and year"
           />
+          {errorFor("startDate") && (
+            <p className={FIELD_ERROR_CLASS}>{errorFor("startDate")}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-brand-foreground-muted uppercase tracking-wider">
@@ -154,11 +177,15 @@ function WorkExperienceRow({
         <textarea
           placeholder="What did you build/achieve?"
           value={exp.description ?? ""}
+          onInput={(e) => {
+            e.currentTarget.style.height = "auto";
+            e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 192)}px`;
+          }}
           onChange={(e) =>
             onChange(index, { ...exp, description: e.target.value || null })
           }
           rows={2}
-          className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground placeholder:text-brand-foreground-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary resize-none"
+          className="max-h-48 min-h-20 w-full resize-none overflow-y-auto rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground placeholder:text-brand-foreground-secondary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         />
       </div>
     </div>
@@ -175,9 +202,19 @@ interface EducationRowProps {
   onChange: (index: number, updated: EducationEntry) => void;
   onRemove: (index: number) => void;
   showRemove: boolean;
+  errorFor: RowErrorFor;
+  onBlurField: RowBlurField;
 }
 
-function EducationRow({ edu, index, onChange, onRemove, showRemove }: EducationRowProps) {
+function EducationRow({
+  edu,
+  index,
+  onChange,
+  onRemove,
+  showRemove,
+  errorFor,
+  onBlurField,
+}: EducationRowProps) {
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -204,7 +241,12 @@ function EducationRow({ edu, index, onChange, onRemove, showRemove }: EducationR
           placeholder="e.g. IIT Bombay"
           value={edu.institution}
           onChange={(e) => onChange(index, { ...edu, institution: e.target.value })}
+          onBlur={() => onBlurField("institution")}
+          aria-invalid={Boolean(errorFor("institution"))}
         />
+        {errorFor("institution") && (
+          <p className={FIELD_ERROR_CLASS}>{errorFor("institution")}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -261,7 +303,9 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
     removeEducation,
   } = useSeekerOnboardingStore();
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const fe = useFieldErrors();
+  const { revalidate } = fe;
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const workExperiences =
@@ -274,13 +318,28 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
       ? experience.educations
       : [{ ...EMPTY_EDUCATION }];
 
+  // Recompute the live field-error map whenever work/education entries change.
+  useEffect(() => {
+    revalidate(
+      validateSeekerStep4Experience({
+        workExperiences:
+          experience.workExperiences.length > 0
+            ? experience.workExperiences
+            : [{ ...EMPTY_WORK }],
+        educations:
+          experience.educations.length > 0
+            ? experience.educations
+            : [{ ...EMPTY_EDUCATION }],
+      }).fieldErrors,
+    );
+  }, [experience.workExperiences, experience.educations, revalidate]);
+
   const handleWorkChange = (index: number, updated: WorkExperienceEntry) => {
     if (index < experience.workExperiences.length) {
       updateWorkExperience(index, updated);
     } else {
       addWorkExperience(updated);
     }
-    setErrors([]);
   };
 
   const handleAddWork = () => {
@@ -288,7 +347,6 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
   };
 
   const handleEduChange = (index: number, updated: EducationEntry) => {
-    setErrors([]);
     if (index < experience.educations.length) {
       updateEducation(index, updated);
     } else {
@@ -302,6 +360,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
 
   const handleContinue = async () => {
     if (isSaving) return;
+    setServerError(null);
 
     const workToSave =
       experience.workExperiences.length > 0
@@ -316,11 +375,9 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
     });
 
     if (!validation.valid) {
-      setErrors(validation.errors);
+      fe.setSubmitted(validation.fieldErrors);
       return;
     }
-
-    setErrors([]);
 
     setIsSaving(true);
     try {
@@ -330,7 +387,7 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
       });
 
       if (!result.success) {
-        setErrors([result.error]);
+        setServerError(result.error);
         return;
       }
 
@@ -371,9 +428,18 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
                   onChange={handleWorkChange}
                   onRemove={removeWorkExperience}
                   showRemove={workExperiences.length > 1}
+                  errorFor={(field) =>
+                    fe.errorFor(`workExperiences.${index}.${field}`)
+                  }
+                  onBlurField={(field) =>
+                    fe.touch(`workExperiences.${index}.${field}`)
+                  }
                 />
               ))}
             </div>
+            {fe.errorFor("workExperiences") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("workExperiences")}</p>
+            )}
 
             <button
               type="button"
@@ -400,9 +466,18 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
                   onChange={handleEduChange}
                   onRemove={removeEducation}
                   showRemove={educations.length > 1}
+                  errorFor={(field) =>
+                    fe.errorFor(`educations.${index}.${field}`)
+                  }
+                  onBlurField={(field) =>
+                    fe.touch(`educations.${index}.${field}`)
+                  }
                 />
               ))}
             </div>
+            {fe.errorFor("educations") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("educations")}</p>
+            )}
 
             <button
               type="button"
@@ -414,14 +489,8 @@ export function StepExperience({ onNext, onBack }: StepExperienceProps) {
             </button>
           </div>
 
-          {errors.length > 0 && (
-            <div className="space-y-1">
-              {errors.map((err, i) => (
-                <p key={i} className="text-sm text-brand-danger text-center">
-                  {err}
-                </p>
-              ))}
-            </div>
+          {serverError && (
+            <p className="text-sm text-brand-danger text-center">{serverError}</p>
           )}
         </div>
 

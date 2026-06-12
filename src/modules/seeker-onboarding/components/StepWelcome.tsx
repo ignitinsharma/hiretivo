@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Hand } from "lucide-react";
 
 import { IndiaStateCombobox } from "@/components/forms/IndiaStateCombobox";
@@ -17,7 +17,10 @@ import type {
   ExperienceLevel,
 } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { useFieldErrors } from "@/modules/seeker-onboarding/hooks/use-field-errors";
 import { saveStep1 } from "@/app/actions/onboarding/seeker";
+
+const FIELD_ERROR_CLASS = "text-sm text-brand-danger";
 
 /*
  * StepWelcome
@@ -32,11 +35,27 @@ interface StepWelcomeProps {
 export function StepWelcome({ onNext }: StepWelcomeProps) {
   const { step1, userName, setSituation, setExperienceLevel, setCity, setState } =
     useSeekerOnboardingStore();
-  const [errors, setErrors] = useState<string[]>([]);
+  const fe = useFieldErrors();
+  const { revalidate } = fe;
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Recompute the live field-error map whenever any step 1 value changes so
+  // fixed fields clear their red state immediately.
+  useEffect(() => {
+    revalidate(
+      validateSeekerStep1({
+        situation: step1.situation ?? undefined,
+        experienceLevel: step1.experienceLevel ?? undefined,
+        city: step1.city ?? undefined,
+        state: step1.state ?? undefined,
+      }).fieldErrors,
+    );
+  }, [step1.situation, step1.experienceLevel, step1.city, step1.state, revalidate]);
 
   const handleContinue = async () => {
     if (isSaving) return;
+    setServerError(null);
     const validation = validateSeekerStep1({
       situation: step1.situation ?? undefined,
       experienceLevel: step1.experienceLevel ?? undefined,
@@ -45,11 +64,10 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
     });
 
     if (!validation.valid) {
-      setErrors(validation.errors);
+      fe.setSubmitted(validation.fieldErrors);
       return;
     }
 
-    setErrors([]);
     setIsSaving(true);
     const result = await saveStep1({
       situation: step1.situation!,
@@ -61,22 +79,11 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
 
     if (!result.success) {
       console.error("[StepWelcome] saveStep1 failed:", result.error);
-      setErrors([result.error]);
+      setServerError(result.error);
       return;
     }
 
     onNext();
-  };
-
-  const getErrorMessage = () => {
-    if (errors.includes("Please select your current situation"))
-      return "Please select your current situation";
-    if (errors.includes("Please select your experience level"))
-      return "Please select your experience level";
-    if (errors.includes("Please enter your city")) return "Please enter your city";
-    if (errors.includes("Please select your state or union territory"))
-      return "Please select your state or union territory";
-    return errors[0] ?? null;
   };
 
   return (
@@ -107,10 +114,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => {
-                      setSituation(option.value as SeekerSituation);
-                      setErrors([]);
-                    }}
+                    onClick={() => setSituation(option.value as SeekerSituation)}
                     className={cn(
                       "flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left",
                       isSelected
@@ -161,6 +165,9 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                 );
               })}
             </div>
+            {fe.errorFor("situation") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("situation")}</p>
+            )}
           </div>
 
           {/* Experience level */}
@@ -175,10 +182,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => {
-                      setExperienceLevel(option.value as ExperienceLevel);
-                      setErrors([]);
-                    }}
+                    onClick={() => setExperienceLevel(option.value as ExperienceLevel)}
                     className={cn(
                       "flex items-center justify-center p-4 rounded-lg border-2 transition-all text-sm font-medium",
                       isSelected
@@ -191,6 +195,9 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
                 );
               })}
             </div>
+            {fe.errorFor("experienceLevel") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("experienceLevel")}</p>
+            )}
           </div>
 
           {/* City */}
@@ -201,13 +208,19 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
             <Input
               value={step1.city ?? ""}
               onChange={(e) => setCity(e.target.value)}
+              onBlur={() => fe.touch("city")}
+              aria-invalid={fe.hasError("city")}
               placeholder="e.g. Bengaluru"
               disabled={isSaving}
               aria-label="City"
             />
-            <p className="text-xs text-brand-foreground-muted">
-              Recruiters see this to evaluate timezone fit.
-            </p>
+            {fe.errorFor("city") ? (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("city")}</p>
+            ) : (
+              <p className="text-xs text-brand-foreground-muted">
+                Recruiters see this to evaluate timezone fit.
+              </p>
+            )}
           </div>
 
           {/* State / UT */}
@@ -217,18 +230,16 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
             </label>
             <IndiaStateCombobox
               value={step1.state ?? ""}
-              onValueChange={(val) => {
-                setState(val);
-                setErrors([]);
-              }}
+              onValueChange={(val) => setState(val)}
               disabled={isSaving}
             />
+            {fe.errorFor("state") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("state")}</p>
+            )}
           </div>
 
-          {getErrorMessage() && (
-            <p className="text-sm text-brand-danger text-center">
-              {getErrorMessage()}
-            </p>
+          {serverError && (
+            <p className="text-sm text-brand-danger text-center">{serverError}</p>
           )}
 
           <div className="flex flex-col gap-3 pt-4">

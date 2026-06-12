@@ -12,7 +12,7 @@ const QUERY_KEY = ['seeker-dashboard-summary'] as const;
 
 function SidebarSkeleton() {
   return (
-    <div className="w-full lg:w-80 space-y-6 shrink-0">
+    <div className="w-full lg:w-80 space-y-6 shrink-0 lg:pt-12">
       {/* Verification status skeleton */}
       <div className="rounded-xl border border-slate-200 p-5 space-y-3">
         <div className="flex items-center gap-2">
@@ -22,12 +22,12 @@ function SidebarSkeleton() {
         <Skeleton className="h-3 w-full" />
         <Skeleton className="h-3 w-3/4" />
       </div>
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="bg-white p-6 rounded-xl border border-slate-200">
         <Skeleton className="h-5 w-40 mb-4" />
         <Skeleton className="h-2 w-full rounded-full mb-2" />
         <Skeleton className="h-4 w-24" />
       </div>
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="bg-white p-6 rounded-xl border border-slate-200">
         <Skeleton className="h-5 w-32 mb-6" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex items-center justify-between mb-4">
@@ -68,7 +68,7 @@ export function SeekerDashboardSidebar() {
 
   if (isError || !data) {
     return (
-      <aside className="w-full lg:w-80 space-y-6 shrink-0">
+      <aside className="w-full lg:w-80 space-y-6 shrink-0 lg:pt-12">
         <div className="bg-white p-6 rounded-xl border border-slate-200 text-sm text-slate-500 text-center">
           Could not load dashboard data.
         </div>
@@ -77,7 +77,7 @@ export function SeekerDashboardSidebar() {
   }
 
   return (
-    <aside className="w-full lg:w-80 space-y-6 shrink-0">
+    <aside className="w-full lg:w-80 space-y-6 shrink-0 lg:pt-12">
       {/* <VerificationStatusCard
         status={data.verification.status}
         verificationNotes={data.verification.verificationNotes}

@@ -28,6 +28,7 @@ interface JobCardProps {
   onToggleSave?: () => void;
   saveActionPlacement?: "topRight" | "footer";
   isSaving?: boolean;
+  saveLoadingText?: string;
   onNotInterested?: () => void;
   isDismissing?: boolean;
   variant?: "default" | "compact";
@@ -57,6 +58,7 @@ export function JobCard({
   onToggleSave,
   saveActionPlacement = "topRight",
   isSaving = false,
+  saveLoadingText,
   onNotInterested,
   isDismissing = false,
   variant = "default",
@@ -155,7 +157,7 @@ export function JobCard({
                 variant="secondary"
                 size="sm"
                 loading={isSaving}
-                loadingText={isSaved ? "Removing" : "Saving"}
+                loadingText={saveLoadingText ?? (isSaved ? "Removing" : "Saving")}
                 aria-label={saveLabel}
                 aria-pressed={isSaved}
               >

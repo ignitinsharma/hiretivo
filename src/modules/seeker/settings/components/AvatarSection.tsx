@@ -42,7 +42,9 @@ export function AvatarSection({
     try {
       const compressed = await compressImage(file);
       const result = await uploadService.uploadAvatar(compressed);
-      setCurrentImage(result.key);
+      setCurrentImage(
+        `/api/logo?key=${encodeURIComponent(result.key)}&v=${Date.now()}`,
+      );
       await update({ user: { image: result.key } });
       await queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
       toast.success("Avatar uploaded successfully.");

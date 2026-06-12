@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Building2, type LucideIcon } from "lucide-react";
+import { Building2, ThumbsUp, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -133,10 +133,13 @@ export function SeekerJobBaseCard({
               className={cn(
                 "rounded-lg border px-3 py-1 text-sm font-medium",
                 skill.isPrimary
-                  ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary"
+                  ? "border-green-200 bg-green-50 text-brand-success"
                   : "border-brand-border bg-brand-surface text-brand-foreground-muted",
               )}
             >
+              {skill.isPrimary ? (
+                <ThumbsUp className="mr-1.5 inline h-3.5 w-3.5 align-[-2px]" />
+              ) : null}
               {skill.label}
             </span>
           ))}

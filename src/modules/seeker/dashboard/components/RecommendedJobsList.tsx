@@ -25,6 +25,9 @@ export function RecommendedJobsList() {
   const [savingJobIds, setSavingJobIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [saveLoadingTextByJobId, setSaveLoadingTextByJobId] = useState<
+    Map<string, string>
+  >(() => new Map());
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["seeker-feed"],
@@ -101,7 +104,11 @@ export function RecommendedJobsList() {
     openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
   };
 
-  const setJobSaving = (jobId: string, isSaving: boolean): void => {
+  const setJobSaving = (
+    jobId: string,
+    isSaving: boolean,
+    loadingText?: string,
+  ): void => {
     setSavingJobIds((current) => {
       const next = new Set(current);
       if (isSaving) {
@@ -111,11 +118,20 @@ export function RecommendedJobsList() {
       }
       return next;
     });
+    setSaveLoadingTextByJobId((current) => {
+      const next = new Map(current);
+      if (isSaving && loadingText) {
+        next.set(jobId, loadingText);
+      } else {
+        next.delete(jobId);
+      }
+      return next;
+    });
   };
 
   const handleToggleSave = (jobId: string): void => {
     const isSaved = savedJobIds.has(jobId);
-    setJobSaving(jobId, true);
+    setJobSaving(jobId, true, isSaved ? "Removing" : "Saving");
 
     if (isSaved) {
       unsaveMutation.mutate(jobId, {
@@ -216,6 +232,7 @@ export function RecommendedJobsList() {
               isSaved={savedJobIds.has(job.id)}
               saveActionPlacement="footer"
               isSaving={savingJobIds.has(job.id)}
+              saveLoadingText={saveLoadingTextByJobId.get(job.id)}
               onToggleSave={() => handleToggleSave(job.id)}
               showDescription
               onNotInterested={() => dismissMutation.mutate(job.id)}
