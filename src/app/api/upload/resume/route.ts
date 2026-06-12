@@ -9,6 +9,7 @@ import {
   RESUME_MAX_BYTES,
   RESUME_MIME_TYPES,
 } from '@/lib/validations/upload.schema';
+import { sniffedTypeAllowed } from '@/lib/validations/file-signature';
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -36,6 +37,15 @@ export async function POST(req: NextRequest) {
 
   if (file.size > RESUME_MAX_BYTES) {
     return NextResponse.json({ error: 'File too large (max 5 MB)' }, { status: 400 });
+  }
+
+  // Verify real file type by magic bytes, not the spoofable Content-Type.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!sniffedTypeAllowed(bytes, 'document')) {
+    return NextResponse.json(
+      { error: 'File content does not match an allowed document type' },
+      { status: 400 },
+    );
   }
 
   const key = R2_KEYS.resume(session.user.id);

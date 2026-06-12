@@ -6,7 +6,7 @@ import { SkillSuggestSchema, SkillSuggestOutputSchema } from '@/lib/validations/
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildSkillSuggestMessages, SKILL_SUGGEST_CONFIG } from '@/lib/ai-prompts';
 import { isAdminSession } from '@/lib/admin/is-admin';
-import { consumeFreeDailyAiQuota } from '@/lib/billing/ai-daily-limit';
+import { consumeFreeDailyAiQuota, consumePaidDailyAiCap } from '@/lib/billing/ai-daily-limit';
 
 const suggestSkillsRateLimiter = createRateLimiter('suggest-skills', 10, '1 m');
 
@@ -30,7 +30,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  // 4. Plan gate — FREE plan gets 3 skill suggestions/day (admin bypasses; paid unlimited)
+  // 4. Plan gate — FREE plan gets 3 skill suggestions/day; paid plans get a high
+  // daily safety ceiling (anti-abuse). Admin bypasses both.
   if (!admin && session.user.plan === PlanTier.FREE) {
     const allowed = await consumeFreeDailyAiQuota(AiFeature.SKILLS, session.user.id);
     if (!allowed) {
@@ -40,6 +41,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             "You've used your 3 free AI skill suggestions today. Upgrade to a paid plan for unlimited suggestions.",
         },
         { status: 403 },
+      );
+    }
+  } else if (!admin) {
+    const withinCap = await consumePaidDailyAiCap(AiFeature.SKILLS, session.user.id);
+    if (!withinCap) {
+      return NextResponse.json(
+        { error: "Daily AI usage limit reached. Please try again tomorrow." },
+        { status: 429 },
       );
     }
   }

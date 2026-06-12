@@ -1,5 +1,6 @@
 import { sendEmail } from "@/lib/resend";
 import { formatInterviewTimezoneDisplay } from "@/lib/timezone";
+import { escapeHtml, safeHttpUrl } from "@/lib/email/escape-html";
 
 const FROM_EMAIL = "Hiretivo <noreply@hiretivo.com>";
 
@@ -70,15 +71,18 @@ export async function sendInterviewScheduledEmail(
     input.viewerTimezone,
   );
   const duration = formatDuration(input.startsAt, input.endsAt);
-  const meetSection = input.meetLink
-    ? `<p><strong>Join meeting:</strong> <a href="${input.meetLink}">${input.meetLink}</a></p>`
-    : `<p><em>No meeting link provided.</em></p>`;
+  const safeMeetLink = safeHttpUrl(input.meetLink);
+  const meetSection = safeMeetLink
+    ? `<p><strong>Join meeting:</strong> <a href="${escapeHtml(safeMeetLink)}">${escapeHtml(safeMeetLink)}</a></p>`
+    : input.meetLink
+      ? `<p><strong>Join meeting:</strong> ${escapeHtml(input.meetLink)}</p>`
+      : `<p><em>No meeting link provided.</em></p>`;
 
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Interview Scheduled</h2>
-      <p>Hi ${input.seekerName},</p>
-      <p>An interview has been scheduled for <strong>${input.jobTitle}</strong>.</p>
+      <p>Hi ${escapeHtml(input.seekerName)},</p>
+      <p>An interview has been scheduled for <strong>${escapeHtml(input.jobTitle)}</strong>.</p>
       ${timeBlock.html}
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
@@ -119,15 +123,18 @@ export async function sendInterviewRescheduledEmail(
     input.viewerTimezone,
   );
   const duration = formatDuration(input.startsAt, input.endsAt);
-  const meetSection = input.meetLink
-    ? `<p><strong>Join meeting:</strong> <a href="${input.meetLink}">${input.meetLink}</a></p>`
-    : `<p><em>No meeting link provided.</em></p>`;
+  const safeMeetLink = safeHttpUrl(input.meetLink);
+  const meetSection = safeMeetLink
+    ? `<p><strong>Join meeting:</strong> <a href="${escapeHtml(safeMeetLink)}">${escapeHtml(safeMeetLink)}</a></p>`
+    : input.meetLink
+      ? `<p><strong>Join meeting:</strong> ${escapeHtml(input.meetLink)}</p>`
+      : `<p><em>No meeting link provided.</em></p>`;
 
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Interview Rescheduled</h2>
-      <p>Hi ${input.seekerName},</p>
-      <p>Your interview for <strong>${input.jobTitle}</strong> has been rescheduled.</p>
+      <p>Hi ${escapeHtml(input.seekerName)},</p>
+      <p>Your interview for <strong>${escapeHtml(input.jobTitle)}</strong> has been rescheduled.</p>
       ${timeBlock.html}
       <p><strong>Duration:</strong> ${duration}</p>
       ${meetSection}
@@ -158,8 +165,8 @@ export async function sendInterviewCancelledEmail(
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Interview Cancelled</h2>
-      <p>Hi ${input.seekerName},</p>
-      <p>Unfortunately, your interview for <strong>${input.jobTitle}</strong> has been cancelled.</p>
+      <p>Hi ${escapeHtml(input.seekerName)},</p>
+      <p>Unfortunately, your interview for <strong>${escapeHtml(input.jobTitle)}</strong> has been cancelled.</p>
       <p>Please contact the recruiter if you have questions.</p>
     </div>
   `;

@@ -8,11 +8,12 @@ export const AVATAR_MIME_TYPES = [
   'image/webp',
 ] as const;
 
+// SVG is intentionally excluded: it can carry inline scripts (stored-XSS risk)
+// and cannot be validated by magic bytes. Raster formats only.
 export const LOGO_MIME_TYPES = [
   'image/png',
   'image/jpeg',
   'image/webp',
-  'image/svg+xml',
 ] as const;
 
 export const RESUME_MIME_TYPES = [

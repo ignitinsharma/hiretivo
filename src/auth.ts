@@ -27,7 +27,9 @@ const googleConfigured =
 export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   trustHost: true,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  // 7-day session lifetime (was the 30-day NextAuth default). Shrinks the window
+  // in which a stolen JWT remains valid. Sliding: refreshed once per day of use.
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60, updateAge: 24 * 60 * 60 },
   pages: {
     signIn: "/auth/error",
     error: "/auth/error",

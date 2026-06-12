@@ -11,7 +11,7 @@ import {
   CANDIDATE_SUMMARY_CONFIG,
   type AiSummaryData,
 } from "@/lib/ai-prompts";
-import { consumeFreeDailyAiQuota } from "@/lib/billing/ai-daily-limit";
+import { consumeFreeDailyAiQuota, consumePaidDailyAiCap } from "@/lib/billing/ai-daily-limit";
 import { isApplicationVisibleOnFree } from "@/lib/billing/applicant-visibility";
 
 const aiSummaryRateLimiter = createRateLimiter("ai-summary", 10, "1 m");
@@ -203,6 +203,14 @@ export async function POST(
             "AI candidate summaries require a paid plan once your 3 free summaries today are used. Upgrade to continue.",
         },
         { status: 403 },
+      );
+    }
+  } else {
+    const withinCap = await consumePaidDailyAiCap(AiFeature.SUMMARY, session.user.id);
+    if (!withinCap) {
+      return NextResponse.json(
+        { error: "Daily AI usage limit reached. Please try again tomorrow." },
+        { status: 429 },
       );
     }
   }
