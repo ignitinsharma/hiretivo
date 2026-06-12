@@ -24,7 +24,7 @@ export function AvatarSection({
   verified = false,
 }: AvatarSectionProps) {
   const queryClient = useQueryClient();
-  const { update } = useSession();
+  const { data: session, update } = useSession();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [currentImage, setCurrentImage] = useState<string | null | undefined>(
@@ -42,7 +42,9 @@ export function AvatarSection({
     try {
       const compressed = await compressImage(file);
       const result = await uploadService.uploadAvatar(compressed);
-      setCurrentImage(result.key);
+      setCurrentImage(
+        `/api/logo?key=${encodeURIComponent(result.key)}&v=${Date.now()}`,
+      );
       await update({ user: { image: result.key } });
       await queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
       toast.success("Avatar uploaded successfully.");
@@ -68,6 +70,8 @@ export function AvatarSection({
           <InitialsAvatar
             name={name}
             image={currentImage}
+            userId={session?.user?.id}
+            email={session?.user?.email}
             size="xl"
             verified={verified}
           />

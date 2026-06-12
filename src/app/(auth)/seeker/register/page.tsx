@@ -230,7 +230,7 @@ function SeekerRegisterContent() {
       role="seeker"
       backHref="/"
     >
-      <div className="space-y-8">
+      <div className="space-y-4">
         {roleMismatch && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
@@ -362,7 +362,7 @@ function SeekerRegisterContent() {
             )}
           </div>
 
-          <div className="flex items-start space-x-3 pt-2">
+          <div className="flex items-start space-x-3">
             <Checkbox
               id="acceptTerms"
               className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"

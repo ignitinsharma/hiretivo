@@ -1,7 +1,7 @@
 "use server";
 
 import { auth, unstable_update } from "@/auth";
-import { UserRole } from "@/constants/enums";
+import { SkillLevel, UserRole } from "@/constants/enums";
 import {
   mergeOnboardingDraft,
   nextProgressStep,
@@ -13,9 +13,10 @@ import { sendEmail } from "@/lib/resend";
 import { getAppUrl } from "@/lib/config";
 import {
   step1Schema,
-  step2Schema,
   step4Schema,
 } from "@/lib/validations/onboarding.schema";
+import { uniqueCanonicalSkillNames } from "@/lib/skills/canonicalize";
+import { resolveSkillNames } from "@/lib/skills/resolve-skill-names";
 import {
   projectEntrySchema,
   workExperienceEntrySchema,
@@ -122,7 +123,7 @@ export async function saveStep1(data: {
 export async function saveStep2(data: {
   primaryRole: string;
   yearsOfExperience: string | null;
-  skills: { skillId: string; level: string }[];
+  skills: string[];
 }): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
@@ -130,9 +131,26 @@ export async function saveStep2(data: {
     return { success: false, error: "Forbidden" };
   }
 
-  const parsed = step2Schema.safeParse(data);
+  const parsed = z
+    .object({
+      primaryRole: z
+        .string()
+        .trim()
+        .min(1, "Primary role is required")
+        .max(100, "Primary role must be under 100 characters"),
+      yearsOfExperience: z.string().nullable(),
+      skills: z
+        .array(z.string().trim().min(1).max(100))
+        .min(1, "At least one skill is required"),
+    })
+    .safeParse(data);
   if (!parsed.success) {
     return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
+  }
+
+  const skillNames = uniqueCanonicalSkillNames(parsed.data.skills);
+  if (skillNames.length === 0) {
+    return { success: false, error: "At least one skill is required" };
   }
 
   await prisma.$transaction(async (tx) => {
@@ -159,15 +177,15 @@ export async function saveStep2(data: {
       where: { seekerProfileId: profile.id },
     });
 
-    if (parsed.data.skills.length > 0) {
-      await tx.seekerSkill.createMany({
-        data: parsed.data.skills.map((s) => ({
-          seekerProfileId: profile.id,
-          skillId: s.skillId,
-          level: s.level,
-        })),
-      });
-    }
+    const resolvedSkills = await resolveSkillNames(tx, skillNames);
+    await tx.seekerSkill.createMany({
+      data: resolvedSkills.map((skill) => ({
+        seekerProfileId: profile.id,
+        skillId: skill.id,
+        level: SkillLevel.INTERMEDIATE,
+      })),
+      skipDuplicates: true,
+    });
 
     await tx.user.update({
       where: { id: session.user.id },
@@ -340,9 +358,10 @@ export async function saveStep4(data: {
  */
 export async function saveProofOfWork(data: {
   githubUrl: string;
-  linkedinUrl: string;
+  linkedinUrl: string | null;
+  twitterUrl: string | null;
   websiteUrl: string;
-  videoIntroUrl: string;
+  videoIntroUrl: string | null;
   projects: Array<{ title: string; url: string; description: string }>;
 }): Promise<ActionResult> {
   const session = await auth();
@@ -359,10 +378,11 @@ export async function saveProofOfWork(data: {
 
   const schema = z.object({
     githubUrl: httpUrl.refine((u) => /github\.com\/[a-zA-Z0-9_-]+/.test(u), "Please enter a valid GitHub profile URL"),
-    linkedinUrl: httpUrl,
+    linkedinUrl: httpUrl.or(z.literal("")).nullable().optional(),
+    twitterUrl: httpUrl.or(z.literal("")).nullable().optional(),
     websiteUrl: httpUrl,
     // videoIntroUrl is optional — accept a valid http(s) URL or an empty string
-    videoIntroUrl: httpUrl.or(z.literal("")).optional(),
+    videoIntroUrl: httpUrl.or(z.literal("")).nullable().optional(),
     projects: projectEntrySchema.array().min(1, "At least one project is required"),
   });
 
@@ -385,7 +405,8 @@ export async function saveProofOfWork(data: {
         userId: session.user.id,
         githubUrl: parsed.data.githubUrl,
         githubUsername: githubUsername ?? null,
-        linkedinUrl: parsed.data.linkedinUrl,
+        linkedinUrl: parsed.data.linkedinUrl || null,
+        twitterUrl: parsed.data.twitterUrl || null,
         websiteUrl: parsed.data.websiteUrl,
         videoIntroUrl: parsed.data.videoIntroUrl || null,
         topProjects: parsed.data.projects,
@@ -393,7 +414,8 @@ export async function saveProofOfWork(data: {
       update: {
         githubUrl: parsed.data.githubUrl,
         githubUsername: githubUsername ?? null,
-        linkedinUrl: parsed.data.linkedinUrl,
+        linkedinUrl: parsed.data.linkedinUrl || null,
+        twitterUrl: parsed.data.twitterUrl || null,
         websiteUrl: parsed.data.websiteUrl,
         videoIntroUrl: parsed.data.videoIntroUrl || null,
         topProjects: parsed.data.projects,
@@ -603,6 +625,15 @@ export async function saveCompensation(formData: FormData): Promise<ActionResult
     select: { onboardingStep: true },
   });
 
+  const existingProfile = await prisma.seekerProfile.findUnique({
+    where: { userId },
+    select: { resumeKey: true },
+  });
+
+  if (!resumeKey && !existingProfile?.resumeKey) {
+    return { success: false, error: "Resume is required" };
+  }
+
   await prisma.seekerProfile.upsert({
     where: { userId },
     create: {
@@ -670,6 +701,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
       availability: true,
       githubUrl: true,
       linkedinUrl: true,
+      twitterUrl: true,
       websiteUrl: true,
       videoIntroUrl: true,
       topProjects: true,
@@ -725,9 +757,9 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     };
   }
 
-  // Step 3 continued: LinkedIn and portfolio are required (video intro is optional)
-  if (!profile.linkedinUrl || !profile.websiteUrl) {
-    return { success: false, error: "Add your LinkedIn and portfolio first.", missingStep: 3 };
+  // Step 3 continued: portfolio is required; LinkedIn, X/Twitter, and video are optional.
+  if (!profile.websiteUrl) {
+    return { success: false, error: "Add your portfolio first.", missingStep: 3 };
   }
 
   // Step 4: at least 1 work experience

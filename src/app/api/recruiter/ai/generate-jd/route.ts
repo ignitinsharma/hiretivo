@@ -5,7 +5,7 @@ import { openrouter, getAIModel } from '@/lib/openrouter';
 import { JdGeneratorSchema } from '@/lib/validations/jd-generator.schema';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { buildJdGeneratorMessages, JD_GENERATOR_CONFIG } from '@/lib/ai-prompts';
-import { consumeFreeDailyAiQuota } from '@/lib/billing/ai-daily-limit';
+import { consumeFreeDailyAiQuota, consumePaidDailyAiCap } from '@/lib/billing/ai-daily-limit';
 
 const generateJdRateLimiter = createRateLimiter('generate-jd', 5, '1 m');
 
@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
   }
 
-  // 5. Plan gate — FREE plan gets 3 JD generations/day; paid plans unlimited
+  // 5. Plan gate — FREE plan gets 3 JD generations/day; paid plans get a high
+  // daily safety ceiling (anti-abuse, not a product limit).
   if (session.user.plan === PlanTier.FREE) {
     const allowed = await consumeFreeDailyAiQuota(AiFeature.JD, session.user.id);
     if (!allowed) {
@@ -50,6 +51,14 @@ export async function POST(req: NextRequest) {
             "You've used your 3 free AI job descriptions today. Upgrade to a paid plan for unlimited generations.",
         }),
         { status: 403 },
+      );
+    }
+  } else {
+    const withinCap = await consumePaidDailyAiCap(AiFeature.JD, session.user.id);
+    if (!withinCap) {
+      return new Response(
+        JSON.stringify({ error: "Daily AI usage limit reached. Please try again tomorrow." }),
+        { status: 429 },
       );
     }
   }

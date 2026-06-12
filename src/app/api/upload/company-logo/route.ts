@@ -9,6 +9,7 @@ import {
   LOGO_MAX_BYTES,
   LOGO_MIME_TYPES,
 } from '@/lib/validations/upload.schema';
+import { sniffedTypeAllowed } from '@/lib/validations/file-signature';
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -36,6 +37,15 @@ export async function POST(req: NextRequest) {
 
   if (file.size > LOGO_MAX_BYTES) {
     return NextResponse.json({ error: 'File too large (max 2 MB)' }, { status: 400 });
+  }
+
+  // Verify real file type by magic bytes, not the spoofable Content-Type.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!sniffedTypeAllowed(bytes, 'image')) {
+    return NextResponse.json(
+      { error: 'File content does not match an allowed image type' },
+      { status: 400 },
+    );
   }
 
   const key = R2_KEYS.companyLogo(session.user.id);

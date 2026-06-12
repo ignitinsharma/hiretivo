@@ -228,6 +228,15 @@ async function handleBoostPaymentSucceeded(
   if (!meta?.userId || !meta?.jobId || meta?.type !== 'boost') return;
 
   const { userId, jobId } = meta;
+
+  // Idempotency: if this job's boost already came from this exact payment,
+  // a duplicate webhook delivery must not reset/extend the boost window.
+  const existingBoost = await prisma.boostedJob.findUnique({
+    where: { jobId },
+    select: { paymentId: true },
+  });
+  if (existingBoost?.paymentId === data.payment_id) return;
+
   const startsAt = new Date();
   const expiresAt = new Date(startsAt.getTime() + BOOST_DURATION_MS);
 
@@ -255,6 +264,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
+  const webhookSecret = process.env.DODO_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    // Fail closed: never verify with an empty key (would make forged events trivial).
+    console.error("DODO_WEBHOOK_SECRET is not configured — rejecting webhook");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+
   const rawBody = await req.text();
   const reqHeaders = await headers();
 
@@ -276,7 +292,7 @@ export async function POST(req: NextRequest) {
         "webhook-signature": reqHeaders.get("webhook-signature") ?? "",
         "webhook-timestamp": reqHeaders.get("webhook-timestamp") ?? "",
       },
-      key: process.env.DODO_WEBHOOK_SECRET ?? "",
+      key: webhookSecret,
     });
   } catch (error) {
     console.error("Invalid DodoPayments webhook signature:", error);

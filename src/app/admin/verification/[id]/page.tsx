@@ -3,6 +3,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { VerificationReviewForm } from "@/modules/admin/components/VerificationReviewForm";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 
 const STATUS_LABELS: Record<string, string> = {
   NOT_SUBMITTED: "Not submitted",
@@ -30,6 +31,7 @@ export default async function AdminVerificationDetailPage({
       id: true,
       name: true,
       email: true,
+      image: true,
       verificationStatus: true,
       seekerProfile: {
         select: {
@@ -105,24 +107,34 @@ export default async function AdminVerificationDetailPage({
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Link
-              href="/admin/verification"
-              className="text-sm text-brand-foreground-muted hover:text-brand-foreground"
-            >
-              ← Verification queue
-            </Link>
+        <div className="flex min-w-0 items-start gap-3">
+          <InitialsAvatar
+            name={user.name}
+            email={user.email}
+            userId={user.id}
+            image={user.image}
+            size="lg"
+            className="shrink-0"
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Link
+                href="/admin/verification"
+                className="text-sm text-brand-foreground-muted hover:text-brand-foreground"
+              >
+                ← Verification queue
+              </Link>
+            </div>
+            <h1 className="font-bold text-2xl text-brand-foreground">
+              {user.name ?? "Unnamed engineer"}
+            </h1>
+            <p className="text-sm text-brand-foreground-muted">{user.email ?? "No email"}</p>
+            {submittedAt && (
+              <p className="text-xs text-brand-foreground-secondary mt-1">
+                Submitted {format(new Date(submittedAt), "MMM d, yyyy")}
+              </p>
+            )}
           </div>
-          <h1 className="font-bold text-2xl text-brand-foreground">
-            {user.name ?? "Unnamed engineer"}
-          </h1>
-          <p className="text-sm text-brand-foreground-muted">{user.email ?? "No email"}</p>
-          {submittedAt && (
-            <p className="text-xs text-brand-foreground-secondary mt-1">
-              Submitted {format(new Date(submittedAt), "MMM d, yyyy")}
-            </p>
-          )}
         </div>
         <span className="inline-flex items-center self-start rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
           {statusLabel}

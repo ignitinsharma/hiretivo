@@ -32,6 +32,7 @@ export interface CandidateEducation {
 export interface CandidateApplication {
   id: string;
   jobId?: string;
+  candidateId?: string;
   candidateName: string;
   candidateEmail: string;
   candidateAvatar?: string | null;

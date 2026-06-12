@@ -100,18 +100,19 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
           </Button>
         )}
       </div>
-      <div className="flex flex-wrap gap-2 p-6">
+      <div className="p-6">
         {isLoading ? (
-          <>
+          <div className="flex flex-wrap gap-2">
             <Skeleton className="h-9 w-24 rounded-full" />
             <Skeleton className="h-9 w-28 rounded-full" />
             <Skeleton className="h-9 w-20 rounded-full" />
-          </>
+          </div>
         ) : (
           <SkillsTagInput
             value={skills}
             onChange={setSkills}
             disabled={!isEditing || mutation.isPending}
+            className="w-full"
           />
         )}
       </div>

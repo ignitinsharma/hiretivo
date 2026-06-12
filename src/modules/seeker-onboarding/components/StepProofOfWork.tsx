@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, ArrowLeft, Github, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,18 @@ import { cn } from "@/lib/utils";
 import { validateSeekerStep3 } from "@/lib/validations/seeker-onboarding.schema";
 import type { ProjectEntry } from "@/lib/validations/seeker-onboarding.schema";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
+import { useFieldErrors } from "@/modules/seeker-onboarding/hooks/use-field-errors";
 import { saveProofOfWork } from "@/app/actions/onboarding/seeker";
+
+const FIELD_ERROR_CLASS = "text-sm text-brand-danger";
+const RAW_TEXTAREA_INVALID =
+  "aria-[invalid=true]:border-brand-danger aria-[invalid=true]:focus:ring-brand-danger/20";
 
 /*
  * StepProofOfWork
  * Step 3 of seeker onboarding — Proof of Work.
- * Captures GitHub URL, LinkedIn URL, portfolio/website URL, and video intro URL
- * (all four are required), plus at least one project entry (title, URL, description).
+ * Captures GitHub URL, portfolio/website URL, optional social/video URLs,
+ * plus at least one project entry (title, URL, description).
  * On submit, calls the real saveProofOfWork server action and advances to the next step.
  */
 interface StepProofOfWorkProps {
@@ -35,6 +40,8 @@ interface ProjectEntryRowProps {
   onChange: (index: number, updated: ProjectEntry) => void;
   onRemove: (index: number) => void;
   showRemove: boolean;
+  errorFor: (field: string) => string | undefined;
+  onBlurField: (field: string) => void;
 }
 
 function ProjectEntryRow({
@@ -43,6 +50,8 @@ function ProjectEntryRow({
   onChange,
   onRemove,
   showRemove,
+  errorFor,
+  onBlurField,
 }: ProjectEntryRowProps) {
   return (
     <div className="rounded-xl border border-brand-border bg-brand-surface p-4 space-y-3">
@@ -72,7 +81,12 @@ function ProjectEntryRow({
           onChange={(e) =>
             onChange(index, { ...project, title: e.target.value })
           }
+          onBlur={() => onBlurField("title")}
+          aria-invalid={Boolean(errorFor("title"))}
         />
+        {errorFor("title") && (
+          <p className={FIELD_ERROR_CLASS}>{errorFor("title")}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -85,7 +99,12 @@ function ProjectEntryRow({
           onChange={(e) =>
             onChange(index, { ...project, url: e.target.value })
           }
+          onBlur={() => onBlurField("url")}
+          aria-invalid={Boolean(errorFor("url"))}
         />
+        {errorFor("url") && (
+          <p className={FIELD_ERROR_CLASS}>{errorFor("url")}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -95,12 +114,24 @@ function ProjectEntryRow({
         <textarea
           placeholder="What did you build and what was your role? (min 20 characters)"
           value={project.description}
+          onInput={(e) => {
+            e.currentTarget.style.height = "auto";
+            e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 192)}px`;
+          }}
           onChange={(e) =>
             onChange(index, { ...project, description: e.target.value })
           }
+          onBlur={() => onBlurField("description")}
+          aria-invalid={Boolean(errorFor("description"))}
           rows={3}
-          className="w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground placeholder:text-brand-foreground-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary resize-none"
+          className={cn(
+            "max-h-48 min-h-24 w-full resize-none overflow-y-auto rounded-lg border border-brand-border bg-white px-3 py-2 text-sm text-brand-foreground placeholder:text-brand-foreground-secondary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20",
+            RAW_TEXTAREA_INVALID,
+          )}
         />
+        {errorFor("description") && (
+          <p className={FIELD_ERROR_CLASS}>{errorFor("description")}</p>
+        )}
       </div>
     </div>
   );
@@ -111,6 +142,7 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
     proofOfWork,
     setGithubUrl,
     setLinkedinUrl,
+    setTwitterUrl,
     setWebsiteUrl,
     setVideoIntroUrl,
     addProject,
@@ -118,7 +150,9 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
     removeProject,
   } = useSeekerOnboardingStore();
 
-  const [errors, setErrors] = useState<string[]>([]);
+  const fe = useFieldErrors();
+  const { revalidate } = fe;
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   /* Ensure at least one empty project row on first render */
@@ -127,13 +161,29 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
       ? proofOfWork.projects
       : [{ ...EMPTY_PROJECT }];
 
+  // Recompute the live field-error map whenever any step 3 value changes.
+  useEffect(() => {
+    revalidate(
+      validateSeekerStep3({
+        githubUrl: proofOfWork.githubUrl,
+        linkedinUrl: proofOfWork.linkedinUrl ?? "",
+        twitterUrl: proofOfWork.twitterUrl ?? "",
+        websiteUrl: proofOfWork.websiteUrl ?? "",
+        videoIntroUrl: proofOfWork.videoIntroUrl ?? "",
+        projects:
+          proofOfWork.projects.length > 0
+            ? proofOfWork.projects
+            : [{ ...EMPTY_PROJECT }],
+      }).fieldErrors,
+    );
+  }, [proofOfWork, revalidate]);
+
   const handleProjectChange = (index: number, updated: ProjectEntry) => {
     if (index < proofOfWork.projects.length) {
       updateProject(index, updated);
     } else {
       addProject(updated);
     }
-    setErrors([]);
   };
 
   const handleAddProject = () => {
@@ -146,6 +196,7 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
 
   const handleContinue = async () => {
     if (isSaving) return;
+    setServerError(null);
 
     const projectsToSave =
       proofOfWork.projects.length > 0 ? proofOfWork.projects : projects;
@@ -153,38 +204,35 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
     const validation = validateSeekerStep3({
       githubUrl: proofOfWork.githubUrl,
       linkedinUrl: proofOfWork.linkedinUrl ?? "",
+      twitterUrl: proofOfWork.twitterUrl ?? "",
       websiteUrl: proofOfWork.websiteUrl ?? "",
       videoIntroUrl: proofOfWork.videoIntroUrl ?? "",
       projects: projectsToSave,
     });
 
     if (!validation.valid) {
-      setErrors(validation.errors);
+      fe.setSubmitted(validation.fieldErrors);
       return;
     }
 
     const linkedinUrl = proofOfWork.linkedinUrl?.trim() ?? "";
+    const twitterUrl = proofOfWork.twitterUrl?.trim() ?? "";
     const websiteUrl = proofOfWork.websiteUrl?.trim() ?? "";
     const videoIntroUrl = proofOfWork.videoIntroUrl?.trim() ?? "";
-    if (!linkedinUrl || !websiteUrl || !videoIntroUrl) {
-      setErrors(["Unexpected missing field — please re-enter all URLs."]);
-      return;
-    }
-
-    setErrors([]);
 
     setIsSaving(true);
     try {
       const result = await saveProofOfWork({
         githubUrl: proofOfWork.githubUrl,
-        linkedinUrl,
+        linkedinUrl: linkedinUrl || null,
+        twitterUrl: twitterUrl || null,
         websiteUrl,
-        videoIntroUrl,
+        videoIntroUrl: videoIntroUrl || null,
         projects: projectsToSave,
       });
 
       if (!result.success) {
-        setErrors([result.error]);
+        setServerError(result.error);
         return;
       }
 
@@ -218,26 +266,53 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             <Input
               placeholder="https://github.com/yourusername"
               value={proofOfWork.githubUrl}
-              onChange={(e) => {
-                setGithubUrl(e.target.value);
-                setErrors([]);
-              }}
+              onChange={(e) => setGithubUrl(e.target.value)}
+              onBlur={() => fe.touch("githubUrl")}
+              aria-invalid={fe.hasError("githubUrl")}
             />
+            {fe.errorFor("githubUrl") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("githubUrl")}</p>
+            )}
           </div>
 
-          {/* LinkedIn — required */}
+          {/* LinkedIn — optional */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-brand-foreground">
-              LinkedIn URL <span className="text-brand-danger">*</span>
+              LinkedIn URL{" "}
+              <span className="text-brand-foreground-secondary text-xs font-normal">
+                (optional)
+              </span>
             </label>
             <Input
               placeholder="https://linkedin.com/in/yourname"
               value={proofOfWork.linkedinUrl ?? ""}
-              onChange={(e) => {
-                setLinkedinUrl(e.target.value || null);
-                setErrors([]);
-              }}
+              onChange={(e) => setLinkedinUrl(e.target.value || null)}
+              onBlur={() => fe.touch("linkedinUrl")}
+              aria-invalid={fe.hasError("linkedinUrl")}
             />
+            {fe.errorFor("linkedinUrl") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("linkedinUrl")}</p>
+            )}
+          </div>
+
+          {/* X / Twitter — optional */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-foreground">
+              X / Twitter URL{" "}
+              <span className="text-brand-foreground-secondary text-xs font-normal">
+                (optional)
+              </span>
+            </label>
+            <Input
+              placeholder="https://x.com/yourname"
+              value={proofOfWork.twitterUrl ?? ""}
+              onChange={(e) => setTwitterUrl(e.target.value || null)}
+              onBlur={() => fe.touch("twitterUrl")}
+              aria-invalid={fe.hasError("twitterUrl")}
+            />
+            {fe.errorFor("twitterUrl") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("twitterUrl")}</p>
+            )}
           </div>
 
           {/* Portfolio — required */}
@@ -248,11 +323,13 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             <Input
               placeholder="https://yourwebsite.com"
               value={proofOfWork.websiteUrl ?? ""}
-              onChange={(e) => {
-                setWebsiteUrl(e.target.value || null);
-                setErrors([]);
-              }}
+              onChange={(e) => setWebsiteUrl(e.target.value || null)}
+              onBlur={() => fe.touch("websiteUrl")}
+              aria-invalid={fe.hasError("websiteUrl")}
             />
+            {fe.errorFor("websiteUrl") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("websiteUrl")}</p>
+            )}
           </div>
 
           {/* Video intro — optional */}
@@ -266,11 +343,13 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             <Input
               placeholder="https://loom.com/share/..."
               value={proofOfWork.videoIntroUrl ?? ""}
-              onChange={(e) => {
-                setVideoIntroUrl(e.target.value || null);
-                setErrors([]);
-              }}
+              onChange={(e) => setVideoIntroUrl(e.target.value || null)}
+              onBlur={() => fe.touch("videoIntroUrl")}
+              aria-invalid={fe.hasError("videoIntroUrl")}
             />
+            {fe.errorFor("videoIntroUrl") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("videoIntroUrl")}</p>
+            )}
           </div>
 
           {/* Projects — required, ≥1 */}
@@ -291,9 +370,14 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
                   onChange={handleProjectChange}
                   onRemove={handleRemoveProject}
                   showRemove={projects.length > 1}
+                  errorFor={(field) => fe.errorFor(`projects.${index}.${field}`)}
+                  onBlurField={(field) => fe.touch(`projects.${index}.${field}`)}
                 />
               ))}
             </div>
+            {fe.errorFor("projects") && (
+              <p className={FIELD_ERROR_CLASS}>{fe.errorFor("projects")}</p>
+            )}
 
             <button
               type="button"
@@ -308,14 +392,8 @@ export function StepProofOfWork({ onNext, onBack }: StepProofOfWorkProps) {
             </button>
           </div>
 
-          {errors.length > 0 && (
-            <div className="space-y-1">
-              {errors.map((err, i) => (
-                <p key={i} className="text-sm text-brand-danger text-center">
-                  {err}
-                </p>
-              ))}
-            </div>
+          {serverError && (
+            <p className="text-sm text-brand-danger text-center">{serverError}</p>
           )}
         </div>
 

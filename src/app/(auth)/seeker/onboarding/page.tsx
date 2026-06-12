@@ -52,6 +52,7 @@ export default async function SeekerOnboardingPage() {
           bio: true,
           githubUrl: true,
           linkedinUrl: true,
+          twitterUrl: true,
           websiteUrl: true,
           videoIntroUrl: true,
           topProjects: true,
@@ -124,6 +125,7 @@ export default async function SeekerOnboardingPage() {
           githubUrl: profile.githubUrl,
           hasProjects,
           workExperiencesCount: profile.workExperiences.length,
+          educationsCount: profile.educations.length,
           resumeKey: profile.resumeKey,
           headline: profile.headline,
         }
@@ -175,6 +177,7 @@ export default async function SeekerOnboardingPage() {
           proofOfWork: {
             githubUrl: profile?.githubUrl ?? "",
             linkedinUrl: profile?.linkedinUrl ?? null,
+            twitterUrl: profile?.twitterUrl ?? null,
             websiteUrl: profile?.websiteUrl ?? null,
             videoIntroUrl: profile?.videoIntroUrl ?? null,
             projects,

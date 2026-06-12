@@ -31,6 +31,7 @@ export interface SeekerProgressProfile {
   githubUrl?: string | null;
   hasProjects?: boolean;
   workExperiencesCount?: number;
+  educationsCount?: number;
   resumeKey?: string | null;
   headline?: string | null;
   location?: string | null;
@@ -139,8 +140,8 @@ export function resolveSeekerOnboardingStep(
   // Hard gate: step 3 — GitHub URL + at least 1 project required
   if (!profile.githubUrl || !profile.hasProjects) return 3;
 
-  // Hard gate: step 4 — at least 1 work experience required
-  if ((profile.workExperiencesCount ?? 0) === 0) return 4;
+  // Hard gate: step 4 — at least 1 work experience and 1 education entry required
+  if ((profile.workExperiencesCount ?? 0) === 0 || (profile.educationsCount ?? 0) === 0) return 4;
 
   // Hard gate: step 5 — availability, headline, and resumeKey required
   if (!profile.availability || !profile.headline || !profile.resumeKey) return 5;

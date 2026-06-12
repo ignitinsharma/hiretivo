@@ -43,11 +43,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err: unknown) {
+    // Duplicate email: respond identically to a fresh signup so the endpoint
+    // can't be used to enumerate who is already on the waitlist.
     if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
-      return NextResponse.json(
-        { error: 'This email is already registered' },
-        { status: 409 }
-      );
+      return NextResponse.json({ success: true }, { status: 201 });
     }
     console.error('Early access signup error:', err);
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });

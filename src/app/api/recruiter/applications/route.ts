@@ -247,6 +247,7 @@ export async function GET(req: NextRequest) {
         jobId: app.jobId,
         jobTitle: app.job.title,
         jobSkills: app.job.skills.map((skill) => skill.skill.name),
+        candidateId: seeker.id,
         candidateName: seeker.name ?? "Anonymous",
         candidateEmail: seeker.email ?? "",
         candidateAvatar: resolveLogoUrl(seeker.image),
