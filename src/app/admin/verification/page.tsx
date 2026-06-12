@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 
 /*
  * /admin/verification
@@ -18,6 +19,7 @@ export default async function AdminVerificationPage() {
       id: true,
       name: true,
       email: true,
+      image: true,
       verificationStatus: true,
       seekerProfile: {
         select: {
@@ -63,8 +65,20 @@ export default async function AdminVerificationPage() {
                   const submittedAt = u.seekerProfile?.submittedForReviewAt;
                   return (
                     <tr key={u.id} className="border-t border-brand-border">
-                      <td className="px-4 py-3 text-sm font-medium text-brand-foreground">
-                        {u.name ?? "—"}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <InitialsAvatar
+                            name={u.name}
+                            email={u.email}
+                            userId={u.id}
+                            image={u.image}
+                            size="md"
+                            className="shrink-0"
+                          />
+                          <span className="text-sm font-medium text-brand-foreground">
+                            {u.name ?? "—"}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-brand-foreground-muted">
                         {u.email ?? "—"}

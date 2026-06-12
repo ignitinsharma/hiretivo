@@ -37,6 +37,7 @@ export async function GET(
       id: true,
       name: true,
       email: true,
+      image: true,
       verificationStatus: true,
       seekerProfile: {
         select: {
@@ -106,6 +107,7 @@ export async function GET(
       userId: user.id,
       name: user.name,
       email: user.email,
+      image: user.image,
       verificationStatus: user.verificationStatus,
       seekerProfile: profile
         ? {
