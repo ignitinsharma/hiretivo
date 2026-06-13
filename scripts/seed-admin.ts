@@ -15,9 +15,19 @@
  */
 
 import bcrypt from "bcryptjs";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Role } from "@prisma/client";
 
-const prisma = new PrismaClient();
+/*
+ * Prisma 7 requires the client to be constructed with a driver adapter.
+ * Mirror the app's src/lib/prisma.ts setup so the script connects identically.
+ */
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error("DATABASE_URL env not set");
+  process.exit(1);
+}
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 async function main() {
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
