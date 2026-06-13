@@ -23,10 +23,15 @@ export default auth((req) => {
   const hasKnownRole = userRole === "SEEKER" || userRole === "RECRUITER";
 
   // --- Admin gate (must run before the public check; /admin is not public) ---
+  // Primary check: isAdmin boolean forwarded from JWT (DB-backed, set at sign-in).
+  // Fallback: ADMIN_EMAIL env var (bootstrap path — keeps operator from being locked out).
   if (pathname.startsWith("/admin")) {
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const userEmail = session?.user?.email?.trim().toLowerCase();
-    if (!adminEmail || !userEmail || userEmail !== adminEmail) {
+    const isAdminUser =
+      session?.user?.isAdmin === true ||
+      Boolean(adminEmail && userEmail && userEmail === adminEmail);
+    if (!isAdminUser) {
       return NextResponse.redirect(new URL("/recruiter/login", req.url));
     }
     return NextResponse.next();
