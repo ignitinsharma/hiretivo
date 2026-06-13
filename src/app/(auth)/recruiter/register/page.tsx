@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -30,15 +29,15 @@ const RecruiterSignupLeft = (
   <>
     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-xl w-full">
-      <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-8">
+      <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
         Build your dream <span className="text-primary">team.</span>
       </h1>
-      <p className="text-slate-600 text-lg lg:text-xl font-medium mb-12 max-w-md leading-relaxed">
+      <p className="text-slate-600 text-base lg:text-lg font-medium mb-8 max-w-md leading-relaxed">
         Join leading architectural firms hiring top remote talent across the
         globe.
       </p>
 
-      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm mb-12 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm mb-8 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center">
             <svg
@@ -216,7 +215,7 @@ function RecruiterRegisterContent() {
       role="recruiter"
       backHref="/"
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {roleMismatch && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
@@ -281,7 +280,7 @@ function RecruiterRegisterContent() {
                 type="text"
                 placeholder="John Doe"
                 autoComplete="name"
-                className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
                 {...form.register("name")}
               />
               {form.formState.errors.name && (
@@ -303,7 +302,7 @@ function RecruiterRegisterContent() {
                 type="text"
                 placeholder="Acme Inc"
                 autoComplete="organization"
-                className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
                 {...form.register("companyName")}
               />
               {form.formState.errors.companyName && (
@@ -326,7 +325,7 @@ function RecruiterRegisterContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -347,7 +346,7 @@ function RecruiterRegisterContent() {
               id="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
-              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -398,17 +397,13 @@ function RecruiterRegisterContent() {
 
           <Button
             type="submit"
-            className="w-full h-14 rounded-xl bg-brand-primary text-white font-bold text-lg hover:bg-brand-primary-dark transition-all duration-200 transform active:scale-[0.99]"
-            disabled={isSubmitting}
+            variant="primary"
+            size="lg"
+            className="w-full"
+            loading={isSubmitting}
+            loadingText="Creating account..."
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              "Create Hiring Account"
-            )}
+            Create Hiring Account
           </Button>
         </form>
 
