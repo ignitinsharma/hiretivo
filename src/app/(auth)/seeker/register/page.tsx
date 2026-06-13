@@ -43,7 +43,7 @@ const SeekerSignupLeft = (
       >
         <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
       </svg>
-      <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 mb-12">
+      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-slate-900 mb-6">
         Work should fit your life, not the other way around.
       </h1>
 
@@ -230,7 +230,7 @@ function SeekerRegisterContent() {
       role="seeker"
       backHref="/"
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {roleMismatch && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
@@ -294,7 +294,7 @@ function SeekerRegisterContent() {
               type="text"
               placeholder="John Doe"
               autoComplete="name"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("name")}
             />
             {form.formState.errors.name && (
@@ -330,7 +330,7 @@ function SeekerRegisterContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -351,7 +351,7 @@ function SeekerRegisterContent() {
               id="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
-              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />

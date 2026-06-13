@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,11 +31,11 @@ const RecruiterLoginLeft = (
   <>
     <div className="absolute top-[-10%] right-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-xl w-full">
-      <h1 className="text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-8">
+      <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
         Your dream team
         <p className="text-primary">just a click away. </p>
       </h1>
-      <div className="mt-12 space-y-6">
+      <div className="mt-10 space-y-5">
         <p className="text-slate-500 font-medium text-xs tracking-widest uppercase">
           Trusted by the world&apos;s best teams
         </p>
@@ -59,7 +58,7 @@ const RecruiterLoginLeft = (
           </div>
         </div>
       </div>
-      <div className="mt-20 space-y-4">
+      <div className="mt-12 space-y-4">
         <div className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 p-6 max-w-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -233,7 +232,7 @@ function RecruiterLoginContent() {
       role="recruiter"
       backHref="/"
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {roleMismatch && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
@@ -295,7 +294,7 @@ function RecruiterLoginContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -324,7 +323,7 @@ function RecruiterLoginContent() {
               id="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -337,17 +336,13 @@ function RecruiterLoginContent() {
 
           <Button
             type="submit"
-            className="w-full h-14 rounded-xl bg-brand-primary text-white font-bold text-lg hover:bg-brand-primary-dark transition-all duration-200 transform active:scale-[0.99] mt-2"
-            disabled={isSubmitting}
+            variant="primary"
+            size="lg"
+            className="w-full mt-2"
+            loading={isSubmitting}
+            loadingText="Signing in..."
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign In"
-            )}
+            Sign In
           </Button>
         </form>
 

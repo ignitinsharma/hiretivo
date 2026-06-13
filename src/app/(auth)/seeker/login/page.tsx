@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -40,11 +39,11 @@ const SeekerLoginLeft = (
   <>
     <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-lg w-full">
-      <h1 className="text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900 mb-8">
+      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-slate-900 mb-6">
         <span className="text-brand-primary">Find remote work</span> <br />
         <span className="text-black italic">that fits your life</span>
       </h1>
-      <p className="text-slate-600 font-medium text-lg leading-relaxed mb-12 max-w-md">
+      <p className="text-slate-600 font-medium text-base lg:text-lg leading-relaxed mb-8 max-w-md">
         Access thousands of remote opportunities from companies that value
         work-life balance.
       </p>
@@ -227,7 +226,7 @@ function SeekerLoginContent() {
       role="seeker"
       backHref="/"
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {roleMismatch && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">
@@ -289,7 +288,7 @@ function SeekerLoginContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full px-5 h-14 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -318,7 +317,7 @@ function SeekerLoginContent() {
               id="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -331,17 +330,13 @@ function SeekerLoginContent() {
 
           <Button
             type="submit"
-            className="w-full h-14 rounded-xl bg-brand-primary text-white font-bold text-lg hover:bg-brand-primary-dark transition-all duration-200 transform active:scale-[0.99] mt-2"
-            disabled={isSubmitting}
+            variant="primary"
+            size="lg"
+            className="w-full mt-2"
+            loading={isSubmitting}
+            loadingText="Signing in..."
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign In"
-            )}
+            Sign In
           </Button>
         </form>
 
