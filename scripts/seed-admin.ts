@@ -1,11 +1,17 @@
 /*
  * seed-admin.ts
- * One-time seed for the admin user account.
- * Reads ADMIN_EMAIL + ADMIN_PASSWORD from env, creates a User with role=RECRUITER
- * and a minimal RecruiterProfile so the user can log in via /auth/recruiter/login.
- * Idempotent — if the user already exists, this script no-ops and logs.
+ * Bootstrap / backfill script for the admin user account.
+ * Reads ADMIN_EMAIL + ADMIN_PASSWORD from env.
  *
- * Run: pnpm tsx scripts/seed-admin.ts
+ * Behaviour:
+ * - If the user already exists: updates it to set isAdmin=true (backfill for migration).
+ * - If the user does not exist: creates a new User with role=RECRUITER, isAdmin=true,
+ *   a minimal RecruiterProfile, and bcrypt rounds=12 so the account can log in via
+ *   /recruiter/login.
+ *
+ * Idempotent — safe to run multiple times. Always exits with isAdmin=true on the account.
+ *
+ * Run: pnpm seed:admin
  */
 
 import bcrypt from "bcryptjs";
@@ -28,17 +34,22 @@ async function main() {
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    console.log(`Admin user already exists: ${email}`);
+    await prisma.user.update({
+      where: { email },
+      data: { isAdmin: true },
+    });
+    console.log(`Updated existing admin user: ${email} (isAdmin=true)`);
     return;
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.create({
     data: {
       email,
       name: "Hiretivo Admin",
       role: Role.RECRUITER,
+      isAdmin: true,
       passwordHash,
       emailVerified: new Date(),
       onboardingCompleted: true,
@@ -51,7 +62,7 @@ async function main() {
     },
   });
 
-  console.log(`Created admin user: ${user.email} (id=${user.id})`);
+  console.log(`Created admin user: ${user.email} (id=${user.id}, isAdmin=true)`);
 }
 
 main()
