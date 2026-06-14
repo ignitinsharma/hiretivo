@@ -5,26 +5,14 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import {
-  ChevronDown,
-  Settings,
-  LogOut,
-  User,
   Briefcase,
   LayoutDashboard,
   Send,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
-import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
+import { AccountMenu } from "@/components/shared/AccountMenu";
 import { cn } from "@/lib/utils";
 import { SEEKER_NAV_ITEMS } from "@/constants/nav";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 /** Nav items to show — only Jobs and Applied Jobs per D-18. */
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
@@ -39,7 +27,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function SeekerHeader() {
   const pathname = usePathname();
-  const { data: session } = useSession();
   const hiretivo = useVerificationStatus();
 
   return (
@@ -77,53 +64,14 @@ export function SeekerHeader() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="flex items-center gap-2 group outline-none"
-                aria-label="Account menu"
-              >
-                <InitialsAvatar
-                  name={session?.user?.name}
-                  email={session?.user?.email}
-                  userId={session?.user?.id}
-                  image={session?.user?.image}
-                  fallbackSeed="seeker-header"
-                  size="md"
-                  verified={hiretivo.isVerified}
-                  className="h-9 w-9 border-2 border-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-primary"
-                />
-                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {session?.user?.name && (
-                <>
-                  <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-slate-500">
-                    <User className="w-3.5 h-3.5" />
-                    <span className="truncate">{session.user.name}</span>
-                  </div>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/seeker/settings"
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600 focus:text-red-600 focus:bg-red-50 flex items-center gap-2 cursor-pointer"
-                onClick={() => void signOut({ callbackUrl: "/" })}
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AccountMenu
+            settingsHref="/seeker/settings"
+            fallbackName="Job Seeker"
+            fallbackEmail="Seeker account"
+            fallbackSeed="seeker-header"
+            verified={hiretivo.isVerified}
+            ariaLabel="Open seeker account menu"
+          />
         </div>
       </div>
     </header>

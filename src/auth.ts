@@ -111,6 +111,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             emailVerified: true,
             onboardingCompleted: true,
             onboardingStep: true,
+            isAdmin: true,
           },
         });
         if (dbUser) {
@@ -120,6 +121,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           token.emailVerified = dbUser.emailVerified ?? null;
           token.onboardingCompleted = dbUser.onboardingCompleted ?? null;
           token.onboardingStep = dbUser.onboardingStep ?? null;
+          token.isAdmin = dbUser.isAdmin ?? false;
         }
       }
 
@@ -194,6 +196,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       session.user.emailVerified = (token.emailVerified as Date | null | undefined) ?? null;
       session.user.onboardingCompleted = (token.onboardingCompleted as boolean | null | undefined) ?? null;
       session.user.onboardingStep = (token.onboardingStep as number | null | undefined) ?? null;
+      session.user.isAdmin = (token.isAdmin as boolean | null | undefined) ?? false;
 
       return session;
     },

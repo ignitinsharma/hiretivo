@@ -100,7 +100,7 @@ export const IS_SERVER = typeof window === "undefined";
  */
 export const SITE_NAME = "Hiretivo";
 export const SITE_DESCRIPTION =
-  "Skills-based remote job portal connecting talented professionals with great opportunities";
+  "Hire verified Indian engineers for your startup. Pre-vetted talent with real skills, salary transparency, and availability.";
 
 /**
  * Get OAuth redirect URL for a provider

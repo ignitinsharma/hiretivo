@@ -15,6 +15,10 @@ import { WorkExperienceSection } from '@/modules/seeker/settings/components/Work
 import { EducationSection } from '@/modules/seeker/settings/components/EducationSection';
 import { useVerificationStatus } from '@/hooks/use-verification-status';
 
+/*
+ * SeekerSettingsPanels
+ * Renders the editable seeker settings sections once profile data is available.
+ */
 function SeekerSettingsPanels() {
   const { data, isLoading } = useSeekerSettingsData();
   const hiretivo = useVerificationStatus();
@@ -25,6 +29,9 @@ function SeekerSettingsPanels() {
       <AvatarSection
         name={settings?.name}
         image={settings?.image}
+        headline={settings?.headline}
+        primaryRole={settings?.primaryRole}
+        profileStrength={settings?.profileStrength}
         verified={hiretivo.isVerified}
       />
       <PersonalInfoSection />
@@ -38,6 +45,10 @@ function SeekerSettingsPanels() {
   );
 }
 
+/*
+ * SeekerSettingsPage
+ * Account settings page for seeker profile, social links, work, education, and security.
+ */
 export default function SeekerSettingsPage() {
   return (
     <>

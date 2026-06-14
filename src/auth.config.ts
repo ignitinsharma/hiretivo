@@ -28,6 +28,8 @@ export const authConfig = {
           }
         ).onboardingStep =
           (token.onboardingStep as number | null | undefined) ?? null;
+        (session.user as { isAdmin?: boolean }).isAdmin =
+          (token.isAdmin as boolean | null | undefined) ?? false;
       }
       return session;
     },

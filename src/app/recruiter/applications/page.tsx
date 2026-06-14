@@ -3,8 +3,6 @@
 import React, { useMemo, useState } from "react";
 import {
   Search,
-  Download,
-  Plus,
   ChevronLeft,
   ChevronRight,
   MapPin,
@@ -17,7 +15,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationStatus, PlanTier, VerificationStatus } from "@/constants/enums";
@@ -222,33 +219,6 @@ export default function RecruiterApplicationsPage() {
 
   return (
     <div className="w-full p-8 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <PageHeader
-            title="Applicants Explorer"
-            subtitle="Deep-dive candidate analysis and management"
-            className="mb-0"
-          />
-          {/* <div className="mt-4">  
-            <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-full text-[11px] font-bold uppercase tracking-wider">
-              {applicationsQuery.isLoading
-                ? "..."
-                : `${statsQuery.data?.total ?? 0} Candidates`}
-            </span>
-          </div> */}
-        </div>
-        {/* <div className="flex items-center space-x-3">
-          <Button variant="default" className="gap-2">
-            <Download className="w-4 h-4" />
-            Export List
-          </Button>
-          <Button variant="primary" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Candidate
-          </Button>
-        </div> */}
-      </div>
-
       <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

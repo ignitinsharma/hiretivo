@@ -105,6 +105,7 @@ model User {
   onboardingCompleted Boolean @default(false)
   onboardingStep      Int?
   onboardingDraft     Json?
+  isAdmin              Boolean  @default(false)
   verificationStatus   VerificationStatus @default(NOT_SUBMITTED)
   seekingStatus        SeekingStatus      @default(OPEN_TO_OFFERS)
   createdAt DateTime @default(now())

@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { SidebarToggle } from '@/components/layout/RecruiterSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JobAnalyticsTab } from '@/modules/recruiter/jobs/components/JobAnalyticsTab';
 import { BoostJobButton } from '@/modules/recruiter/jobs/components/BoostJobButton';
@@ -23,16 +22,13 @@ export default async function RecruiterJobDetailPage({ params }: PageProps) {
   if (!job || job.recruiterId !== session?.user?.id) {
     return (
       <div className="w-full p-8">
-        <div className="flex items-start gap-4 mb-10">
-          <SidebarToggle className="mt-2" />
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-              Job not found
-            </h1>
-            <p className="text-slate-500 text-lg mt-1">
-              This job does not exist or you do not have access.
-            </p>
-          </div>
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold tracking-tight text-brand-foreground">
+            Job not found
+          </h1>
+          <p className="mt-1 text-lg text-brand-foreground-muted">
+            This job does not exist or you do not have access.
+          </p>
         </div>
       </div>
     );
@@ -55,16 +51,13 @@ export default async function RecruiterJobDetailPage({ params }: PageProps) {
       </Suspense>
 
       {/* Header */}
-      <div className="flex items-start gap-4 mb-10">
-        <SidebarToggle className="mt-2" />
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-            {job.title}
-          </h1>
-          <p className="text-slate-500 text-lg mt-1">
-            Job details and performance analytics
-          </p>
-        </div>
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold tracking-tight text-brand-foreground">
+          {job.title}
+        </h1>
+        <p className="mt-1 text-lg text-brand-foreground-muted">
+          Job details and performance analytics
+        </p>
       </div>
 
       {/* Tabs */}
