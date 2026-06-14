@@ -16,7 +16,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 
 export const metadata = generatePageMetadata({
-  title: "Hire Verified Indian Engineers",
+  title: "Hire verified Indian engineers for your startup.",
   description:
     "Every engineer is manually reviewed, proof-checked, and salary-transparent. Browse the verified talent pool and hire in 7 days.",
 });

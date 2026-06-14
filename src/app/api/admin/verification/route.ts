@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin/is-admin";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { UserRole, VerificationStatus } from "@/constants/enums";
 
 const adminVerificationReadLimiter = createRateLimiter("admin-verification-read", 30, "1 m");
 
@@ -36,8 +37,10 @@ export async function GET(req: NextRequest) {
 
   const users = await prisma.user.findMany({
     where: {
-      role: "SEEKER",
-      verificationStatus: { in: ["PENDING", "IN_REVIEW"] },
+      role: UserRole.SEEKER,
+      verificationStatus: {
+        in: [VerificationStatus.PENDING, VerificationStatus.IN_REVIEW],
+      },
     },
     select: {
       id: true,
@@ -60,8 +63,10 @@ export async function GET(req: NextRequest) {
 
   const total = await prisma.user.count({
     where: {
-      role: "SEEKER",
-      verificationStatus: { in: ["PENDING", "IN_REVIEW"] },
+      role: UserRole.SEEKER,
+      verificationStatus: {
+        in: [VerificationStatus.PENDING, VerificationStatus.IN_REVIEW],
+      },
     },
   });
 

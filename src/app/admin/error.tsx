@@ -1,33 +1,27 @@
 "use client";
 
+import { AdminErrorState } from "@/modules/admin/components/AdminErrorState";
+
 /*
  * /admin overview error boundary
- * Renders a brand-token error state with a retry action when the overview stats
- * query fails (isError state per CLAUDE.md). Client Component per the Next.js
- * error.tsx contract.
+ * Delegates to the shared AdminErrorState for the overview stats query failure.
  *
- * @param reset - Re-renders the route segment, retrying the failed query.
+ * @param error - the boundary error (logged by AdminErrorState).
+ * @param reset - re-renders the route segment, retrying the failed query.
  */
 export default function OverviewError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-brand-border bg-white p-10 text-center">
-      <h2 className="font-semibold text-xl text-brand-foreground">
-        Could not load overview
-      </h2>
-      <p className="mt-2 text-sm text-brand-foreground-muted">
-        Something went wrong loading the dashboard stats.
-      </p>
-      <button
-        onClick={() => reset()}
-        className="mt-4 inline-flex items-center rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-brand-primary-foreground hover:bg-brand-primary-dark"
-      >
-        Try again
-      </button>
-    </div>
+    <AdminErrorState
+      title="Could not load overview"
+      message="Something went wrong loading the dashboard stats."
+      error={error}
+      reset={reset}
+    />
   );
 }

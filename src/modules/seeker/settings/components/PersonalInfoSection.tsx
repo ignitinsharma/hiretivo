@@ -80,6 +80,10 @@ function getProfileFormValues(
   };
 }
 
+/*
+ * PersonalInfoSection
+ * Editable account profile form with a read-only verified email row.
+ */
 export function PersonalInfoSection() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -191,9 +195,11 @@ export function PersonalInfoSection() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-brand-foreground">Email Address</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <div className="relative">
-                  <Input value={profile?.email ?? ""} readOnly className="bg-brand-surface text-brand-foreground-muted pr-24" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-wider text-black bg-gray-100 px-2 py-0.5 rounded">
+                <div className="flex min-h-10 items-center justify-between gap-3 rounded-lg border border-brand-border bg-brand-surface px-3 py-2">
+                  <span className="min-w-0 truncate text-base text-brand-foreground-muted md:text-sm">
+                    {profile?.email ?? ""}
+                  </span>
+                  <span className="shrink-0 rounded-lg bg-brand-success/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-success">
                     Verified
                   </span>
                 </div>

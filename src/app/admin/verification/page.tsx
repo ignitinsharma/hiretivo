@@ -2,9 +2,10 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
-import { VerificationStatus } from "@/constants/enums";
+import { UserRole, VerificationStatus } from "@/constants/enums";
 import { VERIFICATION_STATUS_DISPLAY } from "@/modules/admin/utils/status-display";
 import { AdminBadge } from "@/modules/admin/components/AdminBadge";
+import { PaginationControls } from "@/components/shared/PaginationControls";
 
 /*
  * /admin/verification
@@ -25,8 +26,10 @@ export default async function AdminVerificationPage({
 
   const users = await prisma.user.findMany({
     where: {
-      role: "SEEKER",
-      verificationStatus: { in: ["PENDING", "IN_REVIEW"] },
+      role: UserRole.SEEKER,
+      verificationStatus: {
+        in: [VerificationStatus.PENDING, VerificationStatus.IN_REVIEW],
+      },
     },
     select: {
       id: true,
@@ -48,8 +51,10 @@ export default async function AdminVerificationPage({
 
   const total = await prisma.user.count({
     where: {
-      role: "SEEKER",
-      verificationStatus: { in: ["PENDING", "IN_REVIEW"] },
+      role: UserRole.SEEKER,
+      verificationStatus: {
+        in: [VerificationStatus.PENDING, VerificationStatus.IN_REVIEW],
+      },
     },
   });
 
@@ -147,37 +152,13 @@ export default async function AdminVerificationPage({
         )}
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-brand-foreground-muted">
-          Page {page} of {totalPages}
-        </p>
-        <div className="flex items-center gap-2">
-          {hasPrev ? (
-            <Link
-              href={`/admin/verification?page=${page - 1}`}
-              className="rounded-lg border border-brand-border bg-white px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-surface"
-            >
-              Previous
-            </Link>
-          ) : (
-            <span className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-foreground-secondary">
-              Previous
-            </span>
-          )}
-          {hasNext ? (
-            <Link
-              href={`/admin/verification?page=${page + 1}`}
-              className="rounded-lg border border-brand-border bg-white px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-surface"
-            >
-              Next
-            </Link>
-          ) : (
-            <span className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-foreground-secondary">
-              Next
-            </span>
-          )}
-        </div>
-      </div>
+      <PaginationControls
+        basePath="/admin/verification"
+        page={page}
+        totalPages={totalPages}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+      />
     </div>
   );
 }

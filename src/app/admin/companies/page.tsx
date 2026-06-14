@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import {
   UserRole,
@@ -10,6 +9,7 @@ import {
 import { AdminCompaniesTable } from "@/modules/admin/components/AdminCompaniesTable";
 import { AdminBadge } from "@/modules/admin/components/AdminBadge";
 import { PLAN_TIER_DISPLAY } from "@/modules/admin/utils/status-display";
+import { PaginationControls } from "@/components/shared/PaginationControls";
 
 interface AdminCompaniesPageProps {
   searchParams?: { page?: string };
@@ -114,37 +114,13 @@ export default async function AdminCompaniesPage({
 
       <AdminCompaniesTable companies={companies} />
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-brand-foreground-muted">
-          Page {page} of {totalPages}
-        </p>
-        <div className="flex items-center gap-2">
-          {hasPrev ? (
-            <Link
-              href={`/admin/companies?page=${page - 1}`}
-              className="rounded-lg border border-brand-border bg-white px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-surface"
-            >
-              Previous
-            </Link>
-          ) : (
-            <span className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-foreground-secondary">
-              Previous
-            </span>
-          )}
-          {hasNext ? (
-            <Link
-              href={`/admin/companies?page=${page + 1}`}
-              className="rounded-lg border border-brand-border bg-white px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-surface"
-            >
-              Next
-            </Link>
-          ) : (
-            <span className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-foreground-secondary">
-              Next
-            </span>
-          )}
-        </div>
-      </div>
+      <PaginationControls
+        basePath="/admin/companies"
+        page={page}
+        totalPages={totalPages}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+      />
     </div>
   );
 }

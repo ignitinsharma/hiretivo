@@ -44,10 +44,10 @@ export function HeroRecruiterSection() {
             <span className="relative inline-block text-brand-primary">
               verified
               <DecorativeUnderline className="absolute -bottom-3 left-0 h-3 w-full text-brand-primary/70" />
-            </span>
+            </span>{" "}
+            Indian engineers
             <br />
-            engineers you can <br />
-            trust.
+            for your startup.
           </h1>
 
           {/* Subtext */}

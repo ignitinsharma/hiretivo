@@ -1,7 +1,11 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { JobListItem } from '@/modules/jobs/types/job.types';
-import type { SeekerDashboardData, SeekerInterview } from '@/modules/seeker/dashboard/types/dashboard.types';
+import type {
+  ProfileStrengthSummary,
+  SeekerDashboardData,
+  SeekerInterview,
+} from '@/modules/seeker/dashboard/types/dashboard.types';
 
 interface DataResponse<T> {
   data: T;
@@ -45,6 +49,7 @@ export interface SeekerSettingsData {
   state: string | null;       // derived by GET endpoint via parseLegacyLocation
   situation: string;
   primaryRole: string;
+  workPreference: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
   currency: string;
@@ -56,6 +61,7 @@ export interface SeekerSettingsData {
   githubUrl: string | null;
   twitterUrl: string | null;
   yearsExperience: number | null;
+  profileStrength: ProfileStrengthSummary;
   workExperiences: WorkExperienceItem[];
   educations: EducationItem[];
 }

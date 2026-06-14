@@ -1,12 +1,9 @@
-import React from "react";
-import {
-  User,
-  Shield,
-  Trash2,
-  Link,
-  Briefcase,
-  GraduationCap,
-} from "lucide-react";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { User, Shield, Link, Briefcase, GraduationCap } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "#account", label: "Account", icon: User },
@@ -16,11 +13,79 @@ const NAV_ITEMS = [
   { href: "#security", label: "Password & Security", icon: Shield },
 ] as const;
 
+type SettingsHash = (typeof NAV_ITEMS)[number]["href"];
+
+const DEFAULT_HASH: SettingsHash = "#account";
+const NAV_HASHES = new Set(NAV_ITEMS.map((item) => item.href));
+
+/*
+ * isSettingsHash
+ * Narrows arbitrary location hashes to supported seeker settings sections.
+ */
+function isSettingsHash(value: string): value is SettingsHash {
+  return NAV_HASHES.has(value as SettingsHash);
+}
+
+/*
+ * getActiveHashFromLocation
+ * Reads the current settings hash and falls back to Account for unknown hashes.
+ */
+function getActiveHashFromLocation(): SettingsHash {
+  if (typeof window === "undefined") return DEFAULT_HASH;
+  return isSettingsHash(window.location.hash)
+    ? window.location.hash
+    : DEFAULT_HASH;
+}
+
+/*
+ * SettingsSidebar
+ * Sticky seeker settings section navigation that follows the current hash/section.
+ */
 export function SettingsSidebar() {
+  const [activeHash, setActiveHash] = useState<SettingsHash>(DEFAULT_HASH);
+
+  useEffect(() => {
+    setActiveHash(getActiveHashFromLocation());
+
+    const handleHashChange = (): void => {
+      setActiveHash(getActiveHashFromLocation());
+    };
+
+    const sections = NAV_ITEMS.map((item) =>
+      document.getElementById(item.href.slice(1)),
+    ).filter((section): section is HTMLElement => Boolean(section));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (!visibleEntry?.target.id) return;
+        const nextHash = `#${visibleEntry.target.id}`;
+        if (isSettingsHash(nextHash)) {
+          setActiveHash(nextHash);
+        }
+      },
+      {
+        rootMargin: "-20% 0px -65% 0px",
+        threshold: [0, 0.1, 0.25],
+      },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
   return (
-    <aside className="w-full md:w-64 shrink-0">
-      <nav className="sticky top-24 flex flex-col gap-1">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">
+    <aside className="w-full shrink-0 md:w-72">
+      <nav className="sticky top-24 flex flex-col gap-3">
+        <p className="px-6 text-xs font-bold uppercase tracking-wider text-brand-foreground-secondary">
           Settings
         </p>
 
@@ -28,10 +93,15 @@ export function SettingsSidebar() {
           <a
             key={href}
             href={href}
-            className="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors leading-loose"
+            aria-current={activeHash === href ? "true" : undefined}
+            className={cn(
+              "flex items-center gap-5 rounded-xl border-l-4 border-transparent px-5 py-4 text-brand-foreground-muted transition-colors hover:bg-brand-surface hover:text-brand-foreground",
+              activeHash === href &&
+                "border-brand-primary bg-brand-primary/5 text-brand-primary",
+            )}
           >
-            <Icon className="w-5 h-5" aria-hidden="true" />
-            <span className="text-sm">{label}</span>
+            <Icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+            <span className="text-base font-medium">{label}</span>
           </a>
         ))}
       </nav>

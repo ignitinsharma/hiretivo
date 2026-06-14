@@ -18,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Hiretivo: Hire Verified Indian Engineers",
+  title: "Hire Verified Indian Engineers for Your Startup | Hiretivo",
   description:
-    "Curated marketplace of pre-verified Indian engineers for US and EU startups. Browse talent, see real skills, hire faster.",
+    "Curated marketplace of pre-verified Indian engineers for startups worldwide. Browse talent, see real skills, hire faster.",
   icons: {
     icon: "/favicon.png",
   },
