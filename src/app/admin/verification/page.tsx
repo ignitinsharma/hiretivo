@@ -2,6 +2,9 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
+import { VerificationStatus } from "@/constants/enums";
+import { VERIFICATION_STATUS_DISPLAY } from "@/modules/admin/utils/status-display";
+import { AdminBadge } from "@/modules/admin/components/AdminBadge";
 
 /*
  * /admin/verification
@@ -73,21 +76,28 @@ export default async function AdminVerificationPage({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px]">
-              <thead className="bg-brand-surface text-left text-xs uppercase tracking-wider text-brand-foreground-muted">
+              <thead className="border-b border-brand-border bg-brand-surface text-left text-xs uppercase tracking-wider text-brand-foreground-muted">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Role</th>
-                  <th className="px-4 py-3">Submitted</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Role</th>
+                  <th className="px-4 py-3 font-medium">Submitted</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 text-right font-medium">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => {
                   const submittedAt = u.seekerProfile?.submittedForReviewAt;
+                  const statusDisplay =
+                    VERIFICATION_STATUS_DISPLAY[
+                      u.verificationStatus as VerificationStatus
+                    ];
                   return (
-                    <tr key={u.id} className="border-t border-brand-border">
+                    <tr
+                      key={u.id}
+                      className="border-t border-brand-border transition-colors hover:bg-brand-surface"
+                    >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <InitialsAvatar
@@ -115,9 +125,10 @@ export default async function AdminVerificationPage({
                           : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                          Pending Review
-                        </span>
+                        <AdminBadge
+                          label={statusDisplay.label}
+                          className={statusDisplay.badge}
+                        />
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Link

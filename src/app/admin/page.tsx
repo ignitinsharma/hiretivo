@@ -12,7 +12,14 @@ export default async function AdminOverviewPage() {
   const stats = await getOverviewStats();
   return (
     <div className="space-y-6">
-      <h1 className="font-bold text-2xl text-brand-foreground">Overview</h1>
+      <div>
+        <h1 className="font-bold text-2xl tracking-tight text-brand-foreground">
+          Overview
+        </h1>
+        <p className="mt-1 text-sm text-brand-foreground-muted">
+          Platform health at a glance — candidates, companies, and jobs.
+        </p>
+      </div>
       <AdminOverviewStats stats={stats} />
     </div>
   );

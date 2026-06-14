@@ -8,6 +8,8 @@ import {
   PLAN_TIER_VALUES,
 } from "@/constants/enums";
 import { AdminCompaniesTable } from "@/modules/admin/components/AdminCompaniesTable";
+import { AdminBadge } from "@/modules/admin/components/AdminBadge";
+import { PLAN_TIER_DISPLAY } from "@/modules/admin/utils/status-display";
 
 interface AdminCompaniesPageProps {
   searchParams?: { page?: string };
@@ -83,23 +85,31 @@ export default async function AdminCompaniesPage({
   const hasNext = page * PAGE_SIZE < total;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
-        <h1 className="font-bold text-2xl text-brand-foreground">Companies</h1>
-        <p className="text-sm text-brand-foreground-muted mt-1">
-          {total} {total === 1 ? "company" : "companies"}
+        <h1 className="font-bold text-2xl tracking-tight text-brand-foreground">
+          Companies
+        </h1>
+        <p className="mt-1 text-sm text-brand-foreground-muted">
+          {total} {total === 1 ? "company" : "companies"} on the platform
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {PLAN_TIER_VALUES.map((tier) => (
-          <div
-            key={tier}
-            className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-foreground"
-          >
-            <span className="font-medium">{tier}</span>: {planCounts[tier]}
-          </div>
-        ))}
+        {PLAN_TIER_VALUES.map((tier) => {
+          const display = PLAN_TIER_DISPLAY[tier];
+          return (
+            <div
+              key={tier}
+              className="flex items-center gap-2 rounded-lg border border-brand-border bg-white px-3 py-2"
+            >
+              <AdminBadge label={display.label} className={display.badge} />
+              <span className="font-semibold text-sm text-brand-foreground">
+                {planCounts[tier]}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <AdminCompaniesTable companies={companies} />
