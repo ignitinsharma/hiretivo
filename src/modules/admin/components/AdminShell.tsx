@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import { Logo } from "@/components/shared/Logo";
 
 const NAV = [
   { href: "/admin", label: "Overview" },
@@ -35,16 +35,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-10 border-b border-brand-border bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/admin" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-primary text-brand-primary-foreground">
-              <ShieldCheck className="h-5 w-5" />
-            </span>
-            <span className="flex flex-col leading-none">
-              <span className="font-bold text-base text-brand-foreground">
-                Hiretivo
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-brand-foreground-secondary">
-                Admin
-              </span>
+            <Logo size="md" />
+            <span className="rounded-md border border-brand-primary/20 bg-brand-primary/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-brand-primary">
+              Admin
             </span>
           </Link>
           <nav className="flex flex-wrap gap-1.5">
