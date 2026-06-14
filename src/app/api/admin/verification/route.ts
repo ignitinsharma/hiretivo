@@ -8,8 +8,9 @@ const adminVerificationReadLimiter = createRateLimiter("admin-verification-read"
 
 /*
  * GET /api/admin/verification
- * Lists all seekers with PENDING or IN_REVIEW verification status.
- * Returns a lightweight row per user sufficient for the queue list UI.
+ * Lists seekers with PENDING or IN_REVIEW verification status, server-side
+ * paginated (skip/take, PAGE_SIZE 25) with a NaN-guarded ?page param.
+ * Returns a lightweight row per user plus { total, page, pageSize } metadata.
  * Returns 403 for non-admin sessions, 429 on rate limit.
  */
 export async function GET(req: NextRequest) {
@@ -27,6 +28,11 @@ export async function GET(req: NextRequest) {
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
+
+  const rawPage = req.nextUrl.searchParams.get("page") ?? undefined;
+  const parsed = parseInt(rawPage ?? "1", 10);
+  const page = Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+  const PAGE_SIZE = 25;
 
   const users = await prisma.user.findMany({
     where: {
@@ -48,6 +54,15 @@ export async function GET(req: NextRequest) {
       },
     },
     orderBy: { seekerProfile: { submittedForReviewAt: "asc" } },
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+  });
+
+  const total = await prisma.user.count({
+    where: {
+      role: "SEEKER",
+      verificationStatus: { in: ["PENDING", "IN_REVIEW"] },
+    },
   });
 
   const data = users.map((u) => ({
@@ -61,5 +76,5 @@ export async function GET(req: NextRequest) {
     verificationStatus: u.verificationStatus,
   }));
 
-  return NextResponse.json({ data });
+  return NextResponse.json({ data, total, page, pageSize: PAGE_SIZE });
 }

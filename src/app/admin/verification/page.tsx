@@ -5,11 +5,21 @@ import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 
 /*
  * /admin/verification
- * Server component queue list. Fetches all PENDING and IN_REVIEW engineers directly
- * from the database. Renders a table with a View link to the individual review page.
+ * Server component queue list. Fetches a server-side bounded (skip/take) page of
+ * PENDING and IN_REVIEW engineers with a NaN-guarded ?page param, rendering a table
+ * with a View link to the individual review page plus Prev/Next pagination controls.
  * Layout is wrapped by the parent /admin/layout.tsx which handles auth + AdminShell.
  */
-export default async function AdminVerificationPage() {
+export default async function AdminVerificationPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const rawPage = searchParams.page;
+  const parsed = parseInt(rawPage ?? "1", 10);
+  const page = Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+  const PAGE_SIZE = 25;
+
   const users = await prisma.user.findMany({
     where: {
       role: "SEEKER",
@@ -29,7 +39,20 @@ export default async function AdminVerificationPage() {
       },
     },
     orderBy: { seekerProfile: { submittedForReviewAt: "asc" } },
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   });
+
+  const total = await prisma.user.count({
+    where: {
+      role: "SEEKER",
+      verificationStatus: { in: ["PENDING", "IN_REVIEW"] },
+    },
+  });
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const hasPrev = page > 1;
+  const hasNext = page * PAGE_SIZE < total;
 
   return (
     <div className="space-y-4">
@@ -37,7 +60,7 @@ export default async function AdminVerificationPage() {
         <div>
           <h1 className="font-bold text-2xl text-brand-foreground">Verification queue</h1>
           <p className="text-sm text-brand-foreground-muted mt-1">
-            Engineers awaiting review — {users.length} pending
+            Engineers awaiting review — {total} pending
           </p>
         </div>
       </div>
@@ -111,6 +134,38 @@ export default async function AdminVerificationPage() {
             </table>
           </div>
         )}
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-brand-foreground-muted">
+          Page {page} of {totalPages}
+        </p>
+        <div className="flex items-center gap-2">
+          {hasPrev ? (
+            <Link
+              href={`/admin/verification?page=${page - 1}`}
+              className="rounded-lg border border-brand-border bg-white px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-surface"
+            >
+              Previous
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-foreground-secondary">
+              Previous
+            </span>
+          )}
+          {hasNext ? (
+            <Link
+              href={`/admin/verification?page=${page + 1}`}
+              className="rounded-lg border border-brand-border bg-white px-3 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-surface"
+            >
+              Next
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-foreground-secondary">
+              Next
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
