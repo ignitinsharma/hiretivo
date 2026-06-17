@@ -1,4 +1,3 @@
-[dotenv@17.3.1] injecting env (37) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
