@@ -24,7 +24,7 @@ jobs:
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@41.4.0
+        run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment Info
         run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
