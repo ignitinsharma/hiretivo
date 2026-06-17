@@ -11,19 +11,28 @@ CREATE TYPE "JobType" AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP
 CREATE TYPE "ApplyType" AS ENUM ('INTERNAL', 'EXTERNAL');
 
 -- CreateEnum
-CREATE TYPE "JobStatus" AS ENUM ('DRAFT', 'OPEN', 'PAUSED', 'CLOSED');
+CREATE TYPE "JobStatus" AS ENUM ('DRAFT', 'OPEN', 'PAUSED', 'CLOSED', 'UNPUBLISHED', 'DELETED');
 
 -- CreateEnum
 CREATE TYPE "SkillLevel" AS ENUM ('BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT');
 
 -- CreateEnum
-CREATE TYPE "AppStatus" AS ENUM ('PENDING', 'REVIEWED', 'SHORTLISTED', 'REJECTED', 'WITHDRAWN');
+CREATE TYPE "AppStatus" AS ENUM ('APPLIED', 'REVIEWING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED');
 
 -- CreateEnum
 CREATE TYPE "WorkType" AS ENUM ('REMOTE', 'HYBRID', 'ONSITE');
 
 -- CreateEnum
-CREATE TYPE "PlanTier" AS ENUM ('FREE', 'PRO', 'ENTERPRISE');
+CREATE TYPE "PlanTier" AS ENUM ('FREE', 'STARTER', 'GROWTH', 'SCALE');
+
+-- CreateEnum
+CREATE TYPE "VerificationStatus" AS ENUM ('NOT_SUBMITTED', 'PENDING', 'IN_REVIEW', 'VERIFIED', 'REJECTED');
+
+-- CreateEnum
+CREATE TYPE "SeekingStatus" AS ENUM ('ACTIVELY_LOOKING', 'OPEN_TO_OFFERS', 'NOT_LOOKING');
+
+-- CreateEnum
+CREATE TYPE "SubStatus" AS ENUM ('ACTIVE', 'PAST_DUE', 'CANCELED');
 
 -- CreateEnum
 CREATE TYPE "InterviewStatus" AS ENUM ('SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW');
@@ -38,6 +47,14 @@ CREATE TABLE "User" (
     "passwordHash" TEXT,
     "role" "Role" NOT NULL DEFAULT 'SEEKER',
     "plan" "PlanTier" NOT NULL DEFAULT 'FREE',
+    "billingCustomerId" TEXT,
+    "timezone" TEXT,
+    "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "onboardingStep" INTEGER,
+    "onboardingDraft" JSONB,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
+    "verificationStatus" "VerificationStatus" NOT NULL DEFAULT 'NOT_SUBMITTED',
+    "seekingStatus" "SeekingStatus" NOT NULL DEFAULT 'OPEN_TO_OFFERS',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -88,6 +105,28 @@ CREATE TABLE "SeekerProfile" (
     "location" TEXT,
     "yearsExperience" INTEGER,
     "workPreference" "WorkType",
+    "situation" TEXT,
+    "primaryRole" TEXT,
+    "salaryMin" INTEGER,
+    "salaryMax" INTEGER,
+    "currency" TEXT,
+    "availability" TEXT,
+    "resumeKey" TEXT,
+    "websiteUrl" TEXT,
+    "linkedinUrl" TEXT,
+    "githubUrl" TEXT,
+    "twitterUrl" TEXT,
+    "githubUsername" TEXT,
+    "videoIntroUrl" TEXT,
+    "topProjects" JSONB,
+    "salaryMinUsd" INTEGER,
+    "salaryMaxUsd" INTEGER,
+    "verificationNotes" TEXT,
+    "verificationReviewedAt" TIMESTAMP(3),
+    "verificationReviewedBy" TEXT,
+    "submittedForReviewAt" TIMESTAMP(3),
+    "digestEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "lastDigestSentAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -99,6 +138,7 @@ CREATE TABLE "Skill" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -122,6 +162,14 @@ CREATE TABLE "RecruiterProfile" (
     "companyName" TEXT NOT NULL,
     "website" TEXT,
     "bio" TEXT,
+    "companySize" TEXT,
+    "industry" TEXT,
+    "fundingType" TEXT,
+    "isFullyRemote" BOOLEAN NOT NULL DEFAULT false,
+    "logo" TEXT,
+    "emailNotifications" BOOLEAN NOT NULL DEFAULT true,
+    "applicationAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "interviewNotifications" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -141,7 +189,16 @@ CREATE TABLE "Job" (
     "salaryMin" INTEGER,
     "salaryMax" INTEGER,
     "currency" TEXT,
+    "experienceLevel" TEXT,
+    "category" TEXT,
     "externalApplyUrl" TEXT,
+    "companyName" TEXT,
+    "companyLogoUrl" TEXT,
+    "companyWebsite" TEXT,
+    "companySize" TEXT,
+    "companyIndustry" TEXT,
+    "companyFunding" TEXT,
+    "isAdminPosted" BOOLEAN NOT NULL DEFAULT false,
     "publishedAt" TIMESTAMP(3),
     "closedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -176,9 +233,10 @@ CREATE TABLE "Application" (
     "id" TEXT NOT NULL,
     "jobId" TEXT NOT NULL,
     "seekerId" TEXT NOT NULL,
-    "status" "AppStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "AppStatus" NOT NULL DEFAULT 'APPLIED',
     "matchScore" INTEGER NOT NULL,
     "coverLetter" TEXT,
+    "aiSummary" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -196,6 +254,7 @@ CREATE TABLE "Interview" (
     "endsAt" TIMESTAMP(3),
     "meetLink" TEXT,
     "notes" TEXT,
+    "scheduledTimeZone" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -212,6 +271,122 @@ CREATE TABLE "ClickEvent" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ClickEvent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EarlyAccessEmail" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EarlyAccessEmail_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BoostedJob" (
+    "id" TEXT NOT NULL,
+    "jobId" TEXT NOT NULL,
+    "recruiterId" TEXT NOT NULL,
+    "paymentId" TEXT,
+    "startsAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "BoostedJob_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Subscription" (
+    "id" TEXT NOT NULL,
+    "dodoSubscriptionId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "status" "SubStatus" NOT NULL,
+    "currentPeriodStart" TIMESTAMP(3) NOT NULL,
+    "currentPeriodEnd" TIMESTAMP(3) NOT NULL,
+    "cancelAtPeriodEnd" BOOLEAN NOT NULL DEFAULT false,
+    "scheduledPlan" "PlanTier",
+    "scheduledChangeAt" TIMESTAMP(3),
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SavedJob" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "jobId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SavedJob_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DismissedJob" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "jobId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "DismissedJob_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WorkExperience" (
+    "id" TEXT NOT NULL,
+    "seekerProfileId" TEXT NOT NULL,
+    "company" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "startDate" TEXT NOT NULL,
+    "endDate" TEXT,
+    "isCurrent" BOOLEAN NOT NULL DEFAULT false,
+    "description" TEXT,
+    "positionType" TEXT,
+    "skills" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WorkExperience_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Education" (
+    "id" TEXT NOT NULL,
+    "seekerProfileId" TEXT NOT NULL,
+    "institution" TEXT NOT NULL,
+    "graduationDate" TEXT,
+    "degree" TEXT,
+    "major" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Education_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerificationReview" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "reviewedBy" TEXT,
+    "status" "VerificationStatus" NOT NULL,
+    "scoreGiven" INTEGER,
+    "notes" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerificationReview_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EngineerUnlock" (
+    "id" TEXT NOT NULL,
+    "recruiterId" TEXT NOT NULL,
+    "engineerId" TEXT NOT NULL,
+    "source" TEXT NOT NULL DEFAULT 'talent_pool',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EngineerUnlock_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -263,6 +438,12 @@ CREATE INDEX "Job_status_idx" ON "Job"("status");
 CREATE INDEX "Job_createdAt_idx" ON "Job"("createdAt");
 
 -- CreateIndex
+CREATE INDEX "Job_isAdminPosted_idx" ON "Job"("isAdminPosted");
+
+-- CreateIndex
+CREATE INDEX "Job_status_createdAt_idx" ON "Job"("status", "createdAt");
+
+-- CreateIndex
 CREATE INDEX "JobSkill_skillId_idx" ON "JobSkill"("skillId");
 
 -- CreateIndex
@@ -282,6 +463,9 @@ CREATE INDEX "Application_seekerId_idx" ON "Application"("seekerId");
 
 -- CreateIndex
 CREATE INDEX "Application_status_idx" ON "Application"("status");
+
+-- CreateIndex
+CREATE INDEX "Application_jobId_status_idx" ON "Application"("jobId", "status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Application_jobId_seekerId_key" ON "Application"("jobId", "seekerId");
@@ -306,6 +490,78 @@ CREATE INDEX "ClickEvent_userId_idx" ON "ClickEvent"("userId");
 
 -- CreateIndex
 CREATE INDEX "ClickEvent_createdAt_idx" ON "ClickEvent"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EarlyAccessEmail_email_key" ON "EarlyAccessEmail"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BoostedJob_jobId_key" ON "BoostedJob"("jobId");
+
+-- CreateIndex
+CREATE INDEX "BoostedJob_expiresAt_idx" ON "BoostedJob"("expiresAt");
+
+-- CreateIndex
+CREATE INDEX "BoostedJob_recruiterId_idx" ON "BoostedJob"("recruiterId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subscription_dodoSubscriptionId_key" ON "Subscription"("dodoSubscriptionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subscription_userId_key" ON "Subscription"("userId");
+
+-- CreateIndex
+CREATE INDEX "Subscription_userId_idx" ON "Subscription"("userId");
+
+-- CreateIndex
+CREATE INDEX "Subscription_dodoSubscriptionId_idx" ON "Subscription"("dodoSubscriptionId");
+
+-- CreateIndex
+CREATE INDEX "SavedJob_userId_idx" ON "SavedJob"("userId");
+
+-- CreateIndex
+CREATE INDEX "SavedJob_jobId_idx" ON "SavedJob"("jobId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SavedJob_userId_jobId_key" ON "SavedJob"("userId", "jobId");
+
+-- CreateIndex
+CREATE INDEX "DismissedJob_userId_idx" ON "DismissedJob"("userId");
+
+-- CreateIndex
+CREATE INDEX "DismissedJob_jobId_idx" ON "DismissedJob"("jobId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DismissedJob_userId_jobId_key" ON "DismissedJob"("userId", "jobId");
+
+-- CreateIndex
+CREATE INDEX "WorkExperience_seekerProfileId_idx" ON "WorkExperience"("seekerProfileId");
+
+-- CreateIndex
+CREATE INDEX "Education_seekerProfileId_idx" ON "Education"("seekerProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerificationReview_userId_idx" ON "VerificationReview"("userId");
+
+-- CreateIndex
+CREATE INDEX "VerificationReview_status_idx" ON "VerificationReview"("status");
+
+-- CreateIndex
+CREATE INDEX "VerificationReview_createdAt_idx" ON "VerificationReview"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "EngineerUnlock_recruiterId_idx" ON "EngineerUnlock"("recruiterId");
+
+-- CreateIndex
+CREATE INDEX "EngineerUnlock_engineerId_idx" ON "EngineerUnlock"("engineerId");
+
+-- CreateIndex
+CREATE INDEX "EngineerUnlock_source_idx" ON "EngineerUnlock"("source");
+
+-- CreateIndex
+CREATE INDEX "EngineerUnlock_createdAt_idx" ON "EngineerUnlock"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EngineerUnlock_recruiterId_engineerId_key" ON "EngineerUnlock"("recruiterId", "engineerId");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -360,3 +616,40 @@ ALTER TABLE "ClickEvent" ADD CONSTRAINT "ClickEvent_jobId_fkey" FOREIGN KEY ("jo
 
 -- AddForeignKey
 ALTER TABLE "ClickEvent" ADD CONSTRAINT "ClickEvent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BoostedJob" ADD CONSTRAINT "BoostedJob_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BoostedJob" ADD CONSTRAINT "BoostedJob_recruiterId_fkey" FOREIGN KEY ("recruiterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SavedJob" ADD CONSTRAINT "SavedJob_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SavedJob" ADD CONSTRAINT "SavedJob_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DismissedJob" ADD CONSTRAINT "DismissedJob_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DismissedJob" ADD CONSTRAINT "DismissedJob_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkExperience" ADD CONSTRAINT "WorkExperience_seekerProfileId_fkey" FOREIGN KEY ("seekerProfileId") REFERENCES "SeekerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Education" ADD CONSTRAINT "Education_seekerProfileId_fkey" FOREIGN KEY ("seekerProfileId") REFERENCES "SeekerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerificationReview" ADD CONSTRAINT "VerificationReview_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EngineerUnlock" ADD CONSTRAINT "EngineerUnlock_recruiterId_fkey" FOREIGN KEY ("recruiterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EngineerUnlock" ADD CONSTRAINT "EngineerUnlock_engineerId_fkey" FOREIGN KEY ("engineerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
