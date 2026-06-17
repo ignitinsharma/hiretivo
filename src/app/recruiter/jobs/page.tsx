@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { useState, useMemo, useEffect } from "react";
 import {
   Plus,
@@ -104,7 +105,7 @@ function JobStatCard({ stat }: { stat: JobStatItem }) {
         <div className="flex items-baseline gap-2">
           <span
             className={cn(
-              "text-3xl font-extrabold",
+              "text-3xl font-bold",
               isPrimary ? "text-white" : "text-slate-900",
             )}
           >
@@ -187,11 +188,7 @@ function JobRow({
       </td>
       <td className="px-4 py-4">
         <p className="text-[11px] text-slate-600 font-medium">
-          {new Date(job.createdAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
+          {format(new Date(job.createdAt), 'MMM d, yyyy')}
         </p>
       </td>
       <td className="px-6 py-4 text-right">

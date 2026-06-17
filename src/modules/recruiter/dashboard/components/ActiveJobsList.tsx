@@ -1,5 +1,6 @@
 'use client';
 
+import { format } from 'date-fns';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -100,7 +101,7 @@ export function ActiveJobsList() {
                 <div>
                   <h3 className="font-bold capitalize text-slate-900">{job.title}</h3>
                   <p className="text-sm text-slate-500">
-                    {new Date(job.createdAt).toLocaleDateString()}
+                    {format(new Date(job.createdAt), 'MMM d, yyyy')}
                   </p>
                 </div>
                 <div className="flex items-center gap-8">

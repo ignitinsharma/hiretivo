@@ -32,6 +32,7 @@ export function RecommendedJobsList() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["seeker-feed"],
     queryFn: seekerService.getFeed,
+    staleTime: 30_000,
   });
   const { data: savedJobs } = useSavedJobs();
   const saveMutation = useSaveJob();

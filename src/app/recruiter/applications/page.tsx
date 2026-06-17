@@ -120,7 +120,6 @@ function Sparkline({ isPrimary }: { isPrimary: boolean }) {
 }
 
 export default function RecruiterApplicationsPage() {
-  const [jobId] = useState<string | undefined>(undefined);
   const [stageFilter, setStageFilter] = useState<ApplicationStatus | null>(
     null,
   );
@@ -133,15 +132,16 @@ export default function RecruiterApplicationsPage() {
   const { openCandidateDrawer, selectedApplicationId } = useUIStore();
 
   const statsQuery = useQuery({
-    queryKey: ["recruiter-application-stats", jobId],
-    queryFn: () => fetchRecruiterStats(jobId),
+    queryKey: ["recruiter-application-stats"],
+    queryFn: () => fetchRecruiterStats(undefined),
     staleTime: 5 * 60_000,
   });
 
   const applicationsQuery = useQuery({
-    queryKey: ["recruiter-applications", jobId, stageFilter, search, cursor],
+    queryKey: ["recruiter-applications", stageFilter, search, cursor],
     queryFn: () =>
-      fetchRecruiterApplications(cursor, stageFilter, search, jobId),
+      fetchRecruiterApplications(cursor, stageFilter, search, undefined),
+    staleTime: 30_000,
   });
 
   const applications = applicationsQuery.data?.applications ?? [];
@@ -447,7 +447,7 @@ export default function RecruiterApplicationsPage() {
                       <div className="inline-flex flex-col items-end">
                         <span
                           className={cn(
-                            "font-extrabold text-lg leading-none",
+                            "font-bold text-lg leading-none",
                             application.matchScore >= 80
                               ? "text-gray-600"
                               : "text-slate-900",

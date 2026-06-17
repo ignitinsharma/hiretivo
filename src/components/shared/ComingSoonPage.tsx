@@ -106,7 +106,7 @@ export function ComingSoonPage() {
             Launching Soon
           </div>
 
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter text-foreground mb-4 leading-none">
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-foreground mb-4 leading-none">
             Coming <span className="text-black italic">Soon</span>
           </h1>
 

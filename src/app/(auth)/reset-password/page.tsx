@@ -66,7 +66,7 @@ function ResetPasswordContent() {
     <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12">
       <section className="w-full max-w-md space-y-8">
         <div className="space-y-3">
-          <h1 className="font-display text-4xl font-extrabold leading-tight text-foreground">
+          <h1 className="font-display text-4xl font-bold leading-tight text-foreground">
             Reset password
           </h1>
           <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745]">

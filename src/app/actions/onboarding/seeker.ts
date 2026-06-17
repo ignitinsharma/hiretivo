@@ -1,7 +1,7 @@
 "use server";
 
 import { auth, unstable_update } from "@/auth";
-import { SkillLevel, UserRole } from "@/constants/enums";
+import { SkillLevel, UserRole, VerificationStatus } from "@/constants/enums";
 import {
   mergeOnboardingDraft,
   nextProgressStep,
@@ -796,7 +796,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
   await prisma.user.update({
     where: { id: userId },
     data: {
-      verificationStatus: "PENDING",
+      verificationStatus: VerificationStatus.PENDING,
       onboardingCompleted: true,
       onboardingStep: null,
     },

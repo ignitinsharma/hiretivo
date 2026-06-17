@@ -188,7 +188,7 @@ export function ApplyJobModal() {
     <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader className="pt-2 pb-4">
-          <DialogTitle className="text-2xl font-extrabold tracking-tight text-slate-900">
+          <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">
             Apply for {selectedJobTitle || "this position"}
           </DialogTitle>
           <p className="text-slate-500 font-medium mt-1">

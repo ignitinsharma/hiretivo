@@ -103,7 +103,5 @@ export async function invalidateJobSkillsCache(jobId: string): Promise<void> {
     distinct: ['seekerProfileId'],
   });
 
-  for (const sp of seekerSkills) {
-    await invalidateSeekerCache(sp.seekerProfileId);
-  }
+  await Promise.all(seekerSkills.map((sp) => invalidateSeekerCache(sp.seekerProfileId)));
 }

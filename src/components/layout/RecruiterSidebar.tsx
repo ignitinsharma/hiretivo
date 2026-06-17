@@ -12,6 +12,7 @@ import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
 import { billingService } from "@/services/billing.service";
+import { useUIStore } from "@/store/use-ui-store";
 import {
   Tooltip,
   TooltipContent,
@@ -188,10 +189,7 @@ function RecruiterSidebarInner({
                 <Button
                   variant="primary"
                   className="transition-transform duration-200 hover:scale-105"
-                  onClick={() => {
-                    const { useUIStore } = require("@/store/use-ui-store");
-                    useUIStore.getState().openPostJobModal();
-                  }}
+                  onClick={() => useUIStore.getState().openPostJobModal()}
                 >
                   <Plus className="w-5 h-5" />
                 </Button>

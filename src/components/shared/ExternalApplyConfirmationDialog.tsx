@@ -116,7 +116,7 @@ export function ExternalApplyConfirmationDialog({
           });
           window.open(externalUrl, '_blank', 'noopener,noreferrer');
         }}
-        className="w-full rounded-full bg-brand-primary py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+        className="w-full rounded-lg bg-brand-primary py-3.5 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
       >
         Continue to Application
         <ExternalLink className="ml-2 h-4 w-4" />
@@ -128,7 +128,7 @@ export function ExternalApplyConfirmationDialog({
           if (!guardVerified()) return;
           setIsOpen(true);
         }}
-        className="w-full rounded-full bg-gray-100 font-semibold text-foreground transition-transform hover:scale-105 active:scale-95"
+        className="w-full rounded-lg bg-gray-100 font-semibold text-foreground transition-transform hover:scale-105 active:scale-95"
       >
         <CheckCircle2 className="mr-2 h-4 w-4" />
         I applied on {companyName}
@@ -149,7 +149,7 @@ export function ExternalApplyConfirmationDialog({
               type="button"
               variant="ghost"
               onClick={() => setIsOpen(false)}
-              className="rounded-full transition-transform hover:scale-105 active:scale-95"
+              className="rounded-lg transition-transform hover:scale-105 active:scale-95"
             >
               Not yet
             </Button>
@@ -157,7 +157,7 @@ export function ExternalApplyConfirmationDialog({
               type="button"
               onClick={confirmApplied}
               disabled={isConfirming}
-              className="rounded-full bg-brand-primary text-white transition-transform hover:scale-105 active:scale-95"
+              className="rounded-lg bg-brand-primary text-white transition-transform hover:scale-105 active:scale-95"
             >
               {isConfirming ? 'Confirming...' : 'Yes, I applied'}
             </Button>

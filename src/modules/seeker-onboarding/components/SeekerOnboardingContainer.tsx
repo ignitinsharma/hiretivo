@@ -94,10 +94,6 @@ export function SeekerOnboardingContainer({
     const result = await completeSeekerOnboarding();
 
     if (!result.success) {
-      console.error(
-        '[SeekerOnboardingContainer] completeSeekerOnboarding failed:',
-        result.error,
-      );
       setCurrentStep(result.missingStep);
       return;
     }
