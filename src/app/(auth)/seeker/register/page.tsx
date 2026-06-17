@@ -104,7 +104,8 @@ function SeekerRegisterContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [roleMismatch, setRoleMismatch] = React.useState(false);
-  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
+  const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] =
+    React.useState(false);
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch =
@@ -144,7 +145,12 @@ function SeekerRegisterContent() {
   }, [hasOAuthRoleMismatch, status, searchParams, router]);
 
   React.useEffect(() => {
-    if (status === "authenticated" && session?.user && !hasOAuthRoleMismatch && !isHandlingOAuthMismatch) {
+    if (
+      status === "authenticated" &&
+      session?.user &&
+      !hasOAuthRoleMismatch &&
+      !isHandlingOAuthMismatch
+    ) {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
@@ -315,11 +321,12 @@ function SeekerRegisterContent() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help" />
+                    <Info className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-sm leading-relaxed">
                     <p>
-                      Use the email where you&apos;ll receive interview shortlists, application updates, and messages from HR.
+                      Use the email where you&apos;ll receive interview
+                      shortlists, application updates, and messages from HR.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -362,7 +369,7 @@ function SeekerRegisterContent() {
             )}
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-center space-x-3 ">
             <Checkbox
               id="acceptTerms"
               className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
