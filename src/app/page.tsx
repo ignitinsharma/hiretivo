@@ -4,6 +4,7 @@ import { HeroRecruiterSection } from "@/components/home/HeroRecruiterSection";
 import { StatsBarSection } from "@/components/home/StatsBarSection";
 import { FeaturedEngineersSection } from "@/components/home/FeaturedEngineersSection";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
+import { AiFeaturesSection } from "@/components/home/AiFeaturesSection";
 import { WhyVerifiedSection } from "@/components/home/WhyVerifiedSection";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { EngineerCTASection } from "@/components/home/EngineerCTASection";
@@ -16,7 +17,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 
 export const metadata = generatePageMetadata({
-  title: "Hire Verified Indian Engineers",
+  title: "Hire verified Indian engineers for your startup.",
   description:
     "Every engineer is manually reviewed, proof-checked, and salary-transparent. Browse the verified talent pool and hire in 7 days.",
 });
@@ -57,6 +58,7 @@ export default async function Home() {
         <StatsBarSection />
         <FeaturedEngineersSection />
         <HowItWorksSection />
+        <AiFeaturesSection />
         <WhyVerifiedSection />
         <TestimonialsSection />
         <EngineerCTASection />

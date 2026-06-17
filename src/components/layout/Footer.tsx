@@ -26,9 +26,9 @@ export function Footer({ className }: FooterProps) {
               <Logo variant="white" size="lg" />
             </Link>
             <p className="text-gray-500 text-base mb-8">
-              Hiretivo helps US and EU startups discover verified Indian
-              engineers with clear skills, salary expectations, and availability
-              before the first call.
+              Hiretivo helps startups hire verified Indian engineers with clear
+              skills, salary expectations, and availability before the first
+              call.
             </p>
             <div className="flex gap-3">
               {SOCIAL_LINKS.map(({ href, icon: Icon, label }) => (

@@ -10,6 +10,7 @@ declare module "next-auth" {
       emailVerified: Date | null;
       onboardingCompleted: boolean | null;
       onboardingStep: number | null;
+      isAdmin: boolean;
     };
   }
 
@@ -29,5 +30,6 @@ declare module "next-auth/jwt" {
     emailVerified?: Date | null;
     onboardingCompleted?: boolean | null;
     onboardingStep?: number | null;
+    isAdmin?: boolean;
   }
 }

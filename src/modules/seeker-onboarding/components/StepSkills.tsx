@@ -109,7 +109,6 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
     setIsSaving(false);
 
     if (!result.success) {
-      console.error("[StepSkills] saveStep2 failed:", result.error);
       setServerError(result.error);
       return;
     }

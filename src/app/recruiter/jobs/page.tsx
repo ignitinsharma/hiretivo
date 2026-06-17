@@ -1,9 +1,9 @@
 "use client";
 
+import { format } from "date-fns";
 import { useState, useMemo, useEffect } from "react";
 import {
   Plus,
-  Upload,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/store/use-ui-store";
@@ -106,7 +105,7 @@ function JobStatCard({ stat }: { stat: JobStatItem }) {
         <div className="flex items-baseline gap-2">
           <span
             className={cn(
-              "text-3xl font-extrabold",
+              "text-3xl font-bold",
               isPrimary ? "text-white" : "text-slate-900",
             )}
           >
@@ -189,11 +188,7 @@ function JobRow({
       </td>
       <td className="px-4 py-4">
         <p className="text-[11px] text-slate-600 font-medium">
-          {new Date(job.createdAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
+          {format(new Date(job.createdAt), 'MMM d, yyyy')}
         </p>
       </td>
       <td className="px-6 py-4 text-right">
@@ -465,21 +460,6 @@ export default function RecruiterJobsPage() {
 
   return (
     <div className="w-full p-8">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6 mb-10">
-        <PageHeader
-          title="Active Jobs"
-          subtitle="Curate and manage your active job listings."
-          className="mb-0"
-        />
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={openPostJobModal}>
-            <Plus className="w-4 h-4" />
-            Post New Job
-          </Button>
-        </div>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         {JOB_STATS.map((stat) => (

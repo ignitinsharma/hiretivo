@@ -18,6 +18,7 @@ export function ApplicationList() {
   } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationService.getMyApplications,
+    staleTime: 30_000,
   });
 
   if (isLoading) {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { SkillLevel, UserRole } from "@/constants/enums";
 import { invalidateSeekerCache } from "@/lib/match";
 import { resolveLogoUrl } from "@/lib/r2";
+import { getProfileStrengthSummary } from "@/lib/seeker-dashboard";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
@@ -285,6 +286,7 @@ export async function GET() {
           location: true,
           situation: true,
           primaryRole: true,
+          workPreference: true,
           salaryMin: true,
           salaryMax: true,
           currency: true,
@@ -340,6 +342,7 @@ export async function GET() {
       skills: skills.map((s) => s.skill),
       workExperiences,
       educations,
+      profileStrength: getProfileStrengthSummary(profileFields),
     },
   });
 }

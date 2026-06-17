@@ -1,20 +1,18 @@
 "use client";
 
 import React, { createContext, useContext, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
-import { LifeBuoy, Plus, LogOut, PanelLeft } from "lucide-react";
+import { LifeBuoy, Plus, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
-import { signOut } from "next-auth/react";
 import { PlanTier } from "@/constants/enums";
 import { Button } from "../ui/button";
 import { billingService } from "@/services/billing.service";
-import { recruiterService } from "@/services/recruiter.service";
+import { useUIStore } from "@/store/use-ui-store";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +34,10 @@ export function useSidebarState() {
   return useContext(SidebarContext);
 }
 
+/*
+ * SidebarToggle
+ * Toggles the recruiter sidebar between expanded and icon-only states.
+ */
 export function SidebarToggle({ className }: { className?: string }) {
   const { toggle } = useSidebarState();
   return (
@@ -52,13 +54,16 @@ export function SidebarToggle({ className }: { className?: string }) {
   );
 }
 
+/*
+ * RecruiterSidebarProvider
+ * Provides recruiter sidebar state and wraps the recruiter app shell content.
+ */
 export function RecruiterSidebarProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const pathname = usePathname();
   const toggle = () => setCollapsed((c) => !c);
   const hideChrome = false;
 
@@ -75,19 +80,21 @@ export function RecruiterSidebarProvider({
   return (
     <SidebarContext.Provider value={{ collapsed, toggle }}>
       <div className="flex min-h-screen">
-        <RecruiterSidebarInner collapsed={collapsed} toggle={toggle} />
+        <RecruiterSidebarInner collapsed={collapsed} />
         <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
       </div>
     </SidebarContext.Provider>
   );
 }
 
+/*
+ * RecruiterSidebarInner
+ * Renders workflow navigation, plan state, and support access for recruiters.
+ */
 function RecruiterSidebarInner({
   collapsed,
-  toggle,
 }: {
   collapsed: boolean;
-  toggle: () => void;
 }) {
   const pathname = usePathname();
   const { data: session, status: sessionStatus } = useSession();
@@ -100,16 +107,6 @@ function RecruiterSidebarInner({
     staleTime: 60_000,
     enabled: !!session?.user,
   });
-
-  // Share cache with RecruiterSettingsClient — same key avoids redundant network call.
-  const { data: settingsData } = useQuery({
-    queryKey: ["recruiter-settings"],
-    queryFn: recruiterService.getSettings,
-    staleTime: 60_000,
-    enabled: !!session?.user,
-  });
-
-  const companyLogo = settingsData?.data?.logo ?? null;
 
   /*
    * currentPlan derivation — three phases must all resolve before showing a label:
@@ -134,22 +131,6 @@ function RecruiterSidebarInner({
   const isPaidPlan =
     currentPlan === PlanTier.STARTER || currentPlan === PlanTier.GROWTH || currentPlan === PlanTier.SCALE;
 
-  const userName = session?.user?.name ?? "Recruiter";
-  const initials =
-    userName
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "R";
-
-  const avatarUrl =
-    companyLogo ??
-    (session?.user?.image
-      ? session.user.image.startsWith("http")
-        ? session.user.image
-        : `/api/logo?key=${encodeURIComponent(session.user.image)}`
-      : null);
   const sidebarTooltipClasses =
     "rounded-lg border border-brand-border bg-white text-[#0a0a0a] shadow-none font-medium";
 
@@ -200,36 +181,6 @@ function RecruiterSidebarInner({
         {/* Divider */}
         <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
 
-        {/* User profile
-      <div
-        className={cn(
-          "px-5 py-4 flex items-center gap-3",
-          collapsed && "justify-center px-0",
-        )}
-      >
-        <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-black font-semibold text-sm ring-2 ring-gray-100">
-            {avatarUrl ? (
-              <Image src={avatarUrl} alt={initials} width={40} height={40} className="h-full w-full object-cover" />
-            ) : (
-              initials
-            )}
-          </div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-white" />
-        </div>
-        {!collapsed && (
-          <div className="flex flex-col overflow-hidden">
-            <span className="font-semibold text-base text-slate-900 truncate">
-              {userName}
-            </span>
-          
-          </div>
-        )}
-      </div> */}
-
-        {/* Divider */}
-        <div className="mx-4 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-50" />
-
         {/* Post New Job CTA */}
         <div className={cn("px-4 py-5", collapsed && "px-2 py-3")}>
           {collapsed ? (
@@ -238,10 +189,7 @@ function RecruiterSidebarInner({
                 <Button
                   variant="primary"
                   className="transition-transform duration-200 hover:scale-105"
-                  onClick={() => {
-                    const { useUIStore } = require("@/store/use-ui-store");
-                    useUIStore.getState().openPostJobModal();
-                  }}
+                  onClick={() => useUIStore.getState().openPostJobModal()}
                 >
                   <Plus className="w-5 h-5" />
                 </Button>
@@ -267,17 +215,12 @@ function RecruiterSidebarInner({
 
         {/* Navigation */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          {RECRUITER_NAV_ITEMS.map((item, index) => {
+          {RECRUITER_NAV_ITEMS.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-            const showSeparator = index === 4;
-
             return (
               <React.Fragment key={item.href}>
-                {showSeparator && (
-                  <div className="mx-3 my-2 h-px bg-linear-to-r from-transparent via-slate-200 to-transparent opacity-30" />
-                )}
                 {collapsed ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -340,7 +283,7 @@ function RecruiterSidebarInner({
           })}
         </nav>
 
-        {/* Sign Out */}
+        {/* Support */}
         <div className="border-t border-slate-200">
           {collapsed ? (
             <Tooltip>
@@ -364,29 +307,6 @@ function RecruiterSidebarInner({
               <LifeBuoy className="w-5 h-5 shrink-0" />
               <span>Contact & Support</span>
             </Link>
-          )}
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="w-full flex items-center gap-3 py-4 px-0 justify-center text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
-                >
-                  <LogOut className="w-5 h-5 shrink-0" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className={sidebarTooltipClasses}>
-                Sign Out
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="w-full flex items-center gap-3 py-4 px-6 text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
-            >
-              <LogOut className="w-5 h-5 shrink-0" />
-              <span>Sign Out</span>
-            </button>
           )}
         </div>
       </aside>

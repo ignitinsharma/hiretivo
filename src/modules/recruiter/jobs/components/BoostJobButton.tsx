@@ -1,5 +1,6 @@
 'use client';
 
+import { format } from 'date-fns';
 import { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,11 +24,7 @@ const BOOST_FEATURES = [
 ] as const;
 
 function formatBoostExpiry(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return format(new Date(isoString), 'MMM d, yyyy');
 }
 
 export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: BoostJobButtonProps) {

@@ -11,7 +11,7 @@ import {
 import { generatePageMetadata } from "@/lib/metadata";
 
 export const metadata = generatePageMetadata({
-  title: "Hire Verified Indian Engineers",
+  title: "Hire verified Indian engineers for your startup.",
   description:
     "Browse verified Indian engineers with salary transparency, proof signals, and profile unlocks for serious recruiter outreach.",
   path: "/hire-talent",

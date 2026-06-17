@@ -115,7 +115,7 @@ export function HireTalentHero() {
             </span>
           </div>
           <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-normal text-brand-foreground md:text-5xl lg:text-6xl">
-            Hire verified Indian engineers without guessing.
+            Hire verified Indian engineers for your startup.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-brand-foreground-muted">
             Browse verified profiles, compare salary expectations upfront, and

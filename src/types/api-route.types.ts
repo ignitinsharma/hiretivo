@@ -8,6 +8,7 @@ export interface SessionUser {
   emailVerified: Date | null;
   onboardingCompleted: boolean | null;
   onboardingStep: number | null;
+  isAdmin: boolean;
 }
 
 export interface AuthSession extends Session {

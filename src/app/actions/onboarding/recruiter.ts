@@ -1,7 +1,9 @@
 "use server";
 
 import { auth, unstable_update } from "@/auth";
-import { ApplyType, CurrencyCode, JobStatus, UserRole } from "@/constants/enums";
+import { ApplyType, CurrencyCode, JobStatus, SkillLevel, UserRole } from "@/constants/enums";
+import { invalidateJobSkillsCache } from "@/lib/match";
+import { resolveSkillNames } from "@/lib/skills/resolve-skill-names";
 import { getEmailVerificationStatus } from "@/lib/auth/email-verification";
 import {
   mergeOnboardingDraft,
@@ -137,22 +139,39 @@ export async function createJobFromOnboarding(data: {
   try {
     const verificationStatus = await getEmailVerificationStatus(session.user.id);
     const shouldPublish = verificationStatus?.isVerified === true;
-    const job = await prisma.job.create({
-      data: {
-        recruiterId: session.user.id,
-        title: parsed.data.title,
-        description: parsed.data.description,
-        jobType: parsed.data.jobType,
-        applyType: ApplyType.INTERNAL,
-        status: shouldPublish ? JobStatus.OPEN : JobStatus.DRAFT,
-        publishedAt: shouldPublish ? new Date() : null,
-        salaryMin: parsed.data.salaryMin,
-        salaryMax: parsed.data.salaryMax,
-        currency: CurrencyCode.USD,
-        experienceLevel: parsed.data.experienceLevel,
-        category: parsed.data.category,
-      },
+    const job = await prisma.$transaction(async (tx) => {
+      const created = await tx.job.create({
+        data: {
+          recruiterId: session.user.id,
+          title: parsed.data.title,
+          description: parsed.data.description,
+          jobType: parsed.data.jobType,
+          applyType: ApplyType.INTERNAL,
+          status: shouldPublish ? JobStatus.OPEN : JobStatus.DRAFT,
+          publishedAt: shouldPublish ? new Date() : null,
+          salaryMin: parsed.data.salaryMin,
+          salaryMax: parsed.data.salaryMax,
+          currency: CurrencyCode.USD,
+          experienceLevel: parsed.data.experienceLevel,
+          category: parsed.data.category,
+        },
+      });
+
+      const skills = await resolveSkillNames(tx, parsed.data.requiredSkills);
+      await tx.jobSkill.createMany({
+        data: skills.map((s) => ({
+          jobId: created.id,
+          skillId: s.id,
+          level: SkillLevel.INTERMEDIATE,
+        })),
+      });
+
+      return created;
     });
+
+    if (shouldPublish) {
+      await invalidateJobSkillsCache(job.id);
+    }
 
     await prisma.user.update({
       where: { id: session.user.id },

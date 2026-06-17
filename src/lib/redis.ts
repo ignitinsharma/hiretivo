@@ -147,25 +147,46 @@ export const cache = {
   },
 
   /**
-   * Get all keys matching a pattern (within current environment)
+   * Get all keys matching a pattern via cursor scan (non-blocking, O(N) spread across calls).
    * Example: cache.keys('user:*') → ['prod:user:123', 'prod:user:456']
    */
   async keys(pattern: string): Promise<string[]> {
     const prefix = getKeyPrefix();
     const prefixedPattern = `${prefix}:${pattern}`;
-    return redis.keys(prefixedPattern);
+    const collected: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await redis.scan(cursor, {
+        match: prefixedPattern,
+        count: 100,
+      });
+      cursor = nextCursor;
+      collected.push(...keys);
+    } while (cursor !== '0');
+    return collected;
   },
 
   /**
-   * Flush all keys in current environment only
+   * Flush all keys in current environment only via cursor scan — non-blocking.
    * CAUTION: This deletes ALL keys for the current environment!
    */
   async flushEnvironment(): Promise<void> {
     const prefix = getKeyPrefix();
-    const keys = await redis.keys(`${prefix}:*`);
+    const collected: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await redis.scan(cursor, {
+        match: `${prefix}:*`,
+        count: 100,
+      });
+      cursor = nextCursor;
+      collected.push(...keys);
+    } while (cursor !== '0');
 
-    if (keys.length > 0) {
-      await redis.del(...keys);
+    const BATCH = 100;
+    for (let i = 0; i < collected.length; i += BATCH) {
+      const batch = collected.slice(i, i + BATCH);
+      if (batch.length > 0) await redis.del(...batch);
     }
   },
 };

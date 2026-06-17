@@ -4,14 +4,9 @@ import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { VerificationReviewForm } from "@/modules/admin/components/VerificationReviewForm";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
-
-const STATUS_LABELS: Record<string, string> = {
-  NOT_SUBMITTED: "Not submitted",
-  PENDING: "Pending review",
-  IN_REVIEW: "In review",
-  VERIFIED: "Verified",
-  REJECTED: "Rejected",
-};
+import { AdminBadge } from "@/modules/admin/components/AdminBadge";
+import { VERIFICATION_STATUS_DISPLAY } from "@/modules/admin/utils/status-display";
+import { VerificationStatus } from "@/constants/enums";
 
 /*
  * /admin/verification/[id]
@@ -101,7 +96,8 @@ export default async function AdminVerificationDetailPage({
     ? (profile.topProjects as TopProject[])
     : [];
 
-  const statusLabel = STATUS_LABELS[user.verificationStatus] ?? user.verificationStatus;
+  const statusDisplay =
+    VERIFICATION_STATUS_DISPLAY[user.verificationStatus as VerificationStatus];
 
   return (
     <div className="space-y-6">
@@ -136,8 +132,11 @@ export default async function AdminVerificationDetailPage({
             )}
           </div>
         </div>
-        <span className="inline-flex items-center self-start rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-          {statusLabel}
+        <span className="self-start">
+          <AdminBadge
+            label={statusDisplay.label}
+            className={statusDisplay.badge}
+          />
         </span>
       </div>
 

@@ -1,8 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { ActiveJobsList } from "@/modules/recruiter/dashboard/components/ActiveJobsList";
 import { RecentApplicantsList } from "@/modules/recruiter/dashboard/components/RecentApplicantsList";
 import { ApplicationTrendChart } from "@/modules/recruiter/dashboard/components/ApplicationTrendChart";
@@ -113,23 +110,8 @@ function StatCardSkeleton() {
   );
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 export default function RecruiterDashboardPage() {
-  const { data: session } = useSession();
   const { data, isLoading } = useFetchRecruiterDashboard();
-  const [greeting, setGreeting] = useState<string | null>(null);
-
-  useEffect(() => {
-    setGreeting(getGreeting());
-  }, []);
-
-  const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
   const stats: DashboardStatItem[] = [
     {
@@ -157,18 +139,6 @@ export default function RecruiterDashboardPage() {
 
   return (
     <div className="w-full p-8 space-y-8">
-      {greeting ? (
-        <PageHeader
-          title={`${greeting}, ${firstName}.`}
-          subtitle="Here's what's happening with your recruitment pipeline today."
-        />
-      ) : (
-        <div className="space-y-2">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-4 w-80" />
-        </div>
-      )}
-
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (

@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
     <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12 ">
       <section className="mx-auto w-full max-w-md rounded-xl border border-gray-200 bg-white p-8">
         <div className="mb-8 space-y-3">
-          <h1 className="font-display text-4xl font-extrabold leading-tight text-foreground ">
+          <h1 className="font-display text-4xl font-bold leading-tight text-foreground ">
             Forgot your password?
           </h1>
           <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] ">
