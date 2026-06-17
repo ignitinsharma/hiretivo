@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel-build": "next build",
+    "vercel-build": "DATABASE_URL=\"$MIGRATE_DATABASE_URL\" prisma migrate deploy && next build",
     "verify:route-access": "tsx scripts/verify/route-access-control.ts",
     "verify:api-rate-limits": "tsx scripts/verify/api-rate-limits.ts",
     "seed:admin": "tsx scripts/seed-admin.ts",
