@@ -11,5 +11,11 @@
   },
   "github": {
     "silent": false
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "0 9 * * 1"
+    }
+  ]
 }
