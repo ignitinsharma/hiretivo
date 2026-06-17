@@ -1,0 +1,49 @@
+name: Vercel Deployment
+
+on:
+  push:
+    branches:
+      - develop
+      - staging
+      - main
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@41.4.0
+
+      - name: Pull Vercel Environment Info
+        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Apply committed Prisma migrations to the target environment's DB BEFORE
+      # the deploy. migrate deploy is forward-only and applies only reviewed,
+      # committed migrations — safe to automate. A failure aborts the job so the
+      # new code never deploys against an un-migrated DB. main → prod DB2,
+      # staging/develop → shared DB1. Direct (unpooled) URLs — pooler breaks DDL.
+      - name: Install dependencies (for migrations)
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply DB migrations
+        run: pnpm exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.PROD_DIRECT_URL || secrets.PREVIEW_DIRECT_URL }}
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
