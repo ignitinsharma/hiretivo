@@ -32,5 +32,20 @@ jobs:
       - name: Build Project
         run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
 
+      # Prod DB migrations run on main only, AFTER build and BEFORE deploy.
+      # A failed migration aborts the job so the new code is never deployed
+      # against an un-migrated database. Migrations need a DIRECT (unpooled)
+      # Neon connection — the pgbouncer pooler breaks Prisma's advisory locks —
+      # so PROD_DIRECT_URL must be the unpooled connection string.
+      - name: Install dependencies (for migrations)
+        if: github.ref == 'refs/heads/main'
+        run: pnpm install --frozen-lockfile
+
+      - name: Run prod DB migrations
+        if: github.ref == 'refs/heads/main'
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DIRECT_URL }}
+
       - name: Deploy to Vercel
         run: vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
