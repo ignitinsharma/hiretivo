@@ -256,3 +256,15 @@ export enum ProfileLinkVariant {
   GHOST = "ghost",
   BORDERED = "bordered",
 }
+
+/**
+ * Resolved state of the DB-backed user sitting behind a (valid) JWT session.
+ * Drives AuthGuard routing — MISSING must be handled distinctly from
+ * NOT_ONBOARDED to avoid the JWT-vs-DB redirect loop (stale cookie, deleted
+ * user, data reset). A missing user is an invalid session, not an unboarded one.
+ */
+export enum SessionUserState {
+  MISSING = "MISSING",
+  NOT_ONBOARDED = "NOT_ONBOARDED",
+  OK = "OK",
+}
