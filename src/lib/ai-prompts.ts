@@ -45,7 +45,11 @@ export interface AiSummaryData {
  */
 export function parseCandidateSummary(raw: string): AiSummaryData | null {
   try {
-    const cleaned = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const cleaned = raw
+      .trim()
+      .replace(/^```(?:json)?/i, "")
+      .replace(/```$/, "")
+      .trim();
     const parsed = JSON.parse(cleaned) as Partial<AiSummaryData>;
     if (
       typeof parsed.summary !== "string" ||
@@ -85,22 +89,24 @@ export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
     jobTitle,
   } = input;
 
-  const skillList = skills.length > 0 ? skills.join(', ') : 'No skills listed';
-  const jobSkillList = jobSkills.length > 0 ? jobSkills.join(', ') : 'Not specified';
-  const headlineText = headline ?? 'Not provided';
-  const roleText = primaryRole ?? 'Professional';
-  const expText = yearsExperience != null
-    ? `${yearsExperience} ${yearsExperience === 1 ? 'year' : 'years'}`
-    : 'Experience not specified';
-  const bioText = (bio ?? '').slice(0, 1000);
-  const workText = recentWork.length > 0
-    ? recentWork
-        .map((w) => `${w.title} at ${w.company}`)
-        .join('; ')
-    : 'No work history available';
-  const eduText = education?.degree && education?.institution
-    ? `${education.degree} from ${education.institution}`
-    : 'Education not specified';
+  const skillList = skills.length > 0 ? skills.join(", ") : "No skills listed";
+  const jobSkillList =
+    jobSkills.length > 0 ? jobSkills.join(", ") : "Not specified";
+  const headlineText = headline ?? "Not provided";
+  const roleText = primaryRole ?? "Professional";
+  const expText =
+    yearsExperience != null
+      ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"}`
+      : "Experience not specified";
+  const bioText = (bio ?? "").slice(0, 1000);
+  const workText =
+    recentWork.length > 0
+      ? recentWork.map((w) => `${w.title} at ${w.company}`).join("; ")
+      : "No work history available";
+  const eduText =
+    education?.degree && education?.institution
+      ? `${education.degree} from ${education.institution}`
+      : "Education not specified";
 
   return {
     system: `You are an expert recruitment analyst creating decision-ready candidate insights for hiring managers screening for a specific role.
@@ -239,10 +245,10 @@ TONE & QUALITY RULES:
 - ONLY use these HTML tags: <h2>, <h3>, <p>, <strong>, <em>, <ul>, <ol>, <li>, <br>.
 - ${isRegeneration ? "This is a regeneration request. Write a fresh alternative draft with different phrasing and examples while preserving the same facts, constraints, section order, and HTML rules." : "This is the first draft request. Write the strongest complete JD from the provided role facts."}
 
-Return ONLY the job description HTML — no preamble, no "Here is your JD:", no explanation.`,
+Return ONLY the job description HTML — no preamble, no "Here is your JD:", no explanation. Do NOT wrap the HTML in markdown code fences.`,
 
     user: `Role title: ${title}
-What this role is about: ${shortDesc}${vibe ? `\nCompany culture / vibe: ${vibe}` : ''}`,
+What this role is about: ${shortDesc}${vibe ? `\nCompany culture / vibe: ${vibe}` : ""}`,
   };
 }
 
