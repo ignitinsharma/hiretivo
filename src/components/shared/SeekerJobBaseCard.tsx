@@ -68,7 +68,7 @@ export function SeekerJobBaseCard({
                 alt={`${companyName} logo`}
                 width={64}
                 height={64}
-                className="h-full w-full object-contain p-2"
+                className="h-full w-full object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}

@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { UserRole } from "@/constants/enums";
 import { fetchRecruiterSettingsForPrefetch } from "@/lib/server/recruiter-data.server";
 import { QueryClient, dehydrate, type DehydratedState } from "@tanstack/react-query";
@@ -32,8 +33,15 @@ export default async function RecruiterLayout({
   const dehydratedState: DehydratedState = dehydrate(queryClient);
 
   return (
-    <RecruiterLayoutClient dehydratedState={dehydratedState}>
-      {children}
-    </RecruiterLayoutClient>
+    <AuthGuard
+      requiredRole={UserRole.RECRUITER}
+      loginPath="/recruiter/login"
+      onboardingPath="/recruiter/onboarding"
+      fallbackDashboard="/recruiter/dashboard"
+    >
+      <RecruiterLayoutClient dehydratedState={dehydratedState}>
+        {children}
+      </RecruiterLayoutClient>
+    </AuthGuard>
   );
 }

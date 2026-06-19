@@ -4,10 +4,12 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JobStatus } from '@/constants/enums';
 import { Plus, ArrowRight } from 'lucide-react';
 import { recruiterService } from '@/services/recruiter.service';
+import { useUIStore } from '@/store/use-ui-store';
 import type { ActiveJob } from '@/services/recruiter.service';
 
 const MAX_JOBS_DISPLAY = 5;
@@ -81,12 +83,13 @@ export function ActiveJobsList() {
             <p className="mt-1 text-sm text-slate-500">
               Create your first job and start attracting top talent.
             </p>
-            <Link
-              href="/recruiter/jobs"
-              className="mt-5 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-primary/20 transition-colors hover:bg-primary/90"
+            <Button
+              variant="primary"
+              onClick={() => useUIStore.getState().openPostJobModal()}
+              className="mt-5"
             >
               Create Your First Job
-            </Link>
+            </Button>
           </div>
         </div>
       ) : (
