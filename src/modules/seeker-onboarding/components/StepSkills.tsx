@@ -5,7 +5,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Construction,
-  Info,
   Plus,
   X,
   PlusCircle,
@@ -243,14 +242,9 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                 <label className="text-sm font-medium text-foreground">
                   Top skills <span className="text-red-500">*</span>
                 </label>
-                <p className="flex items-start gap-2 text-sm leading-relaxed text-brand-foreground-muted">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-primary" />
-                  <span>
-                    <span className="font-medium text-brand-foreground">
-                      Tip:
-                    </span>{" "}
-                    {SKILLS_MATCH_TIP}
-                  </span>
+                <p className="text-sm leading-relaxed text-brand-foreground-muted">
+                  <span className="font-medium text-brand-foreground">Tip:</span>{" "}
+                  {SKILLS_MATCH_TIP}
                 </p>
               </div>
 

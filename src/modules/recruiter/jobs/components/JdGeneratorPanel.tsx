@@ -51,6 +51,7 @@ export function JdGeneratorPanel({
 }: JdGeneratorPanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedJd, setGeneratedJd] = useState<string | null>(null);
+  const [hasApplied, setHasApplied] = useState(false);
   const shortDescRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
@@ -70,9 +71,23 @@ export function JdGeneratorPanel({
     setValue("title", prefillTitle);
     setValue("shortDesc", stripHtml(prefillDescription));
     if (open) {
-      setGeneratedJd(null);
+      setHasApplied(false);
     }
   }, [open, prefillTitle, prefillDescription, setValue]);
+
+  /*
+   * handleOpenChange
+   * Intercepts sheet close — auto-applies a pending generated JD so the
+   * recruiter never loses a generation by accidentally closing the panel.
+   */
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && generatedJd && !hasApplied) {
+      onGenerated(generatedJd);
+      setHasApplied(true);
+      toast.success("AI draft applied to description. Regenerate anytime.");
+    }
+    onOpenChange(nextOpen);
+  };
 
   useEffect(() => {
     const el = shortDescRef.current;
@@ -113,11 +128,12 @@ export function JdGeneratorPanel({
   const handleUseGeneratedJd = () => {
     if (!generatedJd) return;
     onGenerated(generatedJd);
+    setHasApplied(true);
     onOpenChange(false);
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-160 overflow-y-auto"

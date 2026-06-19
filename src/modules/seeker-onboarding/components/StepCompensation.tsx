@@ -5,7 +5,6 @@ import {
   ArrowRight,
   ArrowLeft,
   DollarSign,
-  Info,
   Upload,
   FileText,
   X,
@@ -67,12 +66,9 @@ const SALARY_TIP =
  */
 function FieldTip({ children }: { children: string }) {
   return (
-    <p className="flex items-start gap-2 text-sm leading-relaxed text-brand-foreground-muted">
-      <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-primary" />
-      <span>
-        <span className="font-medium text-brand-foreground">Tip:</span>{" "}
-        {children}
-      </span>
+    <p className="text-sm leading-relaxed text-brand-foreground-muted">
+      <span className="font-medium text-brand-foreground">Tip:</span>{" "}
+      {children}
     </p>
   );
 }

@@ -258,6 +258,7 @@ export function PostJobModal() {
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isJdPanelOpen, setIsJdPanelOpen] = useState(false);
+  const [hasJdGenerated, setHasJdGenerated] = useState(false);
   const [autoSuggestTrigger, setAutoSuggestTrigger] = useState(0);
   const [workType, setWorkType] = useState<WorkType>(WorkType.REMOTE);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">(
@@ -934,7 +935,7 @@ export function PostJobModal() {
                 aria-label="Open AI job description generator"
               >
                 <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Generate with AI
+                {hasJdGenerated ? "Regenerate with AI" : "Generate with AI"}
               </button>
             </div>
             <p className="mb-2 text-xs leading-relaxed text-brand-foreground-muted">
@@ -1173,6 +1174,7 @@ export function PostJobModal() {
               shouldDirty: true,
               shouldValidate: true,
             });
+            setHasJdGenerated(true);
             setIsJdPanelOpen(false);
             // Auto-trigger skill suggestions after JD is generated
             setAutoSuggestTrigger((prev) => prev + 1);

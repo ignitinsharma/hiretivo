@@ -29,24 +29,22 @@ interface CompanyProfileSectionProps {
 }
 
 const COMPANY_TYPE_OPTIONS = [
-  "SaaS",
-  "Fintech",
-  "EdTech",
-  "Marketplace",
-  "Agency",
-  "Healthcare",
-  "E-commerce",
-  "Other",
+  { value: "TECHNOLOGY", label: "Technology" },
+  { value: "FINANCE", label: "Finance" },
+  { value: "HEALTHCARE", label: "Healthcare" },
+  { value: "EDUCATION", label: "Education" },
+  { value: "OTHER", label: "Other" },
 ];
 
 const FUNDING_STAGE_OPTIONS = [
-  "Bootstrapped",
-  "Pre-seed",
-  "Seed funded",
-  "Series A",
-  "Series B+",
-  "Public company",
-  "Other",
+  { value: "BOOTSTRAPPED", label: "Bootstrapped" },
+  { value: "PRE_SEED", label: "Pre-seed" },
+  { value: "SEED", label: "Seed" },
+  { value: "SERIES_A", label: "Series A" },
+  { value: "SERIES_B", label: "Series B" },
+  { value: "SERIES_C", label: "Series C" },
+  { value: "SERIES_C_PLUS", label: "Series C+" },
+  { value: "PUBLICLY_TRADED", label: "Publicly Traded" },
 ];
 
 export function CompanyProfileSection({
@@ -168,8 +166,8 @@ export function CompanyProfileSection({
             </SelectTrigger>
             <SelectContent>
               {COMPANY_TYPE_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -195,8 +193,8 @@ export function CompanyProfileSection({
             </SelectTrigger>
             <SelectContent>
               {FUNDING_STAGE_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>

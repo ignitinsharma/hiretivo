@@ -1,37 +1,39 @@
-import { AuthGuard } from "@/components/auth/AuthGuard";
-import { AuthRedirectToast } from "@/components/auth/AuthRedirectToast";
-import { RecruiterHeader } from "@/components/layout/RecruiterHeader";
-import { RecruiterSidebarProvider } from "@/components/layout/RecruiterSidebar";
-import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
-import { PaidFeatureModal } from "@/components/shared/PaidFeatureModal";
-import { PostJobModal } from "@/modules/recruiter/jobs/components/PostJobModal";
-import { ReactQueryProvider } from "@/providers/query-provider";
+import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
+import { fetchRecruiterSettingsForPrefetch } from "@/lib/server/recruiter-data.server";
+import { QueryClient, dehydrate, type DehydratedState } from "@tanstack/react-query";
+import { RecruiterLayoutClient } from "./RecruiterLayoutClient";
 
-export default function RecruiterLayout({
+/*
+ * RecruiterLayout
+ * Async server component wrapping all /recruiter/* routes.
+ * Prefetches ["recruiter-settings"] and passes dehydrated state to the client
+ * shell so child pages render with warm cache — no blank-flash on settings/dashboard.
+ */
+export default async function RecruiterLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const queryClient = new QueryClient();
+
+  try {
+    const session = await auth();
+    if (session?.user?.id && session.user.role === UserRole.RECRUITER) {
+      await queryClient.prefetchQuery({
+        queryKey: ["recruiter-settings"],
+        queryFn: () => fetchRecruiterSettingsForPrefetch(session.user.id),
+      });
+    }
+  } catch {
+    // Prefetch failure is non-fatal — client useQuery handles it
+  }
+
+  const dehydratedState: DehydratedState = dehydrate(queryClient);
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <AuthGuard
-        requiredRole={UserRole.RECRUITER}
-        loginPath="/recruiter/login"
-        onboardingPath="/recruiter/onboarding"
-        fallbackDashboard="/recruiter/dashboard"
-      >
-        <ReactQueryProvider>
-          <RecruiterSidebarProvider>
-            <AuthRedirectToast />
-            <EmailVerificationBanner />
-            <RecruiterHeader />
-            {children}
-            <PostJobModal />
-            <PaidFeatureModal />
-          </RecruiterSidebarProvider>
-        </ReactQueryProvider>
-      </AuthGuard>
-    </div>
+    <RecruiterLayoutClient dehydratedState={dehydratedState}>
+      {children}
+    </RecruiterLayoutClient>
   );
 }
