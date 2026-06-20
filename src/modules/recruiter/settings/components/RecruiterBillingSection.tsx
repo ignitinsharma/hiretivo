@@ -101,6 +101,7 @@ export function RecruiterBillingSection({
               <Button
                 type="button"
                 variant="primary"
+                className="w-full"
                 onClick={() => portalMutation.mutate()}
                 loading={portalMutation.isPending}
                 loadingText="Opening..."
@@ -108,7 +109,7 @@ export function RecruiterBillingSection({
                 <CreditCard className="h-4 w-4" aria-hidden />
                 Manage billing
               </Button>
-              <Button asChild variant="secondary">
+              <Button asChild variant="secondary" className="w-full">
                 <Link href="/pricing">Explore higher plans</Link>
               </Button>
             </>
