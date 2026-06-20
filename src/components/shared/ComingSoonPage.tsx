@@ -26,8 +26,8 @@ interface FeatureCardProps {
 function FeatureCard({ icon, title, description, variant }: FeatureCardProps) {
   const variantClasses = {
     primary: 'bg-brand-primary text-white relative overflow-hidden group',
-    light: 'bg-gray-50 hover:bg-gray-200 border border-gray-200',
-    white: 'bg-white border border-gray-200 hover:-translate-y-1',
+    light: 'bg-gray-50 hover:bg-gray-200 border border-brand-border',
+    white: 'bg-white border border-brand-border hover:-translate-y-1',
   };
 
   const iconBgClasses = {
@@ -91,7 +91,7 @@ export function ComingSoonPage() {
         <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-gray-50/80 blur-[100px]" />
       </div>
 
-      <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-gray-200/80">
+      <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-brand-border/80">
         <nav className="flex justify-between items-center px-8 py-6 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3">
             <Logo size="md" />
@@ -188,7 +188,7 @@ export function ComingSoonPage() {
         </section>
       </main>
 
-      <footer className="w-full py-16 bg-transparent border-t border-gray-200">
+      <footer className="w-full py-16 bg-transparent border-t border-brand-border">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-8">
           <div className="flex items-center gap-2">
             <Logo />

@@ -29,7 +29,7 @@ export function PublicRecruiterDropdown() {
         className="invisible absolute left-1/2 top-full z-50 w-96 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
         role="menu"
       >
-        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+        <div className="overflow-hidden rounded-2xl border border-brand-border-light bg-white shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
           <Link
             href="/hire-talent"
             className="flex gap-4 px-5 py-4 transition-colors hover:bg-brand-surface focus:bg-brand-surface focus:outline-none"

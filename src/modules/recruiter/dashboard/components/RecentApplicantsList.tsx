@@ -85,8 +85,8 @@ export function RecentApplicantsList({
   isLoading,
 }: RecentApplicantsListProps) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col w-full h-full">
-      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
+    <div className="bg-white rounded-xl border border-brand-border overflow-hidden flex flex-col w-full h-full">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-brand-border">
         <h2 className="text-lg font-bold text-slate-900">Recent Applicants</h2>
         <Link
           href="/recruiter/applications"

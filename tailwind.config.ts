@@ -65,7 +65,7 @@ const config = {
           surface: '#f9fafb',
           "surface-hover": '#f3f4f6',
           /* Borders */
-          border: '#e5e7eb',
+          border: '#ededed',
           "border-light": '#f3f4f6',
           /* Semantic */
           success: '#16a34a',

@@ -95,7 +95,7 @@ export function getFitBadge(fitLevel: FitLevel): {
     default:
       return {
         label: "Unknown",
-        className: "bg-gray-100 text-gray-700 border border-gray-200",
+        className: "bg-gray-100 text-gray-700 border border-brand-border",
       };
   }
 }

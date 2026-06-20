@@ -90,7 +90,7 @@ function ExperienceForm({
   return (
     <form
       onSubmit={form.handleSubmit(onSave)}
-      className="space-y-4 rounded-xl border border-slate-200 p-4"
+      className="space-y-4 rounded-xl border border-brand-border p-4"
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
@@ -321,9 +321,9 @@ export function WorkExperienceSection() {
   return (
     <section
       id="experience"
-      className="rounded-xl border border-slate-200 bg-white"
+      className="rounded-xl border border-brand-border bg-white"
     >
-      <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
+      <div className="flex items-start justify-between gap-4 border-b border-brand-border-light p-6">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Work Experience</h3>
           <p className="text-sm text-slate-500">
@@ -421,7 +421,7 @@ function ExperienceCard({
   isRemoving,
 }: ExperienceCardProps) {
   return (
-    <div className="flex items-start justify-between gap-2 rounded-xl border border-slate-100 p-4">
+    <div className="flex items-start justify-between gap-2 rounded-xl border border-brand-border-light p-4">
       <div className="space-y-0.5">
         <p className="text-sm font-semibold text-slate-900">
           {entry.title} · {entry.company}

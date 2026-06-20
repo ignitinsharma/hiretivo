@@ -131,7 +131,7 @@ export function SkillsTagInput({
       {showDropdown && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-sm"
+          className="absolute z-10 mt-1 w-full rounded-md border border-brand-border bg-white shadow-sm"
         >
           {suggestions.map((skill) => (
             <button

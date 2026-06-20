@@ -5,12 +5,14 @@ import {
   CurrencyCode,
   JobStatus,
   UserRole,
+  VerificationStatus,
 } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { stripHtml } from "@/lib/utils";
 import { createApplicationSchema } from "@/lib/validations/application";
-import { applyRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
+import { applyRateLimiter, dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
+import { getMissingSkillNames } from "@/lib/seeker-dashboard";
 
 /*
  * formatSalaryRange
@@ -59,12 +61,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const { success: userSuccess } = await writeRateLimiter.limit(session.user.id);
+  if (!userSuccess) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   // Verification gate — only VERIFIED seekers may submit applications
   const seekerUser = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { verificationStatus: true },
   });
-  if (seekerUser?.verificationStatus !== "VERIFIED") {
+  if (seekerUser?.verificationStatus !== VerificationStatus.VERIFIED) {
     return NextResponse.json(
       { error: "Complete verification to apply to jobs" },
       { status: 403 },
@@ -189,6 +196,7 @@ export async function GET() {
           experienceLevel: true,
           skills: {
             select: {
+              skillId: true,
               skill: { select: { name: true } },
             },
           },
@@ -213,6 +221,13 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
+  // Seeker skill IDs for per-application matched/missing skill computation
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { skills: { select: { skillId: true } } },
+  });
+  const seekerSkillIds = seekerProfile?.skills.map((s) => s.skillId) ?? [];
+
   return NextResponse.json(
     applications.map((application) => ({
       id: application.id,
@@ -236,6 +251,10 @@ export async function GET() {
       companyFundingType:
         application.job.recruiter.recruiterProfile?.fundingType ?? null,
       skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
+      matchedSkillNames: application.job.skills
+        .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))
+        .map((jobSkill) => jobSkill.skill.name),
+      missingSkills: getMissingSkillNames(seekerSkillIds, application.job.skills),
       description: application.job.description ? stripHtml(application.job.description) : null,
       applicantCount: application.job._count.applications,
       status: application.status,

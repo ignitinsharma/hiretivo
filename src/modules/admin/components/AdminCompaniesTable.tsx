@@ -88,7 +88,7 @@ export function AdminCompaniesTable({ companies }: AdminCompaniesTableProps) {
                         className={
                           c.isActive
                             ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-gray-200 bg-gray-50 text-gray-500"
+                            : "border-brand-border bg-gray-50 text-gray-500"
                         }
                       />
                     </td>

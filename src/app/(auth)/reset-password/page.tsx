@@ -75,7 +75,7 @@ function ResetPasswordContent() {
         </div>
 
         {!token || !email ? (
-          <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-8">
+          <div className="space-y-6 rounded-xl border border-brand-border bg-white p-8">
             <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
               This reset link is invalid or has expired. Please request a new
               one.
@@ -88,7 +88,7 @@ function ResetPasswordContent() {
             </Button>
           </div>
         ) : (
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 rounded-xl border border-gray-200 bg-white p-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 rounded-xl border border-brand-border bg-white p-8">
             <div className="space-y-2">
               <Label
                 htmlFor="newPassword"
@@ -100,7 +100,7 @@ function ResetPasswordContent() {
                 id="newPassword"
                 autoComplete="new-password"
                 placeholder="Enter your new password"
-                className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                className="w-full h-14 px-5 bg-white border border-brand-border rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
                 error={!!form.formState.errors.newPassword}
                 {...form.register("newPassword")}
               />
@@ -122,7 +122,7 @@ function ResetPasswordContent() {
                 id="confirmPassword"
                 autoComplete="new-password"
                 placeholder="Confirm your new password"
-                className="w-full h-14 px-5 bg-white border border-slate-200 rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
+                className="w-full h-14 px-5 bg-white border border-brand-border rounded-lg focus:ring-0 focus:border-brand-primary outline-none transition-all placeholder:text-slate-400 text-slate-900"
                 error={!!form.formState.errors.confirmPassword}
                 {...form.register("confirmPassword")}
               />

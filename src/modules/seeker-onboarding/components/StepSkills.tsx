@@ -5,7 +5,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Construction,
-  Info,
   Plus,
   X,
   PlusCircle,
@@ -243,14 +242,9 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                 <label className="text-sm font-medium text-foreground">
                   Top skills <span className="text-red-500">*</span>
                 </label>
-                <p className="flex items-start gap-2 text-sm leading-relaxed text-brand-foreground-muted">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-primary" />
-                  <span>
-                    <span className="font-medium text-brand-foreground">
-                      Tip:
-                    </span>{" "}
-                    {SKILLS_MATCH_TIP}
-                  </span>
+                <p className="text-sm leading-relaxed text-brand-foreground-muted">
+                  <span className="font-medium text-brand-foreground">Tip:</span>{" "}
+                  {SKILLS_MATCH_TIP}
                 </p>
               </div>
 
@@ -316,7 +310,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                 {showSkillDropdown &&
                   skillSearch &&
                   filteredSkills.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg max-h-48 overflow-y-auto">
                       {filteredSkills
                         .filter(
                           (s) =>
@@ -342,7 +336,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                   )}
 
                 {noMatch && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg overflow-hidden">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg overflow-hidden">
                     <button
                       type="button"
                       className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-primary/5 text-sm text-primary font-medium transition-colors"

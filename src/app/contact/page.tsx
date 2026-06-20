@@ -145,7 +145,7 @@ export default function ContactPage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+          <div className="rounded-xl border border-brand-border bg-gray-50 p-6">
             <h2 className="text-lg font-semibold text-brand-foreground">
               What happens next
             </h2>
@@ -157,7 +157,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <div className="rounded-xl border border-brand-border bg-white p-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {MODE_OPTIONS.map((option) => {
               const isActive = option.type === mode;
@@ -172,10 +172,10 @@ export default function ContactPage() {
                   className={cn(
                     "rounded-lg border p-4 text-left transition-colors",
                     isLocked
-                      ? "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+                      ? "border-brand-border bg-gray-50 text-gray-400 cursor-not-allowed"
                       : isActive
                       ? "border-brand-primary bg-brand-primary text-white"
-                      : "border-gray-200 bg-white text-brand-foreground hover:bg-gray-50",
+                      : "border-brand-border bg-white text-brand-foreground hover:bg-gray-50",
                   )}
                 >
                   <span className="block text-sm font-semibold">

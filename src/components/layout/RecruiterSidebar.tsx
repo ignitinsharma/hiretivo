@@ -138,7 +138,7 @@ function RecruiterSidebarInner({
     <TooltipProvider delayDuration={0} skipDelayDuration={0}>
       <aside
         className={cn(
-          "sticky top-0 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden",
+          "sticky top-0 h-screen bg-white border-r border-brand-border flex flex-col shrink-0 transition-[width] duration-200 ease-in-out overflow-hidden",
           collapsed ? "w-17" : "w-65",
         )}
       >
@@ -284,7 +284,7 @@ function RecruiterSidebarInner({
         </nav>
 
         {/* Support */}
-        <div className="border-t border-slate-200">
+        <div className="border-t border-brand-border">
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>

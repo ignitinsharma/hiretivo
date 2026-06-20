@@ -20,6 +20,7 @@ import {
   RecruiterProfileSettingsSchema,
   type RecruiterProfileSettingsInput,
 } from "@/lib/validations/interview.schema";
+import { CompanyIndustry, FundingStage } from "@/constants/enums";
 import type { RecruiterSettingsData } from "@/services/recruiter.service";
 
 interface CompanyProfileSectionProps {
@@ -28,25 +29,23 @@ interface CompanyProfileSectionProps {
   isSaving: boolean;
 }
 
-const COMPANY_TYPE_OPTIONS = [
-  "SaaS",
-  "Fintech",
-  "EdTech",
-  "Marketplace",
-  "Agency",
-  "Healthcare",
-  "E-commerce",
-  "Other",
+const COMPANY_TYPE_OPTIONS: { value: CompanyIndustry; label: string }[] = [
+  { value: CompanyIndustry.TECHNOLOGY, label: "Technology" },
+  { value: CompanyIndustry.FINANCE, label: "Finance" },
+  { value: CompanyIndustry.HEALTHCARE, label: "Healthcare" },
+  { value: CompanyIndustry.EDUCATION, label: "Education" },
+  { value: CompanyIndustry.OTHER, label: "Other" },
 ];
 
-const FUNDING_STAGE_OPTIONS = [
-  "Bootstrapped",
-  "Pre-seed",
-  "Seed funded",
-  "Series A",
-  "Series B+",
-  "Public company",
-  "Other",
+const FUNDING_STAGE_OPTIONS: { value: FundingStage; label: string }[] = [
+  { value: FundingStage.BOOTSTRAPPED, label: "Bootstrapped" },
+  { value: FundingStage.PRE_SEED, label: "Pre-seed" },
+  { value: FundingStage.SEED, label: "Seed" },
+  { value: FundingStage.SERIES_A, label: "Series A" },
+  { value: FundingStage.SERIES_B, label: "Series B" },
+  { value: FundingStage.SERIES_C, label: "Series C" },
+  { value: FundingStage.SERIES_C_PLUS, label: "Series C+" },
+  { value: FundingStage.PUBLICLY_TRADED, label: "Publicly Traded" },
 ];
 
 export function CompanyProfileSection({
@@ -81,7 +80,7 @@ export function CompanyProfileSection({
   return (
     <form
       onSubmit={form.handleSubmit(handleSubmit)}
-      className="rounded-xl border border-gray-200 bg-white p-6"
+      className="rounded-xl border border-brand-border bg-white p-6"
     >
       <div className="mb-5 flex items-start justify-between gap-4">
         <h3 className="text-[22px] font-semibold leading-[1.25] tracking-[-0.396px] text-foreground ">
@@ -168,8 +167,8 @@ export function CompanyProfileSection({
             </SelectTrigger>
             <SelectContent>
               {COMPANY_TYPE_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -195,8 +194,8 @@ export function CompanyProfileSection({
             </SelectTrigger>
             <SelectContent>
               {FUNDING_STAGE_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -205,7 +204,7 @@ export function CompanyProfileSection({
             Funding context is optional; pick the closest match.
           </p>
         </div>
-        <label className="flex min-h-10 items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-foreground">
+        <label className="flex min-h-10 items-center justify-between rounded-lg border border-brand-border px-4 py-2 text-sm font-semibold text-foreground">
           Fully remote
           <Switch
             checked={form.watch("isFullyRemote") ?? false}

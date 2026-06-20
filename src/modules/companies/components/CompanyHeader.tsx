@@ -33,11 +33,11 @@ export function CompanyHeader({ company, openRoleCount }: CompanyHeaderProps) {
   const summary = company.industry ?? company.fundingType ?? `${openRoleCount} open ${openRoleCount === 1 ? 'role' : 'roles'}`;
 
   return (
-    <div className="mb-8 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div className="mb-8 rounded-xl border border-brand-border bg-white shadow-sm overflow-hidden">
       <div className="px-6 py-6 sm:px-8 sm:py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start md:items-center gap-5 sm:gap-6">
-            <div className="flex-shrink-0 h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex-shrink-0 h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center rounded-xl border border-brand-border bg-white shadow-sm overflow-hidden">
               {company.logoUrl ? (
                 <Image
                   src={company.logoUrl}

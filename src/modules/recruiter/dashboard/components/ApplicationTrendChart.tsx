@@ -96,8 +96,8 @@ export function ApplicationTrendChart({ data, isLoading }: ApplicationTrendChart
 
   if (isLoading) {
     return (
-      <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-200 space-y-2">
+      <section className="bg-white rounded-xl border border-brand-border overflow-hidden">
+        <div className="px-8 py-6 border-b border-brand-border space-y-2">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-72" />
         </div>
@@ -115,8 +115,8 @@ export function ApplicationTrendChart({ data, isLoading }: ApplicationTrendChart
   const dateLabels = getDateLabels(data);
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div className="px-8 py-6 border-b border-slate-200">
+    <section className="bg-white rounded-xl border border-brand-border overflow-hidden">
+      <div className="px-8 py-6 border-b border-brand-border">
         <h2 className="text-xl font-bold text-slate-900">
           Application Trend
         </h2>
@@ -129,10 +129,10 @@ export function ApplicationTrendChart({ data, isLoading }: ApplicationTrendChart
           <div className="flex items-end justify-between w-full h-48 relative">
             {/* Grid lines */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              <div className="border-b border-slate-100 w-full" />
-              <div className="border-b border-slate-100 w-full" />
-              <div className="border-b border-slate-100 w-full" />
-              <div className="border-b border-slate-100 w-full" />
+              <div className="border-b border-brand-border-light w-full" />
+              <div className="border-b border-brand-border-light w-full" />
+              <div className="border-b border-brand-border-light w-full" />
+              <div className="border-b border-brand-border-light w-full" />
             </div>
 
             {/* Chart SVG */}

@@ -54,7 +54,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
         data-purpose="main-navigation"
       >
         <div className="mx-auto max-w-440">
-          <div className="flex h-16 items-center justify-between gap-4 rounded-3xl border border-slate-100 bg-white px-5 shadow-[0_8px_40px_rgba(15,23,42,0.05)] md:px-7 lg:h-20">
+          <div className="flex h-16 items-center justify-between gap-4 rounded-3xl border border-brand-border-light bg-white px-5 shadow-[0_8px_40px_rgba(15,23,42,0.05)] md:px-7 lg:h-20">
             <Link href="/" className="flex items-center" data-purpose="logo">
               <Logo size="md" />
             </Link>
@@ -230,7 +230,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
 
           {/* Logged-in avatar + dropdown — seeker or recruiter */}
           {session && (
-            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+            <div className="flex items-center gap-3 pl-4 border-l border-brand-border">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="relative cursor-pointer flex items-center gap-2 group outline-none">

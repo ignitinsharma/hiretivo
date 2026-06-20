@@ -51,7 +51,7 @@ export function RecruiterProfileSection({
   return (
     <form
       onSubmit={form.handleSubmit(handleSubmit)}
-      className="rounded-xl border border-gray-200 bg-white p-6"
+      className="rounded-xl border border-brand-border bg-white p-6"
     >
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>

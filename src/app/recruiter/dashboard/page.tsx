@@ -41,7 +41,7 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
         "min-h-42.5 p-6 rounded-xl flex flex-col justify-between",
         isPrimary
           ? `${primaryGradient} text-white`
-          : "bg-white border border-slate-200 ",
+          : "bg-white border border-brand-border ",
       )}
     >
       <div className="flex items-center gap-3 mb-4">
@@ -100,7 +100,7 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="min-h-[170px] p-6 rounded-xl bg-white border border-slate-200 flex flex-col justify-between">
+    <div className="min-h-[170px] p-6 rounded-xl bg-white border border-brand-border flex flex-col justify-between">
       <Skeleton className="h-10 w-10 rounded-lg" />
       <div className="space-y-2">
         <Skeleton className="h-8 w-20" />

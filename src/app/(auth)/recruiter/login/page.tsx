@@ -59,7 +59,7 @@ const RecruiterLoginLeft = (
         </div>
       </div>
       <div className="mt-12 space-y-4">
-        <div className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 p-6 max-w-sm">
+        <div className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-border/50 p-6 max-w-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
@@ -75,7 +75,7 @@ const RecruiterLoginLeft = (
             <span className="px-2 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-bold rounded-full">12</span>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-brand-border-light">
               <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary text-xs font-bold">JD</div>
               <div className="flex-1">
                 <div className="h-2.5 w-20 bg-slate-200 rounded-full mb-1.5"></div>
@@ -83,7 +83,7 @@ const RecruiterLoginLeft = (
               </div>
               <span className="text-[10px] font-bold text-brand-primary">98%</span>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-brand-border-light">
               <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary text-xs font-bold">SK</div>
               <div className="flex-1">
                 <div className="h-2.5 w-24 bg-slate-200 rounded-full mb-1.5"></div>
@@ -271,11 +271,11 @@ function RecruiterLoginContent() {
         />
 
         <div className="relative flex items-center">
-          <div className="grow border-t border-slate-200"></div>
+          <div className="grow border-t border-brand-border"></div>
           <span className="shrink mx-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
             OR EMAIL
           </span>
-          <div className="grow border-t border-slate-200"></div>
+          <div className="grow border-t border-brand-border"></div>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -294,7 +294,7 @@ function RecruiterLoginContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -323,7 +323,7 @@ function RecruiterLoginContent() {
               id="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
