@@ -53,7 +53,7 @@ export function CompanyAvatarSection({
   };
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-6">
+    <section className="rounded-xl border border-brand-border bg-white p-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24">

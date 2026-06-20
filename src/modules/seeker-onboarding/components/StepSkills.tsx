@@ -310,7 +310,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                 {showSkillDropdown &&
                   skillSearch &&
                   filteredSkills.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg max-h-48 overflow-y-auto">
                       {filteredSkills
                         .filter(
                           (s) =>
@@ -336,7 +336,7 @@ export function StepSkills({ onNext, onBack }: StepSkillsProps) {
                   )}
 
                 {noMatch && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg overflow-hidden">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg overflow-hidden">
                     <button
                       type="button"
                       className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-primary/5 text-sm text-primary font-medium transition-colors"

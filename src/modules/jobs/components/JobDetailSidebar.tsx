@@ -76,7 +76,7 @@ export function JobDetailSidebar({
 
   return (
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="bg-white border border-brand-border rounded-xl p-5">
         <div className="flex justify-between items-start mb-4">
           <h3 className="font-bold text-slate-900 text-lg">Quick Apply</h3>
           <span className="px-2 py-1 bg-gray-100 text-black text-[10px] font-bold uppercase rounded leading-none">
@@ -85,7 +85,7 @@ export function JobDetailSidebar({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-xl border border-brand-border">
             <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
               Posted
             </p>
@@ -95,7 +95,7 @@ export function JobDetailSidebar({
                 : "Recently"}
             </p>
           </div>
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div className="bg-slate-50 p-3 rounded-xl border border-brand-border">
             <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
               Company
             </p>
@@ -143,7 +143,7 @@ export function JobDetailSidebar({
       </div>
 
       {/* Match Score Section */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="bg-white rounded-xl border border-brand-border p-5">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
           Match Score
         </h3>
@@ -217,18 +217,18 @@ export function JobDetailSidebar({
         )}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex justify-between items-center">
+      <div className="bg-white border border-brand-border rounded-xl overflow-hidden">
+        <div className="p-5 border-b border-brand-border flex justify-between items-center">
           <h3 className="font-bold text-slate-900">Compare Similar</h3>
           <span className="text-xs font-medium text-primary">
             {recommendedJobs.length} Available
           </span>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-brand-border-light">
           <div className="p-4 bg-primary/5 border-l-4 border-primary">
             <div className="flex gap-3 mb-2">
-              <div className="w-8 h-8 bg-white border border-slate-200 rounded flex items-center justify-center text-primary font-bold text-xs shrink-0">
+              <div className="w-8 h-8 bg-white border border-brand-border rounded flex items-center justify-center text-primary font-bold text-xs shrink-0">
                 {job.companyName.charAt(0)}
               </div>
               <div>
@@ -258,7 +258,7 @@ export function JobDetailSidebar({
               className="p-4 block hover:bg-slate-50 transition-colors group"
             >
               <div className="flex gap-3 mb-2">
-                <div className="w-8 h-8 bg-white border border-slate-200 rounded flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
+                <div className="w-8 h-8 bg-white border border-brand-border rounded flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
                   {similarJob.companyLogoUrl ? (
                     <Image
                       src={similarJob.companyLogoUrl}

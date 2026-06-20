@@ -35,8 +35,8 @@ export function ActiveJobsList() {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col w-full h-full">
-      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
+    <div className="bg-white rounded-xl border border-brand-border overflow-hidden flex flex-col w-full h-full">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-brand-border">
         <h2 className="text-lg font-bold text-slate-900">My Active Jobs</h2>
         <Link
           href="/recruiter/jobs"
@@ -46,7 +46,7 @@ export function ActiveJobsList() {
         </Link>
       </div>
       {isLoading ? (
-        <div className="divide-y divide-slate-100 flex-1">
+        <div className="divide-y divide-brand-border-light flex-1">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="px-6 py-5 flex items-center justify-between">
               <div className="space-y-2">
@@ -94,7 +94,7 @@ export function ActiveJobsList() {
         </div>
       ) : (
         <div className="flex flex-col flex-1">
-          <div className="divide-y divide-slate-100 flex-1">
+          <div className="divide-y divide-brand-border-light flex-1">
             {jobs.slice(0, MAX_JOBS_DISPLAY).map((job) => (
               <Link
                 key={job.id}
@@ -127,7 +127,7 @@ export function ActiveJobsList() {
             ))}
           </div>
           {jobs.length > MAX_JOBS_DISPLAY && (
-            <div className="border-t border-slate-200 px-6 py-4">
+            <div className="border-t border-brand-border px-6 py-4">
               <Link
                 href="/recruiter/jobs"
                 className="flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline"

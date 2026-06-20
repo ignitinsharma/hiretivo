@@ -47,7 +47,7 @@ const SeekerSignupLeft = (
         Work should fit your life, not the other way around.
       </h1>
 
-      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-md transform rotate-1 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-border/50 max-w-md transform rotate-1 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
@@ -76,7 +76,7 @@ const SeekerSignupLeft = (
           </div>
           <span className="text-[10px] font-medium text-slate-400">2m ago</span>
         </div>
-        <div className="bg-slate-50 p-4 rounded-xl flex items-center gap-4 border border-slate-100">
+        <div className="bg-slate-50 p-4 rounded-xl flex items-center gap-4 border border-brand-border-light">
           <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-600">
             S
           </div>
@@ -280,11 +280,11 @@ function SeekerRegisterContent() {
         />
 
         <div className="relative flex items-center">
-          <div className="grow border-t border-slate-200"></div>
+          <div className="grow border-t border-brand-border"></div>
           <span className="shrink mx-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">
             OR CONTINUE WITH EMAIL
           </span>
-          <div className="grow border-t border-slate-200"></div>
+          <div className="grow border-t border-brand-border"></div>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -300,7 +300,7 @@ function SeekerRegisterContent() {
               type="text"
               placeholder="John Doe"
               autoComplete="name"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("name")}
             />
             {form.formState.errors.name && (
@@ -337,7 +337,7 @@ function SeekerRegisterContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -358,7 +358,7 @@ function SeekerRegisterContent() {
               id="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -372,7 +372,7 @@ function SeekerRegisterContent() {
           <div className="flex items-center space-x-3 ">
             <Checkbox
               id="acceptTerms"
-              className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
+              className="mt-0.5 rounded border-brand-border data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
               checked={form.watch("acceptTerms")}
               onCheckedChange={(checked) =>
                 form.setValue("acceptTerms", checked === true)

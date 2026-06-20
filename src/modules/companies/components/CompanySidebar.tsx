@@ -50,7 +50,7 @@ export function CompanySidebar({ company, openRoleCount }: CompanySidebarProps) 
 
   return (
     <div className="flex flex-col gap-8 w-full lg:w-80 shrink-0">
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-brand-border bg-white p-6 shadow-sm">
         <h2 className="mb-5 text-lg font-bold text-slate-900">
           Company Quick Facts
         </h2>
@@ -58,7 +58,7 @@ export function CompanySidebar({ company, openRoleCount }: CompanySidebarProps) 
           {facts.map((fact, index) => (
             <div
               key={fact.label}
-              className={index === facts.length - 1 ? "flex justify-between pt-1" : "flex justify-between border-b border-slate-50 pb-3"}
+              className={index === facts.length - 1 ? "flex justify-between pt-1" : "flex justify-between border-b border-brand-border-light pb-3"}
             >
               <span className="text-sm text-slate-500">{fact.label}</span>
               <span className="text-right text-sm font-semibold text-slate-900">

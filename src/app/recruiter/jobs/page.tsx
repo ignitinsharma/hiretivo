@@ -80,7 +80,7 @@ function JobStatCard({ stat }: { stat: JobStatItem }) {
         "min-h-42.5 p-5 rounded-xl flex flex-col justify-between",
         isPrimary
           ? "bg-linear-to-br from-primary to-primary/80 text-white"
-          : "bg-white border border-slate-200",
+          : "bg-white border border-brand-border",
       )}
     >
       <div className="mb-4 flex items-center gap-3">
@@ -206,7 +206,7 @@ function JobRow({
             <PopoverContent
               align="end"
               sideOffset={4}
-              className="w-48 p-0 border-slate-200 rounded-xl shadow-xl ring-4 ring-black/5"
+              className="w-48 p-0 border-brand-border rounded-xl shadow-xl ring-4 ring-black/5"
               style={{ boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px" }}
             >
               <div className="py-1.5">
@@ -309,7 +309,7 @@ function Pagination({
               "h-7 w-7 text-[11px] font-bold  ",
               p === currentPage
                 ? "bg-primary text-white hover:bg-primary/90"
-                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
+                : "bg-white text-slate-700 border border-brand-border hover:bg-slate-50",
             )}
             variant={p === currentPage ? "default" : "secondary"}
             onClick={() => onPageChange(p)}
@@ -468,11 +468,11 @@ export default function RecruiterJobsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex flex-wrap items-center gap-3">
+      <div className="bg-white border border-brand-border rounded-t-xl p-4 flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[240px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
           <Input
-            className="w-full pl-9 bg-slate-50 border-slate-200 text-sm"
+            className="w-full pl-9 bg-slate-50 border-brand-border text-sm"
             placeholder="Quick search listings..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -480,7 +480,7 @@ export default function RecruiterJobsPage() {
         </div>
         <div className="flex items-center gap-2">
           <select
-            className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="appearance-none pl-3 pr-8 py-2 bg-white border border-brand-border rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -492,7 +492,7 @@ export default function RecruiterJobsPage() {
             ))}
           </select>
           <select
-            className="appearance-none pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="appearance-none pl-3 pr-8 py-2 bg-white border border-brand-border rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -504,11 +504,11 @@ export default function RecruiterJobsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border-x border-b border-slate-200 rounded-b-xl ">
+      <div className="bg-white border-x border-b border-brand-border rounded-b-xl ">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200">
+              <tr className="bg-slate-50/80 border-b border-brand-border">
                 <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   Job Details
                 </th>
@@ -523,7 +523,7 @@ export default function RecruiterJobsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-brand-border-light">
               {isLoading ? (
                 <tr>
                   <td colSpan={4} className="px-0 py-0">
@@ -588,7 +588,7 @@ export default function RecruiterJobsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-brand-border">
           <p className="text-[11px] text-slate-500 font-medium">
             Showing{" "}
             <span className="text-slate-900 font-bold">{showStart}</span>–

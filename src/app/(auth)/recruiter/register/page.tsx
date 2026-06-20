@@ -37,7 +37,7 @@ const RecruiterSignupLeft = (
         globe.
       </p>
 
-      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 max-w-sm mb-8 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-border/50 max-w-sm mb-8 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center">
             <svg
@@ -59,7 +59,7 @@ const RecruiterSignupLeft = (
             <p className="text-xs text-slate-500">Pre-vetted professionals</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-brand-border-light">
           <div className="flex -space-x-2">
             <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-primary/20"></div>
             <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-primary/40"></div>
@@ -259,11 +259,11 @@ function RecruiterRegisterContent() {
         />
 
         <div className="relative flex items-center">
-          <div className="grow border-t border-slate-200"></div>
+          <div className="grow border-t border-brand-border"></div>
           <span className="shrink mx-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">
             OR CONTINUE WITH EMAIL
           </span>
-          <div className="grow border-t border-slate-200"></div>
+          <div className="grow border-t border-brand-border"></div>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -280,7 +280,7 @@ function RecruiterRegisterContent() {
                 type="text"
                 placeholder="John Doe"
                 autoComplete="name"
-                className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+                className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
                 {...form.register("name")}
               />
               {form.formState.errors.name && (
@@ -302,7 +302,7 @@ function RecruiterRegisterContent() {
                 type="text"
                 placeholder="Acme Inc"
                 autoComplete="organization"
-                className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+                className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
                 {...form.register("companyName")}
               />
               {form.formState.errors.companyName && (
@@ -325,7 +325,7 @@ function RecruiterRegisterContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -346,7 +346,7 @@ function RecruiterRegisterContent() {
               id="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
-              className="w-full bg-white border border-slate-200 rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -360,7 +360,7 @@ function RecruiterRegisterContent() {
           <div className="flex items-start space-x-3">
             <Checkbox
               id="acceptTerms"
-              className="mt-0.5 rounded border-slate-300 data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
+              className="mt-0.5 rounded border-brand-border data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
               checked={form.watch("acceptTerms")}
               onCheckedChange={(checked) =>
                 form.setValue("acceptTerms", checked === true)

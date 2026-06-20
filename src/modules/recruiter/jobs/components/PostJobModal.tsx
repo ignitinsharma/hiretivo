@@ -595,7 +595,7 @@ export function PostJobModal() {
       }}
     >
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0">
-        <DialogHeader className="border-b border-slate-100 px-6 pt-6 pb-4 shrink-0">
+        <DialogHeader className="border-b border-brand-border-light px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
             {editJobId ? "Edit Job Post" : "Post a New Role"}
           </DialogTitle>
@@ -1024,7 +1024,7 @@ export function PostJobModal() {
               {showSkillDropdown &&
                 skillSearch &&
                 filteredSkills.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg max-h-48 overflow-y-auto">
                     {filteredSkills
                       .filter(
                         (s: { id: string }) => !selectedSkillIds.includes(s.id),
@@ -1052,7 +1052,7 @@ export function PostJobModal() {
                   </div>
                 )}
               {noMatch && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg overflow-hidden">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg overflow-hidden">
                   <button
                     type="button"
                     className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-primary/5 text-sm text-primary font-medium transition-colors"
@@ -1139,7 +1139,7 @@ export function PostJobModal() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-4 mt-6">
+          <div className="pt-6 border-t border-brand-border-light flex items-center justify-end gap-4 mt-6">
             <Button
               type="button"
               variant="ghost"

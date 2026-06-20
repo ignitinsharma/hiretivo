@@ -54,7 +54,7 @@ export function RecruiterBillingSection({
       : null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-6">
+    <section className="rounded-xl border border-brand-border bg-white p-6">
       <p className="text-sm font-semibold uppercase tracking-wide text-brand-foreground-muted">
         Current plan
       </p>

@@ -48,7 +48,7 @@ export default async function ExternalRedirectionPage({
           <Logo size="md" />
         </div>
 
-        <section className="bg-white border border-slate-100  rounded-xl p-8 text-center">
+        <section className="bg-white border border-brand-border-light  rounded-xl p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
             <ExternalLink className="w-8 h-8 text-primary" />
           </div>

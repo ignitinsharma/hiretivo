@@ -26,7 +26,7 @@ function formatEnumLabel(value?: string | null): string | null {
 
 export function CompanyJobs({ jobs }: CompanyJobsProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-white p-8 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-900">Open Positions</h2>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
@@ -38,7 +38,7 @@ export function CompanyJobs({ jobs }: CompanyJobsProps) {
         <p className="text-sm text-slate-500">No open roles right now.</p>
       )}
 
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-brand-border-light">
         {jobs.map((job) => (
           <div key={job.id} className="group flex flex-col sm:flex-row sm:items-center justify-between py-5 first:pt-0 last:pb-0 gap-4">
             <div className="flex flex-col gap-1">

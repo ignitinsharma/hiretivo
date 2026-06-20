@@ -74,7 +74,7 @@ export function AvatarSection({
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <section className="overflow-hidden rounded-xl border border-brand-border bg-white">
       <div className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative h-24 w-24 shrink-0">

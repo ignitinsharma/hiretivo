@@ -26,7 +26,7 @@ function StatCard({ stat }: { stat: DashboardStatItem }) {
         CARD_BASE,
         isPrimary
           ? 'bg-primary text-white shadow-primary/20'
-          : 'bg-white border border-slate-200'
+          : 'bg-white border border-brand-border'
       )}
     >
       <p

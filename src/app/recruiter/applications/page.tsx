@@ -251,7 +251,7 @@ export default function RecruiterApplicationsPage() {
           ? Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="min-h-[170px] p-5 rounded-xl bg-white border border-slate-200 flex flex-col justify-between"
+                className="min-h-[170px] p-5 rounded-xl bg-white border border-brand-border flex flex-col justify-between"
               >
                 <Skeleton className="h-10 w-10 rounded-lg" />
                 <Skeleton className="h-10 w-16" />
@@ -271,8 +271,8 @@ export default function RecruiterApplicationsPage() {
                 isPrimary
                   ? "bg-linear-to-br from-primary to-primary/80 text-white border border-transparent"
                   : isActive
-                    ? "bg-white border-2 border-gray-100"
-                    : "bg-white border border-slate-200 hover:border-slate-300",
+                    ? "bg-white border-2 border-brand-border-light"
+                    : "bg-white border border-brand-border hover:border-brand-border",
               )}
             >
               <div className="mb-4 flex items-center gap-3">
@@ -319,12 +319,12 @@ export default function RecruiterApplicationsPage() {
         })}
       </div>
 
-      <div className="relative bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="relative bg-white rounded-xl border border-brand-border overflow-hidden">
         {applicationsQuery.isLoading ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
+                <tr className="bg-slate-50/50 border-b border-brand-border-light">
                   <th className="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
                     Applicant Name
                   </th>
@@ -345,7 +345,7 @@ export default function RecruiterApplicationsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-brand-border-light">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>
                     <td className="px-8 py-6">
@@ -430,7 +430,7 @@ export default function RecruiterApplicationsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                  <tr className="bg-slate-50/50 border-b border-brand-border-light">
                     <th className="px-8 py-5 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
                       Applicant Name
                     </th>
@@ -451,7 +451,7 @@ export default function RecruiterApplicationsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-brand-border-light">
                   {applications.map((application) => {
                   const isLocked = application.locked === true;
                   const { visible, hiddenCount } = getVisibleSkills(
@@ -515,7 +515,7 @@ export default function RecruiterApplicationsPage() {
                             </span>
                           ))}
                           {hiddenCount > 0 ? (
-                            <span className="px-2.5 py-1 bg-gray-50 text-slate-500 text-[10px] font-bold rounded uppercase border border-slate-100">
+                            <span className="px-2.5 py-1 bg-gray-50 text-slate-500 text-[10px] font-bold rounded uppercase border border-brand-border-light">
                               +{hiddenCount} more
                             </span>
                           ) : null}
@@ -563,7 +563,7 @@ export default function RecruiterApplicationsPage() {
 
             {recruiterPlan === PlanTier.FREE &&
             applications.some((app) => app.locked) ? (
-              <div className="absolute inset-x-10 bottom-8 bg-white/90 rounded-xl border border-gray-200 p-6 text-center">
+              <div className="absolute inset-x-10 bottom-8 bg-white/90 rounded-xl border border-brand-border p-6 text-center">
                 <h3 className="text-slate-900 font-bold">
                   Upgrade to unlock all applicants
                 </h3>
@@ -576,7 +576,7 @@ export default function RecruiterApplicationsPage() {
               </div>
             ) : null}
 
-            <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+            <div className="px-8 py-6 bg-slate-50/50 border-t border-brand-border-light flex items-center justify-between">
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                 Showing{" "}
                 <span className="text-slate-900">{applications.length}</span>{" "}

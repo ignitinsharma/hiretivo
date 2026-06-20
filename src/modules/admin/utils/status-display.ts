@@ -20,7 +20,7 @@ interface BadgeDisplay {
 export const VERIFICATION_STATUS_DISPLAY: Record<VerificationStatus, BadgeDisplay> = {
   [VerificationStatus.NOT_SUBMITTED]: {
     label: "Not submitted",
-    badge: "border-gray-200 bg-gray-50 text-gray-600",
+    badge: "border-brand-border bg-gray-50 text-gray-600",
   },
   [VerificationStatus.PENDING]: {
     label: "Pending",
@@ -47,7 +47,7 @@ export const VERIFICATION_STATUS_DISPLAY: Record<VerificationStatus, BadgeDispla
 export const PLAN_TIER_DISPLAY: Record<PlanTier, BadgeDisplay> = {
   [PlanTier.FREE]: {
     label: "Free",
-    badge: "border-gray-200 bg-gray-50 text-gray-700",
+    badge: "border-brand-border bg-gray-50 text-gray-700",
   },
   [PlanTier.STARTER]: {
     label: "Starter",

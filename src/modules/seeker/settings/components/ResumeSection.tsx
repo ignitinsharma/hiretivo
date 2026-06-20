@@ -49,8 +49,8 @@ export function ResumeSection({ resumeKey }: ResumeSectionProps) {
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <div className="border-b border-slate-100 p-6">
+    <section className="overflow-hidden rounded-xl border border-brand-border bg-white">
+      <div className="border-b border-brand-border-light p-6">
         <h3 className="text-lg font-bold text-slate-900">Resume</h3>
         <p className="text-sm text-slate-500">
           Upload or replace the resume recruiters can request from your profile.

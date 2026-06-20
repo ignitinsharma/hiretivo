@@ -178,9 +178,9 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
     sections.find((section) => section.tab === selectedTab) ?? sections[0];
 
   return (
-    <div className="flex-1 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+    <div className="flex-1 bg-white border border-brand-border rounded-2xl overflow-hidden shadow-sm">
       {sections.length > 1 && (
-        <div className="border-b border-slate-200 px-6 sm:px-8">
+        <div className="border-b border-brand-border px-6 sm:px-8">
           <nav className="flex gap-8 -mb-px overflow-x-auto">
             {visibleTabs.map((tab) => (
               <Button
@@ -190,7 +190,7 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
                 className={`py-5 px-0 h-auto rounded-none text-sm font-bold border-b-2 transition-colors ${
                   selectedTab === tab
                     ? "border-primary text-primary hover:text-primary hover:bg-transparent"
-                    : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300 hover:bg-transparent"
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:border-brand-border hover:bg-transparent"
                 }`}
               >
                 {tab}
@@ -229,9 +229,9 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
           </section>
         )}
 
-        <div className="pt-8 border-t border-slate-200">
+        <div className="pt-8 border-t border-brand-border">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-primary font-bold overflow-hidden border border-slate-200">
+            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-primary font-bold overflow-hidden border border-brand-border">
               {job.companyLogoUrl ? (
                 <Image
                   src={job.companyLogoUrl}

@@ -221,7 +221,7 @@ export function ApplyJobModal() {
             />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-6 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-6 border-t border-brand-border-light">
             <Button
               type="button"
               variant="ghost"

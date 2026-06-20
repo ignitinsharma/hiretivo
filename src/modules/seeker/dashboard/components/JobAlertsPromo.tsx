@@ -20,7 +20,7 @@ export function JobAlertsPromo({
   isTogglingDigest,
 }: JobAlertsPromoProps) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-5">
+    <div className="bg-white p-6 rounded-xl border border-brand-border space-y-5">
       {/* Weekly digest toggle */}
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -49,7 +49,7 @@ export function JobAlertsPromo({
 
       {/* Skill gap tracker */}
       {skillGap.items.length > 0 && (
-        <div className="border-t border-slate-100 pt-5">
+        <div className="border-t border-brand-border-light pt-5">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-amber-500" />
             <h4 className="font-bold text-slate-900 text-sm">Skill Gap</h4>

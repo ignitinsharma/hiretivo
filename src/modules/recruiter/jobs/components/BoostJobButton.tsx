@@ -65,7 +65,7 @@ export function BoostJobButton({ jobId, isAlreadyBoosted, boostExpiresAt }: Boos
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+    <div className="rounded-xl border border-brand-border bg-slate-50 p-5 space-y-4">
       <div>
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
           <Zap className="h-4 w-4 text-gray-500" aria-hidden="true" />
