@@ -268,7 +268,7 @@ export function RecommendedJobsList() {
           </div>
           <h3 className="text-lg font-bold text-slate-900">All caught up!</h3>
           <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-            You've dismissed all matching jobs. New opportunities are added daily — check back soon.
+            You&apos;ve dismissed all matching jobs. New opportunities are added daily — check back soon.
           </p>
         </Card>
       ) : (dashboardSummary?.profileStrength.percentage ?? 0) < 50 ? (
@@ -294,7 +294,7 @@ export function RecommendedJobsList() {
           </div>
           <h3 className="text-lg font-bold text-slate-900">No matching jobs yet</h3>
           <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-            We couldn't find jobs matching your current skills. New positions are posted daily — check back soon.
+            We couldn&apos;t find jobs matching your current skills. New positions are posted daily — check back soon.
           </p>
         </Card>
       )}
