@@ -38,7 +38,7 @@ export function OAuthButton({
       type="button"
       variant="default"
       className={cn(
-        "relative w-full gap-3 h-14 rounded-xl font-semibold shadow-none border-slate-200 hover:bg-slate-50",
+        "relative w-full gap-3 h-14 rounded-xl font-semibold shadow-none border-brand-border hover:bg-slate-50",
         showLastUsed && "px-28 sm:px-4",
         className,
       )}

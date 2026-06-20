@@ -54,7 +54,7 @@ export function RecruiterBillingSection({
       : null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-6">
+    <section className="rounded-xl border border-brand-border bg-white p-6">
       <p className="text-sm font-semibold uppercase tracking-wide text-brand-foreground-muted">
         Current plan
       </p>
@@ -101,6 +101,7 @@ export function RecruiterBillingSection({
               <Button
                 type="button"
                 variant="primary"
+                className="w-full"
                 onClick={() => portalMutation.mutate()}
                 loading={portalMutation.isPending}
                 loadingText="Opening..."
@@ -108,7 +109,7 @@ export function RecruiterBillingSection({
                 <CreditCard className="h-4 w-4" aria-hidden />
                 Manage billing
               </Button>
-              <Button asChild variant="secondary">
+              <Button asChild variant="secondary" className="w-full">
                 <Link href="/pricing">Explore higher plans</Link>
               </Button>
             </>

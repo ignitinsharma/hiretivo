@@ -24,7 +24,7 @@ export function ProfileStrengthCard({
   const label = strengthLabel(percentage);
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200">
+    <div className="bg-white p-6 rounded-xl border border-brand-border">
       <div className="flex items-center gap-2 mb-4">
         <ShieldCheck className="text-primary w-5 h-5" />
         <h3 className="font-bold text-slate-900">Profile Strength</h3>

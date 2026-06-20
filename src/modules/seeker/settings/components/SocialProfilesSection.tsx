@@ -148,10 +148,10 @@ export function SocialProfilesSection() {
   return (
     <section
       id="social"
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+      className="overflow-hidden rounded-xl border border-brand-border bg-white"
     >
       {/* Section header */}
-      <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
+      <div className="flex items-start justify-between gap-4 border-b border-brand-border-light p-6">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Social Profiles</h3>
           <p className="text-sm text-slate-500">

@@ -27,7 +27,7 @@ const METRIC_CARD_CONFIGS: MetricCardConfig[] = [
   { label: 'Top Skills', getValue: (d) => d.topSkills.slice(0, 3).join(', ') || 'No data' },
 ];
 
-const CARD_BASE = 'bg-white rounded-xl border border-slate-200 p-5';
+const CARD_BASE = 'bg-white rounded-xl border border-brand-border p-5';
 
 const CHART_CONFIG = {
   views: { label: 'Views', color: 'hsl(var(--chart-1))' },

@@ -20,7 +20,7 @@ export function StatCard({
   variant = 'default',
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl p-5 border border-gray-100">
+    <div className="bg-white rounded-xl p-5 border border-brand-border-light">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-gray-500">{label}</p>

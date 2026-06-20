@@ -5,6 +5,7 @@ import { LogOut, Settings } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 
 import { InitialsAvatar } from '@/components/shared/InitialsAvatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,11 +24,17 @@ interface AccountMenuProps {
   className?: string;
   fallbackSeed?: string;
   verified?: boolean;
+  /* Caller-provided avatar URL — overrides session?.user?.image when set (even null). */
+  imageOverride?: string | null;
+  /* Caller-provided name for avatar initials — does not affect dropdown display name. */
+  avatarName?: string;
 }
 
 /*
  * AccountMenu
  * Shared profile dropdown for app headers with avatar, account details, settings, and sign out.
+ * Accepts imageOverride/avatarName so callers can pass fresher data (e.g. TanStack Query cache)
+ * without changing the dropdown display name which still comes from the session.
  */
 export function AccountMenu({
   settingsHref,
@@ -37,10 +44,27 @@ export function AccountMenu({
   className,
   fallbackSeed,
   verified = false,
+  imageOverride,
+  avatarName,
 }: AccountMenuProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userName = session?.user?.name ?? fallbackName;
   const userEmail = session?.user?.email ?? fallbackEmail;
+
+  /* Use caller-provided image when defined (allows passing null to clear), else session image. */
+  const avatarImage = imageOverride !== undefined ? imageOverride : (session?.user?.image ?? null);
+
+  /*
+   * Company mode (avatarName set): pass companyName and suppress userId/email so DiceBear
+   * uses the companyName seed — matching CompanyAvatarSection's seed exactly.
+   * User mode: normal userId/email seed from session.
+   */
+  const isCompanyMode = Boolean(avatarName);
+
+  /* Show skeleton while NextAuth session is resolving to avoid stale-avatar flash. */
+  if (status === 'loading') {
+    return <Skeleton className="h-10 w-10 rounded-lg" />;
+  }
 
   return (
     <DropdownMenu>
@@ -54,11 +78,12 @@ export function AccountMenu({
           aria-label={ariaLabel}
         >
           <InitialsAvatar
-            name={userName}
-            email={session?.user?.email}
-            userId={session?.user?.id}
-            image={session?.user?.image}
-            fallbackSeed={fallbackSeed}
+            name={isCompanyMode ? undefined : (session?.user?.name ?? fallbackName)}
+            companyName={isCompanyMode ? avatarName : undefined}
+            email={isCompanyMode ? undefined : session?.user?.email}
+            userId={isCompanyMode ? undefined : session?.user?.id}
+            image={avatarImage}
+            fallbackSeed={isCompanyMode ? undefined : fallbackSeed}
             size="md"
             verified={verified}
             className="bg-brand-surface"

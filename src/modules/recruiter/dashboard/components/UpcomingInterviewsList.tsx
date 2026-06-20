@@ -23,8 +23,8 @@ export function UpcomingInterviewsList() {
   const interviews = data?.data ?? [];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 h-full">
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+    <div className="bg-white rounded-xl border border-brand-border-light h-full">
+      <div className="p-5 border-b border-brand-border-light flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900">
             Upcoming Interviews
@@ -122,7 +122,7 @@ export function UpcomingInterviewsList() {
           ))}
       </div>
 
-      <div className="p-3 border-t border-gray-100">
+      <div className="p-3 border-t border-brand-border-light">
         <Button
           variant="ghost"
           className="w-full text-black font-medium"

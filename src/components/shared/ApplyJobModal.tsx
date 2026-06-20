@@ -104,6 +104,7 @@ export function ApplyJobModal() {
       });
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
       await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard-summary"] });
+      await queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });
       toast.success("Application confirmed!");
       trackEvent("apply_job", {
         apply_type: "external",
@@ -128,6 +129,7 @@ export function ApplyJobModal() {
       });
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
       await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard-summary"] });
+      await queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });
       toast.success("Application submitted!");
       trackEvent("apply_job", {
         apply_type: "internal",
@@ -219,7 +221,7 @@ export function ApplyJobModal() {
             />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-6 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-6 border-t border-brand-border-light">
             <Button
               type="button"
               variant="ghost"

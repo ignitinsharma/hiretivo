@@ -4,10 +4,12 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JobStatus } from '@/constants/enums';
 import { Plus, ArrowRight } from 'lucide-react';
 import { recruiterService } from '@/services/recruiter.service';
+import { useUIStore } from '@/store/use-ui-store';
 import type { ActiveJob } from '@/services/recruiter.service';
 
 const MAX_JOBS_DISPLAY = 5;
@@ -33,8 +35,8 @@ export function ActiveJobsList() {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col w-full h-full">
-      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-200">
+    <div className="bg-white rounded-xl border border-brand-border overflow-hidden flex flex-col w-full h-full">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-brand-border">
         <h2 className="text-lg font-bold text-slate-900">My Active Jobs</h2>
         <Link
           href="/recruiter/jobs"
@@ -44,7 +46,7 @@ export function ActiveJobsList() {
         </Link>
       </div>
       {isLoading ? (
-        <div className="divide-y divide-slate-100 flex-1">
+        <div className="divide-y divide-brand-border-light flex-1">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="px-6 py-5 flex items-center justify-between">
               <div className="space-y-2">
@@ -81,17 +83,18 @@ export function ActiveJobsList() {
             <p className="mt-1 text-sm text-slate-500">
               Create your first job and start attracting top talent.
             </p>
-            <Link
-              href="/recruiter/jobs"
-              className="mt-5 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-primary/20 transition-colors hover:bg-primary/90"
+            <Button
+              variant="primary"
+              onClick={() => useUIStore.getState().openPostJobModal()}
+              className="mt-5"
             >
               Create Your First Job
-            </Link>
+            </Button>
           </div>
         </div>
       ) : (
         <div className="flex flex-col flex-1">
-          <div className="divide-y divide-slate-100 flex-1">
+          <div className="divide-y divide-brand-border-light flex-1">
             {jobs.slice(0, MAX_JOBS_DISPLAY).map((job) => (
               <Link
                 key={job.id}
@@ -124,7 +127,7 @@ export function ActiveJobsList() {
             ))}
           </div>
           {jobs.length > MAX_JOBS_DISPLAY && (
-            <div className="border-t border-slate-200 px-6 py-4">
+            <div className="border-t border-brand-border px-6 py-4">
               <Link
                 href="/recruiter/jobs"
                 className="flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline"

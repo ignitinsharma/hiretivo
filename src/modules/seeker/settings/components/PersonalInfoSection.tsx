@@ -116,6 +116,15 @@ export function PersonalInfoSection() {
 
   const isFormDisabled = !isEditing || saveMutation.isPending;
 
+  /* Derive Select display values: view mode reads from fetched profile to avoid Radix UI's
+   * value-change reconciliation bug (value="" → value="X" after mount doesn't always update
+   * the displayed label). Edit mode reads from form state so in-progress edits are reflected. */
+  const situationValue = isEditing ? (form.watch('situation') ?? '') : (profile?.situation ?? '');
+  const availabilityValue = isEditing ? (form.watch('availability') ?? '') : (profile?.availability ?? '');
+  const yearsValue = isEditing
+    ? (form.watch('yearsExperience')?.toString() ?? '')
+    : (profile?.yearsExperience?.toString() ?? '');
+
   const handleCancel = (): void => {
     form.reset(getProfileFormValues(profile));
     setIsEditing(false);
@@ -224,7 +233,7 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-brand-foreground">Job Search Status</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Select
-                  value={form.watch('situation') ?? ''}
+                  value={situationValue}
                   onValueChange={(val) => form.setValue('situation', val, { shouldValidate: true })}
                   disabled={isFormDisabled}
                 >
@@ -244,7 +253,7 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-brand-foreground">Availability</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Select
-                  value={form.watch('availability') ?? ''}
+                  value={availabilityValue}
                   onValueChange={(val) => form.setValue('availability', val, { shouldValidate: true })}
                   disabled={isFormDisabled}
                 >
@@ -302,7 +311,7 @@ export function PersonalInfoSection() {
               <label className="text-sm font-semibold text-brand-foreground">Years of Experience</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Select
-                  value={form.watch('yearsExperience')?.toString() ?? ''}
+                  value={yearsValue}
                   onValueChange={(val) => form.setValue('yearsExperience', val === '' ? null : Number(val))}
                   disabled={isFormDisabled}
                 >

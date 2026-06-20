@@ -31,7 +31,7 @@ const FREE_FEATURES = [
 ];
 
 const STATUS_STYLES: Record<SubscriptionStatus, string> = {
-  ACTIVE: "border-gray-200 bg-gray-100 text-black",
+  ACTIVE: "border-brand-border bg-gray-100 text-black",
   PAST_DUE: "border-amber-200 bg-amber-50 text-amber-700",
   CANCELED: "border-red-200 bg-red-50 text-red-700",
 };
@@ -64,7 +64,7 @@ function FreePlanCard() {
   const router = useRouter();
 
   return (
-    <Card className="max-w-2xl border-slate-200 bg-white">
+    <Card className="max-w-2xl border-brand-border bg-white">
       <CardHeader>
         <CardTitle className="text-xl">You&apos;re on the Free plan</CardTitle>
         <CardDescription>
@@ -120,7 +120,7 @@ function PaidPlanCard({
     : "Starter";
 
   return (
-    <Card className="max-w-2xl border-brand-primary/30 border-slate-200 bg-white">
+    <Card className="max-w-2xl border-brand-primary/30 border-brand-border bg-white">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-xl">

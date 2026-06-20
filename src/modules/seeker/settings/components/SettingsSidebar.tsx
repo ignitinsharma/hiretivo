@@ -95,7 +95,7 @@ export function SettingsSidebar() {
             href={href}
             aria-current={activeHash === href ? "true" : undefined}
             className={cn(
-              "flex items-center gap-5 rounded-xl border-l-4 border-transparent px-5 py-4 text-brand-foreground-muted transition-colors hover:bg-brand-surface hover:text-brand-foreground",
+              "flex items-center gap-5 rounded-xl border-l-4 border-transparent px-2 py-3 text-brand-foreground-muted transition-colors hover:bg-brand-surface hover:text-brand-foreground",
               activeHash === href &&
                 "border-brand-primary bg-brand-primary/5 text-brand-primary",
             )}

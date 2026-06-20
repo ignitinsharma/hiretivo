@@ -257,6 +257,38 @@ export enum ProfileLinkVariant {
   BORDERED = "bordered",
 }
 
+export enum CompanyIndustry {
+  TECHNOLOGY = "TECHNOLOGY",
+  FINANCE = "FINANCE",
+  HEALTHCARE = "HEALTHCARE",
+  EDUCATION = "EDUCATION",
+  OTHER = "OTHER",
+}
+
+export enum FundingStage {
+  BOOTSTRAPPED = "BOOTSTRAPPED",
+  PRE_SEED = "PRE_SEED",
+  SEED = "SEED",
+  SERIES_A = "SERIES_A",
+  SERIES_B = "SERIES_B",
+  SERIES_C = "SERIES_C",
+  SERIES_C_PLUS = "SERIES_C_PLUS",
+  PUBLICLY_TRADED = "PUBLICLY_TRADED",
+}
+
+export enum SeekerSituation {
+  ACTIVELY_LOOKING = "ACTIVELY_LOOKING",
+  OPEN_TO_OFFERS = "OPEN_TO_OFFERS",
+  EXPLORING_OPTIONS = "EXPLORING_OPTIONS",
+  STUDENT_FRESH_GRAD = "STUDENT_FRESH_GRAD",
+}
+
+export enum SeekerAvailability {
+  IMMEDIATELY = "IMMEDIATELY",
+  TWO_WEEKS = "TWO_WEEKS",
+  ONE_MONTH_PLUS = "ONE_MONTH_PLUS",
+}
+
 /**
  * Resolved state of the DB-backed user sitting behind a (valid) JWT session.
  * Drives AuthGuard routing — MISSING must be handled distinctly from

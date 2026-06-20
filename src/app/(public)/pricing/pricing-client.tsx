@@ -186,7 +186,7 @@ function PricingCard({
         "p-6 rounded-xl flex flex-col h-full text-left relative",
         isHighlighted
           ? "bg-brand-primary border-2 border-brand-primary transform lg:scale-105 z-10 text-white"
-          : "bg-white border border-gray-200",
+          : "bg-white border border-brand-border",
       )}
     >
       {isHighlighted && (
@@ -287,13 +287,13 @@ function PricingCard({
 
 function PricingCompareTable() {
   return (
-    <section className="py-24 px-6 overflow-x-auto border-t border-slate-100">
+    <section className="py-24 px-6 overflow-x-auto border-t border-brand-border-light">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-slate-900 mb-16">Compare features</h2>
         <div className="min-w-[700px]">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="text-left border-b border-slate-200">
+              <tr className="text-left border-b border-brand-border">
                 <th className={cn(TD_BASE, "font-bold text-slate-500 uppercase tracking-wider")}>Feature</th>
                 <th className={cn(TD_BASE, "font-bold text-slate-900")}>Free</th>
                 <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>Starter</th>
@@ -301,7 +301,7 @@ function PricingCompareTable() {
                 <th className={cn(TD_BASE, "font-bold text-slate-900")}>Scale</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-brand-border-light">
               {FEATURE_ROWS.map((row, idx) => (
                 <tr key={row.feature} className={idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""}>
                   <td className={CELL_LABEL}>{row.feature}</td>
@@ -331,7 +331,7 @@ function PricingFaqSection() {
             <AccordionItem
               key={item.question}
               value={item.question}
-              className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+              className="bg-white rounded-xl border border-brand-border overflow-hidden"
             >
               <AccordionTrigger className="px-6 py-6 text-left text-lg font-bold text-slate-900 hover:no-underline hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-slate-500 [&[data-state=open]>svg]:text-brand-primary">
                 {item.question}
@@ -492,7 +492,7 @@ export function PricingClient() {
 
           {/* Monthly / Annual toggle */}
           <div className="flex items-center justify-center mb-16 relative z-30">
-            <div className="bg-slate-100 p-1.5 rounded-xl flex items-center border border-slate-200">
+            <div className="bg-slate-100 p-1.5 rounded-xl flex items-center border border-brand-border">
               <button
                 type="button"
                 onClick={() => setIsAnnual(false)}

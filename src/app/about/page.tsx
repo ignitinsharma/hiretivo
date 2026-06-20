@@ -167,7 +167,7 @@ export default function AboutPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="border-y border-slate-50 bg-white py-24 px-6">
+        <section className="border-y border-brand-border-light bg-white py-24 px-6">
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-2 gap-12 md:grid-cols-4">
               {STATS.map((stat) => (

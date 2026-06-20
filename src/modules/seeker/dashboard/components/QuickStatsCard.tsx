@@ -36,7 +36,7 @@ const STAT_ROWS: StatRow[] = [
 
 export function QuickStatsCard({ quickStats }: QuickStatsCardProps) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200">
+    <div className="bg-white p-6 rounded-xl border border-brand-border">
       <h3 className="font-bold text-slate-900 mb-6">Quick Stats</h3>
       <div className="space-y-4">
         {STAT_ROWS.map((stat) => (

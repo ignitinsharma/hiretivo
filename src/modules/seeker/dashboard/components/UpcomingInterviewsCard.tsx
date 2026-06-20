@@ -5,13 +5,13 @@ import { InterviewTimezoneDisplay } from "@/components/shared/InterviewTimezoneD
 import { useFetchSeekerInterviews } from "../queries/use-fetch-seeker-interviews";
 import type { SeekerInterview } from "../types/dashboard.types";
 
-const CARD_CLASSES = "bg-white rounded-xl border border-gray-200 p-6";
+const CARD_CLASSES = "bg-white rounded-xl border border-brand-border p-6";
 
 const SECTION_TITLE_CLASSES = "text-xl font-semibold text-foreground";
 
 function InterviewRow({ interview }: { interview: SeekerInterview }) {
   return (
-    <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 last:pb-0 first:pt-0">
+    <div className="flex items-start gap-4 py-4 border-b border-brand-border-light last:border-b-0 last:pb-0 first:pt-0">
       <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
         <Calendar className="w-5 h-5 text-black" />
       </div>

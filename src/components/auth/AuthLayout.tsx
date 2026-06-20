@@ -31,7 +31,7 @@ export function AuthLayout({
   const roleBadge = role === "seeker"
     ? { label: "Seeker", color: "bg-brand-primary/10 text-brand-primary border-brand-primary/20" }
     : role === "recruiter"
-    ? { label: "Recruiter", color: "bg-gray-100 text-gray-700 border-gray-200" }
+    ? { label: "Recruiter", color: "bg-gray-100 text-gray-700 border-brand-border" }
     : null;
 
   return (

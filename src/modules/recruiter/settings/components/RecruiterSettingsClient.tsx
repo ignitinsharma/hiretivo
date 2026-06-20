@@ -18,7 +18,7 @@ interface SettingsSectionSkeletonProps {
 
 function SettingsSectionSkeleton({ fieldCount }: SettingsSectionSkeletonProps) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-6">
+    <section className="rounded-xl border border-brand-border bg-white p-6">
       <div className="mb-6 space-y-2">
         <Skeleton className="h-6 w-48 rounded-lg" />
         <Skeleton className="h-4 w-72 max-w-full rounded-lg" />
@@ -67,7 +67,7 @@ export function RecruiterSettingsClient() {
 
   if (isError || !settings) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center font-semibold text-[#d03238]">
+      <div className="rounded-xl border border-brand-border bg-white p-8 text-center font-semibold text-[#d03238]">
         Recruiter settings could not be loaded.
       </div>
     );

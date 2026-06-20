@@ -31,7 +31,7 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
+    --border: 0 0% 93%;
     --input: 0 0% 90%;
     --ring: 248 100% 69%;
 
@@ -83,7 +83,7 @@
   }
 
   .card-border {
-    border: 1px solid #e5e7eb;
+    border: 1px solid #ededed;
   }
 
   .sticky-nav {
@@ -116,7 +116,7 @@
   --sidebar-primary-foreground: hsl(0 0% 100%);
   --sidebar-accent: hsl(0 0% 96%);
   --sidebar-accent-foreground: hsl(0 0% 0%);
-  --sidebar-border: hsl(0 0% 90%);
+  --sidebar-border: hsl(0 0% 93%);
   --sidebar-ring: hsl(248 100% 69%);
 }
 

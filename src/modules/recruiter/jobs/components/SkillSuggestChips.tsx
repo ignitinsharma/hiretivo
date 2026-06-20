@@ -26,7 +26,7 @@ function SkillChip({ name, isAdded, onClick }: SkillChipProps) {
         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
         isAdded
           ? "cursor-not-allowed border-primary/30 bg-primary/10 text-primary opacity-70"
-          : "border-slate-200 bg-white text-slate-700 hover:border-primary hover:bg-primary/5 hover:text-primary",
+          : "border-brand-border bg-white text-slate-700 hover:border-primary hover:bg-primary/5 hover:text-primary",
       )}
     >
       {isAdded ? "✓ " : "+ "}

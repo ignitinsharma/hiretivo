@@ -84,14 +84,14 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'rounded-xl border border-gray-200 bg-white overflow-hidden transition-colors',
+        'rounded-xl border border-brand-border bg-white overflow-hidden transition-colors',
         'focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20',
         hasError && 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500/30',
         disabled && 'opacity-50 cursor-not-allowed',
         className,
       )}
     >
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-slate-100 bg-slate-50/50">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-brand-border-light bg-slate-50/50">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}

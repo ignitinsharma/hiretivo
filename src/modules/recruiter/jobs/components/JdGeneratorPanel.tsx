@@ -51,6 +51,7 @@ export function JdGeneratorPanel({
 }: JdGeneratorPanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedJd, setGeneratedJd] = useState<string | null>(null);
+  const [hasApplied, setHasApplied] = useState(false);
   const shortDescRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
@@ -68,11 +69,33 @@ export function JdGeneratorPanel({
 
   useEffect(() => {
     setValue("title", prefillTitle);
-    setValue("shortDesc", stripHtml(prefillDescription));
+    // Only pre-populate shortDesc when prefill is within the 500-char limit.
+    // If it's longer, it's the generated JD HTML (already applied), not the original brief —
+    // preserve the user's last typed brief so regeneration works without validation errors.
+    const stripped = stripHtml(prefillDescription);
+    if (stripped.length <= 500) {
+      setValue("shortDesc", stripped);
+    }
     if (open) {
+      setHasApplied(false);
       setGeneratedJd(null);
     }
   }, [open, prefillTitle, prefillDescription, setValue]);
+
+  /*
+   * handleOpenChange
+   * Intercepts sheet close — auto-applies a pending generated JD so the
+   * recruiter never loses a generation by accidentally closing the panel.
+   */
+  const handleOpenChange = (nextOpen: boolean) => {
+    // Do not auto-apply a partial JD while streaming is still in progress.
+    if (!nextOpen && generatedJd && !hasApplied && !isGenerating) {
+      onGenerated(generatedJd);
+      setHasApplied(true);
+      toast.success("AI draft applied to description. Regenerate anytime.");
+    }
+    onOpenChange(nextOpen);
+  };
 
   useEffect(() => {
     const el = shortDescRef.current;
@@ -86,12 +109,22 @@ export function JdGeneratorPanel({
     isRegeneration: boolean,
   ) => {
     setIsGenerating(true);
+    setGeneratedJd(null);
+    let accumulated = "";
     try {
-      const jd = await recruiterService.generateJobDescription({
+      for await (const chunk of recruiterService.generateJobDescription({
         ...data,
         isRegeneration,
-      });
-      setGeneratedJd(jd.trim());
+      })) {
+        accumulated += chunk;
+        setGeneratedJd(accumulated);
+      }
+      const cleaned = accumulated
+        .trim()
+        .replace(/^```html?\n?/i, "")
+        .replace(/\n?```$/, "")
+        .trim();
+      setGeneratedJd(cleaned);
     } catch (err) {
       // Surface server messages (e.g. daily free-limit / upgrade prompt) verbatim
       toast.error(
@@ -113,11 +146,12 @@ export function JdGeneratorPanel({
   const handleUseGeneratedJd = () => {
     if (!generatedJd) return;
     onGenerated(generatedJd);
+    setHasApplied(true);
     onOpenChange(false);
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-160 overflow-y-auto"
@@ -203,9 +237,7 @@ export function JdGeneratorPanel({
               {...register("vibe")}
             />
             {errors.vibe && (
-              <p className="text-xs text-brand-danger">
-                {errors.vibe.message}
-              </p>
+              <p className="text-xs text-brand-danger">{errors.vibe.message}</p>
             )}
           </div>
 

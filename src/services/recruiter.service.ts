@@ -1,17 +1,23 @@
-import { apiClient } from '@/lib/axios';
-import type { AiSummaryData } from '@/lib/ai-prompts';
-import type { ApplicationStatus, InterviewStatus, JobStatus, PlanTier, VerificationStatus } from '@/constants/enums';
-import type { JdGeneratorInput } from '@/lib/validations/jd-generator.schema';
+import { apiClient } from "@/lib/axios";
+import type { AiSummaryData } from "@/lib/ai-prompts";
+import type {
+  ApplicationStatus,
+  InterviewStatus,
+  JobStatus,
+  PlanTier,
+  VerificationStatus,
+} from "@/constants/enums";
+import type { JdGeneratorInput } from "@/lib/validations/jd-generator.schema";
 import type {
   RecruiterProfileSettingsInput,
   ScheduleInterviewInput,
-} from '@/lib/validations/interview.schema';
-import type { DashboardData } from '@/modules/recruiter/dashboard/types/dashboard.types';
-import type { JobAnalyticsResponse } from '@/modules/recruiter/jobs/types/analytics.types';
+} from "@/lib/validations/interview.schema";
+import type { DashboardData } from "@/modules/recruiter/dashboard/types/dashboard.types";
+import type { JobAnalyticsResponse } from "@/modules/recruiter/jobs/types/analytics.types";
 import type {
   TalentDetail,
   TalentListResponse,
-} from '@/modules/recruiter/talent/types/talent.types';
+} from "@/modules/recruiter/talent/types/talent.types";
 
 interface DataResponse<T> {
   data: T;
@@ -27,7 +33,7 @@ interface UpdateApplicationStageResponse {
 export interface ActiveJob {
   id: string;
   title: string;
-  status: string;
+  status: JobStatus;
   _count: { applications: number };
   createdAt: string;
 }
@@ -195,8 +201,8 @@ export interface InterviewPayload {
 
 export class TalentForbiddenError extends Error {
   constructor() {
-    super('Talent pool requires a paid recruiter plan.');
-    this.name = 'TalentForbiddenError';
+    super("Talent pool requires a paid recruiter plan.");
+    this.name = "TalentForbiddenError";
   }
 }
 
@@ -204,17 +210,21 @@ export class TalentForbiddenError extends Error {
  * Detects 403 failures after axios normalizes the original response.
  */
 function isForbiddenRequestError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes('403');
+  return error instanceof Error && error.message.includes("403");
 }
 
 export const recruiterService = {
   getDashboard: async (): Promise<DashboardData> => {
-    const { data } = await apiClient.get<DataResponse<DashboardData>>('/recruiter/dashboard');
+    const { data } = await apiClient.get<DataResponse<DashboardData>>(
+      "/recruiter/dashboard",
+    );
     return data.data;
   },
 
   getActiveJobs: async (): Promise<ActiveJob[]> => {
-    const { data } = await apiClient.get<{ jobs: ActiveJob[] }>('/recruiter/jobs');
+    const { data } = await apiClient.get<{ jobs: ActiveJob[] }>(
+      "/recruiter/jobs",
+    );
     return data.jobs ?? [];
   },
 
@@ -222,22 +232,31 @@ export const recruiterService = {
     await apiClient.delete(`/recruiter/jobs/${id}`);
   },
 
-  updateJobStatus: async (id: string, status: JobStatus.OPEN | JobStatus.PAUSED): Promise<void> => {
+  updateJobStatus: async (
+    id: string,
+    status: JobStatus.OPEN | JobStatus.PAUSED,
+  ): Promise<void> => {
     await apiClient.patch(`/recruiter/jobs/${id}`, { status });
   },
 
   getJobAnalytics: async (jobId: string): Promise<JobAnalyticsResponse> => {
-    const { data } = await apiClient.get<DataResponse<JobAnalyticsResponse>>(`/recruiter/jobs/${jobId}/analytics`);
+    const { data } = await apiClient.get<DataResponse<JobAnalyticsResponse>>(
+      `/recruiter/jobs/${jobId}/analytics`,
+    );
     return data.data;
   },
 
   getSettings: async (): Promise<DataResponse<RecruiterSettingsData>> => {
-    const { data } = await apiClient.get<DataResponse<RecruiterSettingsData>>('/recruiter/settings');
+    const { data } = await apiClient.get<DataResponse<RecruiterSettingsData>>(
+      "/recruiter/settings",
+    );
     return data;
   },
 
-  updateSettings: async (payload: RecruiterProfileSettingsInput): Promise<void> => {
-    await apiClient.patch('/recruiter/settings', payload);
+  updateSettings: async (
+    payload: RecruiterProfileSettingsInput,
+  ): Promise<void> => {
+    await apiClient.patch("/recruiter/settings", payload);
   },
 
   updateNotificationSettings: async (payload: {
@@ -245,37 +264,78 @@ export const recruiterService = {
     applicationAlerts: boolean;
     interviewNotifications: boolean;
   }): Promise<void> => {
-    await apiClient.patch('/recruiter/settings', payload);
+    await apiClient.patch("/recruiter/settings", payload);
   },
 
   suggestSkills: async (descriptionText: string): Promise<SuggestedSkills> => {
-    const { data } = await apiClient.post<DataResponse<{ skills: SuggestedSkills }>>('/recruiter/ai/suggest-skills', {
+    const { data } = await apiClient.post<
+      DataResponse<{ skills: SuggestedSkills }>
+    >("/recruiter/ai/suggest-skills", {
       descriptionText,
     });
     return data.data.skills;
   },
 
-  generateJobDescription: async (payload: JdGeneratorInput): Promise<string> => {
-    const { data } = await apiClient.post<string>('/recruiter/ai/generate-jd', payload, {
-      responseType: 'text',
-      transformResponse: [(value: string) => value],
+  /*
+   * generateJobDescription
+   * Streams an AI-generated job description HTML for the given payload.
+   * Yields decoded UTF-8 chunks as they arrive from the server-sent stream.
+   * Must be consumed via `for await...of`; releases the reader in all exit paths.
+   * @param payload - JD generation inputs (title, shortDesc, vibe, isRegeneration)
+   */
+  async *generateJobDescription(
+    payload: JdGeneratorInput,
+  ): AsyncGenerator<string> {
+    const res = await fetch("/api/recruiter/ai/generate-jd", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+    if (!res.ok) {
+      const err = await res
+        .json()
+        .catch(() => ({ error: "Failed to generate JD." }));
+      throw new Error(
+        (err as { error?: string }).error ?? "Failed to generate JD.",
+      );
+    }
+    if (!res.body) throw new Error("No response body from JD generator.");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        yield decoder.decode(value, { stream: true });
+      }
+    } finally {
+      reader.cancel();
+    }
+  },
+
+  getApplicationStats: async (
+    jobId?: string,
+  ): Promise<RecruiterStatsResponse> => {
+    const { data } = await apiClient.get<RecruiterStatsResponse>(
+      "/recruiter/applications/stats",
+      {
+        params: jobId ? { jobId } : undefined,
+      },
+    );
     return data;
   },
 
-  getApplicationStats: async (jobId?: string): Promise<RecruiterStatsResponse> => {
-    const { data } = await apiClient.get<RecruiterStatsResponse>('/recruiter/applications/stats', {
-      params: jobId ? { jobId } : undefined,
-    });
-    return data;
-  },
-
-  getTalent: async (params: RecruiterTalentParams): Promise<TalentListResponse['data']> => {
+  getTalent: async (
+    params: RecruiterTalentParams,
+  ): Promise<TalentListResponse["data"]> => {
     // FREE plan now returns 200 with blurred items + isFreePlan:true (no longer 403).
     // TalentForbiddenError 403 path is dead code for getTalent — removed.
-    const { data } = await apiClient.get<TalentListResponse>('/recruiter/talent', {
-      params,
-    });
+    const { data } = await apiClient.get<TalentListResponse>(
+      "/recruiter/talent",
+      {
+        params,
+      },
+    );
     return data.data;
   },
 
@@ -294,23 +354,35 @@ export const recruiterService = {
     }
   },
 
-  getApplications: async (params: RecruiterApplicationsParams): Promise<RecruiterApplicationsResponse> => {
-    const { data } = await apiClient.get<RecruiterApplicationsResponse>('/recruiter/applications', {
-      params,
-    });
+  getApplications: async (
+    params: RecruiterApplicationsParams,
+  ): Promise<RecruiterApplicationsResponse> => {
+    const { data } = await apiClient.get<RecruiterApplicationsResponse>(
+      "/recruiter/applications",
+      {
+        params,
+      },
+    );
     return data;
   },
 
   scheduleInterview: async (payload: ScheduleInterviewInput): Promise<void> => {
-    await apiClient.post('/recruiter/interviews', payload);
+    await apiClient.post("/recruiter/interviews", payload);
   },
 
-  rescheduleInterview: async (interviewId: string, payload: InterviewPayload): Promise<void> => {
+  rescheduleInterview: async (
+    interviewId: string,
+    payload: InterviewPayload,
+  ): Promise<void> => {
     await apiClient.patch(`/recruiter/interviews/${interviewId}`, payload);
   },
 
-  getUpcomingInterviews: async (): Promise<DataResponse<UpcomingInterviewItem[]>> => {
-    const { data } = await apiClient.get<DataResponse<UpcomingInterviewItem[]>>('/recruiter/interviews/upcoming');
+  getUpcomingInterviews: async (): Promise<
+    DataResponse<UpcomingInterviewItem[]>
+  > => {
+    const { data } = await apiClient.get<DataResponse<UpcomingInterviewItem[]>>(
+      "/recruiter/interviews/upcoming",
+    );
     return data;
   },
 
@@ -322,22 +394,26 @@ export const recruiterService = {
     applicationId: string,
     stage: ApplicationStatus,
   ): Promise<{ status: ApplicationStatus; updatedAt: string }> => {
-    const { data } = await apiClient.patch<DataResponse<UpdateApplicationStageResponse>>(
-      `/recruiter/applications/${applicationId}/stage`,
-      { stage },
-    );
+    const { data } = await apiClient.patch<
+      DataResponse<UpdateApplicationStageResponse>
+    >(`/recruiter/applications/${applicationId}/stage`, { stage });
     return data.data;
   },
 
-  generateApplicationAiSummary: async (applicationId: string): Promise<AiSummaryResult> => {
+  generateApplicationAiSummary: async (
+    applicationId: string,
+  ): Promise<AiSummaryResult> => {
     try {
       const { data } = await apiClient.post<DataResponse<AiSummaryResult>>(
         `/recruiter/applications/${applicationId}/ai-summary`,
       );
       return data.data;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('AI candidate summaries require')) {
-        throw new Error('PLAN_GATED');
+      if (
+        error instanceof Error &&
+        error.message.includes("AI candidate summaries require")
+      ) {
+        throw new Error("PLAN_GATED");
       }
       throw error;
     }

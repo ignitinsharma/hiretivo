@@ -62,9 +62,15 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
     hasText(fact.label),
   );
 
-  const skills = (application.skills ?? []).slice(0, 7).map((skill) => ({
+  const matchedSkillNames = application.matchedSkillNames ?? [];
+  const missingSkillNames = application.missingSkills ?? [];
+  const visibleSkills =
+    matchedSkillNames.length > 0 || missingSkillNames.length > 0
+      ? [...matchedSkillNames.slice(0, 4), ...missingSkillNames.slice(0, 3)]
+      : (application.skills ?? []);
+  const skills = visibleSkills.map((skill) => ({
     label: skill,
-    isPrimary: true,
+    isPrimary: matchedSkillNames.includes(skill),
   }));
 
   return (

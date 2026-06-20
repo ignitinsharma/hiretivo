@@ -2,10 +2,12 @@
 
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { Sparkles, UserCog, Search } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import { JobCard } from "@/components/shared/JobCard";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import {
@@ -35,6 +37,11 @@ export function RecommendedJobsList() {
     staleTime: 30_000,
   });
   const { data: savedJobs } = useSavedJobs();
+  const { data: dashboardSummary } = useQuery({
+    queryKey: ["seeker-dashboard-summary"],
+    queryFn: seekerService.getDashboardSummary,
+    staleTime: 0,
+  });
   const saveMutation = useSaveJob();
   const unsaveMutation = useUnsaveJob();
 
@@ -254,11 +261,40 @@ export function RecommendedJobsList() {
             />
           ))}
         </div>
+      ) : (data?.totalCount ?? 0) > 0 ? (
+        <Card className="p-10 text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
+            <Sparkles className="h-8 w-8 text-amber-500" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">All caught up!</h3>
+          <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+            You&apos;ve dismissed all matching jobs. New opportunities are added daily — check back soon.
+          </p>
+        </Card>
+      ) : (dashboardSummary?.profileStrength.percentage ?? 0) < 50 ? (
+        <Card className="p-10 text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5">
+            <UserCog className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">Complete your profile</h3>
+          <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+            Add your skills and experience so we can recommend jobs tailored to you.
+          </p>
+          <Link href="/seeker/settings">
+            <Button variant="primary" className="mt-6">
+              <UserCog className="h-4 w-4" />
+              Update Profile
+            </Button>
+          </Link>
+        </Card>
       ) : (
-        <Card className="p-8 text-center">
-          <p className="text-brand-foreground-muted">
-            No matching jobs found yet. Try updating your skills to see more
-            results.
+        <Card className="p-10 text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5">
+            <Search className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">No matching jobs yet</h3>
+          <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+            We couldn&apos;t find jobs matching your current skills. New positions are posted daily — check back soon.
           </p>
         </Card>
       )}
