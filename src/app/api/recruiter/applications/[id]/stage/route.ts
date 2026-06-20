@@ -48,7 +48,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const application = await prisma.application.findUnique({
     where: { id: params.id },
     include: {
-      job: { select: { recruiterId: true, title: true } },
+      job: {
+        select: {
+          recruiterId: true,
+          title: true,
+          recruiter: { select: { recruiterProfile: { select: { companyName: true } } } },
+        },
+      },
       seeker: { select: { name: true, email: true } },
     },
   });
@@ -108,6 +114,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         toEmail: application.seeker.email,
         candidateName: application.seeker.name ?? "there",
         jobTitle: application.job.title,
+        companyName: application.job.recruiter.recruiterProfile?.companyName ?? null,
         stage: updated.status as ApplicationStatus,
       });
       notificationSent = true;

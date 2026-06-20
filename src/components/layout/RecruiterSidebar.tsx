@@ -6,7 +6,7 @@ import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
-import { LifeBuoy, Plus, PanelLeft } from "lucide-react";
+import { LifeBuoy, Plus, PanelLeft, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { PlanTier } from "@/constants/enums";
@@ -91,11 +91,7 @@ export function RecruiterSidebarProvider({
  * RecruiterSidebarInner
  * Renders workflow navigation, plan state, and support access for recruiters.
  */
-function RecruiterSidebarInner({
-  collapsed,
-}: {
-  collapsed: boolean;
-}) {
+function RecruiterSidebarInner({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
   const { data: session, status: sessionStatus } = useSession();
 
@@ -120,16 +116,21 @@ function RecruiterSidebarInner({
   const currentPlan: PlanTier | null =
     sessionStatus === "loading" || planLoading
       ? null
-      : (subscriptionStatus?.plan as PlanTier | undefined)
-          ?? (session?.user?.plan as PlanTier | undefined)
-          ?? PlanTier.FREE;
+      : ((subscriptionStatus?.plan as PlanTier | undefined) ??
+        (session?.user?.plan as PlanTier | undefined) ??
+        PlanTier.FREE);
   const planLabel =
-    currentPlan === PlanTier.SCALE ? "Scale"
-    : currentPlan === PlanTier.GROWTH ? "Growth"
-    : currentPlan === PlanTier.STARTER ? "Starter"
-    : "Free";
+    currentPlan === PlanTier.SCALE
+      ? "Scale"
+      : currentPlan === PlanTier.GROWTH
+        ? "Growth"
+        : currentPlan === PlanTier.STARTER
+          ? "Starter"
+          : "Free";
   const isPaidPlan =
-    currentPlan === PlanTier.STARTER || currentPlan === PlanTier.GROWTH || currentPlan === PlanTier.SCALE;
+    currentPlan === PlanTier.STARTER ||
+    currentPlan === PlanTier.GROWTH ||
+    currentPlan === PlanTier.SCALE;
 
   const sidebarTooltipClasses =
     "rounded-lg border border-brand-border bg-white text-[#0a0a0a] shadow-none font-medium";
@@ -159,7 +160,10 @@ function RecruiterSidebarInner({
               >
                 <Logo />
                 {currentPlan === null ? (
-                  <span className="h-4 w-14 animate-pulse rounded-md bg-brand-surface" aria-hidden />
+                  <span
+                    className="h-4 w-14 animate-pulse rounded-md bg-brand-surface"
+                    aria-hidden
+                  />
                 ) : (
                   <span
                     className={cn(
@@ -282,6 +286,40 @@ function RecruiterSidebarInner({
             );
           })}
         </nav>
+
+        {/* Upgrade to Pro bubble — free plan only */}
+        {/* {!isPaidPlan && currentPlan !== null && (
+          <div className={cn("px-4 pb-3", collapsed && "px-2")}>
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/pricing"
+                    className="flex h-9 w-9 mx-auto items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 transition-colors"
+                  >
+                    <Zap className="w-4 h-4" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={sidebarTooltipClasses}>
+                  Upgrade to Pro
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Link
+                href="/pricing"
+                className="block rounded-xl border border-brand-primary/20 bg-brand-primary/10 p-3 transition-colors hover:bg-brand-primary/15"
+              >
+                <div className="mb-1 flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5 shrink-0 text-brand-primary" />
+                  <span className="text-xs font-semibold text-brand-primary">Upgrade to Pro</span>
+                </div>
+                <p className="text-[11px] leading-snug text-brand-foreground-muted">
+                  Unlock unlimited jobs &amp; talent access
+                </p>
+              </Link>
+            )}
+          </div>
+        )} */}
 
         {/* Support */}
         <div className="border-t border-brand-border">

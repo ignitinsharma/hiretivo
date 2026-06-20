@@ -501,7 +501,7 @@ export default function RecruiterApplicationsPage() {
                             className="shrink-0"
                           />
                           <div>
-                            <p className="font-semibold capitalize text-slate-900 text-lg group-hover:text-gray-600 transition-colors">
+                            <p className="font-semibold capitalize text-slate-900 text-base group-hover:text-gray-600 transition-colors">
                               {application.candidateName}
                             </p>
                             <p className="text-xs user-section text-slate-400 font-bold tracking-wider">
@@ -542,7 +542,7 @@ export default function RecruiterApplicationsPage() {
                       <td className="px-8 py-6">
                         <span
                           className={cn(
-                            "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold",
+                            "inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-bold",
                             getStatusPillClasses(application.status),
                           )}
                         >
