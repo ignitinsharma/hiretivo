@@ -33,7 +33,7 @@ interface UpdateApplicationStageResponse {
 export interface ActiveJob {
   id: string;
   title: string;
-  status: string;
+  status: JobStatus;
   _count: { applications: number };
   createdAt: string;
 }
@@ -276,6 +276,13 @@ export const recruiterService = {
     return data.data.skills;
   },
 
+  /*
+   * generateJobDescription
+   * Streams an AI-generated job description HTML for the given payload.
+   * Yields decoded UTF-8 chunks as they arrive from the server-sent stream.
+   * Must be consumed via `for await...of`; releases the reader in all exit paths.
+   * @param payload - JD generation inputs (title, shortDesc, vibe, isRegeneration)
+   */
   async *generateJobDescription(
     payload: JdGeneratorInput,
   ): AsyncGenerator<string> {
@@ -292,12 +299,17 @@ export const recruiterService = {
         (err as { error?: string }).error ?? "Failed to generate JD.",
       );
     }
-    const reader = res.body!.getReader();
+    if (!res.body) throw new Error("No response body from JD generator.");
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      yield decoder.decode(value, { stream: true });
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        yield decoder.decode(value, { stream: true });
+      }
+    } finally {
+      reader.cancel();
     }
   },
 

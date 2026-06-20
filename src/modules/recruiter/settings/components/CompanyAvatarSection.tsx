@@ -9,6 +9,7 @@ import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { compressImage } from "@/lib/image-compression";
+import type { RecruiterSettingsData } from "@/services/recruiter.service";
 import { uploadService } from "@/services/upload.service";
 
 interface CompanyAvatarSectionProps {
@@ -26,9 +27,12 @@ export function CompanyAvatarSection({
   const [currentLogo, setCurrentLogo] = useState<string | null>(logo);
   const displayCompanyName = companyName.trim() || "Company";
 
-  // Sync local state when logo prop changes; add cache-buster so browser refetches after upload
+  /* Sync local display when the logo prop changes from the parent (e.g. initial
+   * load or external update). Skip re-busting if the URL already has a ?v= param
+   * (set by onUpload) to avoid double-appending cache-buster tokens. */
   useEffect(() => {
     if (!logo) { setCurrentLogo(null); return; }
+    if (logo.includes('v=')) { setCurrentLogo(logo); return; }
     setCurrentLogo(logo.includes('?') ? `${logo}&v=${Date.now()}` : `${logo}?v=${Date.now()}`);
   }, [logo]);
 
@@ -38,10 +42,20 @@ export function CompanyAvatarSection({
     try {
       const compressed = await compressImage(file);
       const result = await uploadService.uploadCompanyLogo(compressed);
-      setCurrentLogo(
-        `/api/logo?key=${encodeURIComponent(result.key)}&v=${Date.now()}`,
+      /* Cache-bust the URL so the browser does not serve the stale R2 image.
+       * The R2 key is deterministic (same path on every upload), so the browser
+       * would otherwise hit its HTTP cache (max-age=3600 on /api/logo). */
+      const freshLogoUrl = `/api/logo?key=${encodeURIComponent(result.key)}&v=${Date.now()}`;
+      setCurrentLogo(freshLogoUrl);
+      /* Patch the shared query cache directly so RecruiterHeader (which reads
+       * the same ['recruiter-settings'] key) picks up the new URL immediately
+       * without an extra round-trip — and without getting back a URL that lacks
+       * the cache buster. */
+      queryClient.setQueryData<{ data: RecruiterSettingsData }>(
+        ["recruiter-settings"],
+        (old) =>
+          old ? { ...old, data: { ...old.data, logo: freshLogoUrl } } : old,
       );
-      await queryClient.invalidateQueries({ queryKey: ["recruiter-settings"] });
       toast.success("Company logo uploaded.");
     } catch (error) {
       toast.error(

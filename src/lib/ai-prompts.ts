@@ -74,6 +74,12 @@ export function parseCandidateSummary(raw: string): AiSummaryData | null {
   }
 }
 
+/*
+ * buildCandidateSummaryMessages
+ * Constructs the system + user message pair for the candidate AI summary feature.
+ * @param input - Candidate skills, job skills, match score, verdict, headline, and role
+ * @returns { system, user } message objects for the Anthropic messages API
+ */
 export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
   const {
     skills,
@@ -193,6 +199,12 @@ export interface JdGeneratorInput {
   isRegeneration?: boolean;
 }
 
+/*
+ * buildJdGeneratorMessages
+ * Constructs the system + user message pair for the AI job description generator.
+ * @param input - Job title, short description brief, optional vibe, and regeneration flag
+ * @returns { system, user } message objects for the Anthropic messages API
+ */
 export function buildJdGeneratorMessages(input: JdGeneratorInput) {
   const { title, shortDesc, vibe, isRegeneration } = input;
 
@@ -265,6 +277,12 @@ export interface SkillSuggestInput {
   descriptionText: string;
 }
 
+/*
+ * buildSkillSuggestMessages
+ * Constructs the system + user message pair for the AI skill suggestion feature.
+ * @param input - Job description text (truncated to 3000 chars)
+ * @returns { system, user } message objects for the Anthropic messages API
+ */
 export function buildSkillSuggestMessages(input: SkillSuggestInput) {
   const text = input.descriptionText.slice(0, 3000);
 

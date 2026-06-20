@@ -20,6 +20,7 @@ import {
   RecruiterProfileSettingsSchema,
   type RecruiterProfileSettingsInput,
 } from "@/lib/validations/interview.schema";
+import { CompanyIndustry, FundingStage } from "@/constants/enums";
 import type { RecruiterSettingsData } from "@/services/recruiter.service";
 
 interface CompanyProfileSectionProps {
@@ -28,23 +29,23 @@ interface CompanyProfileSectionProps {
   isSaving: boolean;
 }
 
-const COMPANY_TYPE_OPTIONS = [
-  { value: "TECHNOLOGY", label: "Technology" },
-  { value: "FINANCE", label: "Finance" },
-  { value: "HEALTHCARE", label: "Healthcare" },
-  { value: "EDUCATION", label: "Education" },
-  { value: "OTHER", label: "Other" },
+const COMPANY_TYPE_OPTIONS: { value: CompanyIndustry; label: string }[] = [
+  { value: CompanyIndustry.TECHNOLOGY, label: "Technology" },
+  { value: CompanyIndustry.FINANCE, label: "Finance" },
+  { value: CompanyIndustry.HEALTHCARE, label: "Healthcare" },
+  { value: CompanyIndustry.EDUCATION, label: "Education" },
+  { value: CompanyIndustry.OTHER, label: "Other" },
 ];
 
-const FUNDING_STAGE_OPTIONS = [
-  { value: "BOOTSTRAPPED", label: "Bootstrapped" },
-  { value: "PRE_SEED", label: "Pre-seed" },
-  { value: "SEED", label: "Seed" },
-  { value: "SERIES_A", label: "Series A" },
-  { value: "SERIES_B", label: "Series B" },
-  { value: "SERIES_C", label: "Series C" },
-  { value: "SERIES_C_PLUS", label: "Series C+" },
-  { value: "PUBLICLY_TRADED", label: "Publicly Traded" },
+const FUNDING_STAGE_OPTIONS: { value: FundingStage; label: string }[] = [
+  { value: FundingStage.BOOTSTRAPPED, label: "Bootstrapped" },
+  { value: FundingStage.PRE_SEED, label: "Pre-seed" },
+  { value: FundingStage.SEED, label: "Seed" },
+  { value: FundingStage.SERIES_A, label: "Series A" },
+  { value: FundingStage.SERIES_B, label: "Series B" },
+  { value: FundingStage.SERIES_C, label: "Series C" },
+  { value: FundingStage.SERIES_C_PLUS, label: "Series C+" },
+  { value: FundingStage.PUBLICLY_TRADED, label: "Publicly Traded" },
 ];
 
 export function CompanyProfileSection({

@@ -28,6 +28,11 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   send: Send,
 };
 
+/*
+ * SeekerHeader
+ * Sticky top navigation bar for all /seeker/* routes.
+ * Shows logo, primary nav links, verification badge, and account menu.
+ */
 export function SeekerHeader() {
   const pathname = usePathname();
   const hiretivo = useVerificationStatus();
@@ -37,7 +42,7 @@ export function SeekerHeader() {
   const { data: settingsData } = useQuery<{ data: { image?: string | null } }>({
     queryKey: ["seeker-settings"],
     queryFn: seekerService.getSettings,
-    staleTime: 60_000,
+    staleTime: 5 * 60 * 1000,
     enabled: status === "authenticated",
   });
 

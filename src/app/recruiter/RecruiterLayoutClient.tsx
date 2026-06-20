@@ -25,7 +25,9 @@ export function RecruiterLayoutClient({
   dehydratedState,
 }: RecruiterLayoutClientProps) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-brand-surface">
+      {/* Recruiter-scoped QueryClient — isolates recruiter cache from the root client,
+          so recruiter prefetches hydrate into this client, not the shared one. */}
       <ReactQueryProvider>
         <HydrationBoundary state={dehydratedState}>
           <RecruiterSidebarProvider>

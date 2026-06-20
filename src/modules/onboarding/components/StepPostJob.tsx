@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, ArrowLeft, Info } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -111,10 +111,6 @@ export function StepPostJob({
       });
 
       if (!result.success) {
-        console.error(
-          "[StepPostJob] createJobFromOnboarding failed:",
-          result.error,
-        );
         setErrors([result.error]);
         setIsSaving(false);
         return;
@@ -331,13 +327,6 @@ export function StepPostJob({
               </p>
             )}
           </div>
-
-          {/* <div className="bg-primary/5 rounded-lg p-4 space-y-2">
-            <div className="flex items-start gap-2 text-sm text-muted-foreground">
-              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <p>Your listing goes live immediately across our network of 50,000+ remote workers once you complete the onboarding.</p>
-            </div>
-          </div> */}
 
           <div className="flex flex-col gap-3 pt-4">
             <Button

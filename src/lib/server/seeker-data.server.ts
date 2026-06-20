@@ -2,32 +2,33 @@ import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { getProfileStrengthSummary } from "@/lib/seeker-dashboard";
 import { parseLegacyLocation } from "@/modules/india-location/helpers";
+import { SeekerAvailability, SeekerSituation } from "@/constants/enums";
 import type { SeekerSettingsData } from "@/services/seeker.service";
 
-const SITUATION_VALUE_MAP: Record<string, string> = {
-  ACTIVELY_LOOKING: "ACTIVELY_LOOKING",
-  "ACTIVELY LOOKING": "ACTIVELY_LOOKING",
-  OPEN_TO_OFFERS: "OPEN_TO_OFFERS",
-  "OPEN TO OFFERS": "OPEN_TO_OFFERS",
-  EXPLORING_OPTIONS: "EXPLORING_OPTIONS",
-  "EXPLORING OPTIONS": "EXPLORING_OPTIONS",
-  STUDENT_FRESH_GRAD: "STUDENT_FRESH_GRAD",
-  "STUDENT FRESH GRAD": "STUDENT_FRESH_GRAD",
-  "STUDENT / FRESH GRAD": "STUDENT_FRESH_GRAD",
-  "STUDENT/FRESH GRAD": "STUDENT_FRESH_GRAD",
+const SITUATION_VALUE_MAP: Record<string, SeekerSituation> = {
+  ACTIVELY_LOOKING: SeekerSituation.ACTIVELY_LOOKING,
+  "ACTIVELY LOOKING": SeekerSituation.ACTIVELY_LOOKING,
+  OPEN_TO_OFFERS: SeekerSituation.OPEN_TO_OFFERS,
+  "OPEN TO OFFERS": SeekerSituation.OPEN_TO_OFFERS,
+  EXPLORING_OPTIONS: SeekerSituation.EXPLORING_OPTIONS,
+  "EXPLORING OPTIONS": SeekerSituation.EXPLORING_OPTIONS,
+  STUDENT_FRESH_GRAD: SeekerSituation.STUDENT_FRESH_GRAD,
+  "STUDENT FRESH GRAD": SeekerSituation.STUDENT_FRESH_GRAD,
+  "STUDENT / FRESH GRAD": SeekerSituation.STUDENT_FRESH_GRAD,
+  "STUDENT/FRESH GRAD": SeekerSituation.STUDENT_FRESH_GRAD,
 };
 
-const AVAILABILITY_VALUE_MAP: Record<string, string> = {
-  IMMEDIATELY: "IMMEDIATELY",
-  TWO_WEEKS: "TWO_WEEKS",
-  "TWO WEEKS": "TWO_WEEKS",
-  "2 WEEKS": "TWO_WEEKS",
-  "2 WEEKS NOTICE": "TWO_WEEKS",
-  ONE_MONTH_PLUS: "ONE_MONTH_PLUS",
-  "ONE MONTH PLUS": "ONE_MONTH_PLUS",
-  "1 MONTH": "ONE_MONTH_PLUS",
-  "1 MONTH+": "ONE_MONTH_PLUS",
-  "1 MONTH PLUS": "ONE_MONTH_PLUS",
+const AVAILABILITY_VALUE_MAP: Record<string, SeekerAvailability> = {
+  IMMEDIATELY: SeekerAvailability.IMMEDIATELY,
+  TWO_WEEKS: SeekerAvailability.TWO_WEEKS,
+  "TWO WEEKS": SeekerAvailability.TWO_WEEKS,
+  "2 WEEKS": SeekerAvailability.TWO_WEEKS,
+  "2 WEEKS NOTICE": SeekerAvailability.TWO_WEEKS,
+  ONE_MONTH_PLUS: SeekerAvailability.ONE_MONTH_PLUS,
+  "ONE MONTH PLUS": SeekerAvailability.ONE_MONTH_PLUS,
+  "1 MONTH": SeekerAvailability.ONE_MONTH_PLUS,
+  "1 MONTH+": SeekerAvailability.ONE_MONTH_PLUS,
+  "1 MONTH PLUS": SeekerAvailability.ONE_MONTH_PLUS,
 };
 
 /*
@@ -80,8 +81,30 @@ export async function fetchSeekerSettingsForPrefetch(
           githubUrl: true,
           twitterUrl: true,
           yearsExperience: true,
-          workExperiences: { orderBy: { createdAt: "asc" as const } },
-          educations: { orderBy: { createdAt: "asc" as const } },
+          workExperiences: {
+            orderBy: { createdAt: "asc" as const },
+            select: {
+              id: true,
+              company: true,
+              title: true,
+              startDate: true,
+              endDate: true,
+              isCurrent: true,
+              description: true,
+              positionType: true,
+              skills: true,
+            },
+          },
+          educations: {
+            orderBy: { createdAt: "asc" as const },
+            select: {
+              id: true,
+              institution: true,
+              graduationDate: true,
+              degree: true,
+              major: true,
+            },
+          },
           skills: {
             include: {
               skill: { select: { id: true, name: true, slug: true } },
@@ -104,23 +127,37 @@ export async function fetchSeekerSettingsForPrefetch(
 
   return {
     data: {
-      ...userFields,
+      name: userFields.name ?? "",
+      email: userFields.email ?? "",
       image: resolveLogoUrl(image),
-      ...profileFields,
+      headline: profileFields.headline ?? "",
+      bio: profileFields.bio ?? "",
+      location: profileFields.location ?? null,
+      city,
+      state: derivedState,
       situation:
         normalizeSelectValue(profileFields.situation, SITUATION_VALUE_MAP) ??
         "",
+      primaryRole: profileFields.primaryRole ?? "",
+      workPreference: profileFields.workPreference ?? null,
+      salaryMin: profileFields.salaryMin ?? null,
+      salaryMax: profileFields.salaryMax ?? null,
+      currency: profileFields.currency ?? "",
       availability:
         normalizeSelectValue(
           profileFields.availability,
           AVAILABILITY_VALUE_MAP,
         ) ?? "",
-      city,
-      state: derivedState,
+      resumeKey: profileFields.resumeKey ?? null,
+      websiteUrl: profileFields.websiteUrl ?? null,
+      linkedinUrl: profileFields.linkedinUrl ?? null,
+      githubUrl: profileFields.githubUrl ?? null,
+      twitterUrl: profileFields.twitterUrl ?? null,
+      yearsExperience: profileFields.yearsExperience ?? null,
       skills: skills.map((s) => s.skill),
       workExperiences,
       educations,
       profileStrength: getProfileStrengthSummary(profileFields),
-    } as SeekerSettingsData,
+    },
   };
 }

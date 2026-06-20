@@ -178,7 +178,7 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
     sections.find((section) => section.tab === selectedTab) ?? sections[0];
 
   return (
-    <div className="flex-1 bg-white border border-brand-border rounded-2xl overflow-hidden shadow-sm">
+    <div className="flex-1 bg-white border border-brand-border rounded-2xl overflow-hidden">
       {sections.length > 1 && (
         <div className="border-b border-brand-border px-6 sm:px-8">
           <nav className="flex gap-8 -mb-px overflow-x-auto">

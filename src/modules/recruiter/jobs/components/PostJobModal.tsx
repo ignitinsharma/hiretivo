@@ -391,6 +391,7 @@ export function PostJobModal() {
       });
     } else if (!editJobId) {
       setWorkType(WorkType.REMOTE);
+      setHasJdGenerated(false);
       reset({
         title: "",
         category: "",
@@ -1024,7 +1025,7 @@ export function PostJobModal() {
               {showSkillDropdown &&
                 skillSearch &&
                 filteredSkills.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md max-h-48 overflow-y-auto">
                     {filteredSkills
                       .filter(
                         (s: { id: string }) => !selectedSkillIds.includes(s.id),
@@ -1052,7 +1053,7 @@ export function PostJobModal() {
                   </div>
                 )}
               {noMatch && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md shadow-lg overflow-hidden">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-brand-border rounded-md overflow-hidden">
                   <button
                     type="button"
                     className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-primary/5 text-sm text-primary font-medium transition-colors"

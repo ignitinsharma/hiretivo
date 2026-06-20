@@ -27,6 +27,7 @@ import {
   CandidateDrawer,
   type CandidateApplication,
 } from "@/modules/recruiter/applications/components/CandidateDrawer";
+import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
 import { recruiterService } from "@/services/recruiter.service";
 
@@ -257,6 +258,12 @@ export default function RecruiterApplicationsPage() {
                 <Skeleton className="h-10 w-16" />
               </div>
             ))
+          : statsQuery.isError
+            ? (
+              <div className="col-span-2 md:col-span-5 rounded-xl border border-brand-border bg-white p-6 text-center text-sm text-brand-foreground-muted">
+                Failed to load stats. Refresh to retry.
+              </div>
+            )
           : metricCards.map((card) => {
           const isActive = stageFilter === card.stage;
           const isPrimary = card.variant === "primary";
@@ -320,7 +327,12 @@ export default function RecruiterApplicationsPage() {
       </div>
 
       <div className="relative bg-white rounded-xl border border-brand-border overflow-hidden">
-        {applicationsQuery.isLoading ? (
+        {applicationsQuery.isError ? (
+          <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
+            <p className="text-sm font-medium text-brand-foreground">Failed to load applications</p>
+            <p className="mt-1 text-xs text-brand-foreground-muted">Refresh the page to retry.</p>
+          </div>
+        ) : applicationsQuery.isLoading ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -396,7 +408,7 @@ export default function RecruiterApplicationsPage() {
                       variant="primary"
                       onClick={() => {
                         const jobId = activeJobsQuery.data![0].id;
-                        navigator.clipboard.writeText(`${window.location.origin}/jobs/${jobId}`);
+                        navigator.clipboard.writeText(`${window.location.origin}/jobs/${jobId}`).catch(() => toast.error("Failed to copy link"));
                       }}
                     >
                       <ExternalLink className="h-4 w-4" />

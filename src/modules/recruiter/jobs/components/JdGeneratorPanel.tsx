@@ -78,6 +78,7 @@ export function JdGeneratorPanel({
     }
     if (open) {
       setHasApplied(false);
+      setGeneratedJd(null);
     }
   }, [open, prefillTitle, prefillDescription, setValue]);
 
