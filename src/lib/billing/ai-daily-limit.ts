@@ -19,6 +19,7 @@ const dailyLimiters: Record<AiFeature, ReturnType<typeof createRateLimiter>> = {
   [AiFeature.JD]: createRateLimiter("free-ai-jd-daily", FREE_AI_DAILY_LIMIT, "1 d"),
   [AiFeature.SKILLS]: createRateLimiter("free-ai-skills-daily", FREE_AI_DAILY_LIMIT, "1 d"),
   [AiFeature.SUMMARY]: createRateLimiter("free-ai-summary-daily", FREE_AI_DAILY_LIMIT, "1 d"),
+  [AiFeature.SEARCH]: createRateLimiter("free-ai-search-daily", FREE_AI_DAILY_LIMIT, "1 d"),
 };
 
 /* Per-feature daily safety ceiling for paid recruiters, keyed by userId. */
@@ -26,6 +27,7 @@ const paidDailyCaps: Record<AiFeature, ReturnType<typeof createRateLimiter>> = {
   [AiFeature.JD]: createRateLimiter("paid-ai-jd-daily", PAID_AI_DAILY_CAP, "1 d"),
   [AiFeature.SKILLS]: createRateLimiter("paid-ai-skills-daily", PAID_AI_DAILY_CAP, "1 d"),
   [AiFeature.SUMMARY]: createRateLimiter("paid-ai-summary-daily", PAID_AI_DAILY_CAP, "1 d"),
+  [AiFeature.SEARCH]: createRateLimiter("paid-ai-search-daily", PAID_AI_DAILY_CAP, "1 d"),
 };
 
 /*

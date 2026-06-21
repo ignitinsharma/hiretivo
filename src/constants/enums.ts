@@ -213,6 +213,7 @@ export enum AiFeature {
   JD = "jd",
   SKILLS = "skills",
   SUMMARY = "summary",
+  SEARCH = "search",
 }
 
 export enum ContactRequestType {
