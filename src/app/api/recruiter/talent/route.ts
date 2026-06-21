@@ -6,7 +6,7 @@ import { coarseLocation, redactName } from "@/lib/billing/talent-redaction";
 import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { searchRateLimiter } from "@/lib/rate-limit";
-import type { Prisma } from "@prisma/client";
+import { buildTalentQuery } from "@/modules/recruiter/talent/utils/build-talent-query";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 12;
@@ -149,79 +149,7 @@ export async function GET(req: NextRequest) {
     MAX_LIMIT,
   );
 
-  const where: Prisma.UserWhereInput = {
-    role: "SEEKER",
-    verificationStatus: 'VERIFIED',
-    seekerProfile: {
-      is: {
-        ...(location
-          ? { location: { contains: location, mode: "insensitive" } }
-          : {}),
-        ...(availability
-          ? { availability: { contains: availability, mode: "insensitive" } }
-          : {}),
-        ...(skill
-          ? {
-              skills: {
-                some: {
-                  skill: { name: { contains: skill, mode: "insensitive" } },
-                },
-              },
-            }
-          : {}),
-      },
-    },
-    ...(q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { email: { contains: q, mode: "insensitive" } },
-            {
-              seekerProfile: {
-                is: {
-                  OR: [
-                    { headline: { contains: q, mode: "insensitive" } },
-                    { primaryRole: { contains: q, mode: "insensitive" } },
-                    { bio: { contains: q, mode: "insensitive" } },
-                    { location: { contains: q, mode: "insensitive" } },
-                    { availability: { contains: q, mode: "insensitive" } },
-                    {
-                      workExperiences: {
-                        some: {
-                          OR: [
-                            { company: { contains: q, mode: "insensitive" } },
-                            { title: { contains: q, mode: "insensitive" } },
-                            { description: { contains: q, mode: "insensitive" } },
-                          ],
-                        },
-                      },
-                    },
-                    {
-                      educations: {
-                        some: {
-                          OR: [
-                            { institution: { contains: q, mode: "insensitive" } },
-                            { degree: { contains: q, mode: "insensitive" } },
-                            { major: { contains: q, mode: "insensitive" } },
-                          ],
-                        },
-                      },
-                    },
-                    {
-                      skills: {
-                        some: {
-                          skill: { name: { contains: q, mode: "insensitive" } },
-                        },
-                      },
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-        }
-      : {}),
-  };
+  const where = buildTalentQuery({ q, skill, location, availability });
 
   const [seekers, total] = await Promise.all([
     prisma.user.findMany({
