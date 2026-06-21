@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Loader2, Mail, Search, X } from "lucide-react";
+import { Briefcase, Clock, Copy, FileText, Loader2, Mail, MapPin, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
@@ -167,14 +167,24 @@ function TalentCard({
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-x-4 gap-y-2 text-sm font-semibold text-brand-foreground-muted">
-        <span>{talent.location ?? "Location not provided"}</span>
-        <span>
+        <span className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          {talent.location ?? "Location not provided"}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
           {talent.availability
             ? formatProfileLabel(talent.availability)
             : "Availability unknown"}
         </span>
-        <span>{formatCardExperience(talent.yearsExperience)}</span>
-        <span>{talent.resumeKey ? "Resume available" : "No resume"}</span>
+        <span className="flex items-center gap-1.5">
+          <Briefcase className="h-3.5 w-3.5 shrink-0" />
+          {formatCardExperience(talent.yearsExperience)}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <FileText className="h-3.5 w-3.5 shrink-0" />
+          {talent.resumeKey ? "Resume available" : "No resume"}
+        </span>
       </div>
 
       <div className="mt-auto flex gap-2">
