@@ -128,7 +128,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
         type="button"
         onClick={onRemove}
         aria-label={`Remove filter ${label}`}
-        className="ml-0.5 rounded-full p-0.5 hover:bg-gray-200"
+        className="ml-0.5 rounded-full p-0.5 hover:bg-brand-surface"
       >
         <X className="h-3 w-3" />
       </button>
