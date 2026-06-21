@@ -1,4 +1,5 @@
 import type { VerificationStatus } from "@/constants/enums";
+import type { ParsedFilters } from "@/lib/validations/ai-search.schema";
 
 export interface TalentListItem {
   id: string;
@@ -15,6 +16,7 @@ export interface TalentListItem {
   availability: string | null;
   resumeKey: boolean;
   skills: string[];
+  matchReason?: string | null;
 }
 
 export interface TalentListResponse {
@@ -26,6 +28,30 @@ export interface TalentListResponse {
     demoCount: number;    // Count of all seekers with a profile (unaffected by search filters)
     isFreePlan: boolean;  // true when caller is on FREE plan (items are blurred), false for paid
   };
+}
+
+/*
+ * AiSearchResponseData
+ * Shape of the data object returned by POST /api/recruiter/talent/ai-search.
+ * Extends the standard talent list with AI-specific fields.
+ */
+export interface AiSearchResponseData {
+  items: TalentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  demoCount: number;
+  isFreePlan: boolean;
+  parsedFilters: ParsedFilters;
+  aiRanked: boolean;
+}
+
+/*
+ * AiSearchResponse
+ * API response wrapper for the AI talent search endpoint.
+ */
+export interface AiSearchResponse {
+  data: AiSearchResponseData;
 }
 
 export interface TalentSkill {

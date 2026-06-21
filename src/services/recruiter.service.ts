@@ -17,7 +17,10 @@ import type { JobAnalyticsResponse } from "@/modules/recruiter/jobs/types/analyt
 import type {
   TalentDetail,
   TalentListResponse,
+  AiSearchResponse,
+  AiSearchResponseData,
 } from "@/modules/recruiter/talent/types/talent.types";
+import type { ParsedFilters } from "@/lib/validations/ai-search.schema";
 
 interface DataResponse<T> {
   data: T;
@@ -352,6 +355,27 @@ export const recruiterService = {
 
       throw error;
     }
+  },
+
+  /*
+   * aiSearchTalent
+   * Sends a natural-language query (and optional pre-parsed filters) to the
+   * AI talent search endpoint. Used for both initial queries and chip-removal re-searches.
+   * @param query - The raw NL query string
+   * @param parsedFilters - If provided, the parse step is skipped server-side
+   * @param page - Page number (always 1 for AI mode MVP)
+   * @returns AiSearchResponseData with ranked items + parsedFilters + aiRanked flag
+   */
+  aiSearchTalent: async (
+    query: string,
+    parsedFilters?: ParsedFilters,
+    page = 1,
+  ): Promise<AiSearchResponseData> => {
+    const { data } = await apiClient.post<AiSearchResponse>(
+      "/recruiter/talent/ai-search",
+      { query, parsedFilters, page },
+    );
+    return data.data;
   },
 
   getApplications: async (
