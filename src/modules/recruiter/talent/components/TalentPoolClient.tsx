@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Clock, Copy, FileText, Loader2, Mail, MapPin, Search, X } from "lucide-react";
+import { Briefcase, Clock, Copy, FileText, Loader2, Mail, MapPin, Search, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
@@ -23,8 +23,10 @@ import { DEMO_ENGINEERS, DEMO_THRESHOLD } from "@/constants/demo-engineers";
 import { cn } from "@/lib/utils";
 import type { DemoEngineerProfile } from "@/constants/demo-engineers";
 import { useFetchTalent } from "@/modules/recruiter/talent/queries/use-fetch-talent";
+import { useAiSearchTalent } from "@/modules/recruiter/talent/queries/use-ai-search-talent";
 import { formatProfileLabel } from "@/modules/recruiter/talent/utils/format-profile-label";
-import type { TalentListItem } from "@/modules/recruiter/talent/types/talent.types";
+import type { TalentListItem, AiSearchResponseData } from "@/modules/recruiter/talent/types/talent.types";
+import type { ParsedFilters } from "@/lib/validations/ai-search.schema";
 
 import { DemoEngineerCard } from "./DemoEngineerCard";
 import { TalentProfileDialog } from "./TalentProfileDialog";
@@ -85,13 +87,65 @@ function computeDemoSlices(realCount: number): DemoEngineerProfile[] {
 }
 
 /*
+ * removeFilterChip
+ * Returns a new ParsedFilters object with the specified chip value removed.
+ * @param filters - Current parsed filters
+ * @param type - The filter field to modify
+ * @param value - The value to remove from that field
+ */
+function removeFilterChip(filters: ParsedFilters, type: keyof ParsedFilters, value: string): ParsedFilters {
+  switch (type) {
+    case "skills":
+      return { ...filters, skills: filters.skills?.filter((s) => s !== value) };
+    case "keywords":
+      return { ...filters, keywords: filters.keywords?.filter((k) => k !== value) };
+    case "role":
+      return { ...filters, role: undefined };
+    case "location":
+      return { ...filters, location: undefined };
+    case "availability":
+      return { ...filters, availability: undefined };
+    case "workPreference":
+      return { ...filters, workPreference: undefined };
+    case "minYears":
+      return { ...filters, minYears: undefined };
+    case "maxYears":
+      return { ...filters, maxYears: undefined };
+    default:
+      return filters;
+  }
+}
+
+/*
+ * FilterChip
+ * Removable chip representing a parsed AI search filter.
+ */
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }): ReactElement {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-brand-border bg-brand-surface px-3 py-1 text-xs font-semibold text-brand-foreground">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove filter ${label}`}
+        className="ml-0.5 rounded-full p-0.5 hover:bg-gray-200"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
+/*
  * TalentCard
  * Renders one candidate preview in the Talent Pool grid.
  * Accepts optional onUnlock for FREE plan blurred cards — shows "Unlock Profile" instead of "View Profile".
  * When onUnlock is not provided (paid plan), shows "View Profile" + optional email button.
+ * Renders matchReason (when present from AI search) above the action buttons.
  * @param talent - TalentListItem data from API
  * @param onView - Callback to open TalentProfileDialog (paid plan)
  * @param onUnlock - Optional callback for FREE plan blurred card unlock → opens TalentUpgradeModal
+ * @param isUnlocking - Whether this card's unlock is in progress
  */
 function TalentCard({
   talent,
@@ -186,6 +240,12 @@ function TalentCard({
           {talent.resumeKey ? "Resume available" : "No resume"}
         </span>
       </div>
+
+      {talent.matchReason && (
+        <p className="mb-3 text-xs leading-relaxed text-brand-foreground-muted italic">
+          {talent.matchReason}
+        </p>
+      )}
 
       <div className="mt-auto flex gap-2">
         {onUnlock ? (
@@ -290,6 +350,7 @@ function TalentCardSkeleton(): ReactElement {
     </article>
   );
 }
+
 /*
  * TalentPoolClient
  * Talent Pool search and profile discovery experience for recruiters.
@@ -302,21 +363,31 @@ function TalentCardSkeleton(): ReactElement {
  *   - No Load More button (blurred grid is fixed size).
  *
  * Paid plan behavior:
- *   - Search bar fully functional; search change resets to page 1.
- *   - 12 candidates per page; Load More appends next page.
+ *   - Search bar fully functional; submit on Enter or Search button.
+ *   - AI search: natural-language query triggers AI-ranked results with parsed filter chips.
+ *   - Chip removal triggers re-search with updated filters (skips parse step).
+ *   - Clearing search box reverts to full keyword browse with Load More.
+ *   - 12 candidates per page; Load More appends next page (keyword browse only).
  *   - "Showing N of M verified candidates" / "N of M match 'query'" count.
  *   - Stale results shown with opacity fade during search transitions.
  *   - Load More error shows retry button without clearing existing results.
+ *   - AI HTTP error → toast + fall back to keyword browse results.
  */
 export function TalentPoolClient(): ReactElement {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
+  const [activeParsedFilters, setActiveParsedFilters] = useState<ParsedFilters | undefined>(undefined);
   const debouncedSearch = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const talentQuery = useFetchTalent({ q: debouncedSearch });
+  const isAiMode = submittedQuery.trim().length > 0;
+
+  // Always fetch keyword browse; AI search enabled only when submittedQuery is set.
+  const talentQuery = useFetchTalent({ q: "" });
+  const aiSearchQuery = useAiSearchTalent(submittedQuery, activeParsedFilters);
 
   // Derive flat item list from all loaded pages.
   const allPages = talentQuery.data?.pages ?? [];
@@ -324,11 +395,20 @@ export function TalentPoolClient(): ReactElement {
   const isFreePlan = firstPage?.isFreePlan ?? false;
   const demoCount = firstPage?.demoCount ?? 0;
   const total = firstPage?.total ?? 0;
-  const talentItems = allPages.flatMap((page) => page.items);
 
-  // Loading state: true only on first fetch (no data yet).
-  // isFetchingNextPage is handled separately at the Load More button.
-  const showTalentSkeleton = talentQuery.isLoading;
+  // AI response data
+  const aiData: AiSearchResponseData | undefined = aiSearchQuery.data;
+  const displayedParsedFilters = aiData?.parsedFilters;
+
+  // In AI mode (and no HTTP error): use AI results. Otherwise: use keyword browse pages.
+  const talentItems = isAiMode && !aiSearchQuery.isError
+    ? (aiData?.items ?? [])
+    : allPages.flatMap((page) => page.items);
+
+  // Loading states: separate AI mode vs keyword browse skeletons.
+  const showAiSkeleton = isAiMode && aiSearchQuery.isLoading;
+  const showTalentSkeleton = !isAiMode && talentQuery.isLoading;
+  const showAnySkeleton = showAiSkeleton || showTalentSkeleton;
 
   // Search transition: new query firing but stale data exists (keepPreviousData).
   // Show grid with reduced opacity so the user knows results are refreshing.
@@ -343,6 +423,21 @@ export function TalentPoolClient(): ReactElement {
   const isInitialError = talentQuery.isError && !hasLoadedSome;
   const isLoadMoreError = talentQuery.isError && hasLoadedSome;
 
+  // Toast on AI HTTP error — fall back to keyword browse display.
+  useEffect(() => {
+    if (aiSearchQuery.isError && isAiMode) {
+      toast.error("AI search unavailable — showing keyword results.");
+    }
+  }, [aiSearchQuery.isError, isAiMode]);
+
+  // Toast when AI soft-failed (aiRanked: false in response).
+  useEffect(() => {
+    if (aiData && !aiData.aiRanked && isAiMode) {
+      toast("AI ranking unavailable — showing keyword matches.", { icon: "ℹ️" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiData?.aiRanked]);
+
   /*
    * goToPricing
    * Sends free-plan upgrade intent through the canonical pricing page.
@@ -350,6 +445,50 @@ export function TalentPoolClient(): ReactElement {
    */
   function goToPricing() {
     router.push(TALENT_PRICING_URL);
+  }
+
+  /*
+   * handleAiSearch
+   * Submits the current input as an AI query.
+   * Resets parsed filters so the full parse+rerank pipeline runs.
+   */
+  function handleAiSearch() {
+    const query = searchInput.trim();
+    if (!query) return;
+    setSubmittedQuery(query);
+    setActiveParsedFilters(undefined);
+  }
+
+  /*
+   * handleSearchKeyDown
+   * Submits AI search on Enter key press (paid plan only).
+   */
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !isFreePlan) {
+      handleAiSearch();
+    }
+  }
+
+  /*
+   * handleClearSearch
+   * Clears the search box and exits AI mode, reverting to full keyword browse.
+   */
+  function handleClearSearch() {
+    setSearchInput("");
+    setSubmittedQuery("");
+    setActiveParsedFilters(undefined);
+  }
+
+  /*
+   * handleChipRemove
+   * Removes one parsed filter chip and triggers a re-search skipping the parse step.
+   * @param chipType - The ParsedFilters field to remove from
+   * @param chipValue - The specific value to remove (or empty string for scalar fields)
+   */
+  function handleChipRemove(chipType: keyof ParsedFilters, chipValue: string) {
+    if (!displayedParsedFilters) return;
+    const newFilters = removeFilterChip(displayedParsedFilters, chipType, chipValue);
+    setActiveParsedFilters(newFilters);
   }
 
   /*
@@ -396,38 +535,59 @@ export function TalentPoolClient(): ReactElement {
 
   return (
     <section className="space-y-6">
-      {/* Search bar — disabled with tooltip for FREE plan (D-04) */}
+      {/* Search bar — disabled with tooltip for FREE plan (D-04); AI search for paid */}
       <div className="rounded-xl border border-brand-border bg-white p-4">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-foreground-secondary" />
-                <Input
-                  value={searchInput}
-                  onChange={(event) => {
-                    if (!isFreePlan) setSearchInput(event.target.value);
-                  }}
-                  onClick={() => {
-                    if (isFreePlan) goToPricing();
-                  }}
-                  placeholder="Search candidates by name, role, skill, location, availability, company, or education"
-                  className={cn(
-                    "pr-10 pl-10",
-                    isFreePlan && "cursor-not-allowed opacity-50",
+              {/* Outer wrapper: flex row with Search button for paid plan */}
+              <div className="relative flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-foreground-secondary" />
+                  <Input
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    onClick={() => {
+                      if (isFreePlan) goToPricing();
+                    }}
+                    placeholder={
+                      isFreePlan
+                        ? "Search candidates by name, role, skill, location…"
+                        : "Describe who you're looking for… (press Enter to search)"
+                    }
+                    className={cn(
+                      "pr-10 pl-10",
+                      isFreePlan && "cursor-not-allowed opacity-50",
+                    )}
+                    readOnly={isFreePlan}
+                  />
+                  {searchInput && !isFreePlan && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Clear search"
+                      className="absolute right-1 top-1/2 -translate-y-1/2"
+                      onClick={handleClearSearch}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   )}
-                  readOnly={isFreePlan}
-                />
-                {searchInput && !isFreePlan && (
+                </div>
+                {!isFreePlan && (
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Clear talent search"
-                    className="absolute right-1 top-1/2 -translate-y-1/2"
-                    onClick={() => setSearchInput("")}
+                    variant="primary"
+                    onClick={handleAiSearch}
+                    disabled={!searchInput.trim() || aiSearchQuery.isFetching}
+                    aria-label="Search with AI"
                   >
-                    <X className="h-4 w-4" />
+                    {aiSearchQuery.isFetching ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
                   </Button>
                 )}
               </div>
@@ -439,17 +599,67 @@ export function TalentPoolClient(): ReactElement {
             )}
           </Tooltip>
         </TooltipProvider>
+
+        {/* Parsed filter chips — shown after AI search returns results */}
+        {isAiMode && displayedParsedFilters && (
+          <div className="flex flex-wrap gap-2 pt-3">
+            {displayedParsedFilters.skills?.map((skill) => (
+              <FilterChip
+                key={`skill-${skill}`}
+                label={skill}
+                onRemove={() => handleChipRemove("skills", skill)}
+              />
+            ))}
+            {displayedParsedFilters.keywords?.map((kw) => (
+              <FilterChip
+                key={`kw-${kw}`}
+                label={kw}
+                onRemove={() => handleChipRemove("keywords", kw)}
+              />
+            ))}
+            {displayedParsedFilters.role && (
+              <FilterChip
+                label={`Role: ${displayedParsedFilters.role}`}
+                onRemove={() => handleChipRemove("role", displayedParsedFilters.role!)}
+              />
+            )}
+            {displayedParsedFilters.location && (
+              <FilterChip
+                label={`📍 ${displayedParsedFilters.location}`}
+                onRemove={() => handleChipRemove("location", displayedParsedFilters.location!)}
+              />
+            )}
+            {displayedParsedFilters.workPreference && (
+              <FilterChip
+                label={displayedParsedFilters.workPreference}
+                onRemove={() => handleChipRemove("workPreference", displayedParsedFilters.workPreference!)}
+              />
+            )}
+            {displayedParsedFilters.minYears != null && (
+              <FilterChip
+                label={`${displayedParsedFilters.minYears}+ yrs`}
+                onRemove={() => handleChipRemove("minYears", "")}
+              />
+            )}
+            {displayedParsedFilters.availability && (
+              <FilterChip
+                label={`Available: ${displayedParsedFilters.availability}`}
+                onRemove={() => handleChipRemove("availability", displayedParsedFilters.availability!)}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Count label — paid plan only, shown once data arrives */}
-      {/* {!isFreePlan && !showTalentSkeleton && total > 0 && (
+      {/* {!isFreePlan && !showAnySkeleton && total > 0 && (
         <p className="text-sm font-semibold text-brand-foreground-muted">
           {buildCountLabel()}
         </p>
       )} */}
 
-      {/* Card grid — loading skeleton | initial error | empty (paid only) | real + demo cards */}
-      {showTalentSkeleton ? (
+      {/* Card grid — loading skeleton | initial error | empty | real + demo cards */}
+      {showAnySkeleton ? (
         <div className="grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <TalentCardSkeleton key={index} />
@@ -458,6 +668,16 @@ export function TalentPoolClient(): ReactElement {
       ) : isInitialError ? (
         <div className="rounded-xl border border-brand-border bg-white p-8 text-center text-sm font-semibold text-brand-danger">
           Talent pool could not be loaded.
+        </div>
+      ) : isAiMode && !aiSearchQuery.isLoading && talentItems.length === 0 ? (
+        /* AI mode empty state */
+        <div className="rounded-xl border border-brand-border bg-white p-8 text-center">
+          <p className="text-sm font-semibold text-brand-foreground-muted">
+            No engineers matched your search.
+          </p>
+          <p className="mt-1 text-xs text-brand-foreground-secondary">
+            Try removing location or availability from your query.
+          </p>
         </div>
       ) : talentItems.length === 0 && !isFreePlan ? (
         <div className="rounded-xl border border-brand-border bg-white p-8 text-center text-sm font-semibold text-brand-foreground-muted">
@@ -497,8 +717,8 @@ export function TalentPoolClient(): ReactElement {
         </div>
       )}
 
-      {/* Load More — paid plan only; hidden when all candidates loaded or FREE plan */}
-      {!isFreePlan && !showTalentSkeleton && (
+      {/* Load More — paid plan only; hidden in AI mode (single-page response) */}
+      {!isFreePlan && !showAnySkeleton && !isAiMode && (
         <div className="flex flex-col items-center gap-3 pt-2">
           {/* Load-more error: keep existing cards, show retry */}
           {isLoadMoreError && (
