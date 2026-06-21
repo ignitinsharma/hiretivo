@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   UserPlus,
 } from "lucide-react";
+import { BookCallButton } from "@/components/shared/BookCallButton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -126,6 +127,9 @@ export function PublicMobileNavMenu() {
               Get Verified
             </span>
           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <BookCallButton variant="mobile" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
