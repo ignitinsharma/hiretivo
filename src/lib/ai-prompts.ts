@@ -312,3 +312,165 @@ export const SKILL_SUGGEST_CONFIG = {
   max_tokens: 350,
   temperature: 0.1,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Talent Parse (AI Talent Search — Phase 2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Structured output the model returns when parsing a natural-language talent query.
+ * All fields are optional except `skills` and `keywords`, which default to empty arrays.
+ * `workPreference` is one of "REMOTE" | "ONSITE" | "HYBRID" — validated at the route level.
+ */
+export interface TalentParseOutput {
+  skills: string[];
+  minYears?: number;
+  maxYears?: number;
+  role?: string;
+  /** Work arrangement preference — "REMOTE", "ONSITE", or "HYBRID". Validated at route level. */
+  workPreference?: string;
+  location?: string;
+  availability?: string;
+  keywords: string[];
+}
+
+/*
+ * buildTalentParseMessages
+ * Constructs the system + user message pair for parsing a natural-language talent
+ * search query into structured filters (TalentParseOutput).
+ * @param query - Raw natural-language query entered by the recruiter
+ * @returns { system, user } message objects for the OpenRouter messages API
+ */
+export function buildTalentParseMessages(query: string) {
+  return {
+    system: `You are a query-parsing engine for a talent search platform.
+
+Given a recruiter's natural-language search query, extract structured filters and return ONLY a valid JSON object matching this shape (no markdown, no code fences, no prose outside the JSON):
+
+{
+  "skills": ["normalised technical skills mentioned, e.g. React not ReactJS"],
+  "keywords": ["domain/industry keywords, e.g. fintech, startup, Series A — NOT technical skills"],
+  "minYears": <integer or omit>,
+  "maxYears": <integer or omit>,
+  "role": "normalised job role, e.g. Frontend Engineer, Product Manager (or omit)",
+  "workPreference": "REMOTE | ONSITE | HYBRID (or omit if not mentioned)",
+  "location": "city or country if mentioned (or omit)",
+  "availability": "e.g. immediately, 2 weeks if mentioned (or omit)"
+}
+
+EXTRACTION RULES:
+- skills: technical skills and tools only, normalised (React, TypeScript, Node.js, PostgreSQL). Never include soft skills or domain keywords here.
+- keywords: industry / domain / company-stage terms (fintech, healthtech, B2B SaaS, Series A, startup, enterprise). NOT technical skills.
+- minYears / maxYears: integers extracted from phrases like "5+ years" → minYears:5, "3-5 years" → minYears:3 maxYears:5, "senior" alone → omit.
+- workPreference: output exactly "REMOTE", "ONSITE", or "HYBRID". Omit if not mentioned.
+- role: normalise to a standard title (Frontend Engineer, not "front-end dev").
+- location: extract city or country name only.
+- availability: extract as-stated phrasing (immediately, 2 weeks, 1 month).
+- If the query is gibberish or uninterpretable, return: {"skills":[],"keywords":[]}.
+- Never include PII (names, emails, phone numbers) from the query in the output.
+
+WORKED EXAMPLE:
+Input: "looking for a remote senior React engineer with 5+ years fintech experience, available immediately"
+Output:
+{
+  "skills": ["React"],
+  "keywords": ["fintech"],
+  "minYears": 5,
+  "role": "Frontend Engineer",
+  "workPreference": "REMOTE",
+  "availability": "immediately"
+}
+
+Output the JSON object and NOTHING else.`,
+
+    user: query,
+  };
+}
+
+export const TALENT_PARSE_CONFIG = {
+  max_tokens: 300,
+  temperature: 0.1,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Talent Rerank (AI Talent Search — Phase 2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Compact candidate representation sent to the LLM for reranking.
+ * bioSnippet is capped at 200 chars by the caller to keep token usage predictable.
+ * No PII beyond what is already publicly visible on a talent profile.
+ */
+export interface CandidateSummary {
+  id: string;
+  headline: string | null;
+  role: string | null;
+  skills: string[];
+  yearsExperience: number | null;
+  location: string | null;
+  /** First 200 chars of the candidate's bio — PII-safe excerpt. */
+  bioSnippet: string | null;
+}
+
+/**
+ * Single entry in the reranked output array returned by the model.
+ * `reason` is a ≤120-char plain-text explanation of why this candidate fits the query.
+ */
+export interface RerankEntry {
+  id: string;
+  /** ≤120 chars — why this candidate fits the query. Plain text, no HTML. */
+  reason: string;
+}
+
+/*
+ * buildTalentRerankMessages
+ * Constructs the system + user message pair for reranking a list of candidates
+ * by fit to a recruiter's natural-language query.
+ * @param query      - Original natural-language search query
+ * @param candidates - Up to 40 candidate summaries to rank
+ * @returns { system, user } message objects for the OpenRouter messages API
+ */
+export function buildTalentRerankMessages(
+  query: string,
+  candidates: CandidateSummary[],
+) {
+  const candidatePayload = JSON.stringify(
+    candidates.map((c) => ({
+      id: c.id,
+      headline: c.headline,
+      role: c.role,
+      skills: c.skills,
+      yearsExperience: c.yearsExperience,
+      location: c.location,
+      bioSnippet: c.bioSnippet,
+    })),
+  );
+
+  return {
+    system: `You are a talent-ranking engine for a recruiter search platform.
+
+Given a recruiter's search query and a list of candidate profiles, rank the candidates by fit to the query and return ONLY a valid JSON array (no markdown, no code fences, no prose outside the JSON):
+
+[{"id":"...","reason":"..."},...]
+
+RANKING RULES:
+- Order best-fit first.
+- Include ALL candidate IDs — none may be omitted, none may be duplicated.
+- reason: max 120 chars, plain text, specific to WHY this candidate fits — mention a concrete skill or experience from their profile. Never invent skills or experience not present in the candidate data.
+- If two candidates are equally good, break ties by yearsExperience descending (higher first).
+- Assess fit holistically: skills match, role alignment, years of experience, location if relevant, and bio context.
+- Do NOT invent or assume skills or experience not listed in the candidate data.
+
+Output the JSON array and NOTHING else.`,
+
+    user: `Query: ${query}
+
+Candidates:
+${candidatePayload}`,
+  };
+}
+
+export const TALENT_RERANK_CONFIG = {
+  max_tokens: 1500,
+  temperature: 0.3,
+} as const;
