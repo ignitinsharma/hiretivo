@@ -26,7 +26,7 @@ import { useUIStore } from "@/store/use-ui-store";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
 import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
 import { PlanChangeModal } from "@/components/shared/PlanChangeModal";
-import { PricingWhySection } from "@/app/(public)/pricing/PricingWhySection";
+import WhyHiretivo from "@/app/(public)/pricing/PricingWhySection";
 
 // ─── Table cell class constants ───────────────────────────────────────────────
 
@@ -481,9 +481,7 @@ export function PricingClient() {
 
   return (
     <>
-      <PricingWhySection />
-
-      {/* Hero */}
+      {/* Hero + Toggle + Cards */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-6">
@@ -494,6 +492,8 @@ export function PricingClient() {
           </p>
         </div>
       </section>
+
+      <WhyHiretivo />
 
       {/* Billing toggle + Cards */}
       <section className="py-12 px-6 text-center">
