@@ -26,6 +26,7 @@ import { useUIStore } from "@/store/use-ui-store";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
 import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
 import { PlanChangeModal } from "@/components/shared/PlanChangeModal";
+import { PricingWhySection } from "@/app/(public)/pricing/PricingWhySection";
 
 // ─── Table cell class constants ───────────────────────────────────────────────
 
@@ -489,7 +490,14 @@ export function PricingClient() {
           <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
             Access India&apos;s verified engineers. Pay only for what you unlock.
           </p>
+        </div>
+      </section>
 
+      <PricingWhySection />
+
+      {/* Billing toggle + Cards */}
+      <section className="py-12 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
           {/* Monthly / Annual toggle */}
           <div className="flex items-center justify-center mb-16 relative z-30">
             <div className="bg-slate-100 p-1.5 rounded-xl flex items-center border border-brand-border">
