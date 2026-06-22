@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   FileText,
   Lightbulb,
-  MessageSquareText,
   Puzzle,
   Sparkles,
   type LucideIcon,
@@ -12,6 +11,7 @@ import { sanitizeHtml } from "@/lib/utils/html-sanitizer";
 import type { AiState } from "../types";
 import { getFitBadge } from "../utils";
 import { AiInsightsGate } from "./AiInsightsGate";
+import { ScreeningQuestionsSection } from "./ScreeningQuestionsSection";
 
 interface AiInsightsCardProps {
   state: AiState;
@@ -110,19 +110,7 @@ export function AiInsightsCard({ state }: AiInsightsCardProps) {
 
         {questions.length > 0 ? (
           <div className="border-t border-[#ece9fe] pt-5">
-            <div className="flex items-start gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
-                <MessageSquareText className="h-4 w-4 text-brand-primary" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-brand-primary">Suggested screening questions</p>
-                <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-brand-foreground-muted">
-                  {questions.map((question) => (
-                    <li key={question}>{question}</li>
-                  ))}
-                </ol>
-              </div>
-            </div>
+            <ScreeningQuestionsSection questions={questions} />
           </div>
         ) : null}
       </div>
