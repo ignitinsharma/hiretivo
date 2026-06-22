@@ -1,106 +1,123 @@
-import { ShieldCheck, Users, ClipboardCheck, TrendingUp, type LucideIcon } from "lucide-react";
+import { ShieldCheck, Users, ClipboardList, TrendingUp, type LucideIcon } from "lucide-react";
 
 interface Feature {
   Icon: LucideIcon;
-  titleLine1: string;
-  titleLine2: string;
+  title: string;
   description: string;
-  accent: string;
-  iconColor: string;
+  bottomBg?: string;
+  dotColor: string;
 }
 
+/*
+ * Icon bg and color are uniform across all cards (indigo-100 / indigo-600)
+ * matching the screenshot — only the bottom panel and dots differ per card.
+ */
 const FEATURES: Feature[] = [
   {
     Icon: Users,
-    titleLine1: "Pre-vetted",
-    titleLine2: "engineers",
-    description: "Every engineer passes manual verification. No ghosting, no inflated CVs.",
-    accent: "bg-violet-50",
-    iconColor: "text-violet-600",
+    title: "Precision talent matching",
+    description:
+      "Our AI matches candidates to your job requirements with high accuracy, so you see only the most relevant profiles.",
+    dotColor: "bg-indigo-300",
   },
   {
-    Icon: ClipboardCheck,
-    titleLine1: "Match score",
-    titleLine2: "first",
-    description: "See exactly how well an engineer fits before spending credits.",
-    accent: "bg-blue-50",
-    iconColor: "text-blue-600",
+    Icon: ClipboardList,
+    title: "Smarter screening, less effort",
+    description:
+      "Automated screening, skill evaluation, and AI summaries save hours of manual work.",
+    dotColor: "bg-indigo-300",
   },
   {
     Icon: TrendingUp,
-    titleLine1: "India's",
-    titleLine2: "top 10%",
-    description: "Senior engineers competing for global remote opportunities.",
-    accent: "bg-green-50",
-    iconColor: "text-green-600",
+    title: "Data-driven hiring decisions",
+    description:
+      "Actionable insights and analytics help you make confident, unbiased hiring decisions.",
+    bottomBg: "bg-green-50",
+    dotColor: "bg-green-400",
   },
   {
     Icon: ShieldCheck,
-    titleLine1: "Hire in",
-    titleLine2: "days",
-    description: "Direct access to verified talent without recruiters or agencies.",
-    accent: "bg-orange-50",
-    iconColor: "text-orange-600",
+    title: "Fair, inclusive & compliant",
+    description:
+      "Reduce bias and stay compliant with a fair and transparent hiring process.",
+    bottomBg: "bg-orange-50",
+    dotColor: "bg-orange-300",
   },
 ];
 
 /*
  * PricingWhySection
- * "Why Hiretivo?" value-props section rendered above the hero on /pricing.
+ * Pixel-matched to the "Why Hiretivo?" screenshot — 4-column card grid with
+ * circular icon badges, centered text, indigo underline divider, and per-card
+ * bottom-panel color (cards 3 & 4) + 3×4 dot decoration.
  */
 export function PricingWhySection() {
   return (
-    <section className="py-28">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="py-24">
+      <div className="mx-auto max-w-6xl px-6">
 
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="text-center">
-          <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-4 py-1 text-sm font-medium text-violet-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
+            <span aria-hidden="true">✳</span>
             Built for recruiters
           </span>
 
-          <h2 className="mt-6 text-[32px] font-bold tracking-tight text-slate-950">
+          <h2 className="mt-5 text-[46px] font-bold tracking-tight text-slate-900">
             Why Hiretivo?
           </h2>
 
-          <p className="mt-4 text-xl text-slate-500">
-            Everything you need to find, evaluate, and hire the right engineers faster.
+          <p className="mt-3 text-[17px] text-slate-500">
+            Everything you need to find, evaluate, and hire the right talent—faster.
           </p>
         </div>
 
-        {/* Cards */}
-        <div className="mt-20 grid grid-cols-4 gap-6">
+        {/* ── Cards ── */}
+        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {FEATURES.map((feature) => {
             const Icon = feature.Icon;
             return (
               <div
-                key={feature.titleLine1}
-                className="group relative rounded-[24px] border border-slate-200 bg-white p-7 transition-colors hover:border-slate-300"
+                key={feature.title}
+                className="relative flex min-h-[320px] flex-col items-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-7 pb-20 pt-9 text-center"
               >
-                {/* Icon */}
-                <div className={`mb-8 flex h-14 w-14 items-center justify-center rounded-2xl ${feature.accent}`}>
-                  <Icon className={`h-6 w-6 ${feature.iconColor}`} />
+                {/* Colored bottom panel (cards 3 & 4) */}
+                {feature.bottomBg && (
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 h-28 ${feature.bottomBg}`}
+                    aria-hidden="true"
+                  />
+                )}
+
+                {/* Icon circle */}
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
+                  <Icon className="h-7 w-7 text-indigo-600" strokeWidth={1.75} />
                 </div>
 
-                {/* Content */}
-                <h3 className="text-[20px] font-semibold leading-[1.35] text-slate-900">
-                  {feature.titleLine1}
-                  <br />
-                  {feature.titleLine2}
+                {/* Title */}
+                <h3 className="mt-8 text-[17px] font-bold leading-snug text-slate-900">
+                  {feature.title}
                 </h3>
 
-                <div className="mt-5 h-[3px] w-10 rounded-full bg-violet-500" />
+                {/* Indigo underline */}
+                <div className="mt-3 h-[2px] w-9 rounded-full bg-indigo-600" />
 
-                <p className="mt-6 text-[15px] leading-9 text-slate-500">
+                {/* Description */}
+                <p className="mt-5 text-[14px] leading-7 text-slate-500">
                   {feature.description}
                 </p>
 
-                {/* Decorative dots */}
-                <div className="absolute bottom-5 left-7 flex gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-300" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-300" />
+                {/* 3 × 4 dot grid */}
+                <div
+                  className="absolute bottom-[18px] left-6 z-10 grid grid-cols-4 gap-[6px]"
+                  aria-hidden="true"
+                >
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-[5px] w-[5px] rounded-full ${feature.dotColor}`}
+                    />
+                  ))}
                 </div>
               </div>
             );
