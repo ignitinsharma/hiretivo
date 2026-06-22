@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
+import { BookCallButton } from "@/components/shared/BookCallButton";
 import { Twitter, Linkedin, Instagram } from "lucide-react";
 
 interface FooterProps {
@@ -55,6 +56,7 @@ export function Footer({ className }: FooterProps) {
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/pricing">Pricing</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/recruiter/register">Post a Job</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
+                <li><BookCallButton variant="footer" /></li>
               </ul>
             </div>
             <div>

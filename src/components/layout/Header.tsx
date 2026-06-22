@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { PublicMobileNavMenu } from "@/components/layout/PublicMobileNavMenu";
+import { BookCallButton } from "@/components/shared/BookCallButton";
 import { PublicRecruiterDropdown } from "@/components/layout/PublicRecruiterDropdown";
 import { Logo } from "@/components/shared/Logo";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
@@ -89,6 +90,8 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
             </nav>
 
             <div className="flex items-center gap-4">
+              <BookCallButton variant="nav" />
+
               <Button
                 asChild
                 className="hidden h-11 rounded-2xl px-6 text-sm font-semibold lg:inline-flex xl:h-12 xl:px-7 xl:text-base"
