@@ -22,14 +22,14 @@ interface InitialsAvatarProps {
 
 const SIZE_CLASSES: Record<NonNullable<InitialsAvatarProps['size']>, string> = {
   sm: 'h-6 w-6 text-xs',
-  md: 'h-8 w-8 text-sm',
+  md: 'h-10 w-10 text-sm',
   lg: 'h-12 w-12 text-base',
   xl: 'h-24 w-24 text-2xl',
 };
 
 const SIZE_PIXELS: Record<NonNullable<InitialsAvatarProps['size']>, number> = {
   sm: 24,
-  md: 32,
+  md: 40,
   lg: 48,
   xl: 96,
 };

@@ -72,7 +72,7 @@ export function AccountMenu({
         <button
           type="button"
           className={cn(
-            'group flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white transition-colors hover:bg-brand-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/20',
+            'group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-white transition-colors hover:bg-brand-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/20',
             className,
           )}
           aria-label={ariaLabel}

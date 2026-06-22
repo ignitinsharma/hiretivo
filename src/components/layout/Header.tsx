@@ -5,11 +5,12 @@ import { UserRole } from "@/constants/enums";
 import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { NavLink } from "@/components/layout/NavLink";
 import { SeekerNavLink } from "@/components/layout/SeekerNavLink";
-import { ChevronDown, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -233,7 +234,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
             <div className="flex items-center gap-3 pl-4 border-l border-brand-border">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="relative cursor-pointer flex items-center gap-2 group outline-none">
+                  <div className="relative cursor-pointer flex items-center group outline-none">
                     <InitialsAvatar
                       name={session.user.name}
                       email={session.user.email}
@@ -242,26 +243,34 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
                       fallbackSeed="header-avatar"
                       size="md"
                       verified={isSeekerVerified}
-                      className="h-9 w-9 border-2 border-brand-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-brand-primary"
+                      className="h-10 w-10 border-2 border-brand-primary/20 bg-brand-surface ring-2 ring-transparent transition-all group-hover:border-brand-primary"
                     />
-                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem asChild>
+                <DropdownMenuContent align="end" sideOffset={8} className="w-64 rounded-xl border-brand-border bg-white p-1 shadow-none">
+                  <DropdownMenuLabel className="px-3 py-3">
+                    <span className="block truncate text-sm font-semibold capitalize text-brand-foreground">
+                      {session.user.name ?? (isSeeker ? "Job Seeker" : "Recruiter")}
+                    </span>
+                    <span className="mt-1 block truncate text-xs font-normal text-brand-foreground-muted">
+                      {session.user.email ?? ""}
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-brand-border" />
+                  <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2">
                     <Link
-                      href={
-                        isSeeker ? "/seeker/settings" : "/recruiter/settings"
-                      }
-                      className="flex items-center gap-2 cursor-pointer font-semibold"
+                      href={isSeeker ? "/seeker/settings" : "/recruiter/settings"}
+                      className="flex items-center gap-2 font-semibold"
                     >
                       <Settings className="w-4 h-4" />
                       Settings
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <SignOutButton className="cursor-pointer px-2 py-1.5" />
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-lg px-3 py-2 text-brand-danger focus:bg-brand-danger/10 focus:text-brand-danger"
+                    asChild
+                  >
+                    <SignOutButton className="cursor-pointer px-3 py-2" />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
