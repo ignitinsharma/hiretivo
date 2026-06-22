@@ -26,7 +26,6 @@ import { useUIStore } from "@/store/use-ui-store";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
 import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
 import { PlanChangeModal } from "@/components/shared/PlanChangeModal";
-import WhyHiretivo from "@/app/(public)/pricing/PricingWhySection";
 
 // ─── Table cell class constants ───────────────────────────────────────────────
 
@@ -159,18 +158,13 @@ function PricingCard({
   const isHighlighted = tier.highlighted === true;
   const isCustom = tier.isCustom === true;
 
-  const isPaidPlan =
-    userPlan === PlanTier.STARTER ||
-    userPlan === PlanTier.GROWTH ||
-    userPlan === PlanTier.SCALE;
-
   const isCurrentPlan =
     (userPlan === PlanTier.STARTER && tier.id === PricingTierId.STARTER) ||
     (userPlan === PlanTier.GROWTH && tier.id === PricingTierId.GROWTH) ||
-    (userPlan === PlanTier.SCALE && tier.id === PricingTierId.SCALE) ||
-    (isPaidPlan && isCustom && false);
+    (userPlan === PlanTier.SCALE && tier.id === PricingTierId.SCALE);
 
   const displayedCtaText = isCurrentPlan ? "Manage billing" : tier.cta;
+  const ribbonLabel = isCurrentPlan ? "Current plan" : isHighlighted ? "Most Popular" : null;
 
   const displayedPrice = (() => {
     if (tier.monthlyPrice === null) return null;
@@ -190,21 +184,18 @@ function PricingCard({
           : "bg-white border border-brand-border",
       )}
     >
-      {isHighlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-extrabold px-4 py-1 rounded-full uppercase whitespace-nowrap">
-          Most Popular
-        </div>
-      )}
-      {isCurrentPlan && (
+      {ribbonLabel && (
         <div
           className={cn(
-            "absolute right-4 top-4 rounded-lg border px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
-            isHighlighted
-              ? "border-white/30 bg-white/10 text-white"
-              : "border-brand-border bg-brand-surface text-brand-foreground",
+            "absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border px-4 py-1 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
+            isHighlighted && isCurrentPlan
+              ? "border-white bg-white text-brand-primary"
+              : isHighlighted
+                ? "border-white bg-white text-brand-foreground"
+              : "border-brand-primary bg-brand-primary text-brand-primary-foreground",
           )}
         >
-          Current plan
+          {ribbonLabel}
         </div>
       )}
 
@@ -493,7 +484,7 @@ export function PricingClient() {
         </div>
       </section>
 
-      <WhyHiretivo />
+      {/* <WhyHiretivo /> */}
 
       {/* Billing toggle + Cards */}
       <section className="py-12 px-6 text-center">

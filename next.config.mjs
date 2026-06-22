@@ -82,8 +82,8 @@ const nextConfig = {
 
 /*
  * Sentry build-time wrapper.
- * Uploads source maps when SENTRY_AUTH_TOKEN is set. Without it, build still
- * succeeds — Sentry runtime no-ops via the DSN guard in sentry.*.config.ts.
+ * Uploads source maps only in CI/Vercel when SENTRY_AUTH_TOKEN is set.
+ * Local builds stay offline-safe even if .env.local contains Sentry secrets.
  */
 const sentryBuildOptions = {
   org: process.env.SENTRY_ORG,
@@ -97,6 +97,10 @@ const sentryBuildOptions = {
   automaticVercelMonitors: false,
 };
 
-export default process.env.SENTRY_AUTH_TOKEN
+const shouldEnableSentryBuild =
+  !!process.env.SENTRY_AUTH_TOKEN &&
+  (process.env.CI === "true" || process.env.VERCEL === "1");
+
+export default shouldEnableSentryBuild
   ? withSentryConfig(nextConfig, sentryBuildOptions)
   : nextConfig;
