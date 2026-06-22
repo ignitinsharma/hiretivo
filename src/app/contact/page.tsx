@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getCalApi } from "@calcom/embed-react";
 
-import { ContactRequestType, PlanTier } from "@/constants/enums";
+import { ContactRequestType } from "@/constants/enums";
 import {
   ContactSupportSchema,
   type ContactSupportInput,
@@ -20,24 +20,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+type CalApi = Awaited<ReturnType<typeof getCalApi>>;
+
 interface ModeOption {
   type: ContactRequestType;
   label: string;
   description: string;
-  locked?: boolean;
 }
 
 export default function ContactPage() {
-  const { data: session, status } = useSession();
-  const isPaidUser =
-    status === "authenticated" &&
-    (session?.user?.plan === PlanTier.STARTER ||
-      session?.user?.plan === PlanTier.GROWTH ||
-      session?.user?.plan === PlanTier.SCALE);
+  const calRef = useRef<CalApi | null>(null);
 
   const [mode, setMode] = useState<ContactRequestType>(
     ContactRequestType.CONTACT,
   );
+
+  /* Initialize Cal.com API for the Book a call tab */
+  useEffect(() => {
+    (async () => {
+      const cal = await getCalApi({ namespace: "ignitinsharma" });
+      cal("ui", { hideEventTypeDetails: false });
+      calRef.current = cal;
+    })();
+  }, []);
 
   const MODE_OPTIONS: ModeOption[] = [
     {
@@ -48,12 +53,7 @@ export default function ContactPage() {
     {
       type: ContactRequestType.BOOK_CALL,
       label: "Book a call",
-      description: isPaidUser
-        ? "Share your context and a preferred time to connect."
-        : status === "unauthenticated"
-        ? "Sign in to book a call with our team."
-        : "Upgrade to PRO to book a call with our team.",
-      locked: !isPaidUser,
+      description: "Schedule a 30-min call with our team.",
     },
     {
       type: ContactRequestType.REPORT_BUG,
@@ -101,13 +101,8 @@ export default function ContactPage() {
   });
 
   const handleModeChange = (nextMode: ContactRequestType): void => {
-    const option = MODE_OPTIONS.find((o) => o.type === nextMode);
-    if (option?.locked) {
-      toast.error(
-        status === "unauthenticated"
-          ? "Please sign in to book a call."
-          : "Book a call is available for PRO and Enterprise plans only.",
-      );
+    if (nextMode === ContactRequestType.BOOK_CALL) {
+      calRef.current?.("modal", { calLink: "ignitinsharma/30min" });
       return;
     }
     setMode(nextMode);
@@ -118,7 +113,6 @@ export default function ContactPage() {
     mutation.mutate({ ...data, type: mode });
   };
 
-  const isBookCall = mode === ContactRequestType.BOOK_CALL;
   const isBugReport = mode === ContactRequestType.REPORT_BUG;
 
   return (
@@ -161,61 +155,30 @@ export default function ContactPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {MODE_OPTIONS.map((option) => {
               const isActive = option.type === mode;
-              const isLocked = option.locked;
 
               return (
                 <button
                   key={option.type}
                   type="button"
                   onClick={() => handleModeChange(option.type)}
-                  disabled={isLocked}
                   className={cn(
                     "rounded-lg border p-4 text-left transition-colors",
-                    isLocked
-                      ? "border-brand-border bg-gray-50 text-gray-400 cursor-not-allowed"
-                      : isActive
+                    isActive
                       ? "border-brand-primary bg-brand-primary text-white"
                       : "border-brand-border bg-white text-brand-foreground hover:bg-gray-50",
                   )}
                 >
                   <span className="block text-sm font-semibold">
                     {option.label}
-                    {isLocked && (
-                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wider opacity-60">
-                        Locked
-                      </span>
-                    )}
                   </span>
                   <span
                     className={cn(
                       "mt-1 block text-sm leading-relaxed",
-                      isActive
-                        ? "text-white/80"
-                        : isLocked
-                        ? "text-gray-400"
-                        : "text-brand-foreground-muted",
+                      isActive ? "text-white/80" : "text-brand-foreground-muted",
                     )}
                   >
                     {option.description}
                   </span>
-                  {isLocked && status === "unauthenticated" && (
-                    <Link
-                      href="/seeker/login"
-                      className="mt-2 inline-block text-xs font-bold text-brand-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Sign in →
-                    </Link>
-                  )}
-                  {isLocked && status === "authenticated" && (
-                    <Link
-                      href="/pricing"
-                      className="mt-2 inline-block text-xs font-bold text-brand-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View plans →
-                    </Link>
-                  )}
                 </button>
               );
             })}
@@ -263,50 +226,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {isBookCall ? (
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label
-                    htmlFor="companyOrRole"
-                    className="text-sm font-medium text-[#0a0a0a]"
-                  >
-                    Company or role
-                  </label>
-                  <Input
-                    id="companyOrRole"
-                    className="mt-2"
-                    placeholder="Company, title, or job seeker"
-                    {...register("companyOrRole")}
-                  />
-                  {errors.companyOrRole?.message && (
-                    <p className={FIELD_ERROR_CLASS}>
-                      {errors.companyOrRole.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="preferredTime"
-                    className="text-sm font-medium text-[#0a0a0a]"
-                  >
-                    Preferred time
-                  </label>
-                  <Input
-                    id="preferredTime"
-                    className="mt-2"
-                    placeholder="Tue afternoon IST"
-                    {...register("preferredTime")}
-                  />
-                  {errors.preferredTime?.message && (
-                    <p className={FIELD_ERROR_CLASS}>
-                      {errors.preferredTime.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div>
+            <div>
                 <label
                   htmlFor="subject"
                   className="text-sm font-medium text-[#0a0a0a]"
@@ -316,18 +236,13 @@ export default function ContactPage() {
                 <Input
                   id="subject"
                   className="mt-2"
-                  placeholder={
-                    isBugReport
-                      ? "Short bug title"
-                      : "How can we help?"
-                  }
+                  placeholder={isBugReport ? "Short bug title" : "How can we help?"}
                   {...register("subject")}
                 />
                 {errors.subject?.message && (
                   <p className={FIELD_ERROR_CLASS}>{errors.subject.message}</p>
                 )}
               </div>
-            )}
 
             <div>
               <label
@@ -340,9 +255,7 @@ export default function ContactPage() {
                 id="message"
                 className="mt-2 min-h-36"
                 placeholder={
-                  isBookCall
-                    ? "Tell us what you want to cover on the call."
-                    : isBugReport
+                  isBugReport
                     ? "Describe what happened, what you expected, and where it happened."
                     : "Share the details of your question or issue."
                 }
@@ -360,11 +273,7 @@ export default function ContactPage() {
               loadingText="Sending..."
               className="w-full sm:w-auto"
             >
-              {isBookCall
-                ? "Request call"
-                : isBugReport
-                ? "Send bug report"
-                : "Send message"}
+              {isBugReport ? "Send bug report" : "Send message"}
             </Button>
           </form>
         </div>
