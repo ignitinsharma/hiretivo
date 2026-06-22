@@ -36,6 +36,7 @@ const CSP_DIRECTIVES = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['@calcom/embed-react'],
   async headers() {
     return [
       {
