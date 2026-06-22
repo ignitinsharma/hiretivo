@@ -481,7 +481,9 @@ export function PricingClient() {
 
   return (
     <>
-      {/* Hero + Toggle + Cards */}
+      <PricingWhySection />
+
+      {/* Hero */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-6">
@@ -492,8 +494,6 @@ export function PricingClient() {
           </p>
         </div>
       </section>
-
-      <PricingWhySection />
 
       {/* Billing toggle + Cards */}
       <section className="py-12 px-6 text-center">
