@@ -19,14 +19,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DEMO_ENGINEERS, DEMO_THRESHOLD } from "@/constants/demo-engineers";
 import { cn } from "@/lib/utils";
-import type { DemoEngineerProfile } from "@/constants/demo-engineers";
 import { useFetchTalent } from "@/modules/recruiter/talent/queries/use-fetch-talent";
 import { formatProfileLabel } from "@/modules/recruiter/talent/utils/format-profile-label";
 import type { TalentListItem } from "@/modules/recruiter/talent/types/talent.types";
 
-import { DemoEngineerCard } from "./DemoEngineerCard";
 import { TalentProfileDialog } from "./TalentProfileDialog";
 
 const TALENT_CARD_CLASS = "rounded-xl border border-brand-border bg-white p-5";
@@ -69,19 +66,6 @@ function formatCardExperience(yearsExperience: number | null): string {
   }
 
   return `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"}`;
-}
-
-/*
- * computeDemoSlices
- * Returns the subset of DEMO_ENGINEERS to show alongside real blurred cards.
- * D-05: realCount >= DEMO_THRESHOLD → no demos; 0 < realCount < DEMO_THRESHOLD → fill to 6; 0 → all 6.
- * @param realCount - Number of real blurred cards returned by the API
- * @returns Slice of DEMO_ENGINEERS to pad the grid
- */
-function computeDemoSlices(realCount: number): DemoEngineerProfile[] {
-  if (realCount >= DEMO_THRESHOLD) return [];
-  const needed = Math.max(DEMO_THRESHOLD - realCount, 0);
-  return DEMO_ENGINEERS.slice(0, needed);
 }
 
 /*
@@ -296,9 +280,8 @@ function TalentCardSkeleton(): ReactElement {
  *
  * FREE plan behavior:
  *   - Search bar is disabled (readOnly, opacity-50, cursor-not-allowed) with tooltip.
- *   - Engineer count banner shown above card grid.
- *   - Real blurred cards (API isFreePlan=true) show "Unlock Profile" → Pricing.
- *   - Demo cards pad the grid when realCount < DEMO_THRESHOLD (mix-mode, D-05).
+ *   - Real blurred cards (API isFreePlan=true): unlocked → "View Profile"; locked → "Unlock Profile" (uses trial quota) or routes to pricing when exhausted.
+ *   - Trial unlock counter shown above grid while unlocks remain.
  *   - No Load More button (blurred grid is fixed size).
  *
  * Paid plan behavior:
@@ -324,6 +307,7 @@ export function TalentPoolClient(): ReactElement {
   const isFreePlan = firstPage?.isFreePlan ?? false;
   const demoCount = firstPage?.demoCount ?? 0;
   const total = firstPage?.total ?? 0;
+  const trialUnlocksRemaining = firstPage?.trialUnlocksRemaining ?? 0;
   const talentItems = allPages.flatMap((page) => page.items);
 
   // Loading state: true only on first fetch (no data yet).
@@ -353,6 +337,19 @@ export function TalentPoolClient(): ReactElement {
   }
 
   /*
+   * handleExhaustedTrials
+   * Called when FREE recruiter clicks "Unlock Profile" after using all 3 trial unlocks.
+   * Shows an explanatory toast, then navigates to pricing after a short delay so the
+   * recruiter can read the message before the page changes.
+   */
+  function handleExhaustedTrials() {
+    toast.info("You've used all 3 free trial unlocks — upgrade to unlock more engineers.", {
+      duration: 3000,
+    });
+    window.setTimeout(goToPricing, 1200);
+  }
+
+  /*
    * handleUnlock
    * Calls POST /api/recruiter/talent/[id]/unlock and refetches the talent list.
    * Invalidating an infinite query refetches all loaded pages — intentional,
@@ -371,6 +368,8 @@ export function TalentPoolClient(): ReactElement {
         return;
       }
       await queryClient.invalidateQueries({ queryKey: ["recruiter-talent"] });
+      // FREE plan: open profile dialog immediately after unlock so recruiter sees their trial unlock used
+      if (isFreePlan) setSelectedTalentId(engineerId);
     } catch {
       toast.error("Network error. Try again.");
     } finally {
@@ -391,8 +390,6 @@ export function TalentPoolClient(): ReactElement {
     return `Showing ${loaded} of ${total} verified candidates`;
   }
 
-  // Compute demo cards for mix-mode — only for FREE plan (D-05)
-  const demoSlices = isFreePlan ? computeDemoSlices(talentItems.length) : [];
 
   return (
     <section className="space-y-6">
@@ -464,6 +461,12 @@ export function TalentPoolClient(): ReactElement {
           No matching talent found.
         </div>
       ) : (
+        <>
+          {isFreePlan && trialUnlocksRemaining > 0 && (
+            <p className="text-sm font-semibold text-brand-foreground-muted">
+              {trialUnlocksRemaining} trial {trialUnlocksRemaining === 1 ? "unlock" : "unlocks"} remaining
+            </p>
+          )}
         <div
           className={cn(
             "grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3",
@@ -479,22 +482,19 @@ export function TalentPoolClient(): ReactElement {
               isUnlocking={unlockingId === talent.id}
               onUnlock={
                 isFreePlan
-                  ? goToPricing
+                  ? talent.isUnlocked
+                    ? undefined
+                    : trialUnlocksRemaining > 0
+                      ? () => handleUnlock(talent.id)
+                      : handleExhaustedTrials
                   : !talent.isUnlocked
                     ? () => handleUnlock(talent.id)
                     : undefined
               }
             />
           ))}
-          {/* Demo cards — padded after real cards for FREE plan mix-mode (D-05) */}
-          {demoSlices.map((profile) => (
-            <DemoEngineerCard
-              key={profile.id}
-              profile={profile}
-              onUpgrade={goToPricing}
-            />
-          ))}
         </div>
+        </>
       )}
 
       {/* Load More — paid plan only; hidden when all candidates loaded or FREE plan */}

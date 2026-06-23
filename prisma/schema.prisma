@@ -207,7 +207,7 @@ model SeekerProfile {
   verificationReviewedBy String?
   submittedForReviewAt   DateTime?
 
-  digestEnabled    Boolean   @default(false)
+  digestEnabled    Boolean   @default(true)
   lastDigestSentAt DateTime?
 
   skills          SeekerSkill[]
