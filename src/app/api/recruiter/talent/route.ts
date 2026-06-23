@@ -1,5 +1,4 @@
 import { auth } from "@/auth";
-import { DEMO_THRESHOLD } from "@/constants/demo-engineers";
 import { UserRole, VerificationStatus } from "@/constants/enums";
 import { canAccessTalentPool } from "@/lib/billing/plan-access";
 import { coarseLocation, redactName } from "@/lib/billing/talent-redaction";
@@ -92,7 +91,7 @@ export async function GET(req: NextRequest) {
 
     const blurredSeekers = await prisma.user.findMany({
       where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
-      take: DEMO_THRESHOLD,
+      take: DEFAULT_LIMIT,
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: {
         id: true,
@@ -143,7 +142,7 @@ export async function GET(req: NextRequest) {
         }),
         total: demoCount,
         page: 1,
-        limit: DEMO_THRESHOLD,
+        limit: DEFAULT_LIMIT,
         demoCount,
         isFreePlan: true,
         trialUnlocksRemaining,
