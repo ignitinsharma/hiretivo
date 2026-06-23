@@ -42,6 +42,7 @@ export async function sendVerificationReviewEmail({
   const approvedHtml = `
     <p>We reviewed your profile and are pleased to confirm that you have been <strong>verified</strong> on Hiretivo.</p>
     <p>Your profile is now eligible to appear to startups actively hiring verified engineers.</p>
+    ${safeNotes ? `<p><strong>Reviewer notes:</strong> ${safeNotes}</p>` : ""}
     <p>
       <a href="${approvedUrl}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">
         View your profile
@@ -60,7 +61,7 @@ export async function sendVerificationReviewEmail({
     </p>
   `;
 
-  const approvedText = `${greeting}\n\nYour Hiretivo profile has been verified. You are now eligible to appear to startups worldwide actively hiring. Visit your profile: ${approvedUrl}`;
+  const approvedText = `${greeting}\n\nYour Hiretivo profile has been verified. You are now eligible to appear to startups worldwide actively hiring.${notes ? ` Reviewer notes: ${notes}` : ""} Visit your profile: ${approvedUrl}`;
   const rejectedText = `${greeting}\n\nWe were unable to approve your Hiretivo verification at this time.${notes ? ` Reviewer notes: ${notes}` : ""} You may update your profile and resubmit. Visit your profile: ${rejectedUrl}`;
 
   await sendEmail({
