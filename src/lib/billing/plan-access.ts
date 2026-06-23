@@ -26,6 +26,34 @@ export function getUnlockQuota(plan: string | null | undefined): number | null {
 }
 
 /*
+ * UnlockQuotaConfig
+ * Describes how a plan's unlock quota is enforced.
+ * FREE: 3 lifetime trial unlocks (source='trial', no billing period filter).
+ * Paid: per-billing-period quota (source='talent_pool').
+ * SCALE: unlimited (limit null).
+ */
+export type UnlockQuotaConfig = {
+  limit: number | null;
+  period: "lifetime" | "billing";
+  source: "trial" | "talent_pool";
+};
+
+/*
+ * getUnlockQuotaConfig
+ * Returns quota config for a given plan.
+ * FREE: 3 lifetime trial unlocks. Paid: per-period quotas. SCALE: unlimited.
+ */
+export function getUnlockQuotaConfig(plan: string | null | undefined): UnlockQuotaConfig {
+  switch (plan) {
+    case PlanTier.FREE:    return { limit: 3,    period: "lifetime", source: "trial" };
+    case PlanTier.STARTER: return { limit: 10,   period: "billing",  source: "talent_pool" };
+    case PlanTier.GROWTH:  return { limit: 30,   period: "billing",  source: "talent_pool" };
+    case PlanTier.SCALE:   return { limit: null, period: "billing",  source: "talent_pool" };
+    default:               return { limit: 0,    period: "billing",  source: "talent_pool" };
+  }
+}
+
+/*
  * canPostJob
  * Returns true when this plan can post another active job given the current count.
  * STARTER=2 active jobs, GROWTH/SCALE=unlimited, FREE=0.

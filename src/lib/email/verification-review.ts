@@ -39,11 +39,13 @@ export async function sendVerificationReviewEmail({
   const approvedUrl = `${getAppUrl()}/seeker/profile`;
   const rejectedUrl = `${getAppUrl()}/seeker/onboarding`;
 
+  const P = 'style="color:#0a0a0a;font-size:16px;line-height:1.6;margin:0 0 20px;"';
+
   const approvedHtml = `
-    <p>We reviewed your profile and are pleased to confirm that you have been <strong>verified</strong> on Hiretivo.</p>
-    <p>Your profile is now eligible to appear to startups actively hiring verified engineers.</p>
-    ${safeNotes ? `<p><strong>Reviewer notes:</strong> ${safeNotes}</p>` : ""}
-    <p>
+    <p ${P}>We reviewed your profile and are pleased to confirm that you have been <strong>verified</strong> on Hiretivo.</p>
+    <p ${P}>Your profile is now eligible to appear to startups actively hiring verified engineers.</p>
+    ${safeNotes ? `<p ${P}><strong>Reviewer notes:</strong> ${safeNotes}</p>` : ""}
+    <p style="margin:0 0 20px;">
       <a href="${approvedUrl}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">
         View your profile
       </a>
@@ -51,10 +53,10 @@ export async function sendVerificationReviewEmail({
   `;
 
   const rejectedHtml = `
-    <p>Thank you for submitting your profile for verification. After our review, we were unable to approve your verification at this time.</p>
-    ${safeNotes ? `<p><strong>Reviewer notes:</strong> ${safeNotes}</p>` : ""}
-    <p>You may update your profile and resubmit for review once you have addressed any gaps.</p>
-    <p>
+    <p ${P}>Thank you for submitting your profile for verification. After our review, we were unable to approve your verification at this time.</p>
+    ${safeNotes ? `<p ${P}><strong>Reviewer notes:</strong> ${safeNotes}</p>` : ""}
+    <p ${P}>You may update your profile and resubmit for review once you have addressed any gaps.</p>
+    <p style="margin:0 0 20px;">
       <a href="${rejectedUrl}" style="display:inline-block;padding:12px 24px;background:#7560ff;color:white;border-radius:8px;text-decoration:none;font-weight:600;">
         Update your profile
       </a>

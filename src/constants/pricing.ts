@@ -26,11 +26,12 @@ export const PLAN_TIERS: PlanTierConfig[] = [
     monthlyPrice: 0,
     annualTotal: 0,
     annualSavings: 0,
-    unlocks: 0,
+    unlocks: 3,
     jobSlots: 1,
     highlighted: false,
     isCustom: false,
     features: [
+      "Try 3 verified engineers — free, no card needed",
       "1 active job post",
       "Browse talent pool (blurred preview)",
       "5 applicant views per job",

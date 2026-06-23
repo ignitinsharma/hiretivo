@@ -75,8 +75,15 @@ export async function GET(_req: Request, { params }: TalentDetailRouteContext) {
     select: { plan: true },
   });
 
-  if (!canAccessTalentPool(recruiter?.plan)) {
-    return new Response("Forbidden", { status: 403 });
+  // Allow paid plans OR FREE recruiter who trial-unlocked this specific engineer
+  const hasAccess =
+    canAccessTalentPool(recruiter?.plan) ||
+    (await prisma.engineerUnlock.count({
+      where: { recruiterId: session.user.id, engineerId: params.id, source: "trial" },
+    })) > 0;
+
+  if (!hasAccess) {
+    return NextResponse.json({ error: "Upgrade to view engineer profiles" }, { status: 403 });
   }
 
   // Only VERIFIED engineers accessible — prevents ID-guessing attacks

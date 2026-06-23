@@ -50,7 +50,7 @@ interface FeatureRow {
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Engineer unlocks/mo", free: "—", starter: "10", growth: "30", scale: "Unlimited" },
+  { feature: "Engineer unlocks", free: "3 (lifetime trial)", starter: "10/mo", growth: "30/mo", scale: "Unlimited" },
   { feature: "Active job posts", free: "1", starter: "2", growth: "Unlimited", scale: "Unlimited" },
   { feature: "Applicant views/job", free: "5", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
   { feature: "Full contact details", free: null, starter: true, growth: true, scale: true },
@@ -81,7 +81,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Do unused unlocks roll over?",
     answer:
-      "No — unlock quotas reset each billing period. This keeps pricing fair for all plans.",
+      "Paid plan unlock quotas reset each billing period. Free trial unlocks (3) are one-time and never reset — upgrade to unlock more engineers.",
   },
   {
     question: "What happens to my listings if I downgrade?",
