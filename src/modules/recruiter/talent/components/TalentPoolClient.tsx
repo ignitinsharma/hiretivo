@@ -324,6 +324,7 @@ export function TalentPoolClient(): ReactElement {
   const isFreePlan = firstPage?.isFreePlan ?? false;
   const demoCount = firstPage?.demoCount ?? 0;
   const total = firstPage?.total ?? 0;
+  const trialUnlocksRemaining = firstPage?.trialUnlocksRemaining ?? 0;
   const talentItems = allPages.flatMap((page) => page.items);
 
   // Loading state: true only on first fetch (no data yet).
@@ -371,6 +372,8 @@ export function TalentPoolClient(): ReactElement {
         return;
       }
       await queryClient.invalidateQueries({ queryKey: ["recruiter-talent"] });
+      // FREE plan: open profile dialog immediately after unlock so recruiter sees their trial unlock used
+      if (isFreePlan) setSelectedTalentId(engineerId);
     } catch {
       toast.error("Network error. Try again.");
     } finally {
@@ -464,6 +467,12 @@ export function TalentPoolClient(): ReactElement {
           No matching talent found.
         </div>
       ) : (
+        <>
+          {isFreePlan && trialUnlocksRemaining > 0 && (
+            <p className="text-sm font-semibold text-brand-foreground-muted">
+              {trialUnlocksRemaining} trial {trialUnlocksRemaining === 1 ? "unlock" : "unlocks"} remaining
+            </p>
+          )}
         <div
           className={cn(
             "grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3",
@@ -479,7 +488,11 @@ export function TalentPoolClient(): ReactElement {
               isUnlocking={unlockingId === talent.id}
               onUnlock={
                 isFreePlan
-                  ? goToPricing
+                  ? talent.isUnlocked
+                    ? undefined
+                    : trialUnlocksRemaining > 0
+                      ? () => handleUnlock(talent.id)
+                      : goToPricing
                   : !talent.isUnlocked
                     ? () => handleUnlock(talent.id)
                     : undefined
@@ -495,6 +508,7 @@ export function TalentPoolClient(): ReactElement {
             />
           ))}
         </div>
+        </>
       )}
 
       {/* Load More — paid plan only; hidden when all candidates loaded or FREE plan */}

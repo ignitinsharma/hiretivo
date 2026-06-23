@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
-import { canAccessTalentPool, getUnlockQuota } from "@/lib/billing/plan-access";
+import { getUnlockQuotaConfig } from "@/lib/billing/plan-access";
 import { prisma } from "@/lib/prisma";
 import { writeRateLimiter } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
@@ -38,10 +38,6 @@ export async function POST(_req: Request, { params }: UnlockRouteContext) {
     },
   });
 
-  if (!canAccessTalentPool(recruiter?.plan)) {
-    return NextResponse.json({ error: "Upgrade to unlock engineer profiles" }, { status: 403 });
-  }
-
   // Verify target engineer is VERIFIED
   const engineer = await prisma.user.findFirst({
     where: { id: params.id, role: "SEEKER", verificationStatus: "VERIFIED" },
@@ -64,26 +60,38 @@ export async function POST(_req: Request, { params }: UnlockRouteContext) {
     return NextResponse.json({ data: { unlocked: true, alreadyUnlocked: true } });
   }
 
-  // Quota check: count source='talent_pool' unlocks in current billing period
-  const quota = getUnlockQuota(recruiter?.plan);
-  if (quota !== null && quota > 0) {
-    const now = new Date();
-    const periodStart = recruiter?.subscription?.currentPeriodStart ?? new Date(now.getFullYear(), now.getMonth(), 1);
-    const periodEnd = recruiter?.subscription?.currentPeriodEnd ?? new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  /*
+   * Config-driven quota: FREE = 3 lifetime trial unlocks (source='trial'),
+   * paid plans = per-billing-period quota (source='talent_pool'), SCALE = unlimited.
+   */
+  const config = getUnlockQuotaConfig(recruiter?.plan);
 
-    const usedThisPeriod = await prisma.engineerUnlock.count({
+  if (config.limit === 0) {
+    return NextResponse.json({ error: "Upgrade to unlock engineer profiles" }, { status: 403 });
+  }
+
+  // Period vars in scope here so the billing spread below can reference them
+  const now = new Date();
+  const periodStart = recruiter?.subscription?.currentPeriodStart ?? new Date(now.getFullYear(), now.getMonth(), 1);
+  const periodEnd = recruiter?.subscription?.currentPeriodEnd ?? new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  if (config.limit !== null) {
+    const usedCount = await prisma.engineerUnlock.count({
       where: {
         recruiterId: session.user.id,
-        source: "talent_pool",
-        createdAt: { gte: periodStart, lte: periodEnd },
+        source: config.source,
+        ...(config.period === "billing" && {
+          createdAt: { gte: periodStart, lte: periodEnd },
+        }),
       },
     });
 
-    if (usedThisPeriod >= quota) {
-      return NextResponse.json(
-        { error: `Unlock quota exhausted (${quota}/${quota} used this period). Upgrade to unlock more engineers.` },
-        { status: 402 },
-      );
+    if (usedCount >= config.limit) {
+      const msg =
+        config.period === "lifetime"
+          ? "You've used all 3 free trial unlocks. Upgrade to continue."
+          : `Unlock quota exhausted (${config.limit}/${config.limit} used this period). Upgrade to unlock more engineers.`;
+      return NextResponse.json({ error: msg }, { status: 402 });
     }
   }
 
@@ -93,7 +101,7 @@ export async function POST(_req: Request, { params }: UnlockRouteContext) {
       data: {
         recruiterId: session.user.id,
         engineerId: params.id,
-        source: "talent_pool",
+        source: config.source,
       },
     });
   } catch (error) {

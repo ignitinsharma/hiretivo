@@ -79,9 +79,17 @@ export async function GET(req: NextRequest) {
   });
 
   if (!canAccessTalentPool(recruiter?.plan)) {
-    // FREE plan: return blurred seeker items (up to DEMO_THRESHOLD) + demoCount.
-    // Names are blurred to "First L." server-side. Email and image are nulled.
+    // FREE plan: return blurred seeker items (up to DEMO_THRESHOLD) + demoCount + trialUnlocksRemaining.
+    // Trial-unlocked engineers (source='trial') receive full data; all others are blurred.
     // Client uses these alongside DEMO_ENGINEERS static cards for mix-mode grid.
+
+    const trialUnlocks = await prisma.engineerUnlock.findMany({
+      where: { recruiterId: session.user.id, source: "trial" },
+      select: { engineerId: true },
+    });
+    const unlockedIds = new Set(trialUnlocks.map((u) => u.engineerId));
+    const trialUnlocksRemaining = Math.max(0, 3 - trialUnlocks.length);
+
     const blurredSeekers = await prisma.user.findMany({
       where: { role: "SEEKER", verificationStatus: 'VERIFIED', seekerProfile: { isNot: null } },
       take: DEMO_THRESHOLD,
@@ -89,10 +97,12 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         name: true,
+        email: true,
         image: true,
         seekerProfile: {
           select: {
             headline: true,
+            bio: true,
             location: true,
             yearsExperience: true,
             primaryRole: true,
@@ -111,21 +121,23 @@ export async function GET(req: NextRequest) {
       data: {
         items: blurredSeekers.map((seeker) => {
           const profile = seeker.seekerProfile;
+          const isUnlocked = unlockedIds.has(seeker.id);
           return {
             id: seeker.id,
-            isUnlocked: false, // FREE plan items are always locked
-            name: redactName(seeker.name), // server-side mask — real name never sent
+            isUnlocked,
             // Talent pool only surfaces verified engineers (WHERE verificationStatus: VERIFIED).
             verificationStatus: VerificationStatus.VERIFIED,
-            email: null,      // never expose email on FREE plan
-            image: resolveLogoUrl(seeker.image), // real avatar shown on locked card (product decision)
+            // Unlocked: real name + email + bio. Locked: server-side mask, nulled PII.
+            name: isUnlocked ? seeker.name : redactName(seeker.name),
+            email: isUnlocked ? seeker.email : null,
+            image: resolveLogoUrl(seeker.image),
             headline: profile?.headline ?? null,
-            bioExcerpt: null, // bio hidden on FREE plan
-            location: coarseLocation(profile?.location), // region only — no exact city
+            bioExcerpt: isUnlocked ? getBioExcerpt(profile?.bio) : null,
+            location: isUnlocked ? (profile?.location ?? null) : coarseLocation(profile?.location),
             yearsExperience: profile?.yearsExperience ?? null,
             primaryRole: profile?.primaryRole ?? null,
             availability: profile?.availability ?? null,
-            resumeKey: false, // resume not accessible on FREE plan
+            resumeKey: isUnlocked ? Boolean(profile?.resumeKey) : false,
             skills: profile?.skills.map((item) => item.skill.name) ?? [],
           };
         }),
@@ -134,6 +146,7 @@ export async function GET(req: NextRequest) {
         limit: DEMO_THRESHOLD,
         demoCount,
         isFreePlan: true,
+        trialUnlocksRemaining,
       },
     });
   }
