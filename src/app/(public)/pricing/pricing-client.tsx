@@ -50,9 +50,9 @@ interface FeatureRow {
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Engineer unlocks", free: "3 (lifetime trial)", starter: "10/mo", growth: "30/mo", scale: "Unlimited" },
+  { feature: "Talent pool unlocks", free: "3", starter: "10/mo", growth: "30/mo", scale: "Unlimited" },
   { feature: "Active job posts", free: "1", starter: "2", growth: "Unlimited", scale: "Unlimited" },
-  { feature: "Applicant views/job", free: "5", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
+  { feature: "Applicant profiles", free: "25/job", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
   { feature: "Full contact details", free: null, starter: true, growth: true, scale: true },
   { feature: "AI summaries, JD & skills", free: "3/day", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
   { feature: "Interview scheduling", free: null, starter: true, growth: true, scale: true },
@@ -81,7 +81,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Do unused unlocks roll over?",
     answer:
-      "Paid plan unlock quotas reset each billing period. Free trial unlocks (3) are one-time and never reset — upgrade to unlock more engineers.",
+      "Paid talent pool unlock quotas reset each billing period. Free trial unlocks (3) are one-time and never reset.",
   },
   {
     question: "What happens to my listings if I downgrade?",
@@ -479,7 +479,7 @@ export function PricingClient() {
             Pricing that scales with your hiring
           </h1>
           <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
-            Access India&apos;s verified engineers. Pay only for what you unlock.
+            Access India&apos;s verified engineers with clear talent pool unlocks and applicant profile limits.
           </p>
         </div>
       </section>

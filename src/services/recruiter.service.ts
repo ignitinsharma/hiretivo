@@ -120,7 +120,7 @@ export interface CandidateApplication {
   matchScore: number;
   status: ApplicationStatus;
   plan: PlanTier;
-  /** FREE plan: true when applicant is beyond the visible 5/job window (PII redacted server-side). */
+  /** FREE plan: true when applicant is beyond the visible 25/job window (PII redacted server-side). */
   locked: boolean;
   canScheduleInterviews: boolean;
   canUseAi: boolean;

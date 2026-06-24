@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Locked-applicant gate — FREE recruiters can only manage their visible 5/job.
+  // Locked-applicant gate — FREE recruiters can only manage their visible 25/job.
   if (
     session.user.plan === PlanTier.FREE &&
     !(await isApplicationVisibleOnFree(
