@@ -6,14 +6,14 @@ import { prisma } from "@/lib/prisma";
  * Applicants beyond this are locked (PII redacted) until the recruiter upgrades.
  * Paid plans (STARTER/GROWTH/SCALE) have no cap.
  */
-export const FREE_APPLICANT_LIMIT = 5;
+export const FREE_APPLICANT_LIMIT = 25;
 
 /*
  * getFreeVisibleApplicationIds
  * Computes the set of application IDs a FREE recruiter is allowed to fully view.
  * Cap is per-job: the newest FREE_APPLICANT_LIMIT applications per job are visible.
  * Ordering matches the applications list ([createdAt desc, id desc]) so the list,
- * drawer, and per-record guards all agree on the same visible 5.
+ * drawer, and per-record guards all agree on the same visible 25.
  * Computed from the UNFILTERED per-job ordering (ignores search/stage) so filtering
  * cannot reveal a locked applicant.
  * @param recruiterId - The recruiter (job owner) user id
@@ -50,7 +50,7 @@ export async function getFreeVisibleApplicationIds(
 /*
  * isApplicationVisibleOnFree
  * Returns true when the given application falls within a FREE recruiter's visible
- * 5-per-job window. Used by single-record routes (ai-summary, stage) to block
+ * 25-per-job window. Used by single-record routes (ai-summary, stage) to block
  * access to locked applicants even when the application id is known.
  * @param recruiterId - The recruiter (job owner) user id
  * @param applicationId - The application to check

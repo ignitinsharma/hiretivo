@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl, resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { getFreeVisibleApplicationIds } from "@/lib/billing/applicant-visibility";
+import { coarseLocation, redactName } from "@/lib/billing/talent-redaction";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 20;
@@ -105,7 +106,7 @@ export async function GET(req: NextRequest) {
     select: { plan: true },
   });
 
-  // FREE recruiters see full PII for only the newest 5 applicants per job.
+  // FREE recruiters see full PII for only the newest 25 applicants per job.
   // visibleIds = the allowed set (null for paid plans = everyone visible).
   const isFreePlan = (recruiter?.plan ?? PlanTier.FREE) === PlanTier.FREE;
   const visibleIds = isFreePlan
@@ -186,8 +187,8 @@ export async function GET(req: NextRequest) {
 
   const result = await Promise.all(
     pageItems.map(async (app) => {
-      // Locked = FREE recruiter + applicant outside the visible 5/job window.
-      // Locked rows ship zero PII (redacted server-side), not just blurred.
+      // Locked = FREE recruiter + applicant outside the visible 25/job window.
+      // Locked rows ship redacted teaser fields only; sensitive PII stays server-side.
       const locked = visibleIds !== null && !visibleIds.has(app.id);
       if (locked) {
         lockedCount += 1;
@@ -196,18 +197,18 @@ export async function GET(req: NextRequest) {
           jobId: app.jobId,
           jobTitle: app.job.title,
           jobSkills: app.job.skills.map((skill) => skill.skill.name),
-          candidateName: "Candidate",
+          candidateName: redactName(app.seeker.name),
           candidateEmail: "",
-          candidateAvatar: null,
-          verificationStatus: VerificationStatus.NOT_SUBMITTED,
-          primaryRole: null,
+          candidateAvatar: resolveLogoUrl(app.seeker.image),
+          verificationStatus: app.seeker.verificationStatus ?? VerificationStatus.NOT_SUBMITTED,
+          primaryRole: app.seeker.seekerProfile?.primaryRole ?? null,
           headline: null,
-          location: null,
+          location: coarseLocation(app.seeker.seekerProfile?.location),
           skills: [],
           candidateProfile: {
-            primaryRole: null,
+            primaryRole: app.seeker.seekerProfile?.primaryRole ?? null,
             headline: null,
-            location: null,
+            location: coarseLocation(app.seeker.seekerProfile?.location),
             skills: [],
             yearsExperience: null,
             websiteUrl: null,

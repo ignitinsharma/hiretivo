@@ -580,7 +580,7 @@ export default function RecruiterApplicationsPage() {
                   Upgrade to unlock all applicants
                 </h3>
                 <p className="text-slate-500 text-sm mt-1">
-                  FREE plan shows full details for the first 5 candidates per job.
+                  Free plan includes full profiles for the first 25 applicants per job.
                 </p>
                 <Button variant="primary" className="mt-4">
                   Upgrade Plan

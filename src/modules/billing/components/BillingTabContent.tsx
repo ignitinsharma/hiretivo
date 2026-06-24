@@ -26,7 +26,8 @@ const PLAN_LABEL = { STARTER: "Starter", GROWTH: "Growth", SCALE: "Scale" } as c
 
 const FREE_FEATURES = [
   "1 active job post",
-  "20 applicant views/mo",
+  "25 applicant profiles per job",
+  "3 talent pool unlocks",
   "Basic AI skill match",
 ];
 

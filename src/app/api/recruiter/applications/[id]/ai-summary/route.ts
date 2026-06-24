@@ -143,7 +143,7 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // 6b. Locked-applicant gate — FREE recruiters can only summarize their visible 5/job.
+  // 6b. Locked-applicant gate — FREE recruiters can only summarize their visible 25/job.
   // Blocks summarizing a locked candidate's PII even when the application id is known.
   if (
     session.user.plan === PlanTier.FREE &&
