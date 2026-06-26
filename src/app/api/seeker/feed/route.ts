@@ -6,7 +6,7 @@ import { CurrencyCode, JobStatus, UserRole, MatchThreshold, LocationClass } from
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { resolveLogoUrl } from '@/lib/r2';
-import { computeAllMatches, upsertJobMatches } from '@/lib/match';
+import { computeAllMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
@@ -192,7 +192,6 @@ export async function GET(req: NextRequest) {
   } else {
     matches = await computeAllMatches(seekerProfile.id);
     if (matches.length > 0) {
-      await upsertJobMatches(seekerProfile.id, matches);
       await redis.set(cacheKey, JSON.stringify(matches), { ex: 900 });
     }
   }
