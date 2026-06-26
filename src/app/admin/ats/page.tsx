@@ -1,8 +1,9 @@
 import { AtsBlocklistSection } from '@/modules/admin/components/AtsBlocklistSection';
+import { AtsPauseToggle } from '@/modules/admin/components/AtsPauseToggle';
 
 /*
  * /admin/ats
- * ATS management page — displays feed stats and the company blocklist editor.
+ * ATS management page — pause/resume import, feed stats, company blocklist editor.
  * Auth is enforced by the parent admin layout.
  */
 export default function AdminAtsPage() {
@@ -16,6 +17,7 @@ export default function AdminAtsPage() {
           Monitor automated job imports and manage the company blocklist.
         </p>
       </div>
+      <AtsPauseToggle />
       <AtsBlocklistSection />
     </div>
   );

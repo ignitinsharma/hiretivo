@@ -586,3 +586,11 @@ model EngineerUnlock {
   @@index([source])
   @@index([createdAt])
 }
+
+// Key-value store for global admin-controlled flags.
+// key is unique — upsert by key to read/write.
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
