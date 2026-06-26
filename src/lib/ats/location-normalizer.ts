@@ -1,5 +1,4 @@
-import { LocationClass } from '@/constants/enums';
-import { WorkType } from '@/constants/enums';
+import { LocationClass, WorkType } from '@/constants/enums';
 
 /*
  * classifyLocation

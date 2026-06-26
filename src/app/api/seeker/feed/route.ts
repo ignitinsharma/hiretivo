@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
+import { JobType as PrismaJobType, WorkType as PrismaWorkType } from '@prisma/client';
 import { auth } from '@/auth';
 import { CurrencyCode, JobStatus, UserRole, MatchThreshold, LocationClass } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
@@ -126,12 +128,12 @@ export async function GET(req: NextRequest) {
   });
   const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
 
-  const feedFilterWhere: any = {
+  const feedFilterWhere: Prisma.JobWhereInput = {
     status: JobStatus.OPEN,
     id: { notIn: [...appliedJobIds, ...dismissedJobIds] },
   };
-  if (jobType) feedFilterWhere.jobType = jobType;
-  if (workType) feedFilterWhere.workType = workType;
+  if (jobType) feedFilterWhere.jobType = jobType as PrismaJobType;
+  if (workType) feedFilterWhere.workType = workType as PrismaWorkType;
   if (locationClass) feedFilterWhere.locationClass = locationClass;
   if (visaSponsored) feedFilterWhere.visaSponsored = true;
 
