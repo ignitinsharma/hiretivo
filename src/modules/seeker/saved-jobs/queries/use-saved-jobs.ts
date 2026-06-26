@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/axios";
 
@@ -20,15 +20,23 @@ export interface SavedJobItem {
   };
 }
 
-interface SavedJobsResponse {
+interface SavedJobsPage {
   data: SavedJobItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 const SAVED_JOBS_QUERY_KEY = ["seeker-saved-jobs"] as const;
 
-async function fetchSavedJobs(): Promise<SavedJobItem[]> {
-  const { data } = await apiClient.get<SavedJobsResponse>("/seeker/saved-jobs");
-  return data.data;
+async function fetchSavedJobsPage({ pageParam }: { pageParam: number }): Promise<SavedJobsPage> {
+  const { data } = await apiClient.get<SavedJobsPage>("/seeker/saved-jobs", {
+    params: { page: pageParam, limit: 10 },
+  });
+  return data;
 }
 
 async function saveJob(jobId: string): Promise<void> {
@@ -44,22 +52,19 @@ interface UseSavedJobsOptions {
 }
 
 export function useSavedJobs(options?: UseSavedJobsOptions) {
-  return useQuery({
+  return useInfiniteQuery<SavedJobsPage>({
     queryKey: SAVED_JOBS_QUERY_KEY,
-    queryFn: fetchSavedJobs,
+    queryFn: fetchSavedJobsPage,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.page < lastPage.pagination.totalPages
+        ? lastPage.pagination.page + 1
+        : undefined,
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60_000,
   });
 }
 
-/*
- * useSaveJob
- * Mutation to save a job to the seeker's saved list.
- * Uses optimistic update: immediately adds a placeholder to the seeker-saved-jobs cache
- * so the save button reflects state instantly. On success, invalidates the cache to
- * replace the placeholder with real server data. Never invalidates seeker-feed
- * (isSaved is derived solely from seeker-saved-jobs cache, not feed data).
- */
 export function useSaveJob() {
   const queryClient = useQueryClient();
 
@@ -67,18 +72,32 @@ export function useSaveJob() {
     mutationFn: saveJob,
     onMutate: async (jobId: string) => {
       await queryClient.cancelQueries({ queryKey: SAVED_JOBS_QUERY_KEY });
-      const previous = queryClient.getQueryData<SavedJobItem[]>(SAVED_JOBS_QUERY_KEY);
+      const previous = queryClient.getQueryData<{
+        pages: SavedJobsPage[];
+        pageParams: number[];
+      }>(SAVED_JOBS_QUERY_KEY);
 
-      queryClient.setQueryData<SavedJobItem[]>(SAVED_JOBS_QUERY_KEY, (old) => {
-        if (!old) return old;
-        const placeholder: SavedJobItem = {
-          id: `optimistic-${jobId}`,
-          savedAt: new Date().toISOString(),
-          application: null,
-          job: { id: jobId } as SavedJobItem["job"],
-        };
-        return [...old, placeholder];
-      });
+      const placeholder: SavedJobItem = {
+        id: `optimistic-${jobId}`,
+        savedAt: new Date().toISOString(),
+        application: null,
+        job: { id: jobId } as SavedJobItem["job"],
+      };
+
+      queryClient.setQueryData<{ pages: SavedJobsPage[]; pageParams: number[] }>(
+        SAVED_JOBS_QUERY_KEY,
+        (old) =>
+          old
+            ? {
+                ...old,
+                pages: old.pages.map((page, i) =>
+                  i === 0
+                    ? { ...page, data: [placeholder, ...page.data] }
+                    : page,
+                ),
+              }
+            : old,
+      );
 
       return { previous };
     },
@@ -93,13 +112,6 @@ export function useSaveJob() {
   });
 }
 
-/*
- * useUnsaveJob
- * Mutation to remove a job from the seeker's saved list.
- * Uses optimistic update: immediately removes the item from the seeker-saved-jobs cache
- * so the save button reflects state instantly. Rolls back on error. On success,
- * invalidates the cache to sync with server. Never invalidates seeker-feed.
- */
 export function useUnsaveJob() {
   const queryClient = useQueryClient();
 
@@ -107,10 +119,23 @@ export function useUnsaveJob() {
     mutationFn: unsaveJob,
     onMutate: async (jobId: string) => {
       await queryClient.cancelQueries({ queryKey: SAVED_JOBS_QUERY_KEY });
-      const previous = queryClient.getQueryData<SavedJobItem[]>(SAVED_JOBS_QUERY_KEY);
+      const previous = queryClient.getQueryData<{
+        pages: SavedJobsPage[];
+        pageParams: number[];
+      }>(SAVED_JOBS_QUERY_KEY);
 
-      queryClient.setQueryData<SavedJobItem[]>(SAVED_JOBS_QUERY_KEY, (old) =>
-        old ? old.filter((item) => item.job.id !== jobId) : old,
+      queryClient.setQueryData<{ pages: SavedJobsPage[]; pageParams: number[] }>(
+        SAVED_JOBS_QUERY_KEY,
+        (old) =>
+          old
+            ? {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  data: page.data.filter((item) => item.job.id !== jobId),
+                })),
+              }
+            : old,
       );
 
       return { previous };
