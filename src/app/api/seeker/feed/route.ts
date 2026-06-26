@@ -10,7 +10,7 @@ import { computeAllMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
-import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
+import { resolveJobCompany, resolveCompanyLogoUrl } from '@/lib/jobs/resolve-job-company';
 import { stripHtml } from '@/lib/utils';
 
 const LOCATION_BADGE: Record<LocationClass, string> = {
@@ -351,7 +351,11 @@ function buildJobResponse(
     title: job.title,
     companyId: company.companyId,
     companyName: company.companyName,
-    companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+    companyLogoUrl: resolveCompanyLogoUrl(
+      company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+      job.companyWebsite,
+      company.companyName,
+    ),
     location: locationBadge,
     salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
     matchScore: score,

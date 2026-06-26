@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { stripHtml } from "@/lib/utils";
-import { resolveJobCompany } from "@/lib/jobs/resolve-job-company";
+import { resolveJobCompany, resolveCompanyLogoUrl } from "@/lib/jobs/resolve-job-company";
 
 /*
  * formatSalaryRange
@@ -114,7 +114,11 @@ export async function GET() {
           title: savedJob.job.title,
           companyId: company.companyId,
           companyName: company.companyName,
-          companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+          companyLogoUrl: resolveCompanyLogoUrl(
+            company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+            savedJob.job.companyWebsite,
+            company.companyName,
+          ),
           location: savedJob.job.workType ?? "Remote",
           salaryRange: formatSalaryRange(
             savedJob.job.salaryMin,

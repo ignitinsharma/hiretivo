@@ -52,7 +52,8 @@ export function extractSkillsFromText(
       }
 
       if (skill.name.length < 4) {
-        return new RegExp(`\\b${skill.name}\\b`, 'i').test(text);
+        const escaped = skill.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`\\b${escaped}\\b`, 'i').test(text);
       }
       return lowerText.includes(skill.name.toLowerCase());
     })
