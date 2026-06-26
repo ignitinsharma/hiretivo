@@ -85,13 +85,22 @@ export function isTechRole(
  * meetsQualityBar
  * Determines if a job posting meets quality criteria for inclusion in the feed.
  * Checks: description length, skill count, location classification, job type,
- * and role type (tech vs. non-tech/executive).
+ * role type (tech vs. non-tech/executive), and region eligibility for Indian seekers.
+ *
+ * Region rules:
+ *   worldwide → always accepted
+ *   india     → always accepted
+ *   us-only   → accepted only if visaSponsored
+ *   emea      → accepted only if visaSponsored
+ *   onsite    → always rejected
+ *
  * @param title - job title
  * @param description - job description
  * @param department - job department (nullable)
  * @param extractedSkillNames - list of extracted skill names
  * @param locationClass - location classification (nullable or undefined)
  * @param jobType - job type (e.g., INTERNSHIP, FULL_TIME)
+ * @param visaSponsored - whether the job offers visa sponsorship
  * @returns true if job meets quality bar
  */
 export function meetsQualityBar(
@@ -101,6 +110,7 @@ export function meetsQualityBar(
   extractedSkillNames: string[],
   locationClass: string | null | undefined,
   jobType: string,
+  visaSponsored = false,
 ): boolean {
   // Must have description
   if (!description || description.length < 100) return false;
@@ -110,6 +120,12 @@ export function meetsQualityBar(
 
   // Location must be classifiable
   if (!locationClass || locationClass === 'unknown') return false;
+
+  // Region eligibility for Indian seekers:
+  // onsite → always skip
+  if (locationClass === 'onsite') return false;
+  // us-only or emea → only if visa sponsored
+  if ((locationClass === 'us-only' || locationClass === 'emea') && !visaSponsored) return false;
 
   // Skip internships
   if (jobType === JobType.INTERNSHIP) return false;

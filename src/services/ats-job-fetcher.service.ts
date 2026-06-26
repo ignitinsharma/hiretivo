@@ -205,6 +205,7 @@ async function fetchAndUpsertSource(
       skillNames,
       job.locationClass,
       job.jobType,
+      job.visaSponsored,
     );
   });
 
