@@ -30,6 +30,100 @@ import type { AdminJobListItem } from "../types/admin-job.types";
 
 const PAGE_SIZE = 20;
 
+interface JobRowProps {
+  job: AdminJobListItem;
+  pendingId: string | null;
+  publishMut: ReturnType<typeof usePublishAdminJob>;
+  deleteMut: ReturnType<typeof useDeleteAdminJob>;
+  onPublish: (id: string) => Promise<void>;
+  setDeleteTargetId: (id: string | null) => void;
+}
+
+function JobRow({ job, pendingId, publishMut, deleteMut, onPublish, setDeleteTargetId }: JobRowProps) {
+  const rowPending = pendingId === job.id;
+
+  return (
+    <tr key={job.id} className="border-t border-brand-border">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <LogoPreview
+            url={job.companyLogoUrl ?? ""}
+            companyName={job.companyName ?? "?"}
+            size={32}
+          />
+          <span className="text-sm text-brand-foreground">
+            {job.companyName ?? "—"}
+          </span>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-sm text-brand-foreground">{job.title}</td>
+      <td className="px-4 py-3">
+        <JobStatusBadge status={job.status} />
+      </td>
+      <td className="px-4 py-3 text-sm text-brand-foreground-muted">
+        {job.applicantCount}
+      </td>
+      <td className="px-4 py-3 text-sm text-brand-foreground-muted">
+        {format(new Date(job.createdAt), "MMM d, yyyy")}
+      </td>
+      <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+        <Link href={`/admin/jobs/${job.id}/edit`}>
+          <Button variant="ghost" size="sm">Edit</Button>
+        </Link>
+        {job.status === JobStatus.DRAFT && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => onPublish(job.id)}
+            disabled={rowPending}
+          >
+            {rowPending && publishMut.isPending ? "Publishing…" : "Publish"}
+          </Button>
+        )}
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setDeleteTargetId(job.id)}
+          disabled={rowPending}
+        >
+          {rowPending && deleteMut.isPending ? "Deleting…" : "Delete"}
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
+interface PaginationFooterProps {
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  total: number;
+  totalPages: number;
+  limit: number;
+}
+
+function PaginationFooter({ currentPage, onPageChange, total, totalPages, limit }: PaginationFooterProps) {
+  const showStart = Math.min((currentPage - 1) * limit + 1, total);
+  const showEnd = Math.min(currentPage * limit, total);
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-t border-brand-border bg-brand-surface">
+      <p className="text-xs text-brand-foreground-muted">
+        Showing{" "}
+        <span className="font-semibold text-brand-foreground">{showStart}</span>
+        –
+        <span className="font-semibold text-brand-foreground">{showEnd}</span>{" "}
+        of{" "}
+        <span className="font-semibold text-brand-foreground">{total}</span>
+      </p>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
+    </div>
+  );
+}
+
 /*
  * AdminJobList
  * Table view of admin-posted jobs with server-side offset pagination (20/page).
@@ -50,20 +144,11 @@ export function AdminJobList() {
   const publishMut = usePublishAdminJob();
   const deleteMut = useDeleteAdminJob();
 
-  /*
-   * handleStatusChange
-   * Updates the status filter and resets to page 1 to avoid empty-page states.
-   */
   const handleStatusChange = (value: string) => {
     setStatus(value);
     setCurrentPage(1);
   };
 
-  /*
-   * onPublish
-   * Fires the publish mutation for a single row and scopes the loading state
-   * to only that row via pendingId.
-   */
   const onPublish = async (id: string) => {
     setPendingId(id);
     try {
@@ -79,11 +164,6 @@ export function AdminJobList() {
     }
   };
 
-  /*
-   * confirmDelete
-   * Called after the AlertDialog confirmation. Runs delete mutation and clears
-   * pending/target state.
-   */
   const confirmDelete = async () => {
     if (!deleteTargetId) return;
     const id = deleteTargetId;
@@ -104,9 +184,6 @@ export function AdminJobList() {
 
   const pagination = data?.pagination;
   const jobs = data?.jobs ?? [];
-  const pageLimit = pagination?.limit ?? PAGE_SIZE;
-  const showStart = pagination ? Math.min((currentPage - 1) * pageLimit + 1, pagination.total) : 0;
-  const showEnd = pagination ? Math.min(currentPage * pageLimit, pagination.total) : 0;
 
   return (
     <div className="space-y-4">
@@ -161,80 +238,28 @@ export function AdminJobList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {jobs.map((j: AdminJobListItem) => {
-                    const rowPending = pendingId === j.id;
-                    return (
-                      <tr key={j.id} className="border-t border-brand-border">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <LogoPreview
-                              url={j.companyLogoUrl ?? ""}
-                              companyName={j.companyName ?? "?"}
-                              size={32}
-                            />
-                            <span className="text-sm text-brand-foreground">
-                              {j.companyName ?? "—"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-brand-foreground">{j.title}</td>
-                        <td className="px-4 py-3">
-                          <JobStatusBadge status={j.status} />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-brand-foreground-muted">
-                          {j.applicantCount}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-brand-foreground-muted">
-                          {format(new Date(j.createdAt), "MMM d, yyyy")}
-                        </td>
-                        <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                          <Link href={`/admin/jobs/${j.id}/edit`}>
-                            <Button variant="ghost" size="sm">
-                              Edit
-                            </Button>
-                          </Link>
-                          {j.status === JobStatus.DRAFT && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => onPublish(j.id)}
-                              disabled={rowPending}
-                            >
-                              {rowPending && publishMut.isPending ? "Publishing…" : "Publish"}
-                            </Button>
-                          )}
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setDeleteTargetId(j.id)}
-                            disabled={rowPending}
-                          >
-                            {rowPending && deleteMut.isPending ? "Deleting…" : "Delete"}
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {jobs.map((j) => (
+                    <JobRow
+                      key={j.id}
+                      job={j}
+                      pendingId={pendingId}
+                      publishMut={publishMut}
+                      deleteMut={deleteMut}
+                      onPublish={onPublish}
+                      setDeleteTargetId={setDeleteTargetId}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination footer */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-t border-brand-border bg-brand-surface">
-              <p className="text-xs text-brand-foreground-muted">
-                Showing{" "}
-                <span className="font-semibold text-brand-foreground">{showStart}</span>
-                –
-                <span className="font-semibold text-brand-foreground">{showEnd}</span>{" "}
-                of{" "}
-                <span className="font-semibold text-brand-foreground">{pagination?.total ?? 0}</span>
-              </p>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={pagination?.totalPages ?? 1}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+            <PaginationFooter
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              total={pagination?.total ?? 0}
+              totalPages={pagination?.totalPages ?? 1}
+              limit={pagination?.limit ?? PAGE_SIZE}
+            />
           </>
         )}
       </div>

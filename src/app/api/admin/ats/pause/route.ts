@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Session } from 'next-auth';
 import { auth } from '@/auth';
 import { isAdminSession } from '@/lib/admin/is-admin';
 import { isImportPaused, setImportPaused } from '@/lib/ats/pause';
@@ -16,13 +17,19 @@ const adminWriteLimiter = createRateLimiter('admin-ats-pause-write', 5, '1 m');
  * Admin-gated. Rate-limited to 30 req/min per user.
  * @returns { paused: boolean }
  */
-export async function GET() {
-  const session = await auth();
-  if (!isAdminSession(session)) {
+function getUserIdOrForbid(session: Session | null): string | NextResponse {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  return session.user.id;
+}
 
-  const { success } = await adminReadLimiter.limit(session!.user!.id!);
+export async function GET() {
+  const session = await auth();
+  const userId = getUserIdOrForbid(session);
+  if (userId instanceof NextResponse) return userId;
+
+  const { success } = await adminReadLimiter.limit(userId);
   if (!success) {
     return new NextResponse('Too Many Requests', { status: 429 });
   }
@@ -40,11 +47,10 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!isAdminSession(session)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const userId = getUserIdOrForbid(session);
+  if (userId instanceof NextResponse) return userId;
 
-  const { success } = await adminWriteLimiter.limit(session!.user!.id!);
+  const { success } = await adminWriteLimiter.limit(userId);
   if (!success) {
     return new NextResponse('Too Many Requests', { status: 429 });
   }
