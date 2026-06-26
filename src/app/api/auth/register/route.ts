@@ -32,6 +32,16 @@ export async function POST(req: NextRequest) {
     const { email, password, name, role } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
+    if (
+      normalizedEmail === 'system@hiretivo.com' ||
+      normalizedEmail.endsWith('@hiretivo.com')
+    ) {
+      return NextResponse.json(
+        { error: 'This email address cannot be used for registration.' },
+        { status: 403 }
+      );
+    }
+
     const existing = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       select: { id: true },

@@ -11,6 +11,7 @@ export interface JobCompanyInput {
   companySize: string | null;
   companyIndustry: string | null;
   companyFunding: string | null;
+  companyWebsite?: string | null;
   recruiter: {
     recruiterProfile: {
       id: string;
@@ -57,4 +58,30 @@ export function resolveJobCompany(job: JobCompanyInput): ResolvedCompany {
     companyIndustry: job.companyIndustry ?? profile?.industry ?? null,
     companyFundingType: job.companyFunding ?? profile?.fundingType ?? null,
   };
+}
+
+/** 
+ * Resolves a company logo URL with multi-tier fallback:
+ * 1. Direct URL from DB (admin override or recruiter profile)
+ * 2. Google faviconV2 from company website (free, no key)
+ * 3. null — frontend should show initials placeholder
+ */
+export function resolveCompanyLogoUrl(
+  directUrl: string | null,
+  companyWebsite: string | null,
+  companyName: string,
+): string | null {
+  if (directUrl) return directUrl;
+
+  if (companyWebsite) {
+    try {
+      const url = new URL(companyWebsite.startsWith('http') ? companyWebsite : `https://${companyWebsite}`);
+      const domain = url.hostname.replace(/^www\./, '');
+      return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=64`;
+    } catch {
+      // Invalid URL — fall through
+    }
+  }
+
+  return null;
 }
