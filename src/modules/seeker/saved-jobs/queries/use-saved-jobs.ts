@@ -73,6 +73,12 @@ export function useSavedJobs(options?: UseSavedJobsOptions) {
 }
 
 export function useSaveJob() {
+  /*
+   * Uses optimistic update: immediately prepends a placeholder to page 1
+   * so the save button reflects state instantly. On success, invalidates the
+   * cache to replace placeholders with real server data. Never invalidates
+   * seeker-feed (isSaved is derived solely from seeker-saved-jobs cache).
+   */
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -120,6 +126,12 @@ export function useSaveJob() {
 }
 
 export function useUnsaveJob() {
+  /*
+   * Uses optimistic update: immediately filters the removed item from every
+   * page so the save button reflects state instantly. Rolls back on error.
+   * On success, invalidates the cache to sync with server. Never invalidates
+   * seeker-feed (isSaved is derived solely from seeker-saved-jobs cache).
+   */
   const queryClient = useQueryClient();
 
   return useMutation({
