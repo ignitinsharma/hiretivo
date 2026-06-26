@@ -269,6 +269,7 @@ async function fetchAndUpsertSource(
 
   // Phase 3: Create new jobs + reopen closed ones
   const newJobIds: string[] = [];
+  let reopenedCount = 0;
 
   for (let i = 0; i < filteredJobs.length; i++) {
     const job = filteredJobs[i];
@@ -288,6 +289,7 @@ async function fetchAndUpsertSource(
 
       if (existingClosed) {
         // Reopen the closed job
+        reopenedCount++;
         await prisma.job.update({
           where: { id: existingClosed.id },
           data: {
@@ -405,7 +407,7 @@ async function fetchAndUpsertSource(
 
   return {
     fetched: filteredJobs.length,
-    created: newJobCandidates.length - closedJobLookup.size,
+    created: newJobCandidates.length - reopenedCount,
     updated,
     errors: totalErrors,
     newJobIds,
