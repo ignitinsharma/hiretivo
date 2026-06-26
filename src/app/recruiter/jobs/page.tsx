@@ -5,8 +5,6 @@ import { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Search,
-  ChevronLeft,
-  ChevronRight,
   MoreVertical,
   Briefcase,
   BarChart3,
