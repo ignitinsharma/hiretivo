@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
   const jobs = await prisma.job.findMany({
     where: { recruiterId: session.user.id, NOT: { status: JobStatus.DELETED } },
     orderBy: { createdAt: 'desc' },
+    take: 5,
     select: {
       id: true,
       title: true,
