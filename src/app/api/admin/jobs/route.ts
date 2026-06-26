@@ -11,8 +11,8 @@ const adminReadLimiter = createRateLimiter("admin-read", 60, "1 m");
 
 /*
  * GET /api/admin/jobs
- * Lists all admin-posted jobs ordered by createdAt desc, optionally filtered by status.
- * Query params: status (optional, e.g. OPEN, DRAFT, ALL)
+ * Lists admin-posted jobs with offset pagination, optionally filtered by status.
+ * Query params: status (optional), page (default 1), limit (default 20)
  * Returns 403 for non-admin sessions. 429 on rate limit.
  */
 export async function GET(req: NextRequest) {
@@ -26,24 +26,34 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const status = req.nextUrl.searchParams.get("status") ?? undefined;
+  const params = req.nextUrl.searchParams;
+  const status = params.get("status") ?? undefined;
+  const page = Math.max(1, parseInt(params.get("page") ?? "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(params.get("limit") ?? "20", 10)));
+  const skip = (page - 1) * limit;
+
   const where: Record<string, unknown> = { isAdminPosted: true };
   if (status && status !== "ALL") where.status = status;
 
-  const jobs = await prisma.job.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      companyName: true,
-      companyLogoUrl: true,
-      status: true,
-      createdAt: true,
-      publishedAt: true,
-      _count: { select: { applications: true } },
-    },
-  });
+  const [jobs, total] = await prisma.$transaction([
+    prisma.job.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        companyName: true,
+        companyLogoUrl: true,
+        status: true,
+        createdAt: true,
+        publishedAt: true,
+        _count: { select: { applications: true } },
+      },
+    }),
+    prisma.job.count({ where }),
+  ]);
 
   return NextResponse.json({
     jobs: jobs.map((j) => ({
@@ -56,6 +66,12 @@ export async function GET(req: NextRequest) {
       publishedAt: j.publishedAt,
       applicantCount: j._count.applications,
     })),
+    pagination: {
+      total,
+      totalPages: Math.ceil(total / limit),
+      page,
+      limit,
+    },
   });
 }
 
