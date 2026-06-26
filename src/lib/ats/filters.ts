@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { JobType } from '@/constants/enums';
 
 /*
  * computeDescriptionHash
@@ -111,7 +112,7 @@ export function meetsQualityBar(
   if (!locationClass || locationClass === 'unknown') return false;
 
   // Skip internships
-  if (jobType === 'INTERNSHIP') return false;
+  if (jobType === JobType.INTERNSHIP) return false;
 
   // Must be a tech role
   if (!isTechRole(title, department, extractedSkillNames)) return false;

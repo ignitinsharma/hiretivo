@@ -316,3 +316,9 @@ export enum SessionUserState {
   NOT_ONBOARDED = "NOT_ONBOARDED",
   OK = "OK",
 }
+
+export enum AtsSource {
+  ASHBY = 'ashby',
+  GREENHOUSE = 'greenhouse',
+  LEVER = 'lever',
+}

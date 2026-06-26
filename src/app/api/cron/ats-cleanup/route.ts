@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
   const oldJobIds = await prisma.job.findMany({
     where: {
       isAdminPosted: true,
+      atsSource: { not: null },
       status: JobStatus.CLOSED,
       OR: [
         { closedAt: { lt: thirtyDaysAgo } },

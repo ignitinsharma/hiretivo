@@ -57,7 +57,7 @@ export async function upsertJobMatches(
   const CHUNK_SIZE = 50;
   for (let i = 0; i < matches.length; i += CHUNK_SIZE) {
     const chunk = matches.slice(i, i + CHUNK_SIZE);
-    await Promise.allSettled(
+    const results = await Promise.allSettled(
       chunk.map((m) =>
         prisma.jobMatch.upsert({
           where: {
@@ -78,6 +78,11 @@ export async function upsertJobMatches(
         }),
       ),
     );
+    for (const r of results) {
+      if (r.status === 'rejected') {
+        console.error('[match] upsertJobMatches chunk failure:', r.reason);
+      }
+    }
   }
 }
 

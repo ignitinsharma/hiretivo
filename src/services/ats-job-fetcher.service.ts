@@ -5,8 +5,8 @@ import { fetchAshbyJobs } from '@/lib/ats/normalizers/ashby.normalizer';
 import { fetchGreenhouseJobs } from '@/lib/ats/normalizers/greenhouse.normalizer';
 import { fetchLeverJobs } from '@/lib/ats/normalizers/lever.normalizer';
 import { computeDescriptionHash, meetsQualityBar } from '@/lib/ats/filters';
-import { subHours, subDays, subMinutes } from 'date-fns';
-import { SkillLevel, JobStatus } from '@/constants/enums';
+import { subHours, subDays } from 'date-fns';
+import { SkillLevel, JobStatus, AtsSource } from '@/constants/enums';
 import { WorkType, JobType } from '@prisma/client';
 
 const SYSTEM_USER_ID = 'system-ats-user';
@@ -66,9 +66,9 @@ export async function fetchAndUpsertAllJobs(): Promise<{
   const blockedNames = new Set(blocklist.map((b) => b.companyName.toLowerCase()));
 
   const results = await Promise.all([
-    fetchAndUpsertSource('ashby', blockedNames, allSkills),
-    fetchAndUpsertSource('greenhouse', blockedNames, allSkills),
-    fetchAndUpsertSource('lever', blockedNames, allSkills),
+    fetchAndUpsertSource(AtsSource.ASHBY, blockedNames, allSkills),
+    fetchAndUpsertSource(AtsSource.GREENHOUSE, blockedNames, allSkills),
+    fetchAndUpsertSource(AtsSource.LEVER, blockedNames, allSkills),
   ]);
 
   const allNewJobIds: string[] = [];
@@ -102,7 +102,7 @@ export async function fetchAndUpsertAllJobs(): Promise<{
   };
 }
 
-export type FetchSourceType = 'ashby' | 'greenhouse' | 'lever';
+export { AtsSource as FetchSourceType };
 
 /*
  * fetchAndAutoClose
@@ -111,7 +111,7 @@ export type FetchSourceType = 'ashby' | 'greenhouse' | 'lever';
  * @param source - ATS source identifier
  * @returns per-source counters including total closed
  */
-export async function fetchAndAutoClose(source: FetchSourceType): Promise<{
+export async function fetchAndAutoClose(source: AtsSource): Promise<{
   source: string;
   fetched: number;
   created: number;
@@ -151,7 +151,7 @@ export async function fetchAndAutoClose(source: FetchSourceType): Promise<{
  * @returns fetched/created/updated/errors counts, new job IDs, and per-company error map
  */
 async function fetchAndUpsertSource(
-  source: 'ashby' | 'greenhouse' | 'lever',
+  source: AtsSource,
   blockedNames: Set<string>,
   allSkills: Array<{ id: string; name: string }>,
 ): Promise<{ fetched: number; created: number; updated: number; errors: number; newJobIds: string[]; companyErrors: Map<string, number> }> {
@@ -168,9 +168,9 @@ async function fetchAndUpsertSource(
       chunk.map(async (company) => {
         if (blockedNames.has(company.name.toLowerCase())) return [];
         const fetcher =
-          source === 'ashby'
+          source === AtsSource.ASHBY
             ? fetchAshbyJobs
-            : source === 'greenhouse'
+            : source === AtsSource.GREENHOUSE
               ? fetchGreenhouseJobs
               : fetchLeverJobs;
         return fetcher(company.boardToken, company.name, company.website, company.logoUrl || null, allSkills);
@@ -249,13 +249,17 @@ async function fetchAndUpsertSource(
   }
 
   // 3b: Batch-fetch existing job details for descriptionHash comparison
-  const existingDedupeCandidates = filteredJobs.filter((_, i) => existingKeys.has(dedupeKeys[i]));
   const existingJobDetails = new Map<string, { id: string; descriptionHash: string | null }>();
 
-  if (existingDedupeCandidates.length > 0) {
-    const existingDedupeKeys = existingDedupeCandidates.map(
-      (j) => dedupeKeys[filteredJobs.indexOf(j)],
-    );
+  // Collect existing dedupe keys with a direct indexed loop — avoids O(n²) indexOf
+  const existingDedupeKeys: string[] = [];
+  for (let i = 0; i < filteredJobs.length; i++) {
+    if (existingKeys.has(dedupeKeys[i])) {
+      existingDedupeKeys.push(dedupeKeys[i]);
+    }
+  }
+
+  if (existingDedupeKeys.length > 0) {
     const existing = await prisma.job.findMany({
       where: { dedupeKey: { in: existingDedupeKeys } },
       select: { id: true, dedupeKey: true, descriptionHash: true },
@@ -476,42 +480,48 @@ async function autoCloseStaleJobs(
   companyErrors: Map<string, number>,
 ): Promise<{ closedStale: number; closedOld: number }> {
   const erroredCompanies = [...companyErrors.keys()];
+  const now = new Date();
 
-  const { count: closedStale } = await prisma.job.updateMany({
+  // Pre-collect IDs before closing so orphan cleanup is reliable
+  const staleIds = (await prisma.job.findMany({
     where: {
       isAdminPosted: true,
       status: JobStatus.OPEN,
-      lastSeenAt: { lt: subHours(new Date(), 48) },
+      lastSeenAt: { lt: subHours(now, 48) },
       ...(erroredCompanies.length > 0 ? { companyName: { notIn: erroredCompanies } } : {}),
-    },
-    data: { status: JobStatus.CLOSED, closedAt: new Date() },
-  });
-
-  const { count: closedOld } = await prisma.job.updateMany({
-    where: {
-      isAdminPosted: true,
-      status: JobStatus.OPEN,
-      publishedAt: { lt: subDays(new Date(), 60) },
-      ...(erroredCompanies.length > 0 ? { companyName: { notIn: erroredCompanies } } : {}),
-    },
-    data: { status: JobStatus.CLOSED, closedAt: new Date() },
-  });
-
-  // Clean up orphaned JobSkill and JobMatch for newly closed jobs
-  const closedJobIds = await prisma.job.findMany({
-    where: {
-      isAdminPosted: true,
-      status: JobStatus.CLOSED,
-      closedAt: { gte: subMinutes(new Date(), 5) },
     },
     select: { id: true },
-  });
+  })).map(j => j.id);
 
-  if (closedJobIds.length > 0) {
-    const ids = closedJobIds.map((j) => j.id);
+  const oldIds = (await prisma.job.findMany({
+    where: {
+      isAdminPosted: true,
+      status: JobStatus.OPEN,
+      publishedAt: { lt: subDays(now, 60) },
+      ...(erroredCompanies.length > 0 ? { companyName: { notIn: erroredCompanies } } : {}),
+    },
+    select: { id: true },
+  })).map(j => j.id);
+
+  const allClosingIds = [...new Set([...staleIds, ...oldIds])];
+
+  let closedStale = 0;
+  let closedOld = 0;
+
+  if (staleIds.length > 0) {
+    const r = await prisma.job.updateMany({ where: { id: { in: staleIds } }, data: { status: JobStatus.CLOSED, closedAt: now } });
+    closedStale = r.count;
+  }
+  if (oldIds.length > 0) {
+    const r = await prisma.job.updateMany({ where: { id: { in: oldIds } }, data: { status: JobStatus.CLOSED, closedAt: now } });
+    closedOld = r.count;
+  }
+
+  // Clean up orphaned skills/matches for just-closed jobs
+  if (allClosingIds.length > 0) {
     await Promise.all([
-      prisma.jobSkill.deleteMany({ where: { jobId: { in: ids } } }),
-      prisma.jobMatch.deleteMany({ where: { jobId: { in: ids } } }),
+      prisma.jobSkill.deleteMany({ where: { jobId: { in: allClosingIds } } }),
+      prisma.jobMatch.deleteMany({ where: { jobId: { in: allClosingIds } } }),
     ]);
   }
 
