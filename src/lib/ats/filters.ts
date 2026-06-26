@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { JobType } from '@/constants/enums';
+import { JobType, LocationClass } from '@/constants/enums';
 
 /*
  * computeDescriptionHash
@@ -123,9 +123,9 @@ export function meetsQualityBar(
 
   // Region eligibility for Indian seekers:
   // onsite → always skip
-  if (locationClass === 'onsite') return false;
+  if (locationClass === LocationClass.ONSITE) return false;
   // us-only or emea → only if visa sponsored
-  if ((locationClass === 'us-only' || locationClass === 'emea') && !visaSponsored) return false;
+  if ((locationClass === LocationClass.US_ONLY || locationClass === LocationClass.EMEA) && !visaSponsored) return false;
 
   // Skip internships
   if (jobType === JobType.INTERNSHIP) return false;
