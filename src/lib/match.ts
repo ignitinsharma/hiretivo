@@ -41,33 +41,44 @@ export async function computeAllMatches(
   return matches.sort((a, b) => b.score - a.score);
 }
 
+/*
+ * upsertJobMatches
+ * Upserts match records for a seeker across all jobs.
+ * Chunked to 50 at a time using Promise.allSettled to avoid transaction timeout.
+ * @param seekerProfileId - seeker profile ID
+ * @param matches - array of { jobId, score } to upsert
+ */
 export async function upsertJobMatches(
   seekerProfileId: string,
   matches: { jobId: string; score: number }[],
 ): Promise<void> {
   if (matches.length === 0) return;
 
-  await prisma.$transaction(
-    matches.map((m) =>
-      prisma.jobMatch.upsert({
-        where: {
-          jobId_seekerProfileId: {
+  const CHUNK_SIZE = 50;
+  for (let i = 0; i < matches.length; i += CHUNK_SIZE) {
+    const chunk = matches.slice(i, i + CHUNK_SIZE);
+    await Promise.allSettled(
+      chunk.map((m) =>
+        prisma.jobMatch.upsert({
+          where: {
+            jobId_seekerProfileId: {
+              jobId: m.jobId,
+              seekerProfileId,
+            },
+          },
+          create: {
             jobId: m.jobId,
             seekerProfileId,
+            score: m.score,
           },
-        },
-        create: {
-          jobId: m.jobId,
-          seekerProfileId,
-          score: m.score,
-        },
-        update: {
-          score: m.score,
-          computedAt: new Date(),
-        },
-      }),
-    ),
-  );
+          update: {
+            score: m.score,
+            computedAt: new Date(),
+          },
+        }),
+      ),
+    );
+  }
 }
 
 export async function invalidateSeekerCache(seekerProfileId: string): Promise<void> {
