@@ -126,6 +126,22 @@ export enum WorkType {
 
 export const WORK_TYPE_VALUES = [WorkType.REMOTE, WorkType.HYBRID, WorkType.ONSITE] as const;
 
+export enum LocationClass {
+  WORLDWIDE = 'worldwide',
+  US_ONLY = 'us-only',
+  EMEA = 'emea',
+  INDIA = 'india',
+  ONSITE = 'onsite',
+}
+
+export const LOCATION_CLASS_VALUES = [
+  LocationClass.WORLDWIDE,
+  LocationClass.US_ONLY,
+  LocationClass.EMEA,
+  LocationClass.INDIA,
+  LocationClass.ONSITE,
+] as const;
+
 export enum PlanTier {
   FREE = "FREE",
   STARTER = "STARTER",

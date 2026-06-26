@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { CurrencyCode, JobStatus, UserRole, MatchThreshold } from '@/constants/enums';
+import { CurrencyCode, JobStatus, UserRole, MatchThreshold, LocationClass } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { resolveLogoUrl } from '@/lib/r2';
@@ -10,6 +10,42 @@ import { createRateLimiter } from '@/lib/rate-limit';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
 import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
 import { stripHtml } from '@/lib/utils';
+
+const LOCATION_BADGE: Record<LocationClass, string> = {
+  [LocationClass.WORLDWIDE]: '🌍 Remote (Worldwide)',
+  [LocationClass.US_ONLY]: '🇺🇸 Remote (US Only)',
+  [LocationClass.EMEA]: '🇪🇺 Remote (EMEA)',
+  [LocationClass.INDIA]: '🇮🇳 India',
+  [LocationClass.ONSITE]: '🏢 On-site',
+};
+
+interface JobFeedItem {
+  id: string;
+  title: string;
+  companyId: string | null;
+  companyName: string;
+  companyLogoUrl: string | null;
+  location: string;
+  salaryRange: string;
+  matchScore: number;
+  tags: string[];
+  postedAt: string;
+  jobType: string;
+  workType: string | null;
+  experienceLevel: string | null;
+  companyIndustry: string | null;
+  companySize: string | null;
+  companyFundingType: string | null;
+  matchedSkillNames: string[];
+  applyType: string;
+  externalApplyUrl: string | null;
+  missingSkills: string[];
+  missingSkillsHint: string | null;
+  description: string | null;
+  applicantCount: number;
+  locationClass: string | null;
+  visaSponsored: boolean;
+}
 
 const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
 
@@ -54,7 +90,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // Rate limiting — 30 feed requests/min
   const { success } = await feedRateLimiter.limit(session.user.id);
   if (!success) {
     return new NextResponse('Too Many Requests', { status: 429 });
@@ -69,7 +104,7 @@ export async function GET(req: NextRequest) {
   });
 
   if (!seekerProfile) {
-    return NextResponse.json({ jobs: [], nextCursor: null });
+    return NextResponse.json({ jobs: [], nextCursor: null, hasMoreRecent: false });
   }
 
   const parsed = feedFilterSchema.safeParse(Object.fromEntries(req.nextUrl.searchParams));
@@ -77,9 +112,75 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid query params' }, { status: 400 });
   }
 
-  const { cursor, limit, jobType, workType } = parsed.data;
+  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored } = parsed.data;
 
-  // Redis cache read-through
+  const appliedRows = await prisma.application.findMany({
+    where: { seekerId: session.user.id },
+    select: { jobId: true },
+  });
+  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
+
+  const dismissedRows = await prisma.dismissedJob.findMany({
+    where: { userId: session.user.id },
+    select: { jobId: true },
+  });
+  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
+
+  const feedFilterWhere: any = {
+    status: JobStatus.OPEN,
+    id: { notIn: [...appliedJobIds, ...dismissedJobIds] },
+  };
+  if (jobType) feedFilterWhere.jobType = jobType;
+  if (workType) feedFilterWhere.workType = workType;
+  if (locationClass) feedFilterWhere.locationClass = locationClass;
+  if (visaSponsored) feedFilterWhere.visaSponsored = true;
+
+  // Hybrid mode: recentOffset provided → unmatched jobs tail
+  if (recentOffset !== undefined) {
+    const matchedJobIds = await prisma.jobMatch.findMany({
+      where: { seekerProfileId: seekerProfile.id },
+      select: { jobId: true },
+    });
+    const allMatchedIds = matchedJobIds.map((m) => m.jobId);
+
+    const recentJobs = await prisma.job.findMany({
+      where: {
+        ...feedFilterWhere,
+        id: { notIn: [...allMatchedIds, ...appliedJobIds, ...dismissedJobIds] },
+        isAdminPosted: true,
+      },
+      orderBy: { publishedAt: 'desc' },
+      skip: recentOffset,
+      take: limit + 1,
+      include: {
+        recruiter: {
+          select: {
+            recruiterProfile: {
+              select: { id: true, companyName: true, logo: true, companySize: true, fundingType: true, industry: true },
+            },
+          },
+        },
+        skills: {
+          select: { skillId: true, skill: { select: { name: true } } },
+        },
+        _count: { select: { applications: true } },
+      },
+    });
+
+    const hasMoreRecent = recentJobs.length > limit;
+    const pageJobs = hasMoreRecent ? recentJobs.slice(0, limit) : recentJobs;
+    const seekerSkillIds = seekerProfile.skills.map((s) => s.skillId);
+    const jobsResponse = pageJobs.map((job) => buildJobResponse(job, seekerSkillIds, 0));
+
+    return NextResponse.json({
+      jobs: jobsResponse,
+      recentOffset: recentOffset + pageJobs.length,
+      hasMoreRecent,
+      section: 'recent',
+    });
+  }
+
+  // === Matched jobs flow (existing behavior) ===
   const cacheKey = `match:${seekerProfile.id}`;
   let matches: { jobId: string; score: number }[];
 
@@ -95,24 +196,9 @@ export async function GET(req: NextRequest) {
   }
 
   if (matches.length === 0) {
-    return NextResponse.json({ jobs: [], nextCursor: null });
+    return NextResponse.json({ jobs: [], nextCursor: null, hasMoreRecent: true });
   }
 
-  // Fetch applied job IDs to exclude before pagination (SKR-03).
-  // Must happen before cursor slicing so pagination offsets remain stable.
-  const appliedRows = await prisma.application.findMany({
-    where: { seekerId: session.user.id },
-    select: { jobId: true },
-  });
-  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
-
-  const dismissedRows = await prisma.dismissedJob.findMany({
-    where: { userId: session.user.id },
-    select: { jobId: true },
-  });
-  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
-
-  // Fetch job data for all matched jobs (needed for filtering + exclusions)
   const jobIds = matches.map((m) => m.jobId);
   const jobs = await prisma.job.findMany({
     where: { id: { in: jobIds }, status: JobStatus.OPEN },
@@ -120,6 +206,8 @@ export async function GET(req: NextRequest) {
       id: true,
       jobType: true,
       workType: true,
+      locationClass: true,
+      visaSponsored: true,
       recruiter: {
         select: {
           recruiterProfile: {
@@ -132,7 +220,6 @@ export async function GET(req: NextRequest) {
 
   const jobMap = new Map(jobs.map((j) => [j.id, j]));
 
-  // Apply filters and exclude already-applied/dismissed jobs before cursor slicing.
   let filteredMatches = matches.filter((m) => {
     if (appliedJobIds.has(m.jobId)) return false;
     if (dismissedJobIds.has(m.jobId)) return false;
@@ -140,20 +227,16 @@ export async function GET(req: NextRequest) {
     if (!job) return false;
     if (jobType && job.jobType !== jobType) return false;
     if (workType && job.workType !== workType) return false;
+    if (locationClass && job.locationClass !== locationClass) return false;
+    if (visaSponsored && !job.visaSponsored) return false;
     return true;
   });
 
-  // INT-03: Prepend boosted jobs that are active and within the seeker's matched set.
-  // Boosted jobs only pin for skill-matched seekers — non-matched jobs are excluded by
-  // filteredMatches already, so we only check BoostedJob within the current filtered set.
   if (filteredMatches.length > 0) {
     const now = new Date();
     const filteredJobIds = filteredMatches.map((m) => m.jobId);
     const activeBoosted = await prisma.boostedJob.findMany({
-      where: {
-        jobId: { in: filteredJobIds },
-        expiresAt: { gt: now },
-      },
+      where: { jobId: { in: filteredJobIds }, expiresAt: { gt: now } },
       select: { jobId: true },
     });
     if (activeBoosted.length > 0) {
@@ -164,7 +247,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Cursor pagination
   if (cursor) {
     try {
       const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString()) as { score: number; jobId: string };
@@ -172,7 +254,7 @@ export async function GET(req: NextRequest) {
         (m) => m.score < decoded.score || (m.score === decoded.score && m.jobId < decoded.jobId),
       );
     } catch {
-      // Invalid cursor — ignore and start from beginning
+      // invalid cursor — start from beginning
     }
   }
 
@@ -186,7 +268,6 @@ export async function GET(req: NextRequest) {
     ? Buffer.from(JSON.stringify({ score: pageItems[pageItems.length - 1].score, jobId: pageItems[pageItems.length - 1].jobId })).toString('base64')
     : null;
 
-  // Enrich with full job data including skills for missing-skills hint
   const paginatedJobIds = pageItems.map((m) => m.jobId);
   const enrichedJobs = await prisma.job.findMany({
     where: { id: { in: paginatedJobIds }, status: JobStatus.OPEN },
@@ -194,22 +275,12 @@ export async function GET(req: NextRequest) {
       recruiter: {
         select: {
           recruiterProfile: {
-            select: {
-              id: true,
-              companyName: true,
-              logo: true,
-              companySize: true,
-              fundingType: true,
-              industry: true,
-            },
+            select: { id: true, companyName: true, logo: true, companySize: true, fundingType: true, industry: true },
           },
         },
       },
       skills: {
-        select: {
-          skillId: true,
-          skill: { select: { name: true } },
-        },
+        select: { skillId: true, skill: { select: { name: true } } },
       },
       _count: { select: { applications: true } },
     },
@@ -217,92 +288,88 @@ export async function GET(req: NextRequest) {
 
   const enrichedMap = new Map(enrichedJobs.map((j) => [j.id, j]));
   const scoreMap = new Map(pageItems.map((m) => [m.jobId, m.score]));
-
-  // Seeker skill IDs for per-job missing-skill computation
   const seekerSkillIds = seekerProfile.skills.map((s) => s.skillId);
 
-  // Preserve order from pagination
-  const jobsResponse: Array<{
-    id: string;
-    title: string;
-    companyId: string | null;
-    companyName: string;
-    companyLogoUrl: string | null;
-    location: string;
-    salaryRange: string;
-    matchScore: number;
-    tags: string[];
-    postedAt: string;
-    jobType: string;
-    workType: string | null;
-    experienceLevel: string | null;
-    companyIndustry: string | null;
-    companySize: string | null;
-    companyFundingType: string | null;
-    matchedSkillNames: string[];
-    applyType: string;
-    externalApplyUrl: string | null;
-    missingSkills: string[];
-    missingSkillsHint: string | null;
-    description: string | null;
-    applicantCount: number;
-  }> = [];
+  const jobsResponse: Array<JobFeedItem> = [];
 
   for (const m of pageItems) {
     const job = enrichedMap.get(m.jobId);
     if (!job) continue;
 
-    const score = scoreMap.get(m.jobId) ?? 0;
-
-    const jobSkillsForHint = job.skills;
-    const matchedSkillNames = jobSkillsForHint
-      .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))
-      .map((jobSkill) => jobSkill.skill.name);
-    const missingSkills = getMissingSkillNames(seekerSkillIds, jobSkillsForHint);
-    let missingSkillsHint: string | null = null;
-
-    if (score < LOW_MATCH_THRESHOLD) {
-      if (missingSkills.length > 0) {
-        const hintSkills = missingSkills.slice(0, MAX_HINT_SKILLS);
-        missingSkillsHint = `Missing: ${hintSkills.join(', ')}`;
-      }
-    }
-
-    const company = resolveJobCompany({
-      companyName: job.companyName,
-      companyLogoUrl: job.companyLogoUrl,
-      companySize: job.companySize,
-      companyIndustry: job.companyIndustry,
-      companyFunding: job.companyFunding,
-      recruiter: job.recruiter,
-    });
-
-    jobsResponse.push({
-      id: job.id,
-      title: job.title,
-      companyId: company.companyId,
-      companyName: company.companyName,
-      companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
-      location: job.workType ?? 'Remote',
-      salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
-      matchScore: score,
-      tags: job.skills.slice(0, 3).map((s) => s.skill.name),
-      postedAt: formatPostedAt(job.publishedAt),
-      jobType: job.jobType,
-      workType: job.workType,
-      experienceLevel: job.experienceLevel,
-      companyIndustry: company.companyIndustry,
-      companySize: company.companySize,
-      companyFundingType: company.companyFundingType,
-      matchedSkillNames,
-      applyType: job.applyType,
-      externalApplyUrl: job.externalApplyUrl,
-      missingSkills,
-      missingSkillsHint,
-      description: job.description ? stripHtml(job.description) : null,
-      applicantCount: job._count.applications,
-    });
+    jobsResponse.push(buildJobResponse(job, seekerSkillIds, scoreMap.get(m.jobId) ?? 0));
   }
 
-  return NextResponse.json({ jobs: jobsResponse, nextCursor, totalCount, remainingCount });
+  // Check if there are unmatched jobs available
+  const matchedJobIds = matches.map((m) => m.jobId);
+  const unmatchedCount = await prisma.job.count({
+    where: {
+      status: JobStatus.OPEN,
+      isAdminPosted: true,
+      id: { notIn: [...matchedJobIds, ...appliedJobIds, ...dismissedJobIds] },
+    },
+  });
+
+  return NextResponse.json({
+    jobs: jobsResponse,
+    nextCursor,
+    totalCount,
+    remainingCount,
+    hasMoreRecent: unmatchedCount > 0,
+  });
+}
+
+function buildJobResponse(
+  job: any,
+  seekerSkillIds: string[],
+  score: number,
+): JobFeedItem {
+  const jobSkillsForHint = job.skills ?? [];
+  const matchedSkillNames = jobSkillsForHint
+    .filter((js: any) => seekerSkillIds.includes(js.skillId))
+    .map((js: any) => js.skill.name);
+  const missingSkills = getMissingSkillNames(seekerSkillIds, jobSkillsForHint);
+  let missingSkillsHint: string | null = null;
+
+  if (score < LOW_MATCH_THRESHOLD && missingSkills.length > 0) {
+    missingSkillsHint = `Missing: ${missingSkills.slice(0, MAX_HINT_SKILLS).join(', ')}`;
+  }
+
+  const company = resolveJobCompany({
+    companyName: job.companyName,
+    companyLogoUrl: job.companyLogoUrl,
+    companySize: job.companySize,
+    companyIndustry: job.companyIndustry,
+    companyFunding: job.companyFunding,
+    recruiter: job.recruiter,
+  });
+
+  const locationBadge = (LOCATION_BADGE[job.locationClass as LocationClass] || job.workType) ?? 'Remote';
+
+  return {
+    id: job.id,
+    title: job.title,
+    companyId: company.companyId,
+    companyName: company.companyName,
+    companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+    location: locationBadge,
+    salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
+    matchScore: score,
+    tags: jobSkillsForHint.slice(0, 3).map((js: any) => js.skill.name),
+    postedAt: formatPostedAt(job.publishedAt),
+    jobType: job.jobType,
+    workType: job.workType,
+    experienceLevel: job.experienceLevel,
+    companyIndustry: company.companyIndustry,
+    companySize: company.companySize,
+    companyFundingType: company.companyFundingType,
+    matchedSkillNames,
+    applyType: job.applyType,
+    externalApplyUrl: job.externalApplyUrl,
+    missingSkills,
+    missingSkillsHint,
+    description: job.description ? stripHtml(job.description) : null,
+    applicantCount: job._count?.applications ?? 0,
+    locationClass: job.locationClass ?? null,
+    visaSponsored: job.visaSponsored ?? false,
+  };
 }
