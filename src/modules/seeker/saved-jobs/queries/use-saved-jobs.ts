@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useInfiniteQuery, useQueryClient, InfiniteData } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/axios";
 
@@ -52,9 +52,16 @@ interface UseSavedJobsOptions {
 }
 
 export function useSavedJobs(options?: UseSavedJobsOptions) {
-  return useInfiniteQuery<SavedJobsPage>({
+  return useInfiniteQuery<
+    SavedJobsPage,
+    Error,
+    InfiniteData<SavedJobsPage>,
+    typeof SAVED_JOBS_QUERY_KEY,
+    number
+  >({
     queryKey: SAVED_JOBS_QUERY_KEY,
-    queryFn: fetchSavedJobsPage,
+    queryFn: ({ pageParam }) =>
+      fetchSavedJobsPage({ pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.page < lastPage.pagination.totalPages

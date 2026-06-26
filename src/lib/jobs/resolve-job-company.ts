@@ -69,7 +69,6 @@ export function resolveJobCompany(job: JobCompanyInput): ResolvedCompany {
 export function resolveCompanyLogoUrl(
   directUrl: string | null,
   companyWebsite: string | null,
-  companyName: string,
 ): string | null {
   if (directUrl) return directUrl;
 

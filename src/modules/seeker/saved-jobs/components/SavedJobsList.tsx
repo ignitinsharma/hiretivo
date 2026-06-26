@@ -162,20 +162,13 @@ export function SavedJobsList() {
       {hasNextPage && (
         <div className="flex justify-center pt-2">
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
             onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
+            loading={isFetchingNextPage}
             className="w-full max-w-xs"
           >
-            {isFetchingNextPage ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-brand-foreground-muted border-t-brand-foreground" />
-                Loading...
-              </>
-            ) : (
-              `Load more (${remaining} remaining)`
-            )}
+            {isFetchingNextPage ? "Loading..." : `Load more (${remaining} remaining)`}
           </Button>
         </div>
       )}
