@@ -2,17 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { isAdminSession } from '@/lib/admin/is-admin';
 import { isImportPaused, setImportPaused } from '@/lib/ats/pause';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+/* Admin read limiter — 30 req/min per userId (authenticated gate) */
+const adminReadLimiter = createRateLimiter('admin-ats-pause-read', 30, '1 m');
+
+/* Admin write limiter — 5 req/min per userId (write gate per CLAUDE.md) */
+const adminWriteLimiter = createRateLimiter('admin-ats-pause-write', 5, '1 m');
 
 /*
  * GET /api/admin/ats/pause
  * Returns current ATS import pause state.
- * Admin-gated.
+ * Admin-gated. Rate-limited to 30 req/min per user.
  * @returns { paused: boolean }
  */
 export async function GET() {
   const session = await auth();
   if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { success } = await adminReadLimiter.limit(session!.user!.id!);
+  if (!success) {
+    return new NextResponse('Too Many Requests', { status: 429 });
   }
 
   const paused = await isImportPaused();
@@ -22,7 +34,7 @@ export async function GET() {
 /*
  * POST /api/admin/ats/pause
  * Toggles the ATS import pause flag.
- * Admin-gated.
+ * Admin-gated. Rate-limited to 5 req/min per user.
  * @body { paused: boolean }
  * @returns { paused: boolean }
  */
@@ -30,6 +42,11 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { success } = await adminWriteLimiter.limit(session!.user!.id!);
+  if (!success) {
+    return new NextResponse('Too Many Requests', { status: 429 });
   }
 
   const body = await req.json();

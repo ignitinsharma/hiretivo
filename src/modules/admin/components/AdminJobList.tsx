@@ -104,8 +104,9 @@ export function AdminJobList() {
 
   const pagination = data?.pagination;
   const jobs = data?.jobs ?? [];
-  const showStart = pagination ? Math.min((currentPage - 1) * PAGE_SIZE + 1, pagination.total) : 0;
-  const showEnd = pagination ? Math.min(currentPage * PAGE_SIZE, pagination.total) : 0;
+  const pageLimit = pagination?.limit ?? PAGE_SIZE;
+  const showStart = pagination ? Math.min((currentPage - 1) * pageLimit + 1, pagination.total) : 0;
+  const showEnd = pagination ? Math.min(currentPage * pageLimit, pagination.total) : 0;
 
   return (
     <div className="space-y-4">
