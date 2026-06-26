@@ -301,6 +301,15 @@ model Job {
   publishedAt DateTime?
   closedAt    DateTime?
 
+  // ATS job feed fields — null on regular recruiter jobs
+  atsSource     String?   // 'ashby' | 'greenhouse' | 'lever'
+  atsSourceId   String?   // Raw ID from source API (stable per source)
+  dedupeKey     String?   @unique  // MD5(companyName|title|atsSourceId)
+  lastSeenAt    DateTime? // Refreshed every cron run — drives 48h stale check
+  location      String?   // Raw location string: "San Francisco, CA", "Remote", "Bangalore, India"
+  locationClass String?   // Classified: 'worldwide' | 'us-only' | 'emea' | 'india' | 'onsite'
+  visaSponsored Boolean   @default(false)  // Extracted from description text
+
   skills        JobSkill[]
   applications  Application[]
   jobMatches    JobMatch[]
@@ -317,6 +326,21 @@ model Job {
   @@index([createdAt])
   @@index([isAdminPosted])
   @@index([status, createdAt])
+  @@index([atsSource])
+  @@index([locationClass])
+  @@index([lastSeenAt])
+}
+
+model AtsBlocklist {
+  id          String   @id @default(cuid())
+  companyName String   // Match against Job.companyName (case-insensitive)
+  domain      String?  // Match against Job.companyWebsite (optional)
+  reason      String?  // Admin note
+  blockedAt   DateTime @default(now())
+  blockedBy   String?  // Admin userId who added this
+
+  @@index([companyName])
+  @@index([domain])
 }
 
 model JobSkill {
