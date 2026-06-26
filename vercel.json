@@ -19,15 +19,15 @@
     },
     {
       "path": "/api/cron/ats-ashby",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/ats-greenhouse",
-      "schedule": "15 */6 * * *"
+      "schedule": "15 0 * * *"
     },
     {
       "path": "/api/cron/ats-lever",
-      "schedule": "30 */6 * * *"
+      "schedule": "30 0 * * *"
     },
     {
       "path": "/api/cron/ats-cleanup",
