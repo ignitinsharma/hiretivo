@@ -36,6 +36,7 @@ export interface SeekerFeedResponse {
   nextCursor: string | null;
   totalCount?: number;
   remainingCount?: number;
+  hasMoreRecent?: boolean;
 }
 
 export interface SeekerSettingsData {

@@ -46,7 +46,8 @@ export function RecommendedJobsList() {
   } = useFeed();
 
   const allJobs = useMemo(() => data?.pages.flatMap((p) => p.jobs) ?? [], [data]);
-  const allCaughtUp = !hasNextPage && allJobs.length === 0;
+  const lastPage = data?.pages[data.pages.length - 1];
+  const allCaughtUp = !hasNextPage && lastPage?.hasMoreRecent === false && allJobs.length === 0;
 
   const { data: savedJobs } = useSavedJobs();
   const { data: dashboardSummary } = useQuery({
@@ -58,7 +59,7 @@ export function RecommendedJobsList() {
   const unsaveMutation = useUnsaveJob();
 
   const savedJobIds = useMemo(
-    () => new Set(savedJobs?.map((s) => s.job.id) ?? []),
+    () => new Set(savedJobs?.pages.flatMap((p) => p.data.map((s) => s.job.id)) ?? []),
     [savedJobs],
   );
 
