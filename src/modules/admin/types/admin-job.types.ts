@@ -71,6 +71,26 @@ export interface CompanySuggestion {
 }
 
 /*
+ * AdminJobPagination
+ * Pagination metadata returned alongside the job list.
+ */
+export interface AdminJobPagination {
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}
+
+/*
+ * AdminJobsListResponse
+ * Full response shape from GET /api/admin/jobs.
+ */
+export interface AdminJobsListResponse {
+  jobs: AdminJobListItem[];
+  pagination: AdminJobPagination;
+}
+
+/*
  * AdminJobFormValues
  * Uncontrolled form state shape for the admin job create/edit form.
  * Salary fields are strings to accommodate empty/partial input;

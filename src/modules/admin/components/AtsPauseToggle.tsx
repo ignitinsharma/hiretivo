@@ -1,45 +1,64 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/axios';
+
+/*
+ * fetchAtsPauseState
+ * Fetches current ATS import pause state from the admin API.
+ * @returns { paused: boolean }
+ */
+async function fetchAtsPauseState(): Promise<{ paused: boolean }> {
+  const { data } = await apiClient.get<{ paused: boolean }>('/admin/ats/pause');
+  return data;
+}
+
+/*
+ * setAtsPauseState
+ * Posts the desired pause state to the admin API.
+ * @param paused - true to pause, false to resume
+ * @returns { paused: boolean } reflecting the new state
+ */
+async function setAtsPauseState(paused: boolean): Promise<{ paused: boolean }> {
+  const { data } = await apiClient.post<{ paused: boolean }>('/admin/ats/pause', { paused });
+  return data;
+}
 
 /*
  * AtsPauseToggle
  * Admin control to pause or resume automated ATS job imports.
- * Reads current state on mount; toggles via POST /api/admin/ats/pause.
+ * Uses TanStack Query for fetching state (useQuery) and toggling (useMutation).
+ * Invalidates the ats-pause-state cache on successful toggle so the UI
+ * reflects the confirmed server value rather than an optimistic guess.
  */
 export function AtsPauseToggle() {
-  const [paused, setPaused] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [toggling, setToggling] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
 
-  useEffect(() => {
-    fetch('/api/admin/ats/pause')
-      .then((r) => r.json())
-      .then((data) => setPaused(data.paused))
-      .catch(() => setError('Failed to load import status'))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['ats-pause-state'],
+    queryFn: fetchAtsPauseState,
+    staleTime: 30 * 1000,
+  });
 
-  async function handleToggle() {
+  const paused = data?.paused ?? null;
+
+  const toggleMutation = useMutation({
+    mutationFn: (next: boolean) => setAtsPauseState(next),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ats-pause-state'] });
+    },
+  });
+
+  /*
+   * handleToggle
+   * Fires the toggle mutation with the opposite of the current pause state.
+   * No-ops when the state is not yet loaded. Side effect: on success the
+   * ats-pause-state query is invalidated so the badge re-fetches from the server.
+   */
+  function handleToggle() {
     if (paused === null) return;
-    setToggling(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/ats/pause', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paused: !paused }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to update');
-      setPaused(data.paused);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setToggling(false);
-    }
+    toggleMutation.mutate(!paused);
   }
 
   return (
@@ -50,33 +69,45 @@ export function AtsPauseToggle() {
             ATS Import
           </h3>
           <p className="mt-1 text-sm text-brand-foreground-muted">
-            {loading
+            {isLoading
               ? 'Loading status...'
               : paused
               ? 'Import is paused. Cron runs will skip fetch and auto-close.'
               : 'Import is active. Jobs fetch daily at midnight UTC.'}
           </p>
-          {error && (
-            <p className="mt-1 text-sm text-brand-danger">{error}</p>
+          {(isError || toggleMutation.isError) && (
+            <p className="mt-1 text-sm text-brand-danger">
+              {toggleMutation.isError
+                ? (toggleMutation.error instanceof Error
+                    ? toggleMutation.error.message
+                    : 'Failed to update')
+                : 'Failed to load import status'}
+            </p>
           )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium border ${
-            loading
-              ? 'border-gray-200 bg-gray-50 text-gray-400'
+            isLoading
+              ? 'border-brand-border bg-brand-surface text-brand-foreground-muted'
               : paused
-              ? 'border-red-200 bg-red-50 text-red-600'
-              : 'border-green-200 bg-green-50 text-green-700'
+              ? 'border-brand-border bg-brand-surface text-brand-danger'
+              : 'border-brand-border bg-brand-surface text-brand-success'
           }`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'bg-gray-300' : paused ? 'bg-red-500' : 'bg-green-500'}`} />
-            {loading ? 'Loading' : paused ? 'Paused' : 'Active'}
+            <span className={`h-1.5 w-1.5 rounded-full ${
+              isLoading
+                ? 'bg-brand-foreground-secondary'
+                : paused
+                ? 'bg-brand-danger'
+                : 'bg-brand-success'
+            }`} />
+            {isLoading ? 'Loading' : paused ? 'Paused' : 'Active'}
           </span>
           <Button
             variant={paused ? 'primary' : 'destructive'}
             onClick={handleToggle}
-            disabled={loading || toggling || paused === null}
+            disabled={isLoading || toggleMutation.isPending || paused === null}
           >
-            {toggling ? 'Updating...' : paused ? 'Resume Import' : 'Pause Import'}
+            {toggleMutation.isPending ? 'Updating...' : paused ? 'Resume Import' : 'Pause Import'}
           </Button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Bookmark, BriefcaseBusiness } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,7 +21,22 @@ const SKELETON_ITEMS = Array.from(
 export function SavedJobsList() {
   const { openApplyModal } = useUIStore();
   const { data: hiretvoStatus } = useHiretvoVerificationStatus();
-  const { data: savedJobs, isLoading, isError } = useSavedJobs();
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSavedJobs();
+
+  const allJobs = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
+
+  const totalCount = data?.pages[0]?.pagination?.total ?? allJobs.length;
+  const remaining = totalCount - allJobs.length;
 
   const getApplyLockedLabel = (): string | undefined => {
     if (!hiretvoStatus) return undefined;
@@ -77,7 +92,7 @@ export function SavedJobsList() {
     );
   }
 
-  if (!savedJobs || savedJobs.length === 0) {
+  if (allJobs.length === 0) {
     return (
       <Card className="p-10 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-brand-surface text-brand-foreground">
@@ -102,11 +117,11 @@ export function SavedJobsList() {
       <div className="flex items-center gap-2 text-brand-foreground-muted">
         <BriefcaseBusiness className="h-5 w-5 text-brand-foreground" />
         <p className="text-sm font-semibold">
-          {savedJobs.length} saved {savedJobs.length === 1 ? "job" : "jobs"}
+          {totalCount} saved {totalCount === 1 ? "job" : "jobs"}
         </p>
       </div>
       <div className="flex flex-col gap-3">
-        {savedJobs.map((savedJob) => (
+        {allJobs.map((savedJob) => (
           <JobCard
             key={savedJob.id}
             job={savedJob.job}
@@ -144,6 +159,19 @@ export function SavedJobsList() {
           />
         ))}
       </div>
+      {hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => fetchNextPage()}
+            loading={isFetchingNextPage}
+            className="w-full max-w-xs"
+          >
+            {isFetchingNextPage ? "Loading..." : `Load more (${remaining} remaining)`}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

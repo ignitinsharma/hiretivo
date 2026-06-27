@@ -36,7 +36,9 @@ export function SaveJobButton({
   const { data: savedJobs, isLoading } = useSavedJobs({ enabled: canQuerySavedJobs });
   const saveMutation = useSaveJob();
   const unsaveMutation = useUnsaveJob();
-  const isSaved = savedJobs?.some((savedJob) => savedJob.job.id === jobId) ?? false;
+  const isSaved = savedJobs?.pages.some((page) =>
+    page.data.some((savedJob) => savedJob.job.id === jobId),
+  ) ?? false;
   const isPending = saveMutation.isPending || unsaveMutation.isPending;
   const isBusy = canQuerySavedJobs && (isLoading || isPending);
 

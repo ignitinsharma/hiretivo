@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import { JobStatus, UserRole } from "@/constants/enums";
@@ -8,11 +8,6 @@ import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { stripHtml } from "@/lib/utils";
 import { resolveJobCompany, resolveCompanyLogoUrl } from "@/lib/jobs/resolve-job-company";
 
-/*
- * formatSalaryRange
- * Formats nullable salary bounds for saved job cards.
- * Returns a human-readable salary range or "Not specified".
- */
 function formatSalaryRange(
   min: number | null,
   max: number | null,
@@ -26,11 +21,6 @@ function formatSalaryRange(
   return minStr || maxStr;
 }
 
-/*
- * formatPostedAt
- * Converts a job publish date into a compact relative label.
- * Returns values such as Today, 1 day ago, weeks ago, or months ago.
- */
 function formatPostedAt(date: Date | null): string {
   if (!date) return "Recently";
   const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -41,12 +31,7 @@ function formatPostedAt(date: Date | null): string {
   return `${Math.floor(diffDays / 30)} months ago`;
 }
 
-/*
- * GET /api/seeker/saved-jobs
- * Lists saved jobs for the authenticated seeker with card summary fields.
- * Returns saved job data or auth/rate-limit errors.
- */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,39 +46,63 @@ export async function GET() {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const savedJobs = await prisma.savedJob.findMany({
-    where: { userId: session.user.id, job: { status: { not: JobStatus.DELETED } } },
-    orderBy: { createdAt: "desc" },
-    include: {
-      job: {
-        include: {
-          recruiter: {
-            select: {
-              recruiterProfile: {
-                select: {
-                  id: true,
-                  companyName: true,
-                  logo: true,
-                  companySize: true,
-                  industry: true,
-                  fundingType: true,
-                },
-              },
-            },
-          },
-          skills: {
-            include: { skill: { select: { name: true } } },
-          },
-          _count: { select: { applications: true } },
-          applications: {
-            where: { seekerId: session.user.id },
-            select: { id: true, status: true },
-            take: 1,
+  const url = new URL(req.url);
+  const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "10")));
+  const skip = (page - 1) * limit;
+
+  const where = { userId: session.user.id, job: { status: { not: JobStatus.DELETED } } };
+
+  const baseInclude = {
+    recruiter: {
+      select: {
+        recruiterProfile: {
+          select: {
+            id: true,
+            companyName: true,
+            logo: true,
+            companySize: true,
+            industry: true,
+            fundingType: true,
           },
         },
       },
     },
-  });
+    skills: {
+      include: { skill: { select: { name: true } } },
+    },
+    _count: { select: { applications: true } },
+  } as const;
+
+  const includeFirstPage = {
+    job: {
+      include: {
+        ...baseInclude,
+        applications: {
+          where: { seekerId: session.user.id },
+          select: { id: true, status: true },
+          take: 1,
+        },
+      },
+    },
+  };
+
+  const includeLaterPages = {
+    job: {
+      include: baseInclude,
+    },
+  };
+
+  const [savedJobs, totalCount] = await Promise.all([
+    prisma.savedJob.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: page === 1 ? includeFirstPage : includeLaterPages,
+    }),
+    prisma.savedJob.count({ where }),
+  ]);
 
   return NextResponse.json({
     data: savedJobs.map((savedJob) => {
@@ -108,7 +117,9 @@ export async function GET() {
       return {
         id: savedJob.id,
         savedAt: savedJob.createdAt.toISOString(),
-        application: savedJob.job.applications[0] ?? null,
+        application: "applications" in savedJob.job
+          ? (savedJob.job as any).applications?.[0] ?? null
+          : null,
         job: {
           id: savedJob.job.id,
           title: savedJob.job.title,
@@ -117,7 +128,6 @@ export async function GET() {
           companyLogoUrl: resolveCompanyLogoUrl(
             company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
             savedJob.job.companyWebsite,
-            company.companyName,
           ),
           location: savedJob.job.workType ?? "Remote",
           salaryRange: formatSalaryRange(
@@ -138,5 +148,11 @@ export async function GET() {
         },
       };
     }),
+    pagination: {
+      page,
+      limit,
+      total: totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+    },
   });
 }

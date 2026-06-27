@@ -106,7 +106,6 @@ export async function GET(
       companyLogoUrl: resolveCompanyLogoUrl(
         company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
         job.companyWebsite,
-        company.companyName,
       ),
       skills: job.skills.map((s) => ({
         id: s.skill.id,

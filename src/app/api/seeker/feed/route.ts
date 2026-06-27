@@ -354,7 +354,6 @@ function buildJobResponse(
     companyLogoUrl: resolveCompanyLogoUrl(
       company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
       job.companyWebsite,
-      company.companyName,
     ),
     location: locationBadge,
     salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
