@@ -194,6 +194,12 @@ export async function GET() {
           jobType: true,
           workType: true,
           experienceLevel: true,
+          isAdminPosted: true,
+          companyName: true,
+          companyLogoUrl: true,
+          companyIndustry: true,
+          companySize: true,
+          companyFunding: true,
           skills: {
             select: {
               skillId: true,
@@ -234,10 +240,15 @@ export async function GET() {
       jobId: application.jobId,
       jobTitle: application.job.title,
       jobStatus: application.job.status,
-      companyId: application.job.recruiter.recruiterProfile?.id ?? null,
-      companyName:
-        application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company",
-      companyLogoUrl: resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),
+      companyId: application.job.isAdminPosted
+        ? null
+        : (application.job.recruiter.recruiterProfile?.id ?? null),
+      companyName: application.job.isAdminPosted
+        ? (application.job.companyName ?? "Unknown Company")
+        : (application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company"),
+      companyLogoUrl: application.job.isAdminPosted
+        ? (application.job.companyLogoUrl ?? null)
+        : resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),
       salaryRange: formatSalaryRange(
         application.job.salaryMin,
         application.job.salaryMax,
@@ -246,10 +257,15 @@ export async function GET() {
       jobType: application.job.jobType,
       workType: application.job.workType,
       experienceLevel: application.job.experienceLevel,
-      companyIndustry: application.job.recruiter.recruiterProfile?.industry ?? null,
-      companySize: application.job.recruiter.recruiterProfile?.companySize ?? null,
-      companyFundingType:
-        application.job.recruiter.recruiterProfile?.fundingType ?? null,
+      companyIndustry: application.job.isAdminPosted
+        ? (application.job.companyIndustry ?? null)
+        : (application.job.recruiter.recruiterProfile?.industry ?? null),
+      companySize: application.job.isAdminPosted
+        ? (application.job.companySize ?? null)
+        : (application.job.recruiter.recruiterProfile?.companySize ?? null),
+      companyFundingType: application.job.isAdminPosted
+        ? (application.job.companyFunding ?? null)
+        : (application.job.recruiter.recruiterProfile?.fundingType ?? null),
       skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
       matchedSkillNames: application.job.skills
         .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))

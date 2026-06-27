@@ -21,6 +21,15 @@ export function sanitizeHtml(html: string): string {
   });
 }
 
+/*
+ * stripHtml
+ * Strips HTML tags for plain-text previews. SSR-safe — no DOMPurify.
+ * IMPORTANT: output must only be assigned via React text children or
+ * textContent — NEVER via innerHTML / dangerouslySetInnerHTML.
+ * Entities (&lt; &gt; &amp;) are intentionally left encoded; a browser
+ * text node renders them as the literal characters, which is correct for
+ * a preview snippet.
+ */
 export function stripHtml(html: string): string {
-  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
