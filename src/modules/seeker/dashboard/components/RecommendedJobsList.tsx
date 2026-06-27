@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, UserCog, Search } from "lucide-react";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import {
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
+import { useFeed } from "@/hooks/use-feed";
 
 export function RecommendedJobsList() {
   const { openApplyModal } = useUIStore();
@@ -31,11 +32,19 @@ export function RecommendedJobsList() {
     Map<string, string>
   >(() => new Map());
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["seeker-feed"],
-    queryFn: seekerService.getFeed,
-    staleTime: 30_000,
-  });
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useFeed();
+
+  const allJobs = useMemo(() => data?.pages.flatMap((p) => p.jobs) ?? [], [data]);
+  const lastPage = data?.pages[data.pages.length - 1];
+  const allCaughtUp = !hasNextPage && lastPage?.hasMoreRecent === false && allJobs.length === 0;
+
   const { data: savedJobs } = useSavedJobs();
   const { data: dashboardSummary } = useQuery({
     queryKey: ["seeker-dashboard-summary"],
@@ -46,7 +55,7 @@ export function RecommendedJobsList() {
   const unsaveMutation = useUnsaveJob();
 
   const savedJobIds = useMemo(
-    () => new Set(savedJobs?.map((savedJob) => savedJob.job.id) ?? []),
+    () => new Set(savedJobs?.pages.flatMap((p) => p.data.map((s) => s.job.id)) ?? []),
     [savedJobs],
   );
 
@@ -55,28 +64,33 @@ export function RecommendedJobsList() {
     onMutate: async (jobId: string) => {
       setDismissingJobId(jobId);
       await queryClient.cancelQueries({ queryKey: ["seeker-feed"] });
-      const previousFeed = queryClient.getQueryData<SeekerFeedResponse>([
-        "seeker-feed",
-      ]);
+      const previousFeed = queryClient.getQueryData<{
+        pages: SeekerFeedResponse[];
+        pageParams: unknown[];
+      }>(["seeker-feed"]);
 
-      queryClient.setQueryData<SeekerFeedResponse>(["seeker-feed"], (current) =>
+      queryClient.setQueryData<{
+        pages: SeekerFeedResponse[];
+        pageParams: unknown[];
+      }>(["seeker-feed"], (current) =>
         current
           ? {
               ...current,
-              jobs: current.jobs.filter((job) => job.id !== jobId),
+              pages: current.pages.map((page) => ({
+                ...page,
+                jobs: page.jobs.filter((job) => job.id !== jobId),
+              })),
             }
           : current,
       );
 
       return { previousFeed };
     },
-    onError: (error, _jobId, context) => {
+    onError: (_error, _jobId, context) => {
       if (context?.previousFeed) {
         queryClient.setQueryData(["seeker-feed"], context.previousFeed);
       }
-      toast.error(
-        error instanceof Error ? error.message : "Failed to remove job.",
-      );
+      toast.error("Failed to remove job.");
     },
     onSuccess: () => {
       toast.success("Job removed from recommendations.");
@@ -87,11 +101,6 @@ export function RecommendedJobsList() {
     },
   });
 
-  /*
-   * resolveApplyLockedLabel
-   * Returns a user-facing label when the seeker's Hiretivo verification blocks applying.
-   * Returns undefined when the seeker is verified (normal Apply Now flow).
-   */
   const resolveApplyLockedLabel = (): string | undefined => {
     if (hiretivo.isVerified) return undefined;
     if (hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW")
@@ -144,13 +153,7 @@ export function RecommendedJobsList() {
     if (isSaved) {
       unsaveMutation.mutate(jobId, {
         onSuccess: () => toast.success("Job removed from saved jobs."),
-        onError: (error) => {
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Failed to remove saved job.",
-          );
-        },
+        onError: () => toast.error("Failed to remove saved job."),
         onSettled: () => setJobSaving(jobId, false),
       });
       return;
@@ -158,15 +161,31 @@ export function RecommendedJobsList() {
 
     saveMutation.mutate(jobId, {
       onSuccess: () => toast.success("Job saved."),
-      onError: (error) => {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to save job.",
-        );
-      },
+      onError: () => toast.error("Failed to save job."),
       onSettled: () => setJobSaving(jobId, false),
     });
   };
 
+  // IntersectionObserver sentinel
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "400px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex-1">
@@ -208,7 +227,8 @@ export function RecommendedJobsList() {
     );
   }
 
-  if (error) {
+  // Error state (only when no data available)
+  if (error && allJobs.length === 0) {
     return (
       <div className="flex-1">
         <div className="mb-6 flex items-center gap-2">
@@ -224,44 +244,14 @@ export function RecommendedJobsList() {
     );
   }
 
-  return (
-    <div className="flex-1">
-      <div className="mb-6 flex items-center gap-2">
-        <Sparkles className="h-6 w-6 text-brand-primary" />
-        <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
-      </div>
-
-      {data?.jobs && data.jobs.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          {data.jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              isSaved={savedJobIds.has(job.id)}
-              saveActionPlacement="footer"
-              isSaving={savingJobIds.has(job.id)}
-              saveLoadingText={saveLoadingTextByJobId.get(job.id)}
-              onToggleSave={() => handleToggleSave(job.id)}
-              showDescription
-              onNotInterested={() => dismissMutation.mutate(job.id)}
-              isDismissing={dismissingJobId === job.id}
-              applyLockedLabel={applyLockedLabel}
-              onApply={
-                applyLockedLabel
-                  ? undefined
-                  : () =>
-                      handleApply(
-                        job.id,
-                        job.title,
-                        job.companyName,
-                        job.applyType,
-                        job.externalApplyUrl,
-                      )
-              }
-            />
-          ))}
+  // Empty states
+  if (allJobs.length === 0 && allCaughtUp) {
+    return (
+      <div className="flex-1">
+        <div className="mb-6 flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-brand-primary" />
+          <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
         </div>
-      ) : (data?.totalCount ?? 0) > 0 ? (
         <Card className="p-10 text-center">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
             <Sparkles className="h-8 w-8 text-amber-500" />
@@ -271,7 +261,17 @@ export function RecommendedJobsList() {
             You&apos;ve dismissed all matching jobs. New opportunities are added daily — check back soon.
           </p>
         </Card>
-      ) : (dashboardSummary?.profileStrength.percentage ?? 0) < 50 ? (
+      </div>
+    );
+  }
+
+  if (allJobs.length === 0 && (dashboardSummary?.profileStrength.percentage ?? 0) < 50) {
+    return (
+      <div className="flex-1">
+        <div className="mb-6 flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-brand-primary" />
+          <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
+        </div>
         <Card className="p-10 text-center">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5">
             <UserCog className="h-8 w-8 text-primary" />
@@ -287,7 +287,17 @@ export function RecommendedJobsList() {
             </Button>
           </Link>
         </Card>
-      ) : (
+      </div>
+    );
+  }
+
+  if (allJobs.length === 0) {
+    return (
+      <div className="flex-1">
+        <div className="mb-6 flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-brand-primary" />
+          <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
+        </div>
         <Card className="p-10 text-center">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5">
             <Search className="h-8 w-8 text-primary" />
@@ -297,7 +307,67 @@ export function RecommendedJobsList() {
             We couldn&apos;t find jobs matching your current skills. New positions are posted daily — check back soon.
           </p>
         </Card>
+      </div>
+    );
+  }
+
+  // Main list — page scroll, no virtualizer
+  return (
+    <div className="flex-1">
+      <div className="mb-6 flex items-center gap-2">
+        <Sparkles className="h-6 w-6 text-brand-primary" />
+        <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
+      </div>
+
+      <div className="flex flex-col gap-5">
+        {allJobs.map((job) => (
+          <JobCard
+            key={job.id}
+            job={job}
+            isSaved={savedJobIds.has(job.id)}
+            saveActionPlacement="footer"
+            isSaving={savingJobIds.has(job.id)}
+            saveLoadingText={saveLoadingTextByJobId.get(job.id)}
+            onToggleSave={() => handleToggleSave(job.id)}
+            showDescription
+            onNotInterested={() => dismissMutation.mutate(job.id)}
+            isDismissing={dismissingJobId === job.id}
+            applyLockedLabel={applyLockedLabel}
+            onApply={
+              applyLockedLabel
+                ? undefined
+                : () =>
+                    handleApply(
+                      job.id,
+                      job.title,
+                      job.companyName,
+                      job.applyType,
+                      job.externalApplyUrl,
+                    )
+            }
+          />
+        ))}
+      </div>
+
+      {isFetchingNextPage && (
+        <div className="flex items-center justify-center py-6">
+          <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary" />
+          <span className="text-sm text-brand-foreground-muted">Loading more...</span>
+        </div>
       )}
+
+      {!isFetchingNextPage && error && (
+        <Card className="mx-0 mb-3 p-4 text-center">
+          <p className="mb-2 text-sm text-brand-foreground-muted">
+            Failed to load more jobs.
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => fetchNextPage()}>
+            Retry
+          </Button>
+        </Card>
+      )}
+
+      <div ref={sentinelRef} className="h-1" />
     </div>
   );
 }

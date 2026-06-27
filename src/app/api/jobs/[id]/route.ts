@@ -7,7 +7,7 @@ import { invalidateJobSkillsCache } from '@/lib/match';
 import { JobStatus, SkillLevel, UserRole } from '@/constants/enums';
 import { requireVerifiedEmailForTrustedAction } from '@/lib/auth/email-verification';
 import { getRateLimitIp, publicReadRateLimiter, writeRateLimiter } from '@/lib/rate-limit';
-import { resolveJobCompany } from '@/lib/jobs/resolve-job-company';
+import { resolveJobCompany, resolveCompanyLogoUrl } from '@/lib/jobs/resolve-job-company';
 
 /*
  * GET /api/jobs/[id]
@@ -52,6 +52,7 @@ export async function GET(
     companySize: job.companySize,
     companyIndustry: job.companyIndustry,
     companyFunding: job.companyFunding,
+    companyWebsite: job.companyWebsite,
     recruiter: job.recruiter,
   });
 
@@ -102,7 +103,10 @@ export async function GET(
       externalApplyUrl: job.externalApplyUrl,
       companyId: company.companyId,
       companyName: company.companyName,
-      companyLogoUrl: company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+      companyLogoUrl: resolveCompanyLogoUrl(
+        company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
+        job.companyWebsite,
+      ),
       skills: job.skills.map((s) => ({
         id: s.skill.id,
         name: s.skill.name,

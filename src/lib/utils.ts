@@ -5,9 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/* Strip HTML tags and collapse whitespace into a plain-text string. */
+/*
+ * stripHtml
+ * Decodes common HTML entities then strips all tags — handles both raw HTML
+ * and double-encoded HTML (e.g. ATS descriptions stored as &lt;div&gt;).
+ * Output is plain text only — never pass to innerHTML.
+ */
 export function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function formatRelativeTime(dateString: string): string {

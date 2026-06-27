@@ -36,6 +36,7 @@ export interface SeekerFeedResponse {
   nextCursor: string | null;
   totalCount?: number;
   remainingCount?: number;
+  hasMoreRecent?: boolean;
 }
 
 export interface SeekerSettingsData {
@@ -67,8 +68,8 @@ export interface SeekerSettingsData {
 }
 
 export const seekerService = {
-  getFeed: async (): Promise<SeekerFeedResponse> => {
-    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed');
+  getFeed: async (params?: { cursor?: string; limit?: number }): Promise<SeekerFeedResponse> => {
+    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params });
     return data;
   },
 

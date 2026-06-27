@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/axios";
-import type { AdminJobDetail, AdminJobListItem, CompanySuggestion } from "../types/admin-job.types";
+import type { AdminJobDetail, AdminJobListItem, AdminJobsListResponse, CompanySuggestion } from "../types/admin-job.types";
 import type { AdminJobCreateInput, AdminJobUpdateInput } from "@/lib/validations/admin-job.schema";
 
 /*
@@ -12,15 +12,14 @@ import type { AdminJobCreateInput, AdminJobUpdateInput } from "@/lib/validations
 export const adminJobService = {
   /*
    * list
-   * Fetches the admin job list with an optional status filter.
-   * GET /api/admin/jobs?status=<status>
-   * Returns: { jobs: AdminJobListItem[] }
+   * Fetches a paginated admin job list with optional status filter.
+   * GET /api/admin/jobs?status=<status>&page=<page>&limit=<limit>
+   * Returns: AdminJobsListResponse
    */
-  list: async (status?: string): Promise<{ jobs: AdminJobListItem[] }> => {
-    const { data } = await apiClient.get<{ jobs: AdminJobListItem[] }>(
-      "/admin/jobs",
-      { params: status ? { status } : undefined },
-    );
+  list: async (status?: string, page = 1, limit = 20): Promise<AdminJobsListResponse> => {
+    const params: Record<string, string | number> = { page, limit };
+    if (status) params.status = status;
+    const { data } = await apiClient.get<AdminJobsListResponse>("/admin/jobs", { params });
     return data;
   },
 

@@ -5,8 +5,6 @@ import { useState, useMemo, useEffect } from "react";
 import {
   Plus,
   Search,
-  ChevronLeft,
-  ChevronRight,
   MoreVertical,
   Briefcase,
   BarChart3,
@@ -33,6 +31,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
+import { Pagination } from "@/components/shared/Pagination";
 import type { ApiJob, JobsApiResponse } from "@/services/job.service";
 
 const JOBS_PER_PAGE = 5;
@@ -254,80 +253,6 @@ function JobRow({
         </div>
       </td>
     </tr>
-  );
-}
-
-function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-
-  const pages: (number | "...")[] = [];
-
-  if (totalPages <= 5) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (currentPage > 3) pages.push("...");
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    if (currentPage < totalPages - 2) pages.push("...");
-    pages.push(totalPages);
-  }
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7 text-slate-400 disabled:opacity-30"
-        disabled={currentPage === 1}
-        onClick={() => onPageChange(currentPage - 1)}
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </Button>
-      {pages.map((p, i) =>
-        p === "..." ? (
-          <span
-            key={`ellipsis-${i}`}
-            className="w-7 h-7 flex items-center justify-center text-slate-400 text-[11px]"
-          >
-            ...
-          </span>
-        ) : (
-          <Button
-            key={p}
-            size="icon"
-            className={cn(
-              "h-7 w-7 text-[11px] font-bold  ",
-              p === currentPage
-                ? "bg-primary text-white hover:bg-primary/90"
-                : "bg-white text-slate-700 border border-brand-border hover:bg-slate-50",
-            )}
-            variant={p === currentPage ? "default" : "secondary"}
-            onClick={() => onPageChange(p)}
-          >
-            {p}
-          </Button>
-        ),
-      )}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7 text-slate-400 disabled:opacity-30"
-        disabled={currentPage === totalPages}
-        onClick={() => onPageChange(currentPage + 1)}
-      >
-        <ChevronRight className="w-5 h-5" />
-      </Button>
-    </div>
   );
 }
 

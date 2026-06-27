@@ -168,7 +168,7 @@ export function ApplyJobModal() {
                 className="w-full font-bold bg-brand-primary text-white hover:bg-brand-primary/90"
                 onClick={handleConfirmApplied}
               >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4" />
                 Yes, I applied!
               </Button>
               <Button
