@@ -12,7 +12,7 @@ const QUERY_KEY = ['seeker-dashboard-summary'] as const;
 
 function SidebarSkeleton() {
   return (
-    <div className="w-full lg:w-80 space-y-6 shrink-0 lg:pt-12">
+    <div className="w-full lg:w-80 space-y-6 shrink-0">
       {/* Verification status skeleton */}
       <div className="rounded-xl border border-brand-border p-5 space-y-3">
         <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function SeekerDashboardSidebar() {
 
   if (isError || !data) {
     return (
-      <aside className="w-full lg:w-80 space-y-6 shrink-0 lg:pt-12">
+      <aside className="w-full lg:w-80 space-y-6 shrink-0">
         <div className="bg-white p-6 rounded-xl border border-brand-border text-sm text-slate-500 text-center">
           Could not load dashboard data.
         </div>
@@ -77,7 +77,7 @@ export function SeekerDashboardSidebar() {
   }
 
   return (
-    <aside className="w-full lg:w-80 space-y-6 shrink-0 lg:pt-12">
+    <aside className="w-full lg:w-80 space-y-6 shrink-0">
       {/* <VerificationStatusCard
         status={data.verification.status}
         verificationNotes={data.verification.verificationNotes}

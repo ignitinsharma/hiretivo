@@ -6,7 +6,7 @@ import { Building2, ThumbsUp, type LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { sanitizeHtml } from "@/lib/utils/html-sanitizer";
+import { stripHtml } from "@/lib/utils/html-sanitizer";
 
 export interface SeekerJobCardFact {
   icon: LucideIcon;
@@ -147,10 +147,9 @@ export function SeekerJobBaseCard({
       )}
 
       {description ? (
-        <div
-          className="mt-4 line-clamp-1 text-sm font-normal text-brand-foreground-muted [&_strong]:font-semibold [&_b]:font-semibold [&_em]:italic [&_i]:italic"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }}
-        />
+        <p className="mt-4 line-clamp-1 text-sm font-normal text-brand-foreground-muted">
+          {stripHtml(description)}
+        </p>
       ) : null}
 
       {hintText ? (

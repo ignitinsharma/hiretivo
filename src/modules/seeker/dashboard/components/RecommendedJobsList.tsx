@@ -2,7 +2,6 @@
 
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { Sparkles, UserCog, Search } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -20,9 +19,6 @@ import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
 import { useFeed } from "@/hooks/use-feed";
-
-const ESTIMATED_CARD_HEIGHT = 220;
-const OVERSCAN_COUNT = 5;
 
 export function RecommendedJobsList() {
   const { openApplyModal } = useUIStore();
@@ -170,15 +166,6 @@ export function RecommendedJobsList() {
     });
   };
 
-  // Virtualizer
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: allJobs.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => ESTIMATED_CARD_HEIGHT,
-    overscan: OVERSCAN_COUNT,
-  });
-
   // IntersectionObserver sentinel
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -324,7 +311,7 @@ export function RecommendedJobsList() {
     );
   }
 
-  // Main virtualized list
+  // Main list — page scroll, no virtualizer
   return (
     <div className="flex-1">
       <div className="mb-6 flex items-center gap-2">
@@ -332,79 +319,55 @@ export function RecommendedJobsList() {
         <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
       </div>
 
-      <div ref={scrollRef} className="relative overflow-auto" style={{ height: "70vh" }}>
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            position: "relative",
-          }}
-        >
-          {virtualizer.getVirtualItems().map((virtualItem) => {
-            const job = allJobs[virtualItem.index];
-            if (!job) return null;
-
-            return (
-              <div
-                key={job.id}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
-              >
-                <div className="pb-3">
-                  <JobCard
-                    job={job}
-                    isSaved={savedJobIds.has(job.id)}
-                    saveActionPlacement="footer"
-                    isSaving={savingJobIds.has(job.id)}
-                    saveLoadingText={saveLoadingTextByJobId.get(job.id)}
-                    onToggleSave={() => handleToggleSave(job.id)}
-                    showDescription
-                    onNotInterested={() => dismissMutation.mutate(job.id)}
-                    isDismissing={dismissingJobId === job.id}
-                    applyLockedLabel={applyLockedLabel}
-                    onApply={
-                      applyLockedLabel
-                        ? undefined
-                        : () =>
-                            handleApply(
-                              job.id,
-                              job.title,
-                              job.companyName,
-                              job.applyType,
-                              job.externalApplyUrl,
-                            )
-                    }
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {isFetchingNextPage && (
-          <div className="flex items-center justify-center py-6">
-            <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary" />
-            <span className="text-sm text-brand-foreground-muted">Loading more...</span>
-          </div>
-        )}
-
-        {!isFetchingNextPage && error && (
-          <Card className="mx-0 mb-3 p-4 text-center">
-            <p className="mb-2 text-sm text-brand-foreground-muted">
-              Failed to load more jobs.
-            </p>
-            <Button variant="ghost" size="sm" onClick={() => fetchNextPage()}>
-              Retry
-            </Button>
-          </Card>
-        )}
-
-        <div ref={sentinelRef} className="h-1" />
+      <div className="flex flex-col gap-5">
+        {allJobs.map((job) => (
+          <JobCard
+            key={job.id}
+            job={job}
+            isSaved={savedJobIds.has(job.id)}
+            saveActionPlacement="footer"
+            isSaving={savingJobIds.has(job.id)}
+            saveLoadingText={saveLoadingTextByJobId.get(job.id)}
+            onToggleSave={() => handleToggleSave(job.id)}
+            showDescription
+            onNotInterested={() => dismissMutation.mutate(job.id)}
+            isDismissing={dismissingJobId === job.id}
+            applyLockedLabel={applyLockedLabel}
+            onApply={
+              applyLockedLabel
+                ? undefined
+                : () =>
+                    handleApply(
+                      job.id,
+                      job.title,
+                      job.companyName,
+                      job.applyType,
+                      job.externalApplyUrl,
+                    )
+            }
+          />
+        ))}
       </div>
+
+      {isFetchingNextPage && (
+        <div className="flex items-center justify-center py-6">
+          <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-brand-border border-t-brand-primary" />
+          <span className="text-sm text-brand-foreground-muted">Loading more...</span>
+        </div>
+      )}
+
+      {!isFetchingNextPage && error && (
+        <Card className="mx-0 mb-3 p-4 text-center">
+          <p className="mb-2 text-sm text-brand-foreground-muted">
+            Failed to load more jobs.
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => fetchNextPage()}>
+            Retry
+          </Button>
+        </Card>
+      )}
+
+      <div ref={sentinelRef} className="h-1" />
     </div>
   );
 }
