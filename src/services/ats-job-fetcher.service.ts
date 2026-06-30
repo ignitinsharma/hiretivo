@@ -197,7 +197,9 @@ async function fetchAndUpsertSource(
       const r = results[i];
       const companyName = chunk[i].name;
       if (r.status === 'fulfilled') {
-        const jobs = r.value;
+        // Cap to 5 most recent per company — sorted by publishedAt desc (API returns newest first).
+        // Prevents large boards (GitLab, Stripe) from flooding the feed.
+        const jobs = r.value.slice(0, 5);
         if (jobs.length === 0 && !companyZeroJobs.has(companyName)) {
           companyZeroJobs.add(companyName);
           console.warn(`[ats-fetch] ${source} ${companyName} returned 0 jobs`);
