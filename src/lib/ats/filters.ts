@@ -36,6 +36,21 @@ const TECH_TITLE_KEYWORDS = [
 
 const EXECUTIVE_PREFIXES = ['vp ', 'chief ', 'director of ', 'head of '];
 
+// Title fragments that identify non-tech roles regardless of other signals.
+// Checked before isTechRole so methodology terms (agile/scrum) don't cause false positives.
+const NON_TECH_TITLE_PATTERNS = [
+  'sales development', 'account executive', 'account manager', 'channel sales',
+  'channel partner', 'business development representative', 'bdr', 'sdr',
+  'customer success manager', 'customer support', 'customer service',
+  'talent acquisition', 'technical recruiter', 'recruiter',
+  'human resources', 'people operations', 'people partner',
+  'office manager', 'executive assistant', 'administrative assistant',
+  'content marketing', 'demand generation', 'growth marketing', 'field marketing',
+  'financial analyst', 'accountant', 'controller', 'payroll',
+  'legal counsel', 'paralegal', 'attorney',
+  'operations manager', 'revenue operations',
+];
+
 const TECH_DEPARTMENTS = [
   'engineering', 'product', 'design', 'data', 'technology',
   'security', 'infrastructure', 'research', 'development',
@@ -66,15 +81,17 @@ export function isTechRole(
     if (TECH_DEPARTMENTS.some((d) => lowerDept.includes(d))) return true;
   }
 
-  // Check extracted skills — if 2+ tech skills found, it's a tech role
+  // Check extracted skills — if 2+ unambiguous tech skills found, it's a tech role.
+  // Excluded: agile/scrum (appear in all corporate JDs), api/rest (too broad — sales
+  // and partnerships jobs mention "API integrations" constantly).
   const techSkillCount = extractedSkillNames.filter((s) =>
     ['typescript', 'python', 'javascript', 'react', 'go', 'rust', 'java',
      'kubernetes', 'docker', 'aws', 'sql', 'node.js', 'html', 'css',
      'c++', 'c#', 'ruby', 'php', 'swift', 'kotlin', 'tensorflow',
-     'pytorch', 'git', 'terraform', 'ansible', 'graphql', 'api',
+     'pytorch', 'git', 'terraform', 'ansible', 'graphql',
      'redis', 'postgresql', 'mongodb', 'linux', 'bash', 'shell',
-     'machine learning', 'deep learning', 'nlp', 'data pipeline',
-     'ci/cd', 'microservices', 'rest', 'agile', 'scrum',
+     'machine learning', 'deep learning', 'nlp', 'data pipeline', 'ci/cd',
+     'microservices', 'react native', 'next.js', 'vue.js', 'angular',
     ].includes(s.toLowerCase()),
   ).length;
 
@@ -129,6 +146,11 @@ export function meetsQualityBar(
 
   // Skip internships
   if (jobType === JobType.INTERNSHIP) return false;
+
+  // Reject known non-tech titles before isTechRole — prevents methodology terms
+  // (agile/scrum) in sales/ops JDs from producing false positives.
+  const lowerTitleCheck = title.toLowerCase().trim();
+  if (NON_TECH_TITLE_PATTERNS.some((p) => lowerTitleCheck.includes(p))) return false;
 
   // Must be a tech role
   if (!isTechRole(title, department, extractedSkillNames)) return false;
