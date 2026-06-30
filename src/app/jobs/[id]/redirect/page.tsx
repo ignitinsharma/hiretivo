@@ -21,6 +21,8 @@ export default async function ExternalRedirectionPage({
       title: true,
       applyType: true,
       externalApplyUrl: true,
+      isAdminPosted: true,
+      companyName: true,
       recruiter: {
         select: {
           recruiterProfile: {
@@ -33,7 +35,9 @@ export default async function ExternalRedirectionPage({
     },
   });
 
-  const companyName = job?.recruiter.recruiterProfile?.companyName ?? "the employer";
+  const companyName = job?.isAdminPosted
+    ? (job.companyName ?? 'the employer')
+    : (job?.recruiter.recruiterProfile?.companyName ?? 'the employer');
   const canRedirectExternally =
     job?.applyType === ApplyType.EXTERNAL && !!job.externalApplyUrl;
   const trackedUrl =
