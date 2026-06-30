@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
+import { Ratelimit } from '@upstash/ratelimit';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { redis } from '@/lib/redis';
 import { extractSkillsFromText } from '@/lib/ats/skill-extractor';
 import { meetsQualityBar } from '@/lib/ats/filters';
 import { COMPANY_REGISTRY } from '@/lib/ats/registry';
 import { SkillLevel, JobStatus } from '@/constants/enums';
+
+/* Heavy batch operation — cap at 2 runs/min per admin user. */
+const ratelimit = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(2, '1 m') });
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -28,6 +33,9 @@ export async function POST() {
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+
+  const { success } = await ratelimit.limit(session.user.id);
+  if (!success) return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 });
 
   const allSkills = await prisma.skill.findMany({ select: { id: true, name: true } });
   const skillNameToId = new Map(allSkills.map((s) => [s.name, s.id]));
