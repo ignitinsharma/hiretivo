@@ -2,19 +2,28 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { extractSkillsFromText } from '@/lib/ats/skill-extractor';
+import { meetsQualityBar } from '@/lib/ats/filters';
+import { COMPANY_REGISTRY } from '@/lib/ats/registry';
 import { SkillLevel, JobStatus } from '@/constants/enums';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
+const CORE_SKILLS = [
+  'typescript', 'python', 'go', 'rust', 'react', 'node.js',
+  'kubernetes', 'docker', 'aws', 'postgresql', 'machine learning',
+];
+
 /*
  * POST /api/admin/ats/backfill-skills
- * One-time admin endpoint: finds all admin-posted open jobs with zero JobSkill records,
- * re-extracts skills from their description, writes JobSkill rows, and recomputes
- * JobMatch scores for affected seekers.
- * Returns counts of jobs processed, skills written, and matches computed.
+ * Admin-only, run once after deploying quality filter changes.
+ *
+ * Phase 1 — purge: closes admin-posted jobs from companies no longer in registry
+ *            or whose description no longer passes the new quality bar.
+ * Phase 2 — backfill: for surviving open jobs with zero JobSkill rows,
+ *            re-extracts skills, writes JobSkill + JobMatch, clears Redis caches.
  */
-export async function POST(req: Request) {
+export async function POST() {
   const session = await auth();
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -23,7 +32,70 @@ export async function POST(req: Request) {
   const allSkills = await prisma.skill.findMany({ select: { id: true, name: true } });
   const skillNameToId = new Map(allSkills.map((s) => [s.name, s.id]));
 
-  // Find all admin-posted open jobs that have zero JobSkill records
+  // ── Phase 1: purge jobs from dropped companies ──────────────────────────────
+  const activeCompanyNames = new Set(COMPANY_REGISTRY.map((c) => c.name));
+
+  const droppedCompanyJobs = await prisma.job.findMany({
+    where: {
+      isAdminPosted: true,
+      status: JobStatus.OPEN,
+      companyName: { notIn: [...activeCompanyNames] },
+    },
+    select: { id: true },
+  });
+  const droppedIds = droppedCompanyJobs.map((j) => j.id);
+
+  let purgedByCompany = 0;
+  if (droppedIds.length > 0) {
+    await Promise.all([
+      prisma.jobSkill.deleteMany({ where: { jobId: { in: droppedIds } } }),
+      prisma.jobMatch.deleteMany({ where: { jobId: { in: droppedIds } } }),
+    ]);
+    const r = await prisma.job.updateMany({
+      where: { id: { in: droppedIds } },
+      data: { status: JobStatus.CLOSED, closedAt: new Date() },
+    });
+    purgedByCompany = r.count;
+  }
+
+  // ── Phase 2: purge jobs that fail the new quality bar ──────────────────────
+  const openJobs = await prisma.job.findMany({
+    where: { isAdminPosted: true, status: JobStatus.OPEN },
+    select: {
+      id: true, title: true, description: true, category: true,
+      locationClass: true, jobType: true, visaSponsored: true,
+    },
+  });
+
+  const failQualityIds: string[] = [];
+  for (const job of openJobs) {
+    const extracted = extractSkillsFromText(job.description ?? '', allSkills);
+    const passes = meetsQualityBar(
+      job.title,
+      job.description ?? '',
+      job.category,
+      extracted,
+      job.locationClass,
+      job.jobType,
+      job.visaSponsored,
+    );
+    if (!passes) failQualityIds.push(job.id);
+  }
+
+  let purgedByQuality = 0;
+  if (failQualityIds.length > 0) {
+    await Promise.all([
+      prisma.jobSkill.deleteMany({ where: { jobId: { in: failQualityIds } } }),
+      prisma.jobMatch.deleteMany({ where: { jobId: { in: failQualityIds } } }),
+    ]);
+    const r = await prisma.job.updateMany({
+      where: { id: { in: failQualityIds } },
+      data: { status: JobStatus.CLOSED, closedAt: new Date() },
+    });
+    purgedByQuality = r.count;
+  }
+
+  // ── Phase 3: backfill skills for surviving open jobs with 0 JobSkill rows ──
   const jobsWithoutSkills = await prisma.job.findMany({
     where: {
       isAdminPosted: true,
@@ -38,29 +110,24 @@ export async function POST(req: Request) {
 
   for (const job of jobsWithoutSkills) {
     const extracted = extractSkillsFromText(job.description ?? '', allSkills);
-    if (extracted.length === 0) continue;
+    // Only backfill if it has a core skill — matches the new quality bar
+    const hasCoreSkill = extracted.some((s) => CORE_SKILLS.includes(s.toLowerCase()));
+    if (!hasCoreSkill || extracted.length < 2) continue;
 
     const skillIds = extracted
       .map((name) => skillNameToId.get(name))
       .filter((id): id is string => id !== undefined);
-
     if (skillIds.length === 0) continue;
 
     await prisma.jobSkill.createMany({
-      data: skillIds.map((skillId) => ({
-        jobId: job.id,
-        skillId,
-        level: SkillLevel.INTERMEDIATE,
-      })),
+      data: skillIds.map((skillId) => ({ jobId: job.id, skillId, level: SkillLevel.INTERMEDIATE })),
       skipDuplicates: true,
     });
-
     skillsWritten += skillIds.length;
     processedJobIds.push(job.id);
   }
 
-  // Recompute matches: for each processed job, find seekers with overlapping skills
-  // and upsert JobMatch rows.
+  // ── Phase 4: compute JobMatch for backfilled jobs ──────────────────────────
   let matchesComputed = 0;
   const CHUNK = 10;
   for (let i = 0; i < processedJobIds.length; i += CHUNK) {
@@ -79,20 +146,16 @@ export async function POST(req: Request) {
           select: { id: true, skills: { select: { skillId: true } } },
         });
 
-        const matches = seekerProfiles
-          .map((sp) => {
-            const seekerSet = new Set(sp.skills.map((s) => s.skillId));
-            const intersection = jobSkillIds.filter((id) => seekerSet.has(id)).length;
-            const score = Math.round((intersection / jobSkillIds.length) * 100);
-            return { seekerProfileId: sp.id, score };
-          })
-          .filter((m) => m.score > 0);
+        for (const sp of seekerProfiles) {
+          const seekerSet = new Set(sp.skills.map((s) => s.skillId));
+          const intersection = jobSkillIds.filter((id) => seekerSet.has(id)).length;
+          const score = Math.round((intersection / jobSkillIds.length) * 100);
+          if (score === 0) continue;
 
-        for (const m of matches) {
           await prisma.jobMatch.upsert({
-            where: { jobId_seekerProfileId: { jobId, seekerProfileId: m.seekerProfileId } },
-            create: { jobId, seekerProfileId: m.seekerProfileId, score: m.score },
-            update: { score: m.score },
+            where: { jobId_seekerProfileId: { jobId, seekerProfileId: sp.id } },
+            create: { jobId, seekerProfileId: sp.id, score },
+            update: { score },
           });
           matchesComputed++;
         }
@@ -100,7 +163,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // Invalidate Redis match caches for all affected seekers
+  // ── Phase 5: invalidate Redis match caches for affected seekers ────────────
   const affectedSeekers = await prisma.jobMatch.findMany({
     where: { jobId: { in: processedJobIds } },
     select: { seekerProfileId: true },
@@ -113,8 +176,9 @@ export async function POST(req: Request) {
   );
 
   return NextResponse.json({
-    jobsWithoutSkills: jobsWithoutSkills.length,
-    jobsProcessed: processedJobIds.length,
+    purgedByCompany,
+    purgedByQuality,
+    jobsBackfilled: processedJobIds.length,
     skillsWritten,
     matchesComputed,
     cacheKeysInvalidated: affectedSeekers.length,

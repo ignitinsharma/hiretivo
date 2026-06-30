@@ -132,17 +132,23 @@ export function meetsQualityBar(
   // Must have description
   if (!description || description.length < 100) return false;
 
-  // Must have at least 2 skills extracted
+  // Must have 2+ skills AND at least 1 core engineering skill.
+  // Core skills are unambiguous signal of a genuine engineering JD.
+  const CORE_SKILLS = [
+    'typescript', 'python', 'go', 'rust', 'react', 'node.js',
+    'kubernetes', 'docker', 'aws', 'postgresql', 'machine learning',
+  ];
   if (extractedSkillNames.length < 2) return false;
+  const hasCoreSkill = extractedSkillNames.some((s) => CORE_SKILLS.includes(s.toLowerCase()));
+  if (!hasCoreSkill) return false;
 
   // Location must be classifiable
   if (!locationClass || locationClass === 'unknown') return false;
 
   // Region eligibility for Indian seekers:
-  // onsite → always skip
+  // onsite → always skip; us-only / emea → always skip (visa text is unreliable)
   if (locationClass === LocationClass.ONSITE) return false;
-  // us-only or emea → only if visa sponsored
-  if ((locationClass === LocationClass.US_ONLY || locationClass === LocationClass.EMEA) && !visaSponsored) return false;
+  if (locationClass === LocationClass.US_ONLY || locationClass === LocationClass.EMEA) return false;
 
   // Skip internships
   if (jobType === JobType.INTERNSHIP) return false;
