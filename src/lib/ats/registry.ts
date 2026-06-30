@@ -10,8 +10,8 @@ export interface AtsCompany {
 }
 
 export const COMPANY_REGISTRY: AtsCompany[] = [
-  // ===== ASHBY (21) — high remote signal, hire globally =====
-  { name: 'OpenAI', website: 'openai.com', ats: AtsSource.ASHBY, boardToken: 'openai' },
+  // ===== ASHBY (20) — remote-first, hire globally including India =====
+  // OpenAI removed: jobs say "Remote" but mean "Remote - US". Classifier marks worldwide incorrectly.
   { name: 'Linear', website: 'linear.app', ats: AtsSource.ASHBY, boardToken: 'linear' },
   { name: 'Cursor', website: 'cursor.com', ats: AtsSource.ASHBY, boardToken: 'cursor' },
   { name: 'Supabase', website: 'supabase.com', ats: AtsSource.ASHBY, boardToken: 'supabase' },
@@ -33,7 +33,7 @@ export const COMPANY_REGISTRY: AtsCompany[] = [
   { name: 'Notion', website: 'notion.so', ats: AtsSource.ASHBY, boardToken: 'notion' },
   { name: 'Plaid', website: 'plaid.com', ats: AtsSource.ASHBY, boardToken: 'plaid' },
 
-  // ===== GREENHOUSE (9) — tier-1 remote-friendly =====
+  // ===== GREENHOUSE (10) — tier-1 remote-friendly =====
   { name: 'Anthropic', website: 'anthropic.com', ats: AtsSource.GREENHOUSE, boardToken: 'anthropic' },
   { name: 'Figma', website: 'figma.com', ats: AtsSource.GREENHOUSE, boardToken: 'figma' },
   { name: 'Stripe', website: 'stripe.com', ats: AtsSource.GREENHOUSE, boardToken: 'stripe' },
@@ -43,6 +43,7 @@ export const COMPANY_REGISTRY: AtsCompany[] = [
   { name: 'Gusto', website: 'gusto.com', ats: AtsSource.GREENHOUSE, boardToken: 'gusto' },
   { name: 'Robinhood', website: 'robinhood.com', ats: AtsSource.GREENHOUSE, boardToken: 'robinhood' },
   { name: 'Checkr', website: 'checkr.com', ats: AtsSource.GREENHOUSE, boardToken: 'checkr' },
+  { name: 'Grafana Labs', website: 'grafana.com', ats: AtsSource.GREENHOUSE, boardToken: 'grafana' },
 ];
 
 export function getCompaniesBySource(source: AtsSource): AtsCompany[] {
