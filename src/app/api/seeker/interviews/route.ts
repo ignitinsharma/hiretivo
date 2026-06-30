@@ -41,7 +41,7 @@ export async function GET() {
       application: {
         select: {
           job: {
-            select: { title: true },
+            select: { title: true, companyName: true, isAdminPosted: true },
           },
         },
       },
@@ -67,10 +67,9 @@ export async function GET() {
     scheduledTimeZone: interview.scheduledTimeZone,
     viewerTimezone: seekerUser?.timezone ?? INDIA_TIMEZONE,
     jobTitle: interview.application.job.title,
-    companyName:
-      interview.recruiter.recruiterProfile?.companyName ??
-      interview.recruiter.name ??
-      'Unknown',
+    companyName: interview.application.job.isAdminPosted
+      ? (interview.application.job.companyName ?? interview.recruiter.name ?? 'Unknown')
+      : (interview.recruiter.recruiterProfile?.companyName ?? interview.recruiter.name ?? 'Unknown'),
     interviewerName: interview.recruiter.name ?? 'Recruiter',
   }));
 

@@ -52,6 +52,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         select: {
           recruiterId: true,
           title: true,
+          isAdminPosted: true,
+          companyName: true,
           recruiter: { select: { recruiterProfile: { select: { companyName: true } } } },
         },
       },
@@ -114,7 +116,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         toEmail: application.seeker.email,
         candidateName: application.seeker.name ?? "there",
         jobTitle: application.job.title,
-        companyName: application.job.recruiter.recruiterProfile?.companyName ?? null,
+        companyName: application.job.isAdminPosted
+          ? (application.job.companyName ?? null)
+          : (application.job.recruiter.recruiterProfile?.companyName ?? null),
         stage: updated.status as ApplicationStatus,
       });
       notificationSent = true;

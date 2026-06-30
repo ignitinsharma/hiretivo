@@ -332,6 +332,27 @@ export function calculateMatchScore(required: string[], seeker: string[]): numbe
 
 ## 7. Git & Naming
 
+### ⚠️ Branch Rules — MANDATORY for ALL agents (Claude, Codex, OpenCode, Cursor, Copilot, etc.)
+
+```
+NEVER push directly to: main, staging
+ALWAYS:
+  1. git checkout staging && git pull origin staging
+  2. git checkout -b feature/your-feature-name   (or fix/, chore/, etc.)
+  3. do work + commit on that branch
+  4. push that branch → open PR → target: staging
+```
+
+**Why:** `main` = production. `staging` = integration. Direct pushes break CI, bypass review, and can nuke prod.
+
+| Branch | Purpose | Push policy |
+|--------|---------|-------------|
+| `main` | Production | ❌ Never push directly — merge from staging via PR only |
+| `staging` | Integration / QA | ❌ Never push directly — merge from feature branch via PR only |
+| `feature/*` | New features | ✅ Push freely — PR targets `staging` |
+| `fix/*` | Bug fixes | ✅ Push freely — PR targets `staging` |
+| `chore/*` | Maintenance | ✅ Push freely — PR targets `staging` |
+
 ```
 type(scope): short description        types: feat fix chore refactor style test docs
   feat(jobs): add skills tag input
