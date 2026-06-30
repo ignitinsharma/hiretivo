@@ -76,6 +76,11 @@ const nextConfig = {
         hostname: "lh3.googleusercontent.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "t2.gstatic.com",
+        pathname: "/**",
+      },
     ],
   },
 };
