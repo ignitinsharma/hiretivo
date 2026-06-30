@@ -13,6 +13,23 @@ const SYSTEM_USER_ID = 'system-ats-user';
 const COMPANY_CHUNK_SIZE = 10;
 
 /*
+ * upsertJobSkillIds
+ * Maps extracted skill names to DB skill IDs using the full skill catalogue.
+ * Returns only IDs that exist in the catalogue — unknown names are silently dropped.
+ * @param skillNames - skill names from the normalizer's skillMatches array
+ * @param allSkills  - full skill catalogue fetched once per cron run
+ * @returns array of skill IDs ready for JobSkill.createMany
+ */
+function upsertJobSkillIds(
+  skillNames: string[],
+  allSkills: Array<{ id: string; name: string }>,
+): string[] {
+  if (skillNames.length === 0) return [];
+  const skillMap = new Map(allSkills.map((s) => [s.name, s.id]));
+  return skillNames.map((name) => skillMap.get(name)).filter((id): id is string => id !== undefined);
+}
+
+/*
  * chunks
  * Splits an array into smaller arrays of the given size.
  * @param arr - source array
@@ -292,7 +309,7 @@ async function fetchAndUpsertSource(
       const existingClosed = closedJobLookup.get(closedKey);
 
       if (existingClosed) {
-        // Reopen the closed job
+        // Reopen the closed job — refresh description + re-write skills
         reopenedCount++;
         await prisma.job.update({
           where: { id: existingClosed.id },
@@ -319,6 +336,15 @@ async function fetchAndUpsertSource(
             companyWebsite: job.companyWebsite,
           },
         });
+        // Re-write skills so JobMatch can be computed after reopen
+        await prisma.jobSkill.deleteMany({ where: { jobId: existingClosed.id } });
+        const reopenSkillIds = upsertJobSkillIds(job.skillMatches, allSkills);
+        if (reopenSkillIds.length > 0) {
+          await prisma.jobSkill.createMany({
+            data: reopenSkillIds.map((skillId) => ({ jobId: existingClosed.id, skillId, level: SkillLevel.INTERMEDIATE })),
+            skipDuplicates: true,
+          });
+        }
         newJobIds.push(existingClosed.id);
       } else {
         // Create new job
@@ -352,6 +378,14 @@ async function fetchAndUpsertSource(
             descriptionHash,
           },
         });
+        // Write skills immediately so JobMatch can be computed right after
+        const newSkillIds = upsertJobSkillIds(job.skillMatches, allSkills);
+        if (newSkillIds.length > 0) {
+          await prisma.jobSkill.createMany({
+            data: newSkillIds.map((skillId) => ({ jobId: created.id, skillId, level: SkillLevel.INTERMEDIATE })),
+            skipDuplicates: true,
+          });
+        }
         newJobIds.push(created.id);
       }
     } else {
@@ -360,22 +394,12 @@ async function fetchAndUpsertSource(
       if (existing && existing.descriptionHash !== descriptionHash) {
         // Content changed — re-extract skills and update
         await prisma.jobSkill.deleteMany({ where: { jobId: existing.id } });
-        const skillNames = job.skillMatches;
-        if (skillNames.length > 0) {
-          const skillMap = new Map(allSkills.map((s) => [s.name, s.id]));
-          const skillIds = skillNames
-            .map((name) => skillMap.get(name))
-            .filter((id): id is string => id !== undefined);
-          if (skillIds.length > 0) {
-            await prisma.jobSkill.createMany({
-              data: skillIds.map((skillId) => ({
-                jobId: existing.id,
-                skillId,
-                level: SkillLevel.INTERMEDIATE,
-              })),
-              skipDuplicates: true,
-            });
-          }
+        const updatedSkillIds = upsertJobSkillIds(job.skillMatches, allSkills);
+        if (updatedSkillIds.length > 0) {
+          await prisma.jobSkill.createMany({
+            data: updatedSkillIds.map((skillId) => ({ jobId: existing.id, skillId, level: SkillLevel.INTERMEDIATE })),
+            skipDuplicates: true,
+          });
         }
         await prisma.job.update({
           where: { id: existing.id },
