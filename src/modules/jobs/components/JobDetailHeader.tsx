@@ -77,7 +77,7 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-white border border-brand-border rounded-2xl flex items-center justify-center overflow-hidden shadow-sm p-3">
+          <div className="w-20 h-20 bg-white border border-brand-border rounded-2xl flex items-center justify-center overflow-hidden shadow-sm">
             {job.companyLogoUrl ? (
               <Image
                 src={job.companyLogoUrl}

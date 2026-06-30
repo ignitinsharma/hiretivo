@@ -29,6 +29,7 @@ export async function GET() {
     where: {
       seekerId: session.user.id,
       status: InterviewStatus.SCHEDULED,
+      startsAt: { gte: new Date() },
     },
     select: {
       id: true,

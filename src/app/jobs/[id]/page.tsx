@@ -9,6 +9,7 @@ import { auth } from '@/auth';
 import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { resolveLogoUrl } from '@/lib/r2';
+import { resolveCompanyLogoUrl } from '@/lib/jobs/resolve-job-company';
 import { notFound, redirect } from 'next/navigation';
 
 interface RecommendedJob {
@@ -126,7 +127,7 @@ export default async function JobDescriptionPage({
       ? (job.companyName ?? 'Unknown')
       : (job.recruiter.recruiterProfile?.companyName ?? 'Unknown'),
     companyLogoUrl: job.isAdminPosted
-      ? (job.companyLogoUrl ?? null)
+      ? resolveCompanyLogoUrl(job.companyLogoUrl, job.companyWebsite)
       : resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
     companyId: job.isAdminPosted ? null : (job.recruiter.recruiterProfile?.id ?? null),
     skills: job.skills.map((s) => ({
@@ -166,6 +167,7 @@ export default async function JobDescriptionPage({
       skills: {
         select: { skillId: true },
       },
+      // companyWebsite used for Google favicon fallback on admin-posted jobs
       jobMatches: seekerProfileId
         ? {
             where: { seekerProfileId },
@@ -196,7 +198,7 @@ export default async function JobDescriptionPage({
           ? (recommendedJob.companyName ?? 'Unknown')
           : (recommendedJob.recruiter.recruiterProfile?.companyName ?? 'Unknown'),
         companyLogoUrl: recommendedJob.isAdminPosted
-          ? (recommendedJob.companyLogoUrl ?? null)
+          ? resolveCompanyLogoUrl(recommendedJob.companyLogoUrl, recommendedJob.companyWebsite)
           : resolveLogoUrl(recommendedJob.recruiter.recruiterProfile?.logo),
         salaryRange: formatSalaryRange(
           recommendedJob.salaryMin,
