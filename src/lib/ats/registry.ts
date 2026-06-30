@@ -10,7 +10,7 @@ export interface AtsCompany {
 }
 
 export const COMPANY_REGISTRY: AtsCompany[] = [
-  // ===== ASHBY (20) — remote-first, hire globally including India =====
+  // ===== ASHBY (24) — remote-first, hire globally including India =====
   // OpenAI removed: jobs say "Remote" but mean "Remote - US". Classifier marks worldwide incorrectly.
   { name: 'Linear', website: 'linear.app', ats: AtsSource.ASHBY, boardToken: 'linear' },
   { name: 'Cursor', website: 'cursor.com', ats: AtsSource.ASHBY, boardToken: 'cursor' },
@@ -32,8 +32,12 @@ export const COMPANY_REGISTRY: AtsCompany[] = [
   { name: 'Ramp', website: 'ramp.com', ats: AtsSource.ASHBY, boardToken: 'ramp' },
   { name: 'Notion', website: 'notion.so', ats: AtsSource.ASHBY, boardToken: 'notion' },
   { name: 'Plaid', website: 'plaid.com', ats: AtsSource.ASHBY, boardToken: 'plaid' },
+  { name: 'Temporal', website: 'temporal.io', ats: AtsSource.ASHBY, boardToken: 'temporal' },
+  { name: 'Sanity', website: 'sanity.io', ats: AtsSource.ASHBY, boardToken: 'sanity' },
+  { name: 'Twenty', website: 'twenty.com', ats: AtsSource.ASHBY, boardToken: 'twenty' },
+  { name: 'Mintlify', website: 'mintlify.com', ats: AtsSource.ASHBY, boardToken: 'mintlify' },
 
-  // ===== GREENHOUSE (10) — tier-1 remote-friendly =====
+  // ===== GREENHOUSE (15) — tier-1 remote-friendly =====
   { name: 'Anthropic', website: 'anthropic.com', ats: AtsSource.GREENHOUSE, boardToken: 'anthropic' },
   { name: 'Figma', website: 'figma.com', ats: AtsSource.GREENHOUSE, boardToken: 'figma' },
   { name: 'Stripe', website: 'stripe.com', ats: AtsSource.GREENHOUSE, boardToken: 'stripe' },
@@ -44,6 +48,11 @@ export const COMPANY_REGISTRY: AtsCompany[] = [
   { name: 'Robinhood', website: 'robinhood.com', ats: AtsSource.GREENHOUSE, boardToken: 'robinhood' },
   { name: 'Checkr', website: 'checkr.com', ats: AtsSource.GREENHOUSE, boardToken: 'checkr' },
   { name: 'Grafana Labs', website: 'grafana.com', ats: AtsSource.GREENHOUSE, boardToken: 'grafana' },
+  { name: 'Cloudflare', website: 'cloudflare.com', ats: AtsSource.GREENHOUSE, boardToken: 'cloudflare' },
+  { name: 'Elastic', website: 'elastic.co', ats: AtsSource.GREENHOUSE, boardToken: 'elastic' },
+  { name: 'MongoDB', website: 'mongodb.com', ats: AtsSource.GREENHOUSE, boardToken: 'mongodb' },
+  { name: 'Tailscale', website: 'tailscale.com', ats: AtsSource.GREENHOUSE, boardToken: 'tailscale' },
+  { name: 'Vercel', website: 'vercel.com', ats: AtsSource.GREENHOUSE, boardToken: 'vercel' },
 ];
 
 export function getCompaniesBySource(source: AtsSource): AtsCompany[] {

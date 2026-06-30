@@ -122,9 +122,13 @@ export default async function JobDescriptionPage({
     experienceLevel: job.experienceLevel,
     applyType: job.applyType,
     externalApplyUrl: job.externalApplyUrl,
-    companyName: job.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-    companyLogoUrl: resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
-    companyId: job.recruiter.recruiterProfile?.id ?? null,
+    companyName: job.isAdminPosted
+      ? (job.companyName ?? 'Unknown')
+      : (job.recruiter.recruiterProfile?.companyName ?? 'Unknown'),
+    companyLogoUrl: job.isAdminPosted
+      ? (job.companyLogoUrl ?? null)
+      : resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+    companyId: job.isAdminPosted ? null : (job.recruiter.recruiterProfile?.id ?? null),
     skills: job.skills.map((s) => ({
       id: s.skill.id,
       name: s.skill.name,
@@ -188,8 +192,12 @@ export default async function JobDescriptionPage({
       return {
         id: recommendedJob.id,
         title: recommendedJob.title,
-        companyName: recommendedJob.recruiter.recruiterProfile?.companyName ?? 'Unknown',
-        companyLogoUrl: resolveLogoUrl(recommendedJob.recruiter.recruiterProfile?.logo),
+        companyName: recommendedJob.isAdminPosted
+          ? (recommendedJob.companyName ?? 'Unknown')
+          : (recommendedJob.recruiter.recruiterProfile?.companyName ?? 'Unknown'),
+        companyLogoUrl: recommendedJob.isAdminPosted
+          ? (recommendedJob.companyLogoUrl ?? null)
+          : resolveLogoUrl(recommendedJob.recruiter.recruiterProfile?.logo),
         salaryRange: formatSalaryRange(
           recommendedJob.salaryMin,
           recommendedJob.salaryMax,

@@ -33,7 +33,9 @@ const ACTIVE_COMPANIES = new Set([
   'OpenAI','Linear','Cursor','Supabase','PostHog','Replit','Sentry','Render',
   'Neon','Railway','Trigger.dev','Infisical','WorkOS','Warp','Modal','Poolside',
   'Resend','Runway','Ramp','Notion','Plaid',
+  'Temporal','Sanity','Twenty','Mintlify',
   'Anthropic','Figma','Stripe','Datadog','GitLab','Discord','Gusto','Robinhood','Checkr',
+  'Grafana Labs','Cloudflare','Elastic','MongoDB','Tailscale','Vercel',
 ]);
 
 // ── Skill extractor (inlined) ─────────────────────────────────────────────────
