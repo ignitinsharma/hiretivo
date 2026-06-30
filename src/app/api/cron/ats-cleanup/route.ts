@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { subDays } from 'date-fns';
 import { JobStatus } from '@/constants/enums';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 

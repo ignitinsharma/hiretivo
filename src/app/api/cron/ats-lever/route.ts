@@ -4,6 +4,7 @@ import { fetchAndAutoClose } from '@/services/ats-job-fetcher.service';
 import { isImportPaused } from '@/lib/ats/pause';
 import { AtsSource } from '@/constants/enums';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 

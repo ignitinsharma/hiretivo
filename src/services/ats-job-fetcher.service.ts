@@ -65,33 +65,31 @@ export async function fetchAndUpsertAllJobs(): Promise<{
   const blocklist = await prisma.atsBlocklist.findMany({ select: { companyName: true } });
   const blockedNames = new Set(blocklist.map((b) => b.companyName.toLowerCase()));
 
-  const results = await Promise.all([
-    fetchAndUpsertSource(AtsSource.ASHBY, blockedNames, allSkills),
-    fetchAndUpsertSource(AtsSource.GREENHOUSE, blockedNames, allSkills),
-    fetchAndUpsertSource(AtsSource.LEVER, blockedNames, allSkills),
-  ]);
+  const sources = [AtsSource.ASHBY, AtsSource.GREENHOUSE, AtsSource.LEVER] as const;
+  const results = await Promise.all(
+    sources.map((src) => fetchAndUpsertSource(src, blockedNames, allSkills)),
+  );
 
   const allNewJobIds: string[] = [];
   let totalCreated = 0;
   let totalUpdated = 0;
   let totalErrors = 0;
 
-  // Merge companyErrors from all three sources before passing to autoCloseStaleJobs
-  const mergedCompanyErrors = new Map<string, number>();
   for (const r of results) {
     totalCreated += r.created;
     totalUpdated += r.updated;
     totalErrors += r.errors;
     allNewJobIds.push(...r.newJobIds);
-    for (const [company, count] of r.companyErrors) {
-      mergedCompanyErrors.set(company, (mergedCompanyErrors.get(company) || 0) + count);
-    }
   }
 
   await recomputeJobMatchesForJobs(allNewJobIds);
 
-  const { closedStale, closedOld } = await autoCloseStaleJobs(mergedCompanyErrors);
-  const totalClosed = closedStale + closedOld;
+  // Auto-close per source so each source only closes its own stale/old jobs.
+  let totalClosed = 0;
+  for (let i = 0; i < sources.length; i++) {
+    const { closedStale, closedOld } = await autoCloseStaleJobs(sources[i], results[i].companyErrors);
+    totalClosed += closedStale + closedOld;
+  }
 
   return {
     ashby: { fetched: results[0].fetched, errors: results[0].errors },
@@ -126,8 +124,9 @@ export async function fetchAndAutoClose(source: AtsSource): Promise<{
   const result = await fetchAndUpsertSource(source, blockedNames, allSkills);
   await recomputeJobMatchesForJobs(result.newJobIds);
 
-  // Pass this source's companyErrors directly so stale-close skips errored companies
-  const { closedStale, closedOld } = await autoCloseStaleJobs(result.companyErrors);
+  // Scope stale-close to this source only — prevents Ashby cron from closing Greenhouse/Lever
+  // jobs that haven't been refreshed by their own cron yet (runs at +15min and +30min offsets).
+  const { closedStale, closedOld } = await autoCloseStaleJobs(source, result.companyErrors);
   const totalClosed = closedStale + closedOld;
 
   return {
@@ -471,40 +470,52 @@ async function recomputeJobMatchesForJobs(jobIds: string[]): Promise<void> {
 
 /*
  * autoCloseStaleJobs
- * Closes admin-posted jobs that haven't been seen in 48h or were published over 60 days ago.
- * Skips companies that had API errors during the most recent fetch to avoid false closures.
+ * Closes admin-posted jobs for a single ATS source that haven't been seen in 48h or were
+ * published over 60 days ago. Scoped to `source` so Ashby's cron cannot close Greenhouse/Lever
+ * jobs that haven't been refreshed by their own crons yet (staggered at +15m and +30m).
+ * Skips companies that had API errors during the fetch to avoid false closures.
  * Cleans up orphaned JobSkill and JobMatch records for newly closed jobs.
+ * @param source - ATS source to scope the close to
  * @param companyErrors - map of company names to error counts from the current fetch run
  * @returns counts of stale-closed and old-closed jobs
  */
 async function autoCloseStaleJobs(
+  source: AtsSource,
   companyErrors: Map<string, number>,
 ): Promise<{ closedStale: number; closedOld: number }> {
   const erroredCompanies = [...companyErrors.keys()];
   const now = new Date();
+
+  const sourceFilter = { atsSource: source };
 
   // Pre-collect IDs before closing so orphan cleanup is reliable
   const staleIds = (await prisma.job.findMany({
     where: {
       isAdminPosted: true,
       status: JobStatus.OPEN,
+      ...sourceFilter,
       lastSeenAt: { lt: subHours(now, 48) },
       ...(erroredCompanies.length > 0 ? { companyName: { notIn: erroredCompanies } } : {}),
     },
     select: { id: true },
   })).map(j => j.id);
 
+  const staleIdSet = new Set(staleIds);
+
   const oldIds = (await prisma.job.findMany({
     where: {
       isAdminPosted: true,
       status: JobStatus.OPEN,
+      ...sourceFilter,
       publishedAt: { lt: subDays(now, 60) },
       ...(erroredCompanies.length > 0 ? { companyName: { notIn: erroredCompanies } } : {}),
     },
     select: { id: true },
   })).map(j => j.id);
 
-  const allClosingIds = [...new Set([...staleIds, ...oldIds])];
+  // Exclude stale IDs from old batch to avoid double-counting in returned totals
+  const uniqueOldIds = oldIds.filter(id => !staleIdSet.has(id));
+  const allClosingIds = [...staleIds, ...uniqueOldIds];
 
   let closedStale = 0;
   let closedOld = 0;
@@ -513,8 +524,8 @@ async function autoCloseStaleJobs(
     const r = await prisma.job.updateMany({ where: { id: { in: staleIds } }, data: { status: JobStatus.CLOSED, closedAt: now } });
     closedStale = r.count;
   }
-  if (oldIds.length > 0) {
-    const r = await prisma.job.updateMany({ where: { id: { in: oldIds } }, data: { status: JobStatus.CLOSED, closedAt: now } });
+  if (uniqueOldIds.length > 0) {
+    const r = await prisma.job.updateMany({ where: { id: { in: uniqueOldIds } }, data: { status: JobStatus.CLOSED, closedAt: now } });
     closedOld = r.count;
   }
 

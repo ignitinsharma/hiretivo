@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { acquireLock, releaseLock } from '@/lib/ats/cron-lock';
 import { fetchAndUpsertAllJobs } from '@/services/ats-job-fetcher.service';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
