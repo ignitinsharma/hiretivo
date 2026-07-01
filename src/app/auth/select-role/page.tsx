@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { setUserRole } from "@/app/actions/auth/set-role";
 import { UserRole } from "@/constants/enums";
+import { RECRUITER_ENABLED } from "@/constants/flags";
 
+/*
+ * SelectRolePage
+ * Post-sign-in role assignment. When the recruiter surface is enabled, shows a
+ * seeker/recruiter picker. During the seeker-only pivot (RECRUITER_ENABLED off)
+ * the picker is skipped: the user is auto-provisioned as SEEKER on mount and
+ * routed to seeker onboarding, so the recruiter option never appears.
+ */
 export default function SelectRolePage() {
   const router = useRouter();
   const [loading, setLoading] = useState<UserRole | null>(null);
@@ -29,38 +37,52 @@ export default function SelectRolePage() {
     }
   };
 
+  // Seeker-only pivot: skip the picker and provision as SEEKER on mount.
+  useEffect(() => {
+    if (!RECRUITER_ENABLED) void handleSelect(UserRole.SEEKER);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="max-w-md w-full mx-auto p-8 space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">Welcome to Hiretivo</h1>
-          <p className="text-muted-foreground">Are you looking for work, or looking to hire?</p>
-        </div>
+        {!RECRUITER_ENABLED ? (
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">Welcome to Hiretivo</h1>
+            <p className="text-muted-foreground">Setting up your account…</p>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        ) : (
+          <>
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-bold text-foreground">Welcome to Hiretivo</h1>
+              <p className="text-muted-foreground">Are you looking for work, or looking to hire?</p>
+            </div>
 
-        {error && (
-          <p className="text-sm text-destructive text-center">{error}</p>
+            {error && <p className="text-sm text-destructive text-center">{error}</p>}
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                onClick={() => handleSelect(UserRole.SEEKER)}
+                disabled={loading !== null}
+                variant="default"
+                size="lg"
+                className="h-24 flex-col gap-2 text-base"
+              >
+                {loading === UserRole.SEEKER ? "Setting up..." : "I'm looking for work"}
+              </Button>
+
+              <Button
+                onClick={() => handleSelect(UserRole.RECRUITER)}
+                disabled={loading !== null}
+                size="lg"
+                className="h-24 flex-col gap-2 text-base"
+              >
+                {loading === UserRole.RECRUITER ? "Setting up..." : "I'm hiring"}
+              </Button>
+            </div>
+          </>
         )}
-
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            onClick={() => handleSelect(UserRole.SEEKER)}
-            disabled={loading !== null}
-            variant="default"
-            size="lg"
-            className="h-24 flex-col gap-2 text-base"
-          >
-            {loading === UserRole.SEEKER ? "Setting up..." : "I'm looking for work"}
-          </Button>
-
-          <Button
-            onClick={() => handleSelect(UserRole.RECRUITER)}
-            disabled={loading !== null}
-            size="lg"
-            className="h-24 flex-col gap-2 text-base"
-          >
-            {loading === UserRole.RECRUITER ? "Setting up..." : "I'm hiring"}
-          </Button>
-        </div>
       </div>
     </div>
   );
