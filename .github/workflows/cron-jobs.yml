@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Trigger Ashby fetch
         run: |
-          curl -sf -X GET "${{ secrets.PROD_URL }}/api/cron/ats-ashby" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-ashby" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   greenhouse:
@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Trigger Greenhouse fetch
         run: |
-          curl -sf -X GET "${{ secrets.PROD_URL }}/api/cron/ats-greenhouse" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-greenhouse" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   lever:
@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Trigger Lever fetch
         run: |
-          curl -sf -X GET "${{ secrets.PROD_URL }}/api/cron/ats-lever" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-lever" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   cleanup:
@@ -41,5 +41,5 @@ jobs:
     steps:
       - name: Trigger ATS cleanup
         run: |
-          curl -sf -X GET "${{ secrets.PROD_URL }}/api/cron/ats-cleanup" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-cleanup" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
