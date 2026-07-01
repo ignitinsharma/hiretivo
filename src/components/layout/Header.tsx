@@ -19,6 +19,7 @@ import { SignOutButton } from "@/components/layout/SignOutButton";
 import { PublicMobileNavMenu } from "@/components/layout/PublicMobileNavMenu";
 import { BookCallButton } from "@/components/shared/BookCallButton";
 import { PublicRecruiterDropdown } from "@/components/layout/PublicRecruiterDropdown";
+import { RECRUITER_ENABLED } from "@/constants/flags";
 import { Logo } from "@/components/shared/Logo";
 import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { prisma } from "@/lib/prisma";
@@ -65,12 +66,14 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
               className="hidden items-center gap-7 lg:flex xl:gap-10"
               aria-label="Public navigation"
             >
-              <Link
-                href="/recruiter/talent"
-                className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-900 transition-colors hover:text-brand-primary xl:text-base"
-              >
-                Verified Engineers
-              </Link>
+              {RECRUITER_ENABLED && (
+                <Link
+                  href="/recruiter/talent"
+                  className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-900 transition-colors hover:text-brand-primary xl:text-base"
+                >
+                  Verified Engineers
+                </Link>
+              )}
 
               <Link
                 href="/how"
@@ -86,7 +89,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
                 Pricing
               </Link>
 
-              <PublicRecruiterDropdown />
+              {RECRUITER_ENABLED && <PublicRecruiterDropdown />}
             </nav>
 
             <div className="flex items-center gap-4">
@@ -195,17 +198,19 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
           {/* Public nav — no session */}
           {!session && (
             <>
-              <Link
-                href={"/recruiter/register"}
-                className={cn(
-                  "hidden rounded-lg px-5 py-2.5 text-sm font-bold transition-colors sm:block",
-                  variant === "dark"
-                    ? "bg-brand-primary text-white hover:bg-brand-primary-dark"
-                    : "border border-brand-primary/20 bg-brand-surface text-brand-foreground hover:bg-brand-primary hover:text-white",
-                )}
-              >
-                I&apos;m a recruiter
-              </Link>
+              {RECRUITER_ENABLED && (
+                <Link
+                  href={"/recruiter/register"}
+                  className={cn(
+                    "hidden rounded-lg px-5 py-2.5 text-sm font-bold transition-colors sm:block",
+                    variant === "dark"
+                      ? "bg-brand-primary text-white hover:bg-brand-primary-dark"
+                      : "border border-brand-primary/20 bg-brand-surface text-brand-foreground hover:bg-brand-primary hover:text-white",
+                  )}
+                >
+                  I&apos;m a recruiter
+                </Link>
+              )}
               <Link
                 href={"/seeker/register"}
                 className={cn(
