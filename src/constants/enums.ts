@@ -341,3 +341,32 @@ export enum ProgressiveStep {
   REVIEW = "review",
   DONE = "done",
 }
+
+/*
+ * Country-agnostic work authorization stored on ApplicationDefaults.
+ * NOT a US-visa-specific list — pre-fills the near-universal ATS
+ * "are you authorized to work here" question for any hiring country.
+ */
+export enum WorkAuthStatus {
+  CITIZEN = "CITIZEN",
+  PERMANENT_RESIDENT = "PERMANENT_RESIDENT",
+  WORK_VISA = "WORK_VISA",
+  NEEDS_SPONSORSHIP = "NEEDS_SPONSORSHIP",
+  STUDENT = "STUDENT",
+  OTHER = "OTHER",
+}
+
+/* Voluntary US-EEO self-ID gender, shown only for US jobs. Encrypted at rest. */
+export enum SelfIdGender {
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+  NONBINARY = "NONBINARY",
+  PREFER_NOT = "PREFER_NOT",
+}
+
+/* Tri-state answer for US-EEO veteran/disability self-ID. Encrypted at rest. */
+export enum SelfIdAnswer {
+  YES = "YES",
+  NO = "NO",
+  PREFER_NOT = "PREFER_NOT",
+}
