@@ -17,9 +17,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RECRUITER_ENABLED } from "@/constants/flags";
 
 const PUBLIC_MOBILE_NAV_ITEMS = [
-  { href: "/recruiter/talent", label: "Verified Engineers" },
+  ...(RECRUITER_ENABLED
+    ? [{ href: "/recruiter/talent", label: "Verified Engineers" }]
+    : []),
   { href: "/how", label: "How it Works" },
   { href: "/pricing", label: "Pricing" },
 ] as const;
@@ -77,28 +80,32 @@ export function PublicMobileNavMenu() {
             </Link>
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        {PUBLIC_MOBILE_RECRUITER_ITEMS.map((item) => (
-          <DropdownMenuItem asChild key={item.href}>
-            <Link
-              className="flex cursor-pointer gap-3 rounded-2xl px-4 py-3 focus:bg-brand-surface"
-              href={item.href}
-            >
-              <item.icon
-                aria-hidden="true"
-                className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary"
-              />
-              <span>
-                <span className="block text-sm font-semibold text-brand-foreground">
-                  {item.label}
-                </span>
-                <span className="mt-0.5 block text-xs text-brand-foreground-muted">
-                  {item.description}
-                </span>
-              </span>
-            </Link>
-          </DropdownMenuItem>
-        ))}
+        {RECRUITER_ENABLED && (
+          <>
+            <DropdownMenuSeparator />
+            {PUBLIC_MOBILE_RECRUITER_ITEMS.map((item) => (
+              <DropdownMenuItem asChild key={item.href}>
+                <Link
+                  className="flex cursor-pointer gap-3 rounded-2xl px-4 py-3 focus:bg-brand-surface"
+                  href={item.href}
+                >
+                  <item.icon
+                    aria-hidden="true"
+                    className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-brand-foreground">
+                      {item.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-brand-foreground-muted">
+                      {item.description}
+                    </span>
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
