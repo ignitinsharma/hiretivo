@@ -859,6 +859,13 @@ export async function saveParsedProfile(input: {
   const userId = session.user.id;
   const skillNames = uniqueCanonicalSkillNames(parsed.data.skills);
 
+  // Only trust a resumeKey that lives under this user's own R2 namespace — the
+  // client echoes back whatever parse-resume returned, so without this check a
+  // crafted request could point another user's profile at an arbitrary R2 key.
+  const isOwnResumeKey =
+    input.resumeKey !== null && input.resumeKey.startsWith(`resumes/${userId}/`);
+  const resumeKey = isOwnResumeKey ? input.resumeKey : null;
+
   await prisma.$transaction(async (tx) => {
     const profile = await tx.seekerProfile.upsert({
       where: { userId },
@@ -868,14 +875,14 @@ export async function saveParsedProfile(input: {
         bio: parsed.data.bio || null,
         primaryRole: parsed.data.primaryRole || null,
         location: parsed.data.location || null,
-        ...(input.resumeKey ? { resumeKey: input.resumeKey } : {}),
+        ...(resumeKey ? { resumeKey } : {}),
       },
       update: {
         headline: parsed.data.headline || null,
         bio: parsed.data.bio || null,
         primaryRole: parsed.data.primaryRole || null,
         location: parsed.data.location || null,
-        ...(input.resumeKey ? { resumeKey: input.resumeKey } : {}),
+        ...(resumeKey ? { resumeKey } : {}),
       },
       select: { id: true },
     });
