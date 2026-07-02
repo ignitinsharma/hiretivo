@@ -13,12 +13,12 @@ import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { AccountMenu } from "@/components/shared/AccountMenu";
 import { cn } from "@/lib/utils";
-import { SEEKER_NAV_ITEMS } from "@/constants/nav";
+import { LEGACY_SEEKER_HEADER_ITEMS } from "@/constants/nav";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { seekerService } from "@/services/seeker.service";
 
 /** Nav items to show — only Jobs and Applied Jobs per D-18. */
-const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
+const NAV_ITEMS = LEGACY_SEEKER_HEADER_ITEMS.filter(
   (item) => item.href !== "/seeker/settings" && item.href !== "/contact",
 );
 

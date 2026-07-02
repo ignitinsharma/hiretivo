@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
-import { SEEKER_NAV_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
+import { LEGACY_SEEKER_HEADER_ITEMS, RECRUITER_NAV_ITEMS } from "@/constants/nav";
 import { NavLink } from "@/components/layout/NavLink";
 import { SeekerNavLink } from "@/components/layout/SeekerNavLink";
 import { Settings } from "lucide-react";
@@ -32,7 +32,7 @@ interface HeaderProps {
 }
 
 /** Nav items to show — only Jobs and Applied Jobs, no Settings or Contact. */
-const SEEKER_HEADER_ITEMS = SEEKER_NAV_ITEMS.filter(
+const SEEKER_HEADER_ITEMS = LEGACY_SEEKER_HEADER_ITEMS.filter(
   (item) => item.href !== "/seeker/settings" && item.href !== "/contact",
 );
 
