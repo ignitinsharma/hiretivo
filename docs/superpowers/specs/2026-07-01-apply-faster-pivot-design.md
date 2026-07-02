@@ -3,6 +3,7 @@
 **Date:** 2026-07-01
 **Status:** Approved for planning
 **Supersedes:** `~/.claude/plans/so-u-know-u-velvet-yeti.md` (this doc refines it) and memory `project_pivot_v2`
+**Execution:** `2026-07-02-EXECUTION-GUIDE.md` — developer playbook (new-chat kickoff, code placement, refactor flow, dev cases, LIVE status table). Schema canon: `2026-07-01-pivot-DATA-MODEL.md`. Per-phase plans: `../plans/2026-07-01-p*.md`.
 
 ---
 
