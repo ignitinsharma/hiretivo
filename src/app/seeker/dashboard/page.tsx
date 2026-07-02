@@ -5,6 +5,8 @@ import { RecommendedJobsList } from "@/modules/seeker/dashboard/components/Recom
 import { SeekerDashboardSidebar } from "@/modules/seeker/dashboard/components/SeekerDashboardSidebar";
 import { UpcomingInterviewsCard } from "@/modules/seeker/dashboard/components/UpcomingInterviewsCard";
 import { RejectionCallout } from "@/modules/seeker/dashboard/components/RejectionCallout";
+import { CreditsBanner } from "@/modules/seeker/dashboard/components/CreditsBanner";
+import { TopMatchesRow } from "@/modules/seeker/dashboard/components/TopMatchesRow";
 
 /*
  * SeekerDashboardPage
@@ -42,7 +44,11 @@ export default async function SeekerDashboardPage() {
         </p>
       </div>
 
+      <CreditsBanner />
+
       <UpcomingInterviewsCard />
+
+      <TopMatchesRow />
 
       <div className="flex flex-col lg:flex-row gap-8 mt-8">
         <RecommendedJobsList />
