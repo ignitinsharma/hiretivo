@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
+import type { CertificationInput } from '@/lib/validations/certification.schema';
 import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
 import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
 import type {
@@ -10,6 +11,10 @@ import type {
 
 interface DataResponse<T> {
   data: T;
+}
+
+export interface CertificationItem extends CertificationInput {
+  id: string;
 }
 
 export interface WorkExperienceItem {
@@ -109,5 +114,16 @@ export const seekerService = {
   getJobDetail: async (jobId: string): Promise<JobDetailResponse> => {
     const { data } = await apiClient.get<JobDetailResponse>(`/jobs/${jobId}`);
     return data;
+  },
+
+  getCertifications: async (): Promise<DataResponse<{ certifications: CertificationItem[] }>> => {
+    const { data } = await apiClient.get<DataResponse<{ certifications: CertificationItem[] }>>(
+      '/seeker/certifications',
+    );
+    return data;
+  },
+
+  updateCertifications: async (certifications: CertificationInput[]): Promise<void> => {
+    await apiClient.put('/seeker/certifications', { certifications });
   },
 };

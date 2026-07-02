@@ -9,6 +9,7 @@ import { AvatarSection } from "@/modules/seeker/settings/components/AvatarSectio
 import { SocialProfilesSection } from "@/modules/seeker/settings/components/SocialProfilesSection";
 import { WorkExperienceSection } from "@/modules/seeker/settings/components/WorkExperienceSection";
 import { EducationSection } from "@/modules/seeker/settings/components/EducationSection";
+import { CertificationsSection } from "@/modules/seeker/settings/components/CertificationsSection";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 /*
@@ -37,6 +38,7 @@ export function SeekerSettingsPanels() {
       <SkillsSection settings={settings} isLoading={isLoading} />
       <WorkExperienceSection />
       <EducationSection />
+      <CertificationsSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
     </main>

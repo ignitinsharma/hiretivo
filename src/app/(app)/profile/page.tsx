@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { useSeekerSettingsData } from "@/modules/seeker/settings/components/PersonalInfoSection";
@@ -8,7 +9,10 @@ import { DocumentsSection } from "@/modules/seeker/profile/components/DocumentsS
 import { ExperienceSection } from "@/modules/seeker/profile/components/ExperienceSection";
 import { EducationSection } from "@/modules/seeker/profile/components/EducationSection";
 import { SkillsSection } from "@/modules/seeker/profile/components/SkillsSection";
+import { CertificationsSection } from "@/modules/seeker/profile/components/CertificationsSection";
 import { getProfileCompleteness } from "@/modules/seeker/profile/utils/profile-completeness";
+import { seekerService } from "@/services/seeker.service";
+import type { CertificationItem } from "@/services/seeker.service";
 
 /*
  * ProfilePage
@@ -20,6 +24,13 @@ export default function ProfilePage() {
   const { data, isLoading, isError, refetch } = useSeekerSettingsData();
   const verification = useVerificationStatus();
   const profile = data?.data;
+
+  const { data: certificationsData } = useQuery<{ data: { certifications: CertificationItem[] } }>({
+    queryKey: ["seeker-certifications"],
+    queryFn: seekerService.getCertifications,
+    staleTime: 60_000,
+  });
+  const certifications = certificationsData?.data.certifications ?? [];
 
   if (isLoading) {
     return (
@@ -67,6 +78,7 @@ export default function ProfilePage() {
       <ExperienceSection items={profile.workExperiences} />
       <EducationSection items={profile.educations} />
       <SkillsSection skills={profile.skills} />
+      <CertificationsSection items={certifications} />
     </div>
   );
 }
