@@ -22,3 +22,4 @@ coverage
 docs
 .superpowers/
 .worktrees
+.tmp
