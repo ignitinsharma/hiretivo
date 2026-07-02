@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelLeft } from "lucide-react";
@@ -76,6 +76,18 @@ export function AppSidebarProvider({
 }: AppSidebarProviderProps) {
   const [collapsed, setCollapsed] = useState(false);
   const toggle = () => setCollapsed((c) => !c);
+
+  /*
+   * Mobile-first guard: the sidebar's fixed width (w-65 expanded) is not
+   * lg:-gated, so below the lg breakpoint default to the icon-only rail
+   * (w-17) on mount rather than clipping <main> down to a sliver. The user
+   * can still tap the toggle to expand on any viewport.
+   */
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      setCollapsed(true);
+    }
+  }, []);
 
   return (
     <SidebarContext.Provider value={{ collapsed, toggle }}>
