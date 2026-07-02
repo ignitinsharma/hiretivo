@@ -27,8 +27,9 @@ export default auth((req) => {
   // Covers recruiter pages plus its register/login entry points. Recruiter
   // code/models/APIs stay intact — they just become unreachable via routing.
   // Runs before the admin gate; /admin and /recruiter paths are disjoint.
+  // Target is the pivot seeker home (route group `(app)` → /dashboard).
   if (!RECRUITER_ENABLED && pathname.startsWith("/recruiter")) {
-    return NextResponse.redirect(new URL("/seeker/dashboard", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   // --- Admin gate (must run before the public check; /admin is not public) ---
