@@ -232,10 +232,67 @@ model SeekerProfile {
   digestEnabled    Boolean   @default(true)
   lastDigestSentAt DateTime?
 
-  skills          SeekerSkill[]
-  jobMatches      JobMatch[]
-  workExperiences WorkExperience[]
-  educations      Education[]
+  skills              SeekerSkill[]
+  jobMatches          JobMatch[]
+  workExperiences     WorkExperience[]
+  educations          Education[]
+  certifications      Certification[]
+  applicationDefaults ApplicationDefaults?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Certification {
+  id              String        @id @default(cuid())
+  seekerProfileId String
+  seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  name          String
+  issuer        String?
+  issueDate     String? // "MM/YYYY" — follow WorkExperience convention
+  expiryDate    String? // "MM/YYYY" — null = no expiry
+  credentialUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([seekerProfileId])
+}
+
+model ApplicationDefaults {
+  id              String        @id @default(cuid())
+  seekerProfileId String        @unique
+  seekerProfile   SeekerProfile @relation(fields: [seekerProfileId], references: [id], onDelete: Cascade)
+
+  // Location (ATS address fields)
+  addressLine String?
+  city        String?
+  state       String?
+  postalCode  String?
+  countryCode String? // ISO-3166 alpha-2
+
+  // Contact
+  phone       String? // E.164 "+.."
+  linkedinUrl String?
+
+  // Work authorization (global)
+  workAuth          WorkAuthStatus?
+  authorizedCountry String? // ISO country the auth applies to
+  needsSponsorship  Boolean?
+
+  // Preferences (bool toggles; null = unanswered)
+  openToOnsite     Boolean?
+  willingRelocate  Boolean?
+  startImmediately Boolean?
+
+  // Voluntary US-EEO self-ID (ENCRYPTED at rest — see field-crypto.ts contract). Shown US-only.
+  selfIdGender     SelfIdGender?
+  selfIdEthnicity  String? // encrypted
+  veteranStatus    SelfIdAnswer?
+  disabilityStatus SelfIdAnswer?
+
+  additionalNotes String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
