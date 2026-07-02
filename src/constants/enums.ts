@@ -370,3 +370,32 @@ export enum SelfIdAnswer {
   NO = "NO",
   PREFER_NOT = "PREFER_NOT",
 }
+
+/*
+ * ResumeSectionHeading
+ * ATS-recognised, standard section labels rendered verbatim in the generated
+ * PDF. Fixed set → enum (never inline strings) so headings stay ATS-stable.
+ */
+export enum ResumeSectionHeading {
+  SUMMARY = "SUMMARY",
+  SKILLS = "SKILLS",
+  EXPERIENCE = "EXPERIENCE",
+  EDUCATION = "EDUCATION",
+  CERTIFICATIONS = "CERTIFICATIONS",
+  PROJECTS = "PROJECTS",
+}
+
+/*
+ * RESUME_SECTION_ORDER
+ * Canonical top-to-bottom render order. Reading order == this order == the
+ * order an ATS parser will extract. Do not reorder without re-checking ATS
+ * acceptance criteria.
+ */
+export const RESUME_SECTION_ORDER = [
+  ResumeSectionHeading.SUMMARY,
+  ResumeSectionHeading.SKILLS,
+  ResumeSectionHeading.EXPERIENCE,
+  ResumeSectionHeading.EDUCATION,
+  ResumeSectionHeading.CERTIFICATIONS,
+  ResumeSectionHeading.PROJECTS,
+] as const;

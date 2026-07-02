@@ -39,6 +39,13 @@ export const R2_KEYS = {
   /** Seeker resume — always overwrites so no orphaned files */
   resume: (seekerId: string) => `resumes/${seekerId}/resume.pdf`,
 
+  /**
+   * AI-generated, JD-tailored resume PDF (Phase 3b renderer output).
+   * Separate file from the user-uploaded `resume` so the original is never
+   * clobbered. Overwrites the previous generated PDF for the same seeker.
+   */
+  resumeGenerated: (seekerId: string) => `resumes/${seekerId}/generated.pdf`,
+
   /** Seeker profile photo — unique per upload so cached avatars refresh reliably */
   avatar: (userId: string, uploadId: string) =>
     `avatars/${userId}/${uploadId}.webp`,
