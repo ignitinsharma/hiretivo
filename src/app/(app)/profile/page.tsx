@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { useSeekerSettingsData } from "@/modules/seeker/settings/components/PersonalInfoSection";
 import { ProfileHeader } from "@/modules/seeker/profile/components/ProfileHeader";
+import { DocumentsSection } from "@/modules/seeker/profile/components/DocumentsSection";
 import { getProfileCompleteness } from "@/modules/seeker/profile/utils/profile-completeness";
 
 /*
@@ -59,6 +60,7 @@ export default function ProfilePage() {
         completeness={completeness}
         verified={verification.isVerified}
       />
+      <DocumentsSection resumeKey={profile.resumeKey} />
     </div>
   );
 }
