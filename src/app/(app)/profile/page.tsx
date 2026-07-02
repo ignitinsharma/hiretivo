@@ -5,6 +5,9 @@ import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { useSeekerSettingsData } from "@/modules/seeker/settings/components/PersonalInfoSection";
 import { ProfileHeader } from "@/modules/seeker/profile/components/ProfileHeader";
 import { DocumentsSection } from "@/modules/seeker/profile/components/DocumentsSection";
+import { ExperienceSection } from "@/modules/seeker/profile/components/ExperienceSection";
+import { EducationSection } from "@/modules/seeker/profile/components/EducationSection";
+import { SkillsSection } from "@/modules/seeker/profile/components/SkillsSection";
 import { getProfileCompleteness } from "@/modules/seeker/profile/utils/profile-completeness";
 
 /*
@@ -61,6 +64,9 @@ export default function ProfilePage() {
         verified={verification.isVerified}
       />
       <DocumentsSection resumeKey={profile.resumeKey} />
+      <ExperienceSection items={profile.workExperiences} />
+      <EducationSection items={profile.educations} />
+      <SkillsSection skills={profile.skills} />
     </div>
   );
 }
