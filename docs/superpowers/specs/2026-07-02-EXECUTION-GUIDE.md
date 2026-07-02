@@ -125,7 +125,7 @@ Two phases touching the same file (e.g. `enums.ts`, `schema.prisma`) = fine sequ
 
 | Phase | Plan | Code | PR | Notes |
 |---|---|---|---|---|
-| 1a flags-gate | ✅ | ✅ 4 commits (`acf5ba0..deb8128`) | ⏳ pending browse-verify + push | on `feature/pivot-p1a-flags-gate` (also carries docs commits `ffe1b21`+) |
+| 1a flags-gate | ✅ | ✅ 5 commits (`acf5ba0..deb8128` + mobile-nav fix) | ✅ pushed | on `feature/pivot-p1a-flags-gate`; browse-verify found+fixed ungated `PublicMobileNavMenu.tsx` recruiter items |
 | 1b shell | ✅ | — | — | retargets recruiter redirect → `/dashboard` |
 | 1c onboarding | ✅ | — | — | adds `unpdf`+`mammoth`; PROGRESSIVE_ONBOARDING flag |
 | 2 feed | ✅ | — | — | |

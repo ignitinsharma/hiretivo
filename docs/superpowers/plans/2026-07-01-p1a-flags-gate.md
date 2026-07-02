@@ -1,6 +1,6 @@
 # Phase 1a — Recruiter Flag + Gate Implementation Plan
 
-> **STATUS: CODE COMPLETE (2026-07-01)** — all 4 tasks done on branch `feature/pivot-p1a-flags-gate`, tsc+lint clean. Commits: acf5ba0 (flag), 0fea1b8 (middleware), 5bc3c4a (header), deb8128 (select-role). Pending: manual browse verify + push/PR.
+> **STATUS: DONE (2026-07-02)** — all 4 tasks + browse verify done on branch `feature/pivot-p1a-flags-gate`, tsc+lint clean. Commits: acf5ba0 (flag), 0fea1b8 (middleware), 5bc3c4a (header), deb8128 (select-role), + fix commit for `PublicMobileNavMenu.tsx` gap found during verify. Pushed, PR → staging.
 > Deviation: repo has no `.env.example` (uses gitignored `.env.local`) — flag added to `.env.local`; `flags.ts` defaults false when unset. Header "I'm a recruiter" block was dead code (behind `!session` in a session-only return) — gated anyway.
 > (File regenerated 2026-07-02 after docs/ wipe — content identical to original.)
 
@@ -139,9 +139,12 @@ import { RECRUITER_ENABLED } from "@/constants/flags";
 - [x] **Step 3: Verify** — tsc + eslint clean.
 - [x] **Step 4: Commit** → `deb8128` `feat(pivot): default new signups to SEEKER, hide role picker`
 
-Remaining (not yet done):
-- [ ] Manual browse verify (dev server: recruiter redirects, header at 390px/desktop, OAuth → auto-SEEKER → onboarding)
-- [ ] Push + PR into staging
+- [x] **Manual browse verify** (2026-07-02) — dev server up, verified with gstack browse:
+  - `/recruiter/login` and `/recruiter/dashboard` → redirect chain hits `/seeker/dashboard` then (unauthenticated) `/seeker/login`. Correct: recruiter gate fires first per middleware order.
+  - `/auth/select-role` renders "Setting up your account…" with no role picker buttons.
+  - Header at 390px and 1440px: no recruiter links in the visible bar.
+  > DEVIATION (bug found in-scope, fixed): `PublicMobileNavMenu.tsx` (the mobile hamburger dropdown) was never touched by Task 3 and hardcoded its own `PUBLIC_MOBILE_RECRUITER_ITEMS` ("Hire Engineers", "Recruiter Login", "Recruiter Sign Up") plus an ungated "Verified Engineers" entry — all visible at 390px regardless of the flag. Root-caused and fixed: gated both behind `RECRUITER_ENABLED`, matching the `Header.tsx` desktop pattern. `pnpm tsc --noEmit` + `pnpm eslint` clean. Re-verified via browse: mobile menu now shows only How it Works / Pricing / Sign In / Get Verified / Talk to Founder.
+- [x] **Push + PR into staging** (2026-07-02)
 
 ---
 
