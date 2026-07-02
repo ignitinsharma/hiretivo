@@ -11,3 +11,12 @@
  */
 export const RECRUITER_ENABLED =
   process.env.NEXT_PUBLIC_RECRUITER_ENABLED === "true";
+
+/*
+ * PROGRESSIVE_ONBOARDING gates the lean apply-faster onboarding flow
+ * (upload → AI-parse → review → browse). When off, the legacy 6-step
+ * verified-engineer flow renders instead. Read as NEXT_PUBLIC_* so it is
+ * inlined for both server and client bundles; unset resolves to `false`.
+ */
+export const PROGRESSIVE_ONBOARDING =
+  process.env.NEXT_PUBLIC_PROGRESSIVE_ONBOARDING === "true";

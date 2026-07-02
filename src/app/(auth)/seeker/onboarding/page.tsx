@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
+import { PROGRESSIVE_ONBOARDING } from "@/constants/flags";
 import { parseLegacyLocation } from "@/modules/india-location";
 import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
-import { SeekerOnboardingContainer } from "@/modules/seeker-onboarding";
+import { SeekerOnboardingContainer, ProgressiveOnboardingContainer } from "@/modules/seeker-onboarding";
 import {
   parseOnboardingDraft,
   resolveSeekerOnboardingStep,
@@ -81,6 +82,19 @@ export default async function SeekerOnboardingPage() {
       },
     },
   });
+
+  if (PROGRESSIVE_ONBOARDING) {
+    // No review wall in the pivot — onboardingCompleted alone means "done, go browse".
+    if (user?.onboardingCompleted === true) {
+      redirect("/seeker/dashboard");
+    }
+    return (
+      <>
+        <EmailVerificationBanner />
+        <ProgressiveOnboardingContainer userName={user?.name?.split(" ")[0] ?? "there"} />
+      </>
+    );
+  }
 
   // Redirect only when review is pending/approved — REJECTED seekers must be able to resubmit
   if (

@@ -229,6 +229,7 @@ export enum AiFeature {
   JD = "jd",
   SKILLS = "skills",
   SUMMARY = "summary",
+  PARSE_RESUME = "parse_resume",
 }
 
 export enum ContactRequestType {
@@ -321,4 +322,17 @@ export enum AtsSource {
   ASHBY = 'ashby',
   GREENHOUSE = 'greenhouse',
   LEVER = 'lever',
+}
+
+/* Accepted resume upload MIME types for the progressive onboarding parser. */
+export enum ResumeMimeType {
+  PDF = "application/pdf",
+  DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+/* Steps in the lean upload → parse → review progressive onboarding flow. */
+export enum ProgressiveStep {
+  UPLOAD = "upload",
+  REVIEW = "review",
+  DONE = "done",
 }

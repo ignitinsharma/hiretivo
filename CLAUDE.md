@@ -375,4 +375,20 @@ never commit:  .env* (with values) · node_modules/ · .next/ · keys/tokens/sec
 
 ---
 
+## 8. Pull Requests
+
+Every PR description MUST include (in the PR body):
+
+### Feature Description
+Brief summary of what was built/changed and why.
+
+### UI Testing Guide (if UI changes present)
+Step-by-step instructions to verify the feature in the browser:
+1. Navigate to X page
+2. Perform Y action
+3. Assert Z behavior
+Include any preconditions (logged-in as recruiter, existing job listing, etc.)
+
+---
+
 **End of Rules**

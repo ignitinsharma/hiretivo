@@ -312,3 +312,47 @@ export const SKILL_SUGGEST_CONFIG = {
   max_tokens: 350,
   temperature: 0.1,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Resume Parse (Pivot Phase 1c — progressive onboarding)
+// ---------------------------------------------------------------------------
+
+export interface ResumeParseInput {
+  resumeText: string;
+}
+
+/*
+ * buildResumeParseMessages
+ * System+user messages instructing the model to extract a structured profile
+ * from raw resume text. Extraction only — NEVER fabricate. Empty over invented.
+ * @param input - { resumeText } (caller truncates to a safe length)
+ * @returns { system, user } for openrouter.chat.completions
+ */
+export function buildResumeParseMessages(input: ResumeParseInput) {
+  const text = input.resumeText.slice(0, 12000);
+
+  return {
+    system: `You are a resume extraction engine. Extract ONLY information explicitly present in the resume text. NEVER fabricate, guess, or embellish — if a field is not present, leave it empty rather than inventing a value.
+
+Return ONLY a valid JSON object with exactly these keys: {"fullName":"","headline":"","bio":"","primaryRole":"","location":"","skills":[],"workExperiences":[],"educations":[]} — no markdown, no code fences, no explanation.
+
+Rules:
+- "fullName": the candidate's name as it appears on the resume
+- "headline": a short professional title/tagline if present (e.g. "Senior Backend Engineer"), else ""
+- "bio": a short professional summary drawn ONLY from an existing summary/objective section, else ""
+- "primaryRole": the candidate's most recent or most prominent job title
+- "location": city/region/country as stated, else ""
+- "skills": array of skill strings exactly as named in the resume (max 50)
+- "workExperiences": array of { "company", "title", "startDate", "endDate", "isCurrent", "description" }. Dates are free-text as written on the resume (e.g. "Jan 2021", "2021"). "endDate" is null and "isCurrent" is true only if the resume says "Present"/"Current". "description" is a short summary of responsibilities, or null.
+- "educations": array of { "institution", "degree", "major", "graduationDate" }. Any missing sub-field is null.
+- Every field tolerates being empty/null — never invent a company, date, or credential that isn't in the text.`,
+
+    user: text,
+  };
+}
+
+/* temperature 0 — extraction, not generation. */
+export const RESUME_PARSE_CONFIG = {
+  max_tokens: 2000,
+  temperature: 0,
+} as const;

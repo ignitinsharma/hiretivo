@@ -24,6 +24,8 @@ import {
 } from "@/lib/validations/seeker-onboarding.schema";
 import { isValidState, isValidCity, formatLocation, isCanonicalLocation } from "@/modules/india-location";
 import type { IndiaState } from "@/modules/india-location";
+import { ParsedResumeSchema } from "@/lib/validations/resume-parse.schema";
+import type { ParsedResumeDraft } from "@/lib/validations/resume-parse.schema";
 import { z } from "zod";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -826,6 +828,128 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
   });
 
   return { success: true, redirectTo: "/seeker/dashboard" };
+}
+
+/*
+ * saveParsedProfile
+ * Persists the seeker-reviewed draft from the progressive onboarding flow
+ * (Phase 1c): headline, bio, primaryRole, location, skills, work experiences,
+ * and educations. Re-validates server-side (the client already validated with
+ * the same schema — this is the trust boundary). Completes onboarding directly
+ * with NO review wall — the pivot has no verification step, seekers browse
+ * immediately after saving. Does not set verificationStatus.
+ * @param input - { draft: reviewed ParsedResumeDraft, resumeKey: R2 key or null }
+ * @returns ActionResult
+ */
+export async function saveParsedProfile(input: {
+  draft: ParsedResumeDraft;
+  resumeKey: string | null;
+}): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (session.user.role !== UserRole.SEEKER) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const parsed = ParsedResumeSchema.safeParse(input.draft);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input: " + parsed.error.issues[0]?.message };
+  }
+
+  const userId = session.user.id;
+  const skillNames = uniqueCanonicalSkillNames(parsed.data.skills);
+
+  // Only trust a resumeKey that lives under this user's own R2 namespace — the
+  // client echoes back whatever parse-resume returned, so without this check a
+  // crafted request could point another user's profile at an arbitrary R2 key.
+  const isOwnResumeKey =
+    input.resumeKey !== null && input.resumeKey.startsWith(`resumes/${userId}/`);
+  const resumeKey = isOwnResumeKey ? input.resumeKey : null;
+
+  await prisma.$transaction(async (tx) => {
+    const profile = await tx.seekerProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        headline: parsed.data.headline || null,
+        bio: parsed.data.bio || null,
+        primaryRole: parsed.data.primaryRole || null,
+        location: parsed.data.location || null,
+        ...(resumeKey ? { resumeKey } : {}),
+      },
+      update: {
+        headline: parsed.data.headline || null,
+        bio: parsed.data.bio || null,
+        primaryRole: parsed.data.primaryRole || null,
+        location: parsed.data.location || null,
+        ...(resumeKey ? { resumeKey } : {}),
+      },
+      select: { id: true },
+    });
+
+    if (skillNames.length > 0) {
+      await tx.seekerSkill.deleteMany({ where: { seekerProfileId: profile.id } });
+      const resolvedSkills = await resolveSkillNames(tx, skillNames);
+      await tx.seekerSkill.createMany({
+        data: resolvedSkills.map((skill) => ({
+          seekerProfileId: profile.id,
+          skillId: skill.id,
+          level: SkillLevel.INTERMEDIATE,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    await tx.workExperience.deleteMany({ where: { seekerProfileId: profile.id } });
+    if (parsed.data.workExperiences.length > 0) {
+      await tx.workExperience.createMany({
+        data: parsed.data.workExperiences.map((exp) => ({
+          seekerProfileId: profile.id,
+          company: exp.company,
+          title: exp.title,
+          startDate: exp.startDate,
+          endDate: exp.endDate ?? null,
+          isCurrent: exp.isCurrent,
+          description: exp.description ?? null,
+        })),
+      });
+    }
+
+    await tx.education.deleteMany({ where: { seekerProfileId: profile.id } });
+    if (parsed.data.educations.length > 0) {
+      await tx.education.createMany({
+        data: parsed.data.educations.map((edu) => ({
+          seekerProfileId: profile.id,
+          institution: edu.institution,
+          graduationDate: edu.graduationDate ?? null,
+          degree: edu.degree ?? null,
+          major: edu.major ?? null,
+        })),
+      });
+    }
+
+    // No verificationStatus — pivot has no review wall, seeker browses immediately.
+    await tx.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true, onboardingStep: null },
+    });
+  });
+
+  await unstable_update({
+    user: { onboardingCompleted: true, onboardingStep: null },
+  });
+
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  if (seekerProfile) {
+    invalidateSeekerCache(seekerProfile.id).catch((err) => {
+      console.error("[saveParsedProfile] Cache invalidation failed (non-fatal):", err);
+    });
+  }
+
+  return { success: true };
 }
 
 /*

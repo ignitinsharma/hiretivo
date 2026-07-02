@@ -1,4 +1,5 @@
 export { SeekerOnboardingContainer } from './components/SeekerOnboardingContainer';
+export { ProgressiveOnboardingContainer } from './components/ProgressiveOnboardingContainer';
 export { StepWelcome } from './components/StepWelcome';
 export { StepSkills } from './components/StepSkills';
 export { StepResume } from './components/StepResume';
