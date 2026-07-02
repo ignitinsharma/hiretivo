@@ -26,6 +26,8 @@ export interface JobListItem {
   description?: string | null;
   /** Total number of applications received for this job (all statuses). */
   applicantCount?: number;
+  /** ISO publish timestamp — used to derive feed staleness (null if unpublished). */
+  publishedAtIso?: string | null;
 }
 
 export interface JobSkillItem {

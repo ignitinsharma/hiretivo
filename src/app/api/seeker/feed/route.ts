@@ -47,6 +47,7 @@ interface JobFeedItem {
   applicantCount: number;
   locationClass: string | null;
   visaSponsored: boolean;
+  publishedAtIso: string | null;
 }
 
 const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
@@ -414,5 +415,6 @@ function buildJobResponse(
     applicantCount: job._count?.applications ?? 0,
     locationClass: job.locationClass ?? null,
     visaSponsored: job.visaSponsored ?? false,
+    publishedAtIso: job.publishedAt ? new Date(job.publishedAt).toISOString() : null,
   };
 }
