@@ -91,6 +91,28 @@ enum InterviewStatus {
   NO_SHOW
 }
 
+enum WorkAuthStatus {
+  CITIZEN
+  PERMANENT_RESIDENT
+  WORK_VISA
+  NEEDS_SPONSORSHIP
+  STUDENT
+  OTHER
+}
+
+enum SelfIdGender {
+  MALE
+  FEMALE
+  NONBINARY
+  PREFER_NOT
+}
+
+enum SelfIdAnswer {
+  YES
+  NO
+  PREFER_NOT
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
