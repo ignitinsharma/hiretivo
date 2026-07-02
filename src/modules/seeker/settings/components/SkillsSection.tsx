@@ -27,7 +27,7 @@ export function SkillsSection({ settings, isLoading }: SkillsSectionProps) {
     onSuccess: async () => {
       toast.success("Skills updated successfully.");
       await queryClient.invalidateQueries({ queryKey: ["seeker-settings"] });
-      await queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });
+      await queryClient.invalidateQueries({ queryKey: ["feed"] });
       setIsEditing(false);
     },
     onError: (error) =>
