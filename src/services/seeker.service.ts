@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
-import type { JobListItem } from '@/modules/jobs/types/job.types';
+import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
+import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
 import type {
   ProfileStrengthSummary,
   SeekerDashboardData,
@@ -68,8 +69,12 @@ export interface SeekerSettingsData {
 }
 
 export const seekerService = {
-  getFeed: async (params?: { cursor?: string; limit?: number }): Promise<SeekerFeedResponse> => {
-    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params });
+  getFeed: async (
+    params?: { cursor?: string; limit?: number } & Partial<FeedFilters>,
+  ): Promise<SeekerFeedResponse> => {
+    const { companies, ...rest } = params ?? {};
+    const query = { ...rest, companies: companies?.length ? companies.join(',') : undefined };
+    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params: query });
     return data;
   },
 
@@ -98,5 +103,11 @@ export const seekerService = {
   getUpcomingInterviews: async (): Promise<SeekerInterview[]> => {
     const { data } = await apiClient.get<DataResponse<SeekerInterview[]>>('/seeker/interviews');
     return data.data;
+  },
+
+  /* getJobDetail — reuses the public GET /api/jobs/[id] endpoint (already auth-aware for match data). */
+  getJobDetail: async (jobId: string): Promise<JobDetailResponse> => {
+    const { data } = await apiClient.get<JobDetailResponse>(`/jobs/${jobId}`);
+    return data;
   },
 };

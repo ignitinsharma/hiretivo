@@ -51,6 +51,11 @@ interface UIState {
   isEmailVerificationModalOpen: boolean;
   openEmailVerificationModal: () => void;
   closeEmailVerificationModal: () => void;
+
+  /** Phase-5 seam: queued job ids for "Apply to all" — Phase 5's apply wizard drains this. */
+  applyQueue: string[];
+  enqueueApply: (ids: string[]) => void;
+  dequeueApply: () => string | null;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -162,4 +167,16 @@ export const useUIStore = create<UIState>((set) => ({
   isEmailVerificationModalOpen: false,
   openEmailVerificationModal: () => set({ isEmailVerificationModalOpen: true }),
   closeEmailVerificationModal: () => set({ isEmailVerificationModalOpen: false }),
+
+  applyQueue: [],
+  enqueueApply: (ids) => set({ applyQueue: ids }),
+  dequeueApply: () => {
+    let next: string | null = null;
+    set((state) => {
+      const [head, ...rest] = state.applyQueue;
+      next = head ?? null;
+      return { applyQueue: rest };
+    });
+    return next;
+  },
 }));

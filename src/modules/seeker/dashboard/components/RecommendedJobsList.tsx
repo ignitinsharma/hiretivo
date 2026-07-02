@@ -18,7 +18,7 @@ import {
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
-import { useFeed } from "@/hooks/use-feed";
+import { useFeedQuery, feedQueryKey } from "@/modules/seeker/feed/queries/use-feed-query";
 
 export function RecommendedJobsList() {
   const { openApplyModal } = useUIStore();
@@ -39,7 +39,7 @@ export function RecommendedJobsList() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useFeed();
+  } = useFeedQuery({});
 
   const allJobs = useMemo(() => data?.pages.flatMap((p) => p.jobs) ?? [], [data]);
   const lastPage = data?.pages[data.pages.length - 1];
@@ -59,20 +59,22 @@ export function RecommendedJobsList() {
     [savedJobs],
   );
 
+  const feedKey = feedQueryKey({});
+
   const dismissMutation = useMutation({
     mutationFn: seekerService.dismissJob,
     onMutate: async (jobId: string) => {
       setDismissingJobId(jobId);
-      await queryClient.cancelQueries({ queryKey: ["seeker-feed"] });
+      await queryClient.cancelQueries({ queryKey: feedKey });
       const previousFeed = queryClient.getQueryData<{
         pages: SeekerFeedResponse[];
         pageParams: unknown[];
-      }>(["seeker-feed"]);
+      }>(feedKey);
 
       queryClient.setQueryData<{
         pages: SeekerFeedResponse[];
         pageParams: unknown[];
-      }>(["seeker-feed"], (current) =>
+      }>(feedKey, (current) =>
         current
           ? {
               ...current,
@@ -88,7 +90,7 @@ export function RecommendedJobsList() {
     },
     onError: (_error, _jobId, context) => {
       if (context?.previousFeed) {
-        queryClient.setQueryData(["seeker-feed"], context.previousFeed);
+        queryClient.setQueryData(feedKey, context.previousFeed);
       }
       toast.error("Failed to remove job.");
     },
@@ -97,7 +99,7 @@ export function RecommendedJobsList() {
     },
     onSettled: () => {
       setDismissingJobId(null);
-      void queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });
+      void queryClient.invalidateQueries({ queryKey: feedKey });
     },
   });
 

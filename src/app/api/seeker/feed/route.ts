@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { JobType as PrismaJobType, WorkType as PrismaWorkType } from '@prisma/client';
 import { auth } from '@/auth';
-import { CurrencyCode, JobStatus, UserRole, MatchThreshold, LocationClass } from '@/constants/enums';
+import { CurrencyCode, JobStatus, UserRole, MatchThreshold, LocationClass, EXPERIENCE_BAND_VALUES } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { resolveLogoUrl } from '@/lib/r2';
@@ -47,9 +47,17 @@ interface JobFeedItem {
   applicantCount: number;
   locationClass: string | null;
   visaSponsored: boolean;
+  publishedAtIso: string | null;
 }
 
 const feedRateLimiter = createRateLimiter("seeker-feed", 30, "1 m");
+
+// experienceMax expands to allowed bands (entry ⊂ mid ⊂ senior for filtering purposes).
+const EXPERIENCE_LADDER: Record<(typeof EXPERIENCE_BAND_VALUES)[number], string[]> = {
+  entry: ['entry'],
+  mid: ['entry', 'mid'],
+  senior: ['entry', 'mid', 'senior'],
+};
 
 
 // Jobs below this match score receive an inline missing-skills explainer.
@@ -114,7 +122,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid query params' }, { status: 400 });
   }
 
-  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored } = parsed.data;
+  const {
+    cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored,
+    search, companies, experienceMax, role, employmentType,
+  } = parsed.data;
+  const effectiveJobType = employmentType ?? jobType; // employmentType wins
 
   const appliedRows = await prisma.application.findMany({
     where: { seekerId: session.user.id },
@@ -132,10 +144,25 @@ export async function GET(req: NextRequest) {
     status: JobStatus.OPEN,
     id: { notIn: [...appliedJobIds, ...dismissedJobIds] },
   };
-  if (jobType) feedFilterWhere.jobType = jobType as PrismaJobType;
+  if (effectiveJobType) feedFilterWhere.jobType = effectiveJobType as PrismaJobType;
   if (workType) feedFilterWhere.workType = workType as PrismaWorkType;
   if (locationClass) feedFilterWhere.locationClass = locationClass;
   if (visaSponsored) feedFilterWhere.visaSponsored = true;
+  if (role) feedFilterWhere.category = { equals: role, mode: 'insensitive' };
+  if (companies && companies.length > 0) {
+    feedFilterWhere.companyName = { in: companies };
+  }
+  if (experienceMax) {
+    // Job.experienceLevel is free-form; admin jobs use entry|mid|senior.
+    const band = EXPERIENCE_LADDER[experienceMax];
+    feedFilterWhere.experienceLevel = { in: band };
+  }
+  if (search) {
+    feedFilterWhere.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ];
+  }
 
   // Hybrid mode: recentOffset provided → unmatched jobs tail
   if (recentOffset !== undefined) {
@@ -205,10 +232,14 @@ export async function GET(req: NextRequest) {
     where: { id: { in: jobIds }, status: JobStatus.OPEN },
     select: {
       id: true,
+      title: true,
       jobType: true,
       workType: true,
       locationClass: true,
       visaSponsored: true,
+      category: true,
+      companyName: true,
+      experienceLevel: true,
       recruiter: {
         select: {
           recruiterProfile: {
@@ -226,10 +257,19 @@ export async function GET(req: NextRequest) {
     if (dismissedJobIds.has(m.jobId)) return false;
     const job = jobMap.get(m.jobId);
     if (!job) return false;
-    if (jobType && job.jobType !== jobType) return false;
+    if (effectiveJobType && job.jobType !== effectiveJobType) return false;
     if (workType && job.workType !== workType) return false;
     if (locationClass && job.locationClass !== locationClass) return false;
     if (visaSponsored && !job.visaSponsored) return false;
+    if (role && job.category?.toLowerCase() !== role.toLowerCase()) return false;
+    if (companies && companies.length > 0 && !(job.companyName && companies.includes(job.companyName))) return false;
+    if (experienceMax) {
+      const band = EXPERIENCE_LADDER[experienceMax];
+      if (!job.experienceLevel || !band.includes(job.experienceLevel)) return false;
+    }
+    // Light path has no `description` selected — search matches title only here (asymmetric
+    // vs the recent-jobs flow, which filters at the DB level against title + description).
+    if (search && !job.title.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -375,5 +415,6 @@ function buildJobResponse(
     applicantCount: job._count?.applications ?? 0,
     locationClass: job.locationClass ?? null,
     visaSponsored: job.visaSponsored ?? false,
+    publishedAtIso: job.publishedAt ? new Date(job.publishedAt).toISOString() : null,
   };
 }

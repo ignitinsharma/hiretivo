@@ -142,6 +142,11 @@ export const LOCATION_CLASS_VALUES = [
   LocationClass.ONSITE,
 ] as const;
 
+/* Experience bands used by feed + admin job posting (Job.experienceLevel is free-form String;
+ * these are the only canonical values admin-posted jobs write). */
+export const EXPERIENCE_BAND_VALUES = ["entry", "mid", "senior"] as const;
+export type ExperienceBand = (typeof EXPERIENCE_BAND_VALUES)[number];
+
 export enum PlanTier {
   FREE = "FREE",
   STARTER = "STARTER",
