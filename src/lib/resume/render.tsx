@@ -1,3 +1,4 @@
+import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { ResumeTemplate } from "@/lib/resume/template/ResumeTemplate";
 import type { ResumeDocument } from "@/modules/seeker/profile/types/resume-document.types";

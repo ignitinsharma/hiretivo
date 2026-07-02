@@ -1,3 +1,4 @@
+import React from "react";
 import { Text, View, Link } from "@react-pdf/renderer";
 import { ResumeSectionHeading } from "@/constants/enums";
 import { resumeStyles as s } from "@/lib/resume/template/styles";
