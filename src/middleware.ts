@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/auth.config";
+import { RECRUITER_ENABLED } from "@/constants/flags";
 
 const { auth } = NextAuth(authConfig);
 
@@ -21,6 +22,14 @@ export default auth((req) => {
   const session = req.auth;
   const userRole = session?.user?.role as string | undefined;
   const hasKnownRole = userRole === "SEEKER" || userRole === "RECRUITER";
+
+  // --- Recruiter gate (pivot): recruiter surface hidden unless flag on. ---
+  // Covers recruiter pages plus its register/login entry points. Recruiter
+  // code/models/APIs stay intact — they just become unreachable via routing.
+  // Runs before the admin gate; /admin and /recruiter paths are disjoint.
+  if (!RECRUITER_ENABLED && pathname.startsWith("/recruiter")) {
+    return NextResponse.redirect(new URL("/seeker/dashboard", req.url));
+  }
 
   // --- Admin gate (must run before the public check; /admin is not public) ---
   // Primary check: isAdmin boolean forwarded from JWT (DB-backed, set at sign-in).
