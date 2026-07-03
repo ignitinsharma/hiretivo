@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WORK_AUTH_STATUS_VALUES, SELF_ID_GENDER_VALUES, SELF_ID_ANSWER_VALUES } from "@/constants/enums";
+import { HttpUrlSchema } from "@/lib/validations/http-url.schema";
 
 /*
  * SelfIdSchema
@@ -33,7 +34,7 @@ export const ApplicationDefaultsSchema = z.object({
 
   // Contact
   phone: z.string().trim().max(30).optional().or(z.literal("")).nullable(),
-  linkedinUrl: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")).nullable(),
+  linkedinUrl: HttpUrlSchema.optional().or(z.literal("")).nullable(),
 
   // Work authorization (global)
   workAuth: z.enum(WORK_AUTH_STATUS_VALUES).optional().nullable(),

@@ -5,6 +5,17 @@ interface ProjectsSectionProps {
   items: ProjectInput[];
 }
 
+const HTTP_URL_REGEX = /^https?:\/\//i;
+
+/*
+ * getSafeProjectUrl
+ * Render-site defense in depth: only http(s) URLs become an anchor href,
+ * even though the schema already rejects javascript:/data: at save time.
+ */
+function getSafeProjectUrl(url: string | null | undefined): string | null {
+  return url && HTTP_URL_REGEX.test(url) ? url : null;
+}
+
 /*
  * ProjectsSection
  * Read-only projects card. `.map()`s ProjectInput[] into entries.
@@ -18,11 +29,13 @@ export function ProjectsSection({ items }: ProjectsSectionProps) {
       emptyLabel="No projects added yet."
     >
       <div className="space-y-4">
-        {items.map((entry, index) => (
+        {items.map((entry, index) => {
+          const safeUrl = getSafeProjectUrl(entry.url);
+          return (
           <div key={`${entry.title}-${index}`} className="space-y-1">
             <p className="text-sm font-semibold text-brand-foreground">
-              {entry.url ? (
-                <a href={entry.url} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">
+              {safeUrl ? (
+                <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">
                   {entry.title}
                 </a>
               ) : (
@@ -40,7 +53,8 @@ export function ProjectsSection({ items }: ProjectsSectionProps) {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </ProfileSectionCard>
   );

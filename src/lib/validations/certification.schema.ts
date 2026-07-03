@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { HttpUrlSchema } from "@/lib/validations/http-url.schema";
 
 const MM_YYYY_REGEX = /^(0[1-9]|1[0-2])\/\d{4}$/;
 
@@ -17,12 +18,7 @@ export const CertificationInputSchema = z.object({
     .optional()
     .or(z.literal(""))
     .nullable(),
-  credentialUrl: z
-    .string()
-    .url("Must be a valid URL")
-    .optional()
-    .or(z.literal(""))
-    .nullable(),
+  credentialUrl: HttpUrlSchema.optional().or(z.literal("")).nullable(),
 });
 
 export const CertificationsPayloadSchema = z.object({
