@@ -478,13 +478,17 @@ model Application {
   status      AppStatus @default(APPLIED)
   matchScore  Int
 
-  source            ApplySource @default(FEED)
-  externalJobUrl    String?
-  tailoredResumeKey String?
-  submittedFormData Json?
-  keywordStats      Json?
-  notes             String?  @db.Text
-  statusLog         Json?
+  source              ApplySource @default(FEED)
+  externalJobUrl      String?
+  externalTitle       String?
+  externalCompanyName String?
+  externalDescription String?     @db.Text
+  externalSkills      Json? // string[] — matched Skill.name values for a PASTED_LINK JD
+  tailoredResumeKey   String?
+  submittedFormData   Json?
+  keywordStats        Json?
+  notes               String?  @db.Text
+  statusLog           Json?
 
   coverLetter String? @db.Text
   aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
