@@ -50,6 +50,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     include: {
       job: {
         select: {
+          id: true,
           recruiterId: true,
           title: true,
           isAdminPosted: true,
@@ -65,7 +66,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  if (application.job.recruiterId !== session.user.id) {
+  if (!application.job || application.job.recruiterId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -75,7 +76,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     !(await isApplicationVisibleOnFree(
       session.user.id,
       application.id,
-      application.jobId,
+      application.job.id,
     ))
   ) {
     return NextResponse.json(

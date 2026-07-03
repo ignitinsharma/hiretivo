@@ -132,7 +132,9 @@ export async function GET(req: NextRequest) {
     where: { seekerId: session.user.id },
     select: { jobId: true },
   });
-  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
+  const appliedJobIds = new Set(
+    appliedRows.map((r) => r.jobId).filter((id): id is string => id !== null),
+  );
 
   const dismissedRows = await prisma.dismissedJob.findMany({
     where: { userId: session.user.id },

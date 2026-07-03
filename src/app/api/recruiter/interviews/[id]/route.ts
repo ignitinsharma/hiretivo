@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       recruiterEmail: recruiter?.email ?? "",
       seekerEmail: existing.application.seeker.email ?? "",
       seekerName: existing.application.seeker.name ?? "Candidate",
-      jobTitle: existing.application.job.title,
+      jobTitle: existing.application.job?.title ?? "External job",
       startsAt: updated.startsAt ?? new Date(startsAt),
       endsAt: updated.endsAt ?? new Date(endsAt),
       meetLink: updated.meetLink,

@@ -175,8 +175,14 @@ export async function GET(req: NextRequest) {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   });
 
-  const hasMore = applications.length > limit;
-  const pageItems = hasMore ? applications.slice(0, limit) : applications;
+  // `where.job.recruiterId` above guarantees a Job row for every match — narrow
+  // the nullable relation type so downstream field access doesn't need guards.
+  const applicationsWithJob = applications.filter(
+    (app): app is typeof app & { job: NonNullable<typeof app.job> } => app.job !== null,
+  );
+
+  const hasMore = applicationsWithJob.length > limit;
+  const pageItems = hasMore ? applicationsWithJob.slice(0, limit) : applicationsWithJob;
   const nextCursor = hasMore
     ? (pageItems[pageItems.length - 1]?.id ?? null)
     : null;

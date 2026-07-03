@@ -51,6 +51,7 @@ export enum ApplicationStatus {
   OFFER = "OFFER",
   HIRED = "HIRED",
   REJECTED = "REJECTED",
+  GHOSTED = "GHOSTED",
 }
 
 export const APPLICATION_STATUS_VALUES = [
@@ -60,7 +61,14 @@ export const APPLICATION_STATUS_VALUES = [
   ApplicationStatus.OFFER,
   ApplicationStatus.HIRED,
   ApplicationStatus.REJECTED,
+  ApplicationStatus.GHOSTED,
 ] as const;
+
+/** Same values as Prisma `ApplySource` — origin of an Application record. */
+export enum ApplySource {
+  FEED = "FEED",
+  PASTED_LINK = "PASTED_LINK",
+}
 
 export enum JobType {
   FULL_TIME = "FULL_TIME",
@@ -442,3 +450,15 @@ export const RESUME_SECTION_ORDER = [
   ResumeSectionHeading.CERTIFICATIONS,
   ResumeSectionHeading.PROJECTS,
 ] as const;
+
+/*
+ * WizardStep
+ * The apply-wizard's linear step sequence (Phase 5). Gates which
+ * ApplyStepper panel renders and what actions are available.
+ */
+export enum WizardStep {
+  OPTIMIZE = "optimize",
+  COVER = "cover",
+  SUBMIT = "submit",
+  DONE = "done",
+}

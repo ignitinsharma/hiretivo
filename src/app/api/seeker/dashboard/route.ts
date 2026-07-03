@@ -48,7 +48,9 @@ export async function GET() {
           where: { seekerId: userId },
           select: { jobId: true },
         })
-      ).map((a) => a.jobId)
+      )
+        .map((a) => a.jobId)
+        .filter((id): id is string => id !== null)
     : [];
 
   // Parallel aggregation

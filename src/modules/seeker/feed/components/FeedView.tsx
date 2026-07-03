@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/store/use-ui-store';
 import { useVerificationStatus } from '@/hooks/use-verification-status';
+import { ApplyType } from '@/constants/enums';
 import { useSaveJob, useSavedJobs, useUnsaveJob } from '@/modules/seeker/saved-jobs/queries/use-saved-jobs';
 import { seekerService, type SeekerFeedResponse } from '@/services/seeker.service';
 import { useFeedQuery, feedQueryKey } from '@/modules/seeker/feed/queries/use-feed-query';
@@ -16,6 +18,11 @@ import { FeedFilterBar } from '@/modules/seeker/feed/components/FeedFilterBar';
 import { FeedJobCard } from '@/modules/seeker/feed/components/FeedJobCard';
 import { FeedJobDrawer } from '@/modules/seeker/feed/components/FeedJobDrawer';
 import type { FeedJobItem } from '@/modules/seeker/feed/types/feed.types';
+
+interface ApplyWizardError extends Error {
+  status?: number;
+  data?: { id?: string | null };
+}
 
 interface FeedViewProps {
   companies: string[];
@@ -28,6 +35,7 @@ interface FeedViewProps {
 export function FeedView({ companies }: FeedViewProps) {
   const { filters, clearFilters, activeCount } = useFeedFilters();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { openApplyModal } = useUIStore();
   const hiretivo = useVerificationStatus();
 
@@ -71,6 +79,25 @@ export function FeedView({ companies }: FeedViewProps) {
     },
   });
 
+  // Starts a wizard run for the new assisted-apply flow (EXTERNAL/ATS jobs
+  // only — legacy INTERNAL jobs keep the old ApplyJobModal below). A 409
+  // means a run already exists for this job; route into that one instead
+  // of erroring, since the seeker is just trying to get back to applying.
+  const applyWizardMutation = useMutation({
+    mutationFn: (jobId: string) => seekerService.createApplication(jobId),
+    onSuccess: (res) => router.push(`/dashboard/applications/${res.data.id}`),
+    onError: (err: ApplyWizardError) => {
+      if (err.status === 409 && err.data?.id) {
+        router.push(`/dashboard/applications/${err.data.id}`);
+        return;
+      }
+      toast.error(err.message || 'Could not start your application. Try again.');
+    },
+  });
+
+  // Legacy verification wall — the pivot design explicitly drops it for the
+  // assisted-apply (ApplyType.EXTERNAL) flow, so this only gates legacy
+  // INTERNAL jobs below (applied per-job at the FeedJobCard callsite).
   const resolveApplyLockedLabel = (): string | undefined => {
     if (hiretivo.isVerified) return undefined;
     if (hiretivo.status === 'PENDING' || hiretivo.status === 'IN_REVIEW') return 'Verification pending';
@@ -160,12 +187,14 @@ export function FeedView({ companies }: FeedViewProps) {
               isSaved={savedJobIds.has(job.id)}
               isSaving={savingJobIds.has(job.id)}
               isDismissing={dismissingJobId === job.id}
-              applyLockedLabel={applyLockedLabel}
+              applyLockedLabel={job.applyType === ApplyType.EXTERNAL ? undefined : applyLockedLabel}
               onToggleSave={() => handleToggleSave(job.id)}
               onPass={() => dismissMutation.mutate(job.id)}
               onOpen={() => setSelectedJobId(job.id)}
               onApply={() =>
-                openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)
+                job.applyType === ApplyType.EXTERNAL
+                  ? applyWizardMutation.mutate(job.id)
+                  : openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)
               }
             />
           ))}

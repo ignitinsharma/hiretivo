@@ -27,6 +27,7 @@ export async function getFreeVisibleApplicationIds(
   const rows = await prisma.application.findMany({
     where: {
       job: { recruiterId },
+      jobId: { not: null },
       ...(jobId ? { jobId } : {}),
     },
     select: { id: true, jobId: true },
@@ -37,6 +38,7 @@ export async function getFreeVisibleApplicationIds(
   const visible = new Set<string>();
 
   for (const row of rows) {
+    if (!row.jobId) continue;
     const seen = perJobCount.get(row.jobId) ?? 0;
     if (seen < FREE_APPLICANT_LIMIT) {
       visible.add(row.id);

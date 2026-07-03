@@ -11,6 +11,9 @@ import type {
   SeekerDashboardData,
   SeekerInterview,
 } from '@/modules/seeker/dashboard/types/dashboard.types';
+import type { ApplicationDetail, SubmittedFormField, ApplyKeywordStats } from '@/modules/seeker/apply/types/apply.types';
+import type { ResumeDocument } from '@/modules/seeker/profile/types/resume-document.types';
+import type { ResumeOptimizeRequest, CoverLetterRequest } from '@/lib/validations/apply-ai.schema';
 
 interface DataResponse<T> {
   data: T;
@@ -157,5 +160,66 @@ export const seekerService = {
 
   updateOptimizeMode: async (optimizeMode: OptimizeMode): Promise<void> => {
     await apiClient.patch('/seeker/optimize-mode', { optimizeMode });
+  },
+
+  getCreditStatus: async (): Promise<DataResponse<{ remaining: number; limit: number }>> => {
+    const { data } = await apiClient.get<DataResponse<{ remaining: number; limit: number }>>('/seeker/credits');
+    return data;
+  },
+
+  createApplication: async (jobId: string): Promise<DataResponse<{ id: string }>> => {
+    const { data } = await apiClient.post<DataResponse<{ id: string }>>('/seeker/applications', { jobId });
+    return data;
+  },
+
+  getApplication: async (id: string): Promise<DataResponse<ApplicationDetail>> => {
+    const { data } = await apiClient.get<DataResponse<ApplicationDetail>>(`/seeker/applications/${id}`);
+    return data;
+  },
+
+  updateApplication: async (
+    id: string,
+    payload: Partial<{
+      tailoredResumeKey: string;
+      coverLetter: string;
+      submittedFormData: SubmittedFormField[];
+      keywordStats: ApplyKeywordStats;
+      status: string;
+    }>,
+  ): Promise<void> => {
+    await apiClient.patch(`/seeker/applications/${id}`, payload);
+  },
+
+  finalizeApplication: async (
+    id: string,
+    payload: { resume: unknown; coverLetter: string; submittedFormData: SubmittedFormField[] },
+  ): Promise<DataResponse<{ tailoredResumeUrl: string }>> => {
+    const { data } = await apiClient.post<DataResponse<{ tailoredResumeUrl: string }>>(
+      `/seeker/applications/${id}/finalize`,
+      payload,
+    );
+    return data;
+  },
+
+  /* optimizeResume — response is a single-chunk text/plain ResumeDocument
+   * JSON body (not {data}-wrapped) plus an X-Reservation-Handle header. */
+  optimizeResume: async (
+    payload: ResumeOptimizeRequest,
+  ): Promise<{ resume: ResumeDocument; reservationHandle: string | null }> => {
+    const res = await apiClient.post<string>('/seeker/apply/optimize-resume', payload, {
+      responseType: 'text',
+    });
+    return {
+      resume: JSON.parse(res.data) as ResumeDocument,
+      reservationHandle: (res.headers['x-reservation-handle'] as string | undefined) ?? null,
+    };
+  },
+
+  generateCoverLetter: async (payload: CoverLetterRequest): Promise<{ coverLetter: string }> => {
+    const { data } = await apiClient.post<DataResponse<{ coverLetter: string }>>(
+      '/seeker/apply/cover-letter',
+      payload,
+    );
+    return data.data;
   },
 };

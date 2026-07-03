@@ -94,6 +94,7 @@ export async function POST(
       jobId: true,
       job: {
         select: {
+          id: true,
           recruiterId: true,
           title: true,
           skills: {
@@ -139,7 +140,7 @@ export async function POST(
     },
   });
 
-  if (!application || application.job.recruiterId !== session.user.id) {
+  if (!application || !application.job || application.job.recruiterId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -150,7 +151,7 @@ export async function POST(
     !(await isApplicationVisibleOnFree(
       session.user.id,
       parsed.data.id,
-      application.jobId,
+      application.job.id,
     ))
   ) {
     return NextResponse.json(

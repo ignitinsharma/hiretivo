@@ -136,7 +136,7 @@ export async function GET() {
         seekerName: app.seeker.name ?? "Anonymous",
         seekerImage: resolveLogoUrl(app.seeker.image),
         verificationStatus: app.seeker.verificationStatus,
-        jobTitle: app.job.title,
+        jobTitle: app.job?.title ?? "External job",
         matchScore: app.matchScore,
         status: app.status,
         appliedDate: app.createdAt.toISOString(),

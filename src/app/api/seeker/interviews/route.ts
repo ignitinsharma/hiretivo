@@ -67,8 +67,8 @@ export async function GET() {
     status: interview.status,
     scheduledTimeZone: interview.scheduledTimeZone,
     viewerTimezone: seekerUser?.timezone ?? INDIA_TIMEZONE,
-    jobTitle: interview.application.job.title,
-    companyName: interview.application.job.isAdminPosted
+    jobTitle: interview.application.job?.title ?? 'External job',
+    companyName: interview.application.job?.isAdminPosted
       ? (interview.application.job.companyName ?? interview.recruiter.name ?? 'Unknown')
       : (interview.recruiter.recruiterProfile?.companyName ?? interview.recruiter.name ?? 'Unknown'),
     interviewerName: interview.recruiter.name ?? 'Recruiter',
