@@ -161,3 +161,46 @@ export async function getSeekerCreditStatus(
   const limit = MONTHLY_CREDITS[plan];
   return { remaining: Math.max(0, limit - used), limit };
 }
+
+/*
+ * One wizard run (resume optimize + cover letter) spends exactly ONE credit.
+ * A client-supplied `reuseReservation: boolean` cannot be trusted to prove
+ * that — a caller could always send true and get free cover letters, or
+ * reserve twice by sending false. optimize-resume mints a short-TTL,
+ * single-use handle on successful reservation; cover-letter must present
+ * and atomically consume it (GETDEL) to skip its own reservation.
+ */
+const APPLY_RESERVATION_TTL_SECONDS = 10 * 60; // bounds the reuse window to one wizard run
+
+function applyReservationKey(userId: string, handle: string): string {
+  return `hiretivo:apply-reservation:${userId}:${handle}`;
+}
+
+/*
+ * mintApplyReservationHandle
+ * Issues a single-use handle proving optimize-resume already reserved this
+ * wizard run's credit, so cover-letter can skip reserving a second one.
+ * @param userId - seeker user id that owns the reservation
+ * @returns opaque handle string, valid for APPLY_RESERVATION_TTL_SECONDS
+ */
+export async function mintApplyReservationHandle(userId: string): Promise<string> {
+  const handle = crypto.randomUUID();
+  await redis.set(applyReservationKey(userId, handle), "1", { ex: APPLY_RESERVATION_TTL_SECONDS });
+  return handle;
+}
+
+/*
+ * consumeApplyReservationHandle
+ * Atomically checks and deletes a reservation handle (GETDEL) — a handle can
+ * be redeemed exactly once. Returns false for a missing/expired/already-used
+ * handle, or one minted for a different user, in which case the caller must
+ * fall back to reserving its own credit.
+ * @param userId - seeker user id attempting to reuse the reservation
+ * @param handle - handle returned by mintApplyReservationHandle
+ * @returns true if the handle was valid and has now been consumed
+ */
+export async function consumeApplyReservationHandle(userId: string, handle: string): Promise<boolean> {
+  if (!handle) return false;
+  const value = await redis.getdel(applyReservationKey(userId, handle));
+  return value !== null;
+}
