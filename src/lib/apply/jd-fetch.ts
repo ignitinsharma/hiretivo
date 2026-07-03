@@ -1,0 +1,221 @@
+import { AiMessageRole, AtsSource } from "@/constants/enums";
+import { detectAtsFromUrl } from "@/lib/ats/registry";
+import { fetchGreenhouseJobs } from "@/lib/ats/normalizers/greenhouse.normalizer";
+import { fetchLeverJobs } from "@/lib/ats/normalizers/lever.normalizer";
+import { fetchAshbyJobs } from "@/lib/ats/normalizers/ashby.normalizer";
+import { extractSkillsFromText } from "@/lib/ats/skill-extractor";
+import { stripHtml } from "@/lib/utils";
+import { openrouter, getAIModel } from "@/lib/openrouter";
+import { buildJdExtractMessages, JD_EXTRACT_CONFIG } from "@/lib/ai-prompts";
+import { JdExtractOutputSchema } from "@/lib/validations/apply-from-link.schema";
+
+const LOGIN_WALL_HOSTS = ["linkedin.com", "indeed.com", "glassdoor.com"];
+
+/* Which path produced the ParsedJd (or why parsing could not complete). */
+export enum JdParseStrategy {
+  ATS = "ATS",
+  GENERIC_HTML = "GENERIC_HTML",
+  AI = "AI",
+  MANUAL_PASTE = "MANUAL_PASTE",
+}
+
+/* Normalised JD ready to persist as a PASTED_LINK Application and feed the wizard. */
+export interface ParsedJd {
+  title: string;
+  company: string | null;
+  description: string;
+  skills: string[];
+  strategy: JdParseStrategy;
+  atsSource: AtsSource | null;
+}
+
+/* Discriminated result: either a usable JD, or a signal that the UI must ask for manual paste. */
+export type JdFetchResult =
+  | { ok: true; jd: ParsedJd }
+  | { ok: false; needsManualPaste: true; reason: string };
+
+/*
+ * aiExtractJd
+ * Runs buildJdExtractMessages over raw text and validates the model's JSON
+ * output. Returns null (never throws) on any parse/schema failure so callers
+ * can fall back to a manual-paste signal.
+ */
+async function aiExtractJd(
+  rawText: string,
+  sourceUrl: string | null,
+): Promise<{ title: string; company: string | null; description: string; skills: string[] } | null> {
+  try {
+    const { system, user } = buildJdExtractMessages({ rawText, sourceUrl });
+    const completion = await openrouter.chat.completions.create({
+      model: getAIModel(),
+      ...JD_EXTRACT_CONFIG,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: AiMessageRole.SYSTEM, content: system },
+        { role: AiMessageRole.USER, content: user },
+      ],
+    });
+    const raw = completion.choices[0]?.message?.content?.trim() ?? "{}";
+    const cleaned = raw.replace(/^```[\w]*\n?/, "").replace(/\n?```$/, "").trim();
+    const parsed = JdExtractOutputSchema.safeParse(JSON.parse(cleaned) as unknown);
+    if (!parsed.success || !parsed.data.description) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+/*
+ * fetchViaAts
+ * Fetches the matched ATS board and selects the posting matching postingId
+ * (falls back to the first posting when the URL had no parseable id).
+ * @returns ParsedJd on success, null to fall through to the generic path.
+ */
+async function fetchViaAts(
+  match: NonNullable<ReturnType<typeof detectAtsFromUrl>>,
+  skills: Array<{ id: string; name: string }>,
+): Promise<ParsedJd | null> {
+  const companyName = match.company?.name ?? match.boardToken;
+  const companyWebsite = match.company?.website ?? "";
+  const companyLogoUrl = match.company?.logoUrl ?? null;
+
+  try {
+    let jobs;
+    if (match.ats === AtsSource.GREENHOUSE) {
+      jobs = await fetchGreenhouseJobs(match.boardToken, companyName, companyWebsite, companyLogoUrl, skills);
+    } else if (match.ats === AtsSource.LEVER) {
+      jobs = await fetchLeverJobs(match.boardToken, companyName, companyWebsite, companyLogoUrl, skills);
+    } else {
+      jobs = await fetchAshbyJobs(match.boardToken, companyName, companyWebsite, companyLogoUrl, skills);
+    }
+
+    const posting = match.postingId
+      ? (jobs.find((j) => j.atsSourceId === match.postingId) ?? jobs[0])
+      : jobs[0];
+    if (!posting) return null;
+
+    return {
+      title: posting.title,
+      company: companyName,
+      description: posting.description,
+      skills: posting.skillMatches,
+      strategy: JdParseStrategy.ATS,
+      atsSource: match.ats,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/*
+ * fetchJdFromLink
+ * Turns a pasted job URL (or pasted JD text) into a ParsedJd, or signals that manual paste is required.
+ * @param url        - the job-posting URL the seeker pasted (used for ATS detection + provenance)
+ * @param pastedText - optional raw JD text; when present, fetch is skipped and this is AI-structured (MANUAL_PASTE)
+ * @param skills     - the Skill catalogue rows for skill matching (id + name), loaded once by the caller
+ * @returns JdFetchResult — ok:true with a ParsedJd, or ok:false needsManualPaste for the UI to re-prompt
+ */
+export async function fetchJdFromLink(
+  url: string,
+  pastedText: string | null,
+  skills: Array<{ id: string; name: string }>,
+): Promise<JdFetchResult> {
+  try {
+    // Manual-paste short-circuit: seeker already gave us the JD text.
+    if (pastedText) {
+      const extracted = await aiExtractJd(pastedText, url);
+      if (!extracted) {
+        return { ok: false, needsManualPaste: true, reason: "Could not read the pasted job description." };
+      }
+      const heuristicSkills = extractSkillsFromText(`${extracted.title} ${extracted.description}`, skills);
+      const mergedSkills = [...new Set([...extracted.skills, ...heuristicSkills])];
+      return {
+        ok: true,
+        jd: {
+          title: extracted.title,
+          company: extracted.company,
+          description: extracted.description,
+          skills: mergedSkills,
+          strategy: JdParseStrategy.MANUAL_PASTE,
+          atsSource: null,
+        },
+      };
+    }
+
+    // ATS path: reuse the existing normalizer fetchers, no re-implementation.
+    const match = detectAtsFromUrl(url);
+    if (match) {
+      const viaAts = await fetchViaAts(match, skills);
+      if (viaAts) return { ok: true, jd: viaAts };
+      // Board fetch failed or posting not found — fall through to generic.
+    }
+
+    // Generic HTML path.
+    let host: string;
+    try {
+      host = new URL(url).hostname.toLowerCase();
+    } catch {
+      return { ok: false, needsManualPaste: true, reason: "That doesn't look like a valid URL." };
+    }
+    if (LOGIN_WALL_HOSTS.some((blocked) => host.endsWith(blocked))) {
+      return {
+        ok: false,
+        needsManualPaste: true,
+        reason: "This site blocks automated reading — paste the job description instead.",
+      };
+    }
+
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Hiretivo/1.0 (+https://hiretivo.com)" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8000),
+    });
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!res.ok || !contentType.includes("text/html")) {
+      return {
+        ok: false,
+        needsManualPaste: true,
+        reason: "This site blocks automated reading — paste the job description instead.",
+      };
+    }
+
+    const body = await res.text();
+    const stripped = stripHtml(body);
+    if (stripped.length < 200) {
+      return {
+        ok: false,
+        needsManualPaste: true,
+        reason: "We could not read that page. Paste the job description to continue.",
+      };
+    }
+
+    const heuristicSkills = extractSkillsFromText(stripped, skills);
+    const extracted = await aiExtractJd(stripped, url);
+    if (!extracted) {
+      return {
+        ok: false,
+        needsManualPaste: true,
+        reason: "We could not read that link. Paste the job description to continue.",
+      };
+    }
+
+    const mergedSkills = [...new Set([...extracted.skills, ...heuristicSkills])];
+    return {
+      ok: true,
+      jd: {
+        title: extracted.title,
+        company: extracted.company,
+        description: extracted.description,
+        skills: mergedSkills,
+        strategy: JdParseStrategy.AI,
+        atsSource: null,
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      needsManualPaste: true,
+      reason: "We could not read that link. Paste the job description to continue.",
+    };
+  }
+}
