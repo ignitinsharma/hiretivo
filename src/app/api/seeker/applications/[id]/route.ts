@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
+import { getSignedFileUrl } from "@/lib/r2";
 import { dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
 import { stripHtml } from "@/lib/utils";
 import { patchApplicationSchema } from "@/lib/validations/application.schema";
@@ -51,6 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           description: true,
           isAdminPosted: true,
           companyName: true,
+          externalApplyUrl: true,
           recruiter: { select: { recruiterProfile: { select: { companyName: true } } } },
           skills: { select: { skill: { select: { name: true } } } },
         },
@@ -69,6 +71,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ? (application.job.companyName ?? "Unknown Company")
     : (application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company");
 
+  const tailoredResumeUrl = application.tailoredResumeKey
+    ? await getSignedFileUrl(application.tailoredResumeKey).catch(() => null)
+    : null;
+
   const detail: ApplicationDetail = {
     id: application.id,
     jobId: application.jobId,
@@ -84,7 +90,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     requiredSkills: application.job.skills.map((s) => s.skill.name),
     preferredSkills: [],
     externalJobUrl: application.externalJobUrl,
+    applyUrl: application.externalJobUrl ?? application.job.externalApplyUrl,
     tailoredResumeKey: application.tailoredResumeKey,
+    tailoredResumeUrl,
     coverLetter: application.coverLetter,
     submittedFormData: application.submittedFormData as ApplicationDetail["submittedFormData"],
     keywordStats: application.keywordStats as ApplicationDetail["keywordStats"],

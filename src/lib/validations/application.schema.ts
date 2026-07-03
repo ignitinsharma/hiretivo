@@ -38,5 +38,73 @@ export const patchApplicationSchema = z
   })
   .partial();
 
+/* Mirrors ResumeDocument (resume-document.types.ts) — the edited document
+ * the wizard renders to PDF at finalize. No shared Zod schema existed yet
+ * (parseResumeDocument in ai-prompts.ts validates raw model strings, not a
+ * typed request body) — this is the finalize route's own contract. */
+const ResumeDocumentSchema = z.object({
+  fullName: z.string().min(1).max(120),
+  headline: z.string().max(160).optional(),
+  contact: z.object({
+    email: z.string().email().max(200).optional(),
+    location: z.string().max(160).optional(),
+    websiteUrl: z.string().url().max(300).optional(),
+    linkedinUrl: z.string().url().max(300).optional(),
+    githubUrl: z.string().url().max(300).optional(),
+  }),
+  summary: z.string().max(2000).optional(),
+  skillGroups: z
+    .array(z.object({ category: z.string().min(1).max(80), skills: z.array(z.string().max(60)).max(60) }))
+    .max(20),
+  experience: z
+    .array(
+      z.object({
+        company: z.string().max(160),
+        title: z.string().max(160),
+        startDate: z.string().max(20),
+        endDate: z.string().max(20).nullable(),
+        isCurrent: z.boolean(),
+        bullets: z.array(z.string().max(500)).max(20),
+      }),
+    )
+    .max(30),
+  education: z
+    .array(
+      z.object({
+        institution: z.string().max(200),
+        degree: z.string().max(160).optional(),
+        major: z.string().max(160).optional(),
+        graduationDate: z.string().max(20).optional(),
+      }),
+    )
+    .max(15),
+  certifications: z
+    .array(
+      z.object({
+        name: z.string().max(160),
+        issuer: z.string().max(160).optional(),
+        issueDate: z.string().max(20).optional(),
+      }),
+    )
+    .max(20),
+  projects: z
+    .array(
+      z.object({
+        title: z.string().max(160),
+        url: z.string().url().max(300).optional(),
+        description: z.string().max(1000).optional(),
+      }),
+    )
+    .max(20),
+});
+
+/* POST /api/seeker/applications/[id]/finalize */
+export const finalizeApplicationSchema = z.object({
+  resume: ResumeDocumentSchema,
+  coverLetter: z.string().trim().max(10_000),
+  submittedFormData: z.array(SubmittedFormFieldSchema).max(60),
+});
+
 export type CreateApplicationWizardInput = z.infer<typeof createApplicationWizardSchema>;
 export type PatchApplicationInput = z.infer<typeof patchApplicationSchema>;
+export type FinalizeApplicationInput = z.infer<typeof finalizeApplicationSchema>;

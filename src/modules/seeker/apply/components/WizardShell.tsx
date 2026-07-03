@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { WizardStep } from "@/constants/enums";
@@ -8,8 +9,11 @@ import { seekerService } from "@/services/seeker.service";
 import { ApplyStepper } from "@/modules/seeker/apply/components/ApplyStepper";
 import { StepOptimize } from "@/modules/seeker/apply/components/StepOptimize";
 import { StepCover } from "@/modules/seeker/apply/components/StepCover";
+import { StepSubmit } from "@/modules/seeker/apply/components/StepSubmit";
+import { StepDone } from "@/modules/seeker/apply/components/StepDone";
 import { useApplication } from "@/modules/seeker/apply/hooks/use-application";
 import { useApplyWizard } from "@/modules/seeker/apply/hooks/use-apply-wizard";
+import type { SubmittedFormField } from "@/modules/seeker/apply/types/apply.types";
 
 interface WizardShellProps {
   applicationId: string;
@@ -25,6 +29,20 @@ interface WizardShellProps {
 export function WizardShell({ applicationId }: WizardShellProps) {
   const { data, isLoading, isError, refetch } = useApplication(applicationId);
   const { state, goToStep, setResume, setCoverLetter, setReservationHandle } = useApplyWizard();
+  const [tailoredResumeUrl, setTailoredResumeUrl] = useState<string | null>(null);
+  const [submittedFormData, setSubmittedFormData] = useState<SubmittedFormField[] | null>(null);
+
+  // Re-opening an already-finalized application jumps straight to Done
+  // instead of restarting the wizard at Optimize.
+  useEffect(() => {
+    if (data?.tailoredResumeKey && state.step === WizardStep.OPTIMIZE) {
+      setTailoredResumeUrl(data.tailoredResumeUrl);
+      setSubmittedFormData(data.submittedFormData);
+      setCoverLetter(data.coverLetter ?? "");
+      goToStep(WizardStep.DONE);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.tailoredResumeKey]);
 
   if (isLoading) {
     return <PageSkeleton lines={6} />;
@@ -88,29 +106,26 @@ export function WizardShell({ applicationId }: WizardShellProps) {
             onNext={() => goToStep(WizardStep.SUBMIT)}
           />
         )}
-        {state.step === WizardStep.SUBMIT && (
-          <StepPlaceholder label="Submit" onNext={() => goToStep(WizardStep.DONE)} />
+        {state.step === WizardStep.SUBMIT && state.resume && (
+          <StepSubmit
+            application={data}
+            resume={state.resume}
+            coverLetter={state.coverLetter}
+            onFinalized={(url, rows) => {
+              setTailoredResumeUrl(url);
+              setSubmittedFormData(rows);
+              goToStep(WizardStep.DONE);
+            }}
+          />
         )}
-        {state.step === WizardStep.DONE && <StepPlaceholder label="Done" />}
+        {state.step === WizardStep.DONE && (
+          <StepDone
+            application={{ ...data, submittedFormData }}
+            tailoredResumeUrl={tailoredResumeUrl}
+            coverLetter={state.coverLetter}
+          />
+        )}
       </div>
-    </div>
-  );
-}
-
-/*
- * StepPlaceholder
- * Temporary panel body — replaced by StepOptimize/StepCover/StepSubmit/StepDone
- * as each is built out later in this phase.
- */
-function StepPlaceholder({ label, onNext }: { label: string; onNext?: () => void }) {
-  return (
-    <div className="flex flex-col items-start gap-4">
-      <p className="text-sm text-brand-foreground-muted">{label} step — coming next.</p>
-      {onNext && (
-        <Button variant="primary" size="sm" onClick={onNext}>
-          Continue
-        </Button>
-      )}
     </div>
   );
 }

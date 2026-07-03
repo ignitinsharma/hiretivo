@@ -20,7 +20,12 @@ export interface ApplicationDetail {
   requiredSkills: string[];
   preferredSkills: string[];
   externalJobUrl: string | null;
+  /** Resolved ATS apply link to open in Submit — Job.externalApplyUrl for
+   * FEED applications, or externalJobUrl itself for PASTED_LINK (Phase 7). */
+  applyUrl: string | null;
   tailoredResumeKey: string | null;
+  /** Signed download URL for tailoredResumeKey, resolved server-side; null until finalize. */
+  tailoredResumeUrl: string | null;
   coverLetter: string | null;
   submittedFormData: SubmittedFormField[] | null;
   keywordStats: KeywordStats | null;
