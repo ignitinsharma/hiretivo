@@ -229,12 +229,19 @@ export enum VerdictLabel {
   STRETCH_HIRE = "Stretch hire",
 }
 
-/* AI features subject to the free-plan daily usage quota. */
+/*
+ * AI features. JD/SKILLS/SUMMARY/PARSE_RESUME are recruiter/onboarding features
+ * on the free-plan DAILY quota (see RECRUITER_AI_FEATURES in ai-daily-limit.ts).
+ * RESUME_OPTIMIZE/COVER_LETTER are seeker apply-wizard features on the seeker
+ * MONTHLY credit limiter (see reserveSeekerCredit) — never the daily quota.
+ */
 export enum AiFeature {
   JD = "jd",
   SKILLS = "skills",
   SUMMARY = "summary",
   PARSE_RESUME = "parse_resume",
+  RESUME_OPTIMIZE = "resume_optimize",
+  COVER_LETTER = "cover_letter",
 }
 
 export enum ContactRequestType {
