@@ -1,0 +1,140 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { UserRole } from "@/constants/enums";
+import { prisma } from "@/lib/prisma";
+import { dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
+import { stripHtml } from "@/lib/utils";
+import { patchApplicationSchema } from "@/lib/validations/application.schema";
+import type { ApplicationDetail } from "@/modules/seeker/apply/types/apply.types";
+
+/*
+ * GET /api/seeker/applications/[id]
+ * Fetches one Application for the apply wizard — job/JD context plus any
+ * artifacts already saved on a resumed or completed run. Ownership-scoped:
+ * returns 404 (not 403) for another seeker's application, or a jobless
+ * PASTED_LINK row (Phase 7) missing the fields this route requires.
+ * Response: {data: ApplicationDetail}.
+ */
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.role !== UserRole.SEEKER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await dataFetchRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const { id } = await params;
+  const application = await prisma.application.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      jobId: true,
+      seekerId: true,
+      source: true,
+      status: true,
+      matchScore: true,
+      externalJobUrl: true,
+      tailoredResumeKey: true,
+      coverLetter: true,
+      submittedFormData: true,
+      keywordStats: true,
+      createdAt: true,
+      job: {
+        select: {
+          title: true,
+          description: true,
+          isAdminPosted: true,
+          companyName: true,
+          recruiter: { select: { recruiterProfile: { select: { companyName: true } } } },
+          skills: { select: { skill: { select: { name: true } } } },
+        },
+      },
+    },
+  });
+
+  if (!application || application.seekerId !== session.user.id) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (!application.job) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const companyName = application.job.isAdminPosted
+    ? (application.job.companyName ?? "Unknown Company")
+    : (application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company");
+
+  const detail: ApplicationDetail = {
+    id: application.id,
+    jobId: application.jobId,
+    // Prisma's generated enums and this app's src/constants/enums.ts mirrors
+    // share string values but are distinct nominal types (same convention as
+    // the apply-ai routes' `plan as unknown as PlanTier` boundary cast).
+    source: application.source as unknown as ApplicationDetail["source"],
+    status: application.status as unknown as ApplicationDetail["status"],
+    matchScore: application.matchScore,
+    jobTitle: application.job.title,
+    companyName,
+    jdText: stripHtml(application.job.description),
+    requiredSkills: application.job.skills.map((s) => s.skill.name),
+    preferredSkills: [],
+    externalJobUrl: application.externalJobUrl,
+    tailoredResumeKey: application.tailoredResumeKey,
+    coverLetter: application.coverLetter,
+    submittedFormData: application.submittedFormData as ApplicationDetail["submittedFormData"],
+    keywordStats: application.keywordStats as ApplicationDetail["keywordStats"],
+    createdAt: application.createdAt.toISOString(),
+  };
+
+  return NextResponse.json({ data: detail }, { status: 200 });
+}
+
+/*
+ * PATCH /api/seeker/applications/[id]
+ * Whitelisted partial artifact save as the wizard advances (draft resume
+ * key, cover letter text, submitted-form snapshot, keyword stats). `status`
+ * here only ever confirms the row's existing APPLIED default — the tracker
+ * (Phase 6) owns every later transition.
+ * Request body: patchApplicationSchema. Response: {data:{id}}.
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.role !== UserRole.SEEKER) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { success } = await writeRateLimiter.limit(session.user.id);
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const { id } = await params;
+  const existing = await prisma.application.findUnique({
+    where: { id },
+    select: { seekerId: true },
+  });
+  if (!existing || existing.seekerId !== session.user.id) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = patchApplicationSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  await prisma.application.update({
+    where: { id },
+    data: parsed.data,
+  });
+
+  return NextResponse.json({ data: { id } }, { status: 200 });
+}
