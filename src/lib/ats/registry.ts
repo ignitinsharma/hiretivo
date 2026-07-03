@@ -59,6 +59,53 @@ export function getCompaniesBySource(source: AtsSource): AtsCompany[] {
   return COMPANY_REGISTRY.filter((c) => c.ats === source);
 }
 
+/* Result of matching a pasted URL against a known ATS board. */
+export interface AtsUrlMatch {
+  ats: AtsSource;
+  boardToken: string;
+  postingId: string | null;
+  company: AtsCompany | null;
+}
+
+/*
+ * detectAtsFromUrl
+ * Maps a public job-posting URL to a known ATS (greenhouse/lever/ashby) + board token + posting id.
+ * @param rawUrl - the URL the seeker pasted
+ * @returns AtsUrlMatch when the host is a recognised ATS domain, else null
+ */
+export function detectAtsFromUrl(rawUrl: string): AtsUrlMatch | null {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase();
+  const segments = url.pathname.split('/').filter(Boolean);
+
+  let ats: AtsSource | null = null;
+  if (host.endsWith('greenhouse.io')) ats = AtsSource.GREENHOUSE;
+  else if (host.endsWith('lever.co')) ats = AtsSource.LEVER;
+  else if (host.endsWith('ashbyhq.com')) ats = AtsSource.ASHBY;
+  if (!ats) return null;
+
+  const boardToken = segments[0] ?? null;
+  if (!boardToken) return null;
+
+  let postingId: string | null = null;
+  if (ats === AtsSource.GREENHOUSE) {
+    const jobsIdx = segments.indexOf('jobs');
+    postingId = jobsIdx !== -1 ? (segments[jobsIdx + 1] ?? null) : null;
+  } else {
+    // Lever + Ashby: /<boardToken>/<postingId>
+    postingId = segments[1] ?? null;
+  }
+
+  const company = COMPANY_REGISTRY.find((c) => c.ats === ats && c.boardToken === boardToken) ?? null;
+
+  return { ats, boardToken, postingId, company };
+}
+
 /* Check for duplicate company names across registry — dev only */
 if (process.env.NODE_ENV !== 'production') {
   const allNames = COMPANY_REGISTRY.map((c) => c.name.toLowerCase());
