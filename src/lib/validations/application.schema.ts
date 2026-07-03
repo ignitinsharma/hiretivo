@@ -13,10 +13,12 @@ const SubmittedFormFieldSchema = z.object({
   value: z.string().max(2000),
 });
 
-/* Mirrors ApplyKeywordStats (apply.types.ts). */
+/* Mirrors KeywordStats (lib/apply/keyword-match.ts) — required/preferred
+ * match COUNTS, not name lists (matchedSkills name lists exist only inside
+ * KeywordMatchResult, not persisted). */
 const KeywordStatsSchema = z.object({
-  requiredMatched: z.array(z.string().max(60)).max(60),
-  preferredMatched: z.array(z.string().max(60)).max(60),
+  requiredMatched: z.number().int().min(0),
+  preferredMatched: z.number().int().min(0),
   total: z.number().int().min(0),
 });
 

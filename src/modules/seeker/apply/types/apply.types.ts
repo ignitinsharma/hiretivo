@@ -1,5 +1,6 @@
 import type { ApplicationStatus, ApplySource } from "@/constants/enums";
 import type { ResumeDocument } from "@/modules/seeker/profile/types/resume-document.types";
+import type { KeywordStats } from "@/lib/apply/keyword-match";
 
 /*
  * ApplicationDetail
@@ -22,20 +23,18 @@ export interface ApplicationDetail {
   tailoredResumeKey: string | null;
   coverLetter: string | null;
   submittedFormData: SubmittedFormField[] | null;
-  keywordStats: ApplyKeywordStats | null;
+  keywordStats: KeywordStats | null;
   createdAt: string;
 }
 
 /*
  * ApplyKeywordStats
- * Required/preferred JD-skill match counts shown during the optimize step
- * and persisted on the Application at finalize.
+ * Re-export of lib/apply/keyword-match's KeywordStats (Phase 4) — the
+ * required/preferred JD-skill match counts shown during the optimize step
+ * and persisted on the Application at finalize. Kept as a named re-export
+ * so apply-module consumers import from apply.types.ts, not lib/apply/*.
  */
-export interface ApplyKeywordStats {
-  requiredMatched: string[];
-  preferredMatched: string[];
-  total: number;
-}
+export type ApplyKeywordStats = KeywordStats;
 
 /*
  * SubmittedFormField
