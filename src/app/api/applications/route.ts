@@ -177,7 +177,9 @@ export async function GET() {
   }
 
   const applications = await prisma.application.findMany({
-    where: { seekerId: session.user.id },
+    // Pasted-link applications (Phase 7) have no Job row — this feed-jobs list
+    // excludes them until Phase 7 ships its own list-item rendering.
+    where: { seekerId: session.user.id, jobId: { not: null } },
     select: {
       id: true,
       jobId: true,
@@ -234,8 +236,13 @@ export async function GET() {
   });
   const seekerSkillIds = seekerProfile?.skills.map((s) => s.skillId) ?? [];
 
+  const applicationsWithJob = applications.filter(
+    (application): application is typeof application & { job: NonNullable<typeof application.job> } =>
+      application.job !== null,
+  );
+
   return NextResponse.json(
-    applications.map((application) => ({
+    applicationsWithJob.map((application) => ({
       id: application.id,
       jobId: application.jobId,
       jobTitle: application.job.title,

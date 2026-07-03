@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!application) {
+  if (!application || !application.job) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 

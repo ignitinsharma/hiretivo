@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   sendInterviewCancelledEmail({
     seekerEmail: existing.application.seeker.email ?? "",
     seekerName: existing.application.seeker.name ?? "Candidate",
-    jobTitle: existing.application.job.title,
+    jobTitle: existing.application.job?.title ?? "External job",
   }).catch((err: unknown) => {
     console.error("Failed to send interview cancelled email:", err);
   });
