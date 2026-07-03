@@ -4,6 +4,16 @@
  * Routes import from here — never inline prompts in route handlers.
  */
 
+import { OptimizeMode } from "@/constants/enums";
+import type {
+  ResumeContact,
+  ResumeDocument,
+  ResumeEducation,
+  ResumeExperience,
+  ResumeProject,
+  ResumeSkillGroup,
+} from "@/modules/seeker/profile/types/resume-document.types";
+
 // ---------------------------------------------------------------------------
 // Candidate Summary (INT-01)
 // ---------------------------------------------------------------------------
@@ -356,3 +366,330 @@ export const RESUME_PARSE_CONFIG = {
   max_tokens: 2000,
   temperature: 0,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Resume Optimize + Cover Letter (Pivot Phase 4 — apply-faster wizard)
+// ---------------------------------------------------------------------------
+
+/*
+ * SeekerProfileForAi
+ * The seeker-side context fed to both prompts. Reuses the Phase 3b resume
+ * building blocks (ResumeContact/ResumeSkillGroup/ResumeProject) instead of
+ * redefining shapes — this IS the seeker's real, non-fabricatable data.
+ */
+export interface SeekerProfileForAi {
+  fullName: string;
+  headline: string | null;
+  primaryRole: string | null;
+  yearsExperience: number | null;
+  bio: string | null;
+  location: string | null;
+  contact: ResumeContact;
+  skillGroups: ResumeSkillGroup[];
+  workExperiences: Array<{
+    company: string;
+    title: string;
+    startDate: string; // "MM/YYYY"
+    endDate: string | null; // null = current
+    description: string | null;
+  }>;
+  educations: Array<{
+    institution: string;
+    degree: string | null;
+    major: string | null;
+    graduationDate: string | null;
+  }>;
+  certifications: Array<{ name: string; issuer?: string; issueDate?: string }>;
+  projects: ResumeProject[];
+}
+
+export interface JobForAi {
+  title: string;
+  company: string;
+  descriptionText: string; // JD plain text
+  requiredSkills: string[];
+  preferredSkills: string[];
+}
+
+export interface ResumeOptimizeInput {
+  profile: SeekerProfileForAi;
+  job: JobForAi;
+  matchedSkills: string[]; // from computeKeywordStats — weight these
+  missingSkills: string[]; // from computeKeywordStats — DO NOT fabricate; may surface as gaps
+  tone: OptimizeMode;
+}
+
+export interface CoverLetterInput {
+  profile: SeekerProfileForAi;
+  job: JobForAi;
+  matchedSkills: string[];
+  tone: OptimizeMode;
+}
+
+const HONESTY_GUARDRAIL = `HONESTY INVARIANT (never break this, no exceptions):
+- NEVER invent employers, job titles, dates, degrees, institutions, or skills that are not present in the candidate data below.
+- You MAY reorder, re-emphasize, rephrase, and quantify REAL experience to better match the job. You may NOT fabricate metrics, outcomes, or responsibilities not implied by the real description.
+- Missing skills listed below are gaps — you may acknowledge transferable/adjacent real experience, but never claim the candidate has a skill absent from their profile.
+- "Tailor, never fabricate" is the product's core promise to the candidate and their future employer.`;
+
+function formatProfileForPrompt(profile: SeekerProfileForAi): string {
+  const skillsText = profile.skillGroups
+    .map((g) => `${g.category}: ${g.skills.join(", ")}`)
+    .join("\n");
+  const experienceText = profile.workExperiences
+    .map(
+      (e) =>
+        `- ${e.title} at ${e.company} (${e.startDate} – ${e.endDate ?? "Present"}): ${e.description ?? "No description provided"}`,
+    )
+    .join("\n");
+  const educationText = profile.educations
+    .map((e) => `- ${e.degree ?? "Degree"} ${e.major ? `in ${e.major}` : ""} — ${e.institution} (${e.graduationDate ?? "n/a"})`)
+    .join("\n");
+  const certificationsText = profile.certifications
+    .map((c) => `- ${c.name}${c.issuer ? ` (${c.issuer})` : ""}${c.issueDate ? `, ${c.issueDate}` : ""}`)
+    .join("\n");
+  const projectsText = profile.projects
+    .map((p) => `- ${p.title}${p.description ? `: ${p.description}` : ""}`)
+    .join("\n");
+
+  return `Full name: ${profile.fullName}
+Headline: ${profile.headline ?? "Not provided"}
+Primary role: ${profile.primaryRole ?? "Not provided"}
+Years of experience: ${profile.yearsExperience ?? "Not provided"}
+Location: ${profile.location ?? "Not provided"}
+Bio: ${profile.bio ?? "Not provided"}
+
+SKILLS (real, do not add to this list):
+${skillsText || "None listed"}
+
+WORK EXPERIENCE (real — tailor phrasing only, never invent entries):
+${experienceText || "None listed"}
+
+EDUCATION (real):
+${educationText || "None listed"}
+
+CERTIFICATIONS (real):
+${certificationsText || "None listed"}
+
+PROJECTS (real):
+${projectsText || "None listed"}`;
+}
+
+function formatJobForPrompt(job: JobForAi): string {
+  return `Job title: ${job.title}
+Company: ${job.company}
+Required skills: ${job.requiredSkills.join(", ") || "Not specified"}
+Preferred skills: ${job.preferredSkills.join(", ") || "Not specified"}
+
+Job description:
+${job.descriptionText.slice(0, 6000)}`;
+}
+
+/*
+ * buildResumeOptimizeMessages
+ * Constructs the system + user message pair for JD-tailored resume
+ * generation. Model must return ONLY a JSON object matching ResumeDocument
+ * (Phase 3b's contract — reordered/reworded from real data, never fabricated).
+ * @param input - seeker profile, job, matched/missing skills, tone
+ * @returns { system, user } message objects for the chat completions API
+ */
+export function buildResumeOptimizeMessages(input: ResumeOptimizeInput): {
+  system: string;
+  user: string;
+} {
+  const { profile, job, matchedSkills, missingSkills, tone } = input;
+  const toneInstruction =
+    tone === OptimizeMode.AGGRESSIVE
+      ? "AGGRESSIVE tone: use strong action verbs and confident, achievement-forward framing — still 100% truthful, never overstated beyond what the real description supports."
+      : "HONEST tone: plain, factual, understated phrasing — state accomplishments directly without embellishment.";
+
+  return {
+    system: `You are an expert resume writer tailoring a candidate's REAL resume to a specific job description.
+
+${HONESTY_GUARDRAIL}
+
+OUTPUT FORMAT — return ONLY a valid JSON object (no markdown, no code fences, no prose outside the JSON) with EXACTLY these keys, matching this shape:
+{
+  "fullName": string,
+  "headline": string,
+  "contact": { "email"?: string, "location"?: string, "websiteUrl"?: string, "linkedinUrl"?: string, "githubUrl"?: string },
+  "summary": string,
+  "skillGroups": [{ "category": string, "skills": string[] }],
+  "experience": [{ "company": string, "title": string, "startDate": string, "endDate": string | null, "isCurrent": boolean, "bullets": string[] }],
+  "education": [{ "institution": string, "degree"?: string, "major"?: string, "graduationDate"?: string }],
+  "certifications": [{ "name": string, "issuer"?: string, "issueDate"?: string }],
+  "projects": [{ "title": string, "url"?: string, "description"?: string }]
+}
+
+WORKED EXAMPLE (structure only — never copy this content; always use the real candidate + job data):
+{
+  "fullName": "Jordan Lee",
+  "headline": "Senior Backend Engineer",
+  "contact": { "email": "jordan@example.com", "location": "Remote" },
+  "summary": "Backend engineer with 6 years building scalable payment systems, direct hands-on experience with the required Postgres and distributed-systems stack.",
+  "skillGroups": [{ "category": "Engineering", "skills": ["PostgreSQL", "Go", "Kubernetes"] }],
+  "experience": [{ "company": "Acme", "title": "Backend Engineer", "startDate": "01/2021", "endDate": null, "isCurrent": true, "bullets": ["Owned payments service handling 2M transactions/day on PostgreSQL", "Led migration to Kubernetes reducing deploy time 40%"] }],
+  "education": [{ "institution": "State University", "degree": "B.S. Computer Science" }],
+  "certifications": [],
+  "projects": []
+}
+
+TAILORING RULES:
+- Reorder each skillGroup's "skills" array so JD-matched skills (${matchedSkills.join(", ") || "none"}) appear first — never add or remove skills from what's listed in the candidate data.
+- Rewrite each experience's bullets from the REAL description, quantifying and emphasizing JD-relevant work. Never invent numbers/outcomes not implied by the real text.
+- "summary" is a 2-3 sentence professional summary tailored to this job, grounded in the real background.
+- ${toneInstruction}
+- Gaps for these skills exist and must NOT be claimed as candidate strengths: ${missingSkills.join(", ") || "none"}.
+- "contact", "education", "certifications", "projects" pass through unchanged from the candidate data except omitting empty optional fields.
+- Output the JSON object and NOTHING else.`,
+
+    user: `=== CANDIDATE (REAL DATA — do not deviate) ===
+${formatProfileForPrompt(profile)}
+
+=== TARGET JOB ===
+${formatJobForPrompt(job)}
+
+Generate the tailored resume as a single JSON object following the specified ResumeDocument structure.`,
+  };
+}
+
+/*
+ * buildCoverLetterMessages
+ * Constructs the system + user message pair for a JD-specific cover letter.
+ * Output is plain prose (no JSON, no markdown fences) — used directly.
+ * @param input - seeker profile, job, matched skills, tone
+ * @returns { system, user } message objects for the chat completions API
+ */
+export function buildCoverLetterMessages(input: CoverLetterInput): {
+  system: string;
+  user: string;
+} {
+  const { profile, job, matchedSkills, tone } = input;
+  const toneInstruction =
+    tone === OptimizeMode.AGGRESSIVE
+      ? "AGGRESSIVE tone: confident, achievement-forward, still fully truthful."
+      : "HONEST tone: warm, direct, understated — no overselling.";
+
+  return {
+    system: `You are writing a short, JD-specific cover letter on behalf of a job candidate.
+
+${HONESTY_GUARDRAIL}
+
+FORMAT:
+- 3-4 short paragraphs of plain prose. No markdown, no code fences, no bullet points, no headers.
+- Address the letter to "${job.company}" (no "Dear Hiring Manager" placeholder text beyond that).
+- Reference 2-3 of these matched skills, tied to specific REAL experience: ${matchedSkills.join(", ") || "the candidate's relevant background"}.
+- ${toneInstruction}
+- End with a brief, direct closing (no generic "I look forward to hearing from you" filler beyond one short sentence).
+- Output the letter text and NOTHING else — no subject line, no signature block beyond the candidate's name.`,
+
+    user: `=== CANDIDATE (REAL DATA — do not deviate) ===
+${formatProfileForPrompt(profile)}
+
+=== TARGET JOB ===
+${formatJobForPrompt(job)}
+
+Write the cover letter now.`,
+  };
+}
+
+export const RESUME_OPTIMIZE_CONFIG = { max_tokens: 2200, temperature: 0.3 } as const;
+export const COVER_LETTER_CONFIG = { max_tokens: 900, temperature: 0.5 } as const;
+
+/*
+ * parseResumeDocument
+ * Defensively parses model output into a Phase-3b-compatible ResumeDocument.
+ * Strips optional ```json fences, validates every required field/array shape
+ * (mirroring parseCandidateSummary), coerces optional fields, drops malformed
+ * array entries rather than failing the whole document.
+ * @param raw - raw model output (should be a JSON object, may have fences)
+ * @returns ResumeDocument when valid, else null
+ */
+export function parseResumeDocument(raw: string): ResumeDocument | null {
+  try {
+    const cleaned = raw
+      .trim()
+      .replace(/^```(?:json)?/i, "")
+      .replace(/```$/, "")
+      .trim();
+    const parsed = JSON.parse(cleaned) as Partial<ResumeDocument>;
+
+    if (typeof parsed.fullName !== "string" || !parsed.fullName.trim()) return null;
+    if (!Array.isArray(parsed.skillGroups)) return null;
+    if (!Array.isArray(parsed.experience)) return null;
+    if (!Array.isArray(parsed.education)) return null;
+    if (!Array.isArray(parsed.certifications)) return null;
+    if (!Array.isArray(parsed.projects)) return null;
+
+    const skillGroups: ResumeSkillGroup[] = parsed.skillGroups
+      .filter(
+        (g): g is ResumeSkillGroup =>
+          typeof g === "object" &&
+          g !== null &&
+          typeof (g as ResumeSkillGroup).category === "string" &&
+          Array.isArray((g as ResumeSkillGroup).skills),
+      )
+      .map((g) => ({
+        category: g.category,
+        skills: g.skills.filter((s): s is string => typeof s === "string"),
+      }));
+
+    const experience: ResumeExperience[] = parsed.experience
+      .filter(
+        (e): e is ResumeExperience =>
+          typeof e === "object" &&
+          e !== null &&
+          typeof (e as ResumeExperience).company === "string" &&
+          typeof (e as ResumeExperience).title === "string" &&
+          typeof (e as ResumeExperience).startDate === "string" &&
+          Array.isArray((e as ResumeExperience).bullets),
+      )
+      .map((e) => ({
+        company: e.company,
+        title: e.title,
+        startDate: e.startDate,
+        endDate: typeof e.endDate === "string" ? e.endDate : null,
+        isCurrent: Boolean(e.isCurrent),
+        bullets: e.bullets.filter((b): b is string => typeof b === "string"),
+      }));
+
+    const education: ResumeEducation[] = parsed.education
+      .filter(
+        (e): e is ResumeEducation =>
+          typeof e === "object" && e !== null && typeof (e as ResumeEducation).institution === "string",
+      )
+      .map((e) => ({
+        institution: e.institution,
+        degree: typeof e.degree === "string" ? e.degree : undefined,
+        major: typeof e.major === "string" ? e.major : undefined,
+        graduationDate: typeof e.graduationDate === "string" ? e.graduationDate : undefined,
+      }));
+
+    const certifications = parsed.certifications.filter(
+      (c): c is ResumeDocument["certifications"][number] =>
+        typeof c === "object" && c !== null && typeof (c as { name?: unknown }).name === "string",
+    );
+
+    const projects = parsed.projects.filter(
+      (p): p is ResumeDocument["projects"][number] =>
+        typeof p === "object" && p !== null && typeof (p as { title?: unknown }).title === "string",
+    );
+
+    const contact: ResumeContact =
+      typeof parsed.contact === "object" && parsed.contact !== null ? parsed.contact : {};
+
+    return {
+      fullName: parsed.fullName,
+      headline: typeof parsed.headline === "string" ? parsed.headline : undefined,
+      contact,
+      summary: typeof parsed.summary === "string" ? parsed.summary : undefined,
+      skillGroups,
+      experience,
+      education,
+      certifications,
+      projects,
+    };
+  } catch {
+    return null;
+  }
+}
