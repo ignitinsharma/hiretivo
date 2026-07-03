@@ -28,11 +28,13 @@ export function StepDone({ application, tailoredResumeUrl, coverLetter }: StepDo
       </div>
 
       <Tabs defaultValue="form">
-        <TabsList>
-          <TabsTrigger value="form">Submitted form</TabsTrigger>
-          <TabsTrigger value="resume">Resume</TabsTrigger>
-          <TabsTrigger value="cover">Cover letter</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList>
+            <TabsTrigger value="form">Submitted form</TabsTrigger>
+            <TabsTrigger value="resume">Resume</TabsTrigger>
+            <TabsTrigger value="cover">Cover letter</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="form" className="flex flex-col gap-2 pt-4">
           {(application.submittedFormData ?? []).map((row) => (
