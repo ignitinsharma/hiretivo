@@ -450,3 +450,15 @@ export const RESUME_SECTION_ORDER = [
   ResumeSectionHeading.CERTIFICATIONS,
   ResumeSectionHeading.PROJECTS,
 ] as const;
+
+/*
+ * WizardStep
+ * The apply-wizard's linear step sequence (Phase 5). Gates which
+ * ApplyStepper panel renders and what actions are available.
+ */
+export enum WizardStep {
+  OPTIMIZE = "optimize",
+  COVER = "cover",
+  SUBMIT = "submit",
+  DONE = "done",
+}

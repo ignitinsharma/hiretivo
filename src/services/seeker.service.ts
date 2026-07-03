@@ -11,6 +11,7 @@ import type {
   SeekerDashboardData,
   SeekerInterview,
 } from '@/modules/seeker/dashboard/types/dashboard.types';
+import type { ApplicationDetail, SubmittedFormField, ApplyKeywordStats } from '@/modules/seeker/apply/types/apply.types';
 
 interface DataResponse<T> {
   data: T;
@@ -157,5 +158,39 @@ export const seekerService = {
 
   updateOptimizeMode: async (optimizeMode: OptimizeMode): Promise<void> => {
     await apiClient.patch('/seeker/optimize-mode', { optimizeMode });
+  },
+
+  createApplication: async (jobId: string): Promise<DataResponse<{ id: string }>> => {
+    const { data } = await apiClient.post<DataResponse<{ id: string }>>('/seeker/applications', { jobId });
+    return data;
+  },
+
+  getApplication: async (id: string): Promise<DataResponse<ApplicationDetail>> => {
+    const { data } = await apiClient.get<DataResponse<ApplicationDetail>>(`/seeker/applications/${id}`);
+    return data;
+  },
+
+  updateApplication: async (
+    id: string,
+    payload: Partial<{
+      tailoredResumeKey: string;
+      coverLetter: string;
+      submittedFormData: SubmittedFormField[];
+      keywordStats: ApplyKeywordStats;
+      status: string;
+    }>,
+  ): Promise<void> => {
+    await apiClient.patch(`/seeker/applications/${id}`, payload);
+  },
+
+  finalizeApplication: async (
+    id: string,
+    payload: { resume: unknown; coverLetter: string; submittedFormData: SubmittedFormField[] },
+  ): Promise<DataResponse<{ tailoredResumeUrl: string }>> => {
+    const { data } = await apiClient.post<DataResponse<{ tailoredResumeUrl: string }>>(
+      `/seeker/applications/${id}/finalize`,
+      payload,
+    );
+    return data;
   },
 };
