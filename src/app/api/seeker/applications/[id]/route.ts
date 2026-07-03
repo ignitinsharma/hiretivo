@@ -12,8 +12,9 @@ import type { ApplicationDetail } from "@/modules/seeker/apply/types/apply.types
  * GET /api/seeker/applications/[id]
  * Fetches one Application for the apply wizard — job/JD context plus any
  * artifacts already saved on a resumed or completed run. Ownership-scoped:
- * returns 404 (not 403) for another seeker's application, or a jobless
- * PASTED_LINK row (Phase 7) missing the fields this route requires.
+ * returns 404 (not 403) for another seeker's application. JD context comes
+ * from the joined Job for FEED applications, or from the Application's own
+ * external* fields for a jobless PASTED_LINK row (Phase 7).
  * Response: {data: ApplicationDetail}.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +42,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       status: true,
       matchScore: true,
       externalJobUrl: true,
+      externalTitle: true,
+      externalCompanyName: true,
+      externalDescription: true,
+      externalSkills: true,
       tailoredResumeKey: true,
       coverLetter: true,
       submittedFormData: true,
@@ -63,17 +68,32 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!application || application.seekerId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  if (!application.job) {
+  // PASTED_LINK rows have no Job — their JD context lives on external* fields instead.
+  if (!application.job && !application.externalJobUrl) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-
-  const companyName = application.job.isAdminPosted
-    ? (application.job.companyName ?? "Unknown Company")
-    : (application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company");
 
   const tailoredResumeUrl = application.tailoredResumeKey
     ? await getSignedFileUrl(application.tailoredResumeKey).catch(() => null)
     : null;
+
+  const jobContext = application.job
+    ? {
+        jobTitle: application.job.title,
+        companyName: application.job.isAdminPosted
+          ? (application.job.companyName ?? "Unknown Company")
+          : (application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company"),
+        jdText: stripHtml(application.job.description),
+        requiredSkills: application.job.skills.map((s) => s.skill.name),
+        applyUrl: application.externalJobUrl ?? application.job.externalApplyUrl,
+      }
+    : {
+        jobTitle: application.externalTitle ?? "Untitled role",
+        companyName: application.externalCompanyName ?? "Unknown Company",
+        jdText: application.externalDescription ?? "",
+        requiredSkills: (application.externalSkills as string[] | null) ?? [],
+        applyUrl: application.externalJobUrl,
+      };
 
   const detail: ApplicationDetail = {
     id: application.id,
@@ -84,13 +104,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     source: application.source as unknown as ApplicationDetail["source"],
     status: application.status as unknown as ApplicationDetail["status"],
     matchScore: application.matchScore,
-    jobTitle: application.job.title,
-    companyName,
-    jdText: stripHtml(application.job.description),
-    requiredSkills: application.job.skills.map((s) => s.skill.name),
+    ...jobContext,
     preferredSkills: [],
     externalJobUrl: application.externalJobUrl,
-    applyUrl: application.externalJobUrl ?? application.job.externalApplyUrl,
     tailoredResumeKey: application.tailoredResumeKey,
     tailoredResumeUrl,
     coverLetter: application.coverLetter,
