@@ -1,5 +1,9 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
+import type { CertificationInput } from '@/lib/validations/certification.schema';
+import type { ApplicationDefaultsInput } from '@/lib/validations/application-defaults.schema';
+import type { ProjectInput } from '@/lib/validations/project.schema';
+import type { OptimizeMode } from '@/constants/enums';
 import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
 import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
 import type {
@@ -10,6 +14,10 @@ import type {
 
 interface DataResponse<T> {
   data: T;
+}
+
+export interface CertificationItem extends CertificationInput {
+  id: string;
 }
 
 export interface WorkExperienceItem {
@@ -109,5 +117,45 @@ export const seekerService = {
   getJobDetail: async (jobId: string): Promise<JobDetailResponse> => {
     const { data } = await apiClient.get<JobDetailResponse>(`/jobs/${jobId}`);
     return data;
+  },
+
+  getCertifications: async (): Promise<DataResponse<{ certifications: CertificationItem[] }>> => {
+    const { data } = await apiClient.get<DataResponse<{ certifications: CertificationItem[] }>>(
+      '/seeker/certifications',
+    );
+    return data;
+  },
+
+  updateCertifications: async (certifications: CertificationInput[]): Promise<void> => {
+    await apiClient.put('/seeker/certifications', { certifications });
+  },
+
+  getApplicationDefaults: async (): Promise<DataResponse<ApplicationDefaultsInput | null>> => {
+    const { data } = await apiClient.get<DataResponse<ApplicationDefaultsInput | null>>(
+      '/seeker/application-defaults',
+    );
+    return data;
+  },
+
+  updateApplicationDefaults: async (payload: ApplicationDefaultsInput): Promise<void> => {
+    await apiClient.put('/seeker/application-defaults', payload);
+  },
+
+  getProjects: async (): Promise<DataResponse<{ projects: ProjectInput[] }>> => {
+    const { data } = await apiClient.get<DataResponse<{ projects: ProjectInput[] }>>('/seeker/projects');
+    return data;
+  },
+
+  updateProjects: async (projects: ProjectInput[]): Promise<void> => {
+    await apiClient.put('/seeker/projects', { projects });
+  },
+
+  getOptimizeMode: async (): Promise<DataResponse<{ optimizeMode: OptimizeMode }>> => {
+    const { data } = await apiClient.get<DataResponse<{ optimizeMode: OptimizeMode }>>('/seeker/optimize-mode');
+    return data;
+  },
+
+  updateOptimizeMode: async (optimizeMode: OptimizeMode): Promise<void> => {
+    await apiClient.patch('/seeker/optimize-mode', { optimizeMode });
   },
 };

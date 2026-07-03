@@ -356,6 +356,15 @@ export enum WorkAuthStatus {
   OTHER = "OTHER",
 }
 
+export const WORK_AUTH_STATUS_VALUES = [
+  WorkAuthStatus.CITIZEN,
+  WorkAuthStatus.PERMANENT_RESIDENT,
+  WorkAuthStatus.WORK_VISA,
+  WorkAuthStatus.NEEDS_SPONSORSHIP,
+  WorkAuthStatus.STUDENT,
+  WorkAuthStatus.OTHER,
+] as const;
+
 /* Voluntary US-EEO self-ID gender, shown only for US jobs. Encrypted at rest. */
 export enum SelfIdGender {
   MALE = "MALE",
@@ -364,12 +373,39 @@ export enum SelfIdGender {
   PREFER_NOT = "PREFER_NOT",
 }
 
+export const SELF_ID_GENDER_VALUES = [
+  SelfIdGender.MALE,
+  SelfIdGender.FEMALE,
+  SelfIdGender.NONBINARY,
+  SelfIdGender.PREFER_NOT,
+] as const;
+
 /* Tri-state answer for US-EEO veteran/disability self-ID. Encrypted at rest. */
 export enum SelfIdAnswer {
   YES = "YES",
   NO = "NO",
   PREFER_NOT = "PREFER_NOT",
 }
+
+export const SELF_ID_ANSWER_VALUES = [
+  SelfIdAnswer.YES,
+  SelfIdAnswer.NO,
+  SelfIdAnswer.PREFER_NOT,
+] as const;
+
+/*
+ * Resume/cover-letter tailoring aggressiveness. Honest = tailor only what the
+ * profile supports; Aggressive = pushes phrasing harder, never fabricates.
+ */
+export enum OptimizeMode {
+  HONEST = "HONEST",
+  AGGRESSIVE = "AGGRESSIVE",
+}
+
+export const OPTIMIZE_MODE_VALUES = [
+  OptimizeMode.HONEST,
+  OptimizeMode.AGGRESSIVE,
+] as const;
 
 /*
  * ResumeSectionHeading
