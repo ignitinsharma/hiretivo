@@ -13,6 +13,7 @@ import { CertificationsSection } from "@/modules/seeker/settings/components/Cert
 import { ApplicationDefaultsSection } from "@/modules/seeker/settings/components/ApplicationDefaultsSection";
 import { ProjectsSection } from "@/modules/seeker/settings/components/ProjectsSection";
 import { SelfIdSection } from "@/modules/seeker/settings/components/SelfIdSection";
+import { OptimizeModeSection } from "@/modules/seeker/settings/components/OptimizeModeSection";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 /*
@@ -45,6 +46,7 @@ export function SeekerSettingsPanels() {
       <ProjectsSection />
       <ApplicationDefaultsSection />
       <SelfIdSection />
+      <OptimizeModeSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
     </main>

@@ -113,6 +113,13 @@ enum SelfIdAnswer {
   PREFER_NOT
 }
 
+// Resume/cover-letter tailoring aggressiveness (p3c). Honest = tailor only
+// what the profile supports; Aggressive = pushes phrasing harder, never fabricates.
+enum OptimizeMode {
+  HONEST
+  AGGRESSIVE
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -293,6 +300,9 @@ model ApplicationDefaults {
   disabilityStatus SelfIdAnswer?
 
   additionalNotes String? @db.Text
+
+  // Resume/cover-letter tailoring mode (Phase 4 apply wizard reads this)
+  optimizeMode OptimizeMode @default(HONEST)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

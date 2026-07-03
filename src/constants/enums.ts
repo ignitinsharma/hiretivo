@@ -394,6 +394,20 @@ export const SELF_ID_ANSWER_VALUES = [
 ] as const;
 
 /*
+ * Resume/cover-letter tailoring aggressiveness. Honest = tailor only what the
+ * profile supports; Aggressive = pushes phrasing harder, never fabricates.
+ */
+export enum OptimizeMode {
+  HONEST = "HONEST",
+  AGGRESSIVE = "AGGRESSIVE",
+}
+
+export const OPTIMIZE_MODE_VALUES = [
+  OptimizeMode.HONEST,
+  OptimizeMode.AGGRESSIVE,
+] as const;
+
+/*
  * ResumeSectionHeading
  * ATS-recognised, standard section labels rendered verbatim in the generated
  * PDF. Fixed set → enum (never inline strings) so headings stay ATS-stable.

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { User, Shield, Link, Briefcase, GraduationCap, Award, FileText, FolderGit2 } from "lucide-react";
+import { User, Shield, Link, Briefcase, GraduationCap, Award, FileText, FolderGit2, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "#certifications", label: "Certifications", icon: Award },
   { href: "#projects", label: "Projects", icon: FolderGit2 },
   { href: "#application-defaults", label: "Application Defaults", icon: FileText },
+  { href: "#optimize-mode", label: "Resume Optimize Mode", icon: Sparkles },
   { href: "#security", label: "Password & Security", icon: Shield },
 ] as const;
 

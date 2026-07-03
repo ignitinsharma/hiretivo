@@ -3,6 +3,7 @@ import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { CertificationInput } from '@/lib/validations/certification.schema';
 import type { ApplicationDefaultsInput } from '@/lib/validations/application-defaults.schema';
 import type { ProjectInput } from '@/lib/validations/project.schema';
+import type { OptimizeMode } from '@/constants/enums';
 import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
 import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
 import type {
@@ -147,5 +148,14 @@ export const seekerService = {
 
   updateProjects: async (projects: ProjectInput[]): Promise<void> => {
     await apiClient.put('/seeker/projects', { projects });
+  },
+
+  getOptimizeMode: async (): Promise<DataResponse<{ optimizeMode: OptimizeMode }>> => {
+    const { data } = await apiClient.get<DataResponse<{ optimizeMode: OptimizeMode }>>('/seeker/optimize-mode');
+    return data;
+  },
+
+  updateOptimizeMode: async (optimizeMode: OptimizeMode): Promise<void> => {
+    await apiClient.patch('/seeker/optimize-mode', { optimizeMode });
   },
 };
