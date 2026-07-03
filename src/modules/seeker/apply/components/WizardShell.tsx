@@ -3,7 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { WizardStep } from "@/constants/enums";
+import { computeKeywordStats } from "@/lib/apply/keyword-match";
+import { seekerService } from "@/services/seeker.service";
 import { ApplyStepper } from "@/modules/seeker/apply/components/ApplyStepper";
+import { StepOptimize } from "@/modules/seeker/apply/components/StepOptimize";
 import { useApplication } from "@/modules/seeker/apply/hooks/use-application";
 import { useApplyWizard } from "@/modules/seeker/apply/hooks/use-apply-wizard";
 
@@ -20,7 +23,7 @@ interface WizardShellProps {
  */
 export function WizardShell({ applicationId }: WizardShellProps) {
   const { data, isLoading, isError, refetch } = useApplication(applicationId);
-  const { state, goToStep } = useApplyWizard();
+  const { state, goToStep, setResume, setReservationHandle } = useApplyWizard();
 
   if (isLoading) {
     return <PageSkeleton lines={6} />;
@@ -37,6 +40,19 @@ export function WizardShell({ applicationId }: WizardShellProps) {
     );
   }
 
+  // No dedicated schema field holds the in-progress ResumeDocument draft
+  // (DATA-MODEL only stores tailoredResumeKey, set at finalize) — the
+  // computed keywordStats is the one real, persistable artifact this step
+  // produces early, so that's what gets saved on advance.
+  const handleOptimizeNext = async () => {
+    if (state.resume) {
+      const seekerSkillNames = state.resume.skillGroups.flatMap((g) => g.skills);
+      const { stats } = computeKeywordStats(data.requiredSkills, data.preferredSkills, seekerSkillNames);
+      await seekerService.updateApplication(applicationId, { keywordStats: stats }).catch(() => {});
+    }
+    goToStep(WizardStep.COVER);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -50,7 +66,16 @@ export function WizardShell({ applicationId }: WizardShellProps) {
 
       <div className="rounded-xl border border-brand-border bg-white p-6">
         {state.step === WizardStep.OPTIMIZE && (
-          <StepPlaceholder label="Optimize resume" onNext={() => goToStep(WizardStep.COVER)} />
+          <StepOptimize
+            application={data}
+            resume={state.resume}
+            onOptimized={(resume, reservationHandle) => {
+              setResume(resume);
+              setReservationHandle(reservationHandle);
+            }}
+            onResumeChange={setResume}
+            onNext={handleOptimizeNext}
+          />
         )}
         {state.step === WizardStep.COVER && (
           <StepPlaceholder label="Cover letter" onNext={() => goToStep(WizardStep.SUBMIT)} />

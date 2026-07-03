@@ -12,6 +12,8 @@ import type {
   SeekerInterview,
 } from '@/modules/seeker/dashboard/types/dashboard.types';
 import type { ApplicationDetail, SubmittedFormField, ApplyKeywordStats } from '@/modules/seeker/apply/types/apply.types';
+import type { ResumeDocument } from '@/modules/seeker/profile/types/resume-document.types';
+import type { ResumeOptimizeRequest, CoverLetterRequest } from '@/lib/validations/apply-ai.schema';
 
 interface DataResponse<T> {
   data: T;
@@ -192,5 +194,27 @@ export const seekerService = {
       payload,
     );
     return data;
+  },
+
+  /* optimizeResume — response is a single-chunk text/plain ResumeDocument
+   * JSON body (not {data}-wrapped) plus an X-Reservation-Handle header. */
+  optimizeResume: async (
+    payload: ResumeOptimizeRequest,
+  ): Promise<{ resume: ResumeDocument; reservationHandle: string | null }> => {
+    const res = await apiClient.post<string>('/seeker/apply/optimize-resume', payload, {
+      responseType: 'text',
+    });
+    return {
+      resume: JSON.parse(res.data) as ResumeDocument,
+      reservationHandle: (res.headers['x-reservation-handle'] as string | undefined) ?? null,
+    };
+  },
+
+  generateCoverLetter: async (payload: CoverLetterRequest): Promise<{ coverLetter: string }> => {
+    const { data } = await apiClient.post<DataResponse<{ coverLetter: string }>>(
+      '/seeker/apply/cover-letter',
+      payload,
+    );
+    return data.data;
   },
 };
