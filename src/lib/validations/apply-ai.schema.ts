@@ -91,11 +91,14 @@ export const ResumeOptimizeSchema = ApplyAiBaseSchema.refine(
   { message: "Either jobId or jdText is required" },
 );
 
-/* POST /api/seeker/apply/cover-letter request contract. `reuseReservation`
- * lets the wizard skip a second credit reservation when this call follows a
- * successful optimize-resume call in the same wizard run (one credit/run). */
+/* POST /api/seeker/apply/cover-letter request contract. `reservationHandle`
+ * (from optimize-resume's X-Reservation-Handle response header) lets this
+ * call skip a second credit reservation when it follows a successful
+ * optimize-resume call in the same wizard run (one credit/run). NOT a client
+ *-asserted boolean — the route atomically redeems this server-minted,
+ * single-use handle server-side, so a client can't fabricate "already paid". */
 export const CoverLetterSchema = ApplyAiBaseSchema.extend({
-  reuseReservation: z.boolean().default(false),
+  reservationHandle: z.string().max(200).optional(),
 }).refine((v) => Boolean(v.jobId) || Boolean(v.jdText), {
   message: "Either jobId or jdText is required",
 });

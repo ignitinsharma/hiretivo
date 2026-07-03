@@ -6,7 +6,12 @@ import { openrouter, getAIModel } from "@/lib/openrouter";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { ResumeOptimizeSchema } from "@/lib/validations/apply-ai.schema";
 import { buildResumeOptimizeMessages, parseResumeDocument, RESUME_OPTIMIZE_CONFIG } from "@/lib/ai-prompts";
-import { reserveSeekerCredit, refundSeekerCredit } from "@/lib/billing/ai-daily-limit";
+import {
+  reserveSeekerCredit,
+  refundSeekerCredit,
+  mintApplyReservationHandle,
+  consumeApplyReservationHandle,
+} from "@/lib/billing/ai-daily-limit";
 import { computeKeywordStats, extractJdSkills } from "@/lib/apply/keyword-match";
 
 const optimizeResumeRateLimiter = createRateLimiter("apply-optimize-resume", 5, "1 m");
@@ -39,6 +44,11 @@ async function resolveJobDescriptionText(
  * JSON is unusable client-side anyway, and buffering lets the route
  * deterministically overwrite contact/education/certifications/projects with
  * the real profile data (the model must never own facts it can only fumble).
+ * On success the `X-Reservation-Handle` response header carries a single-use
+ * token the wizard can pass to cover-letter's `reservationHandle` field to
+ * redeem this same credit instead of reserving a second one — the handle is
+ * minted server-side and invalidated on any refund path, so it can't be
+ * spoofed or reused to skip payment (unlike a client-asserted boolean).
  * Request body: ResumeOptimizeSchema. Response: single-chunk ResumeDocument JSON text.
  */
 export async function POST(req: NextRequest) {
@@ -94,6 +104,11 @@ export async function POST(req: NextRequest) {
       { status: 402 },
     );
   }
+  // Single-use handle proving THIS reservation succeeded, so the wizard's
+  // follow-up cover-letter call can redeem it instead of reserving a second
+  // credit. Invalidated below if generation fails (see refund paths) — a
+  // refunded reservation must never be redeemable.
+  const reservationHandle = await mintApplyReservationHandle(session.user.id);
 
   const { system, user } = buildResumeOptimizeMessages({
     profile,
@@ -150,7 +165,10 @@ export async function POST(req: NextRequest) {
             }
           : null;
         if (!finalDoc) {
-          if (!emittedContent) await refundSeekerCredit(userId);
+          if (!emittedContent) {
+            await refundSeekerCredit(userId);
+            await consumeApplyReservationHandle(userId, reservationHandle); // burn it — refunded, not redeemable
+          }
           controller.error(new Error("Model output did not parse into a valid ResumeDocument"));
           return;
         }
@@ -159,6 +177,7 @@ export async function POST(req: NextRequest) {
       } catch (error) {
         if (!emittedContent) {
           await refundSeekerCredit(userId);
+          await consumeApplyReservationHandle(userId, reservationHandle); // burn it — refunded, not redeemable
         }
         controller.error(error);
       }
@@ -169,6 +188,7 @@ export async function POST(req: NextRequest) {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Transfer-Encoding": "chunked",
+      "X-Reservation-Handle": reservationHandle,
     },
   });
 }

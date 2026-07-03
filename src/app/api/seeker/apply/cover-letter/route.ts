@@ -6,7 +6,7 @@ import { openrouter, getAIModel } from "@/lib/openrouter";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { CoverLetterSchema } from "@/lib/validations/apply-ai.schema";
 import { buildCoverLetterMessages, COVER_LETTER_CONFIG } from "@/lib/ai-prompts";
-import { reserveSeekerCredit, refundSeekerCredit } from "@/lib/billing/ai-daily-limit";
+import { reserveSeekerCredit, refundSeekerCredit, consumeApplyReservationHandle } from "@/lib/billing/ai-daily-limit";
 import { computeKeywordStats, extractJdSkills } from "@/lib/apply/keyword-match";
 
 const coverLetterRateLimiter = createRateLimiter("apply-cover-letter", 5, "1 m");
@@ -27,10 +27,12 @@ async function resolveJobDescriptionText(
 /*
  * POST /api/seeker/apply/cover-letter
  * Generates a short, JD-specific cover letter for the seeker's real profile.
- * A wizard run treats resume + cover as ONE credit: when `reuseReservation`
- * is true (the optimize-resume call already reserved it), this route skips
- * reservation; a standalone regeneration (reuseReservation=false) reserves
- * its own credit and refunds it on failure.
+ * A wizard run treats resume + cover as ONE credit: when `reservationHandle`
+ * (from optimize-resume's X-Reservation-Handle header) redeems successfully,
+ * this route skips reservation; otherwise — no handle, expired, already
+ * consumed, or minted for a different user — it reserves its own credit and
+ * refunds on failure. The handle is a server-minted, single-use token, not a
+ * client-asserted boolean, so a client can't claim "already paid" for free.
  * Request body: CoverLetterSchema. Response: { data: { coverLetter } }.
  */
 export async function POST(req: NextRequest) {
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
   }
 
-  const { jobId, jdText, jobTitle, company, tone, profile, reuseReservation } = parsed.data;
+  const { jobId, jdText, jobTitle, company, tone, profile, reservationHandle } = parsed.data;
   let { requiredSkills, preferredSkills } = parsed.data;
 
   const descriptionText = await resolveJobDescriptionText(jobId, jdText);
@@ -79,7 +81,14 @@ export async function POST(req: NextRequest) {
   const userId = session.user.id;
   const plan = session.user.plan as unknown as PlanTier;
 
-  if (!reuseReservation) {
+  // Redeem the resume route's reservation if a valid handle was presented;
+  // otherwise this call must pay for its own credit. Never trust a client
+  // boolean here — the handle is atomically consumed (GETDEL) server-side.
+  const reservationRedeemed = reservationHandle
+    ? await consumeApplyReservationHandle(userId, reservationHandle)
+    : false;
+
+  if (!reservationRedeemed) {
     const { allowed } = await reserveSeekerCredit(userId, plan);
     if (!allowed) {
       return new Response(
@@ -107,7 +116,7 @@ export async function POST(req: NextRequest) {
     });
     const coverLetter = completion.choices[0]?.message?.content?.trim() ?? "";
     if (!coverLetter) {
-      if (!reuseReservation) await refundSeekerCredit(userId);
+      if (!reservationRedeemed) await refundSeekerCredit(userId);
       return new Response(
         JSON.stringify({ error: "Generation failed, your credit was not used." }),
         { status: 502 },
@@ -115,7 +124,7 @@ export async function POST(req: NextRequest) {
     }
     return Response.json({ data: { coverLetter } }, { status: 200 });
   } catch {
-    if (!reuseReservation) await refundSeekerCredit(userId);
+    if (!reservationRedeemed) await refundSeekerCredit(userId);
     return new Response(
       JSON.stringify({ error: "Generation failed, your credit was not used." }),
       { status: 502 },
