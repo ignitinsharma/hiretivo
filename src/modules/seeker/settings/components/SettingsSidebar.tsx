@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { User, Shield, Link, Briefcase, GraduationCap, Award } from "lucide-react";
+import { User, Shield, Link, Briefcase, GraduationCap, Award, FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "#experience", label: "Work Experience", icon: Briefcase },
   { href: "#education", label: "Education", icon: GraduationCap },
   { href: "#certifications", label: "Certifications", icon: Award },
+  { href: "#application-defaults", label: "Application Defaults", icon: FileText },
   { href: "#security", label: "Password & Security", icon: Shield },
 ] as const;
 

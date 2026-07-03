@@ -10,9 +10,11 @@ import { ExperienceSection } from "@/modules/seeker/profile/components/Experienc
 import { EducationSection } from "@/modules/seeker/profile/components/EducationSection";
 import { SkillsSection } from "@/modules/seeker/profile/components/SkillsSection";
 import { CertificationsSection } from "@/modules/seeker/profile/components/CertificationsSection";
+import { ApplicationDefaultsSection } from "@/modules/seeker/profile/components/ApplicationDefaultsSection";
 import { getProfileCompleteness } from "@/modules/seeker/profile/utils/profile-completeness";
 import { seekerService } from "@/services/seeker.service";
 import type { CertificationItem } from "@/services/seeker.service";
+import type { ApplicationDefaultsInput } from "@/lib/validations/application-defaults.schema";
 
 /*
  * ProfilePage
@@ -31,6 +33,13 @@ export default function ProfilePage() {
     staleTime: 60_000,
   });
   const certifications = certificationsData?.data.certifications ?? [];
+
+  const { data: applicationDefaultsData } = useQuery<{ data: ApplicationDefaultsInput | null }>({
+    queryKey: ["seeker-application-defaults"],
+    queryFn: seekerService.getApplicationDefaults,
+    staleTime: 60_000,
+  });
+  const applicationDefaults = applicationDefaultsData?.data ?? null;
 
   if (isLoading) {
     return (
@@ -62,7 +71,7 @@ export default function ProfilePage() {
     hasExperience: profile.workExperiences.length > 0,
     hasEducation: profile.educations.length > 0,
     hasSkills: profile.skills.length > 0,
-    hasApplicationDefaults: false, // wired in Task 8 once application-defaults query lands
+    hasApplicationDefaults: Boolean(applicationDefaults?.phone && applicationDefaults?.workAuth),
   });
 
   return (
@@ -79,6 +88,7 @@ export default function ProfilePage() {
       <EducationSection items={profile.educations} />
       <SkillsSection skills={profile.skills} />
       <CertificationsSection items={certifications} />
+      <ApplicationDefaultsSection defaults={applicationDefaults} />
     </div>
   );
 }

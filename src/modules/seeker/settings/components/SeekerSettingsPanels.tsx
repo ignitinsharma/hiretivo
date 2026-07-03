@@ -10,6 +10,7 @@ import { SocialProfilesSection } from "@/modules/seeker/settings/components/Soci
 import { WorkExperienceSection } from "@/modules/seeker/settings/components/WorkExperienceSection";
 import { EducationSection } from "@/modules/seeker/settings/components/EducationSection";
 import { CertificationsSection } from "@/modules/seeker/settings/components/CertificationsSection";
+import { ApplicationDefaultsSection } from "@/modules/seeker/settings/components/ApplicationDefaultsSection";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 /*
@@ -39,6 +40,7 @@ export function SeekerSettingsPanels() {
       <WorkExperienceSection />
       <EducationSection />
       <CertificationsSection />
+      <ApplicationDefaultsSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
     </main>

@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { CertificationInput } from '@/lib/validations/certification.schema';
+import type { ApplicationDefaultsInput } from '@/lib/validations/application-defaults.schema';
 import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
 import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
 import type {
@@ -125,5 +126,16 @@ export const seekerService = {
 
   updateCertifications: async (certifications: CertificationInput[]): Promise<void> => {
     await apiClient.put('/seeker/certifications', { certifications });
+  },
+
+  getApplicationDefaults: async (): Promise<DataResponse<ApplicationDefaultsInput | null>> => {
+    const { data } = await apiClient.get<DataResponse<ApplicationDefaultsInput | null>>(
+      '/seeker/application-defaults',
+    );
+    return data;
+  },
+
+  updateApplicationDefaults: async (payload: ApplicationDefaultsInput): Promise<void> => {
+    await apiClient.put('/seeker/application-defaults', payload);
   },
 };
