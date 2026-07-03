@@ -49,6 +49,12 @@ enum AppStatus {
   OFFER
   HIRED
   REJECTED
+  GHOSTED
+}
+
+enum ApplySource {
+  FEED
+  PASTED_LINK
 }
 
 enum WorkType {
@@ -466,16 +472,24 @@ model JobMatch {
 model Application {
   id String @id @default(cuid())
 
-  jobId    String
+  jobId    String?
   seekerId String
 
   status      AppStatus @default(APPLIED)
   matchScore  Int
 
+  source            ApplySource @default(FEED)
+  externalJobUrl    String?
+  tailoredResumeKey String?
+  submittedFormData Json?
+  keywordStats      Json?
+  notes             String?  @db.Text
+  statusLog         Json?
+
   coverLetter String? @db.Text
   aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
 
-  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job    Job? @relation(fields: [jobId], references: [id], onDelete: Cascade)
   seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
 
   interviews Interview[]
@@ -484,6 +498,7 @@ model Application {
   updatedAt DateTime @updatedAt
 
   @@unique([jobId, seekerId])
+  @@unique([seekerId, externalJobUrl])
   @@index([seekerId])
   @@index([status])
   @@index([jobId, status])
