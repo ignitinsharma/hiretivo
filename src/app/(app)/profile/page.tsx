@@ -10,11 +10,13 @@ import { ExperienceSection } from "@/modules/seeker/profile/components/Experienc
 import { EducationSection } from "@/modules/seeker/profile/components/EducationSection";
 import { SkillsSection } from "@/modules/seeker/profile/components/SkillsSection";
 import { CertificationsSection } from "@/modules/seeker/profile/components/CertificationsSection";
+import { ProjectsSection } from "@/modules/seeker/profile/components/ProjectsSection";
 import { ApplicationDefaultsSection } from "@/modules/seeker/profile/components/ApplicationDefaultsSection";
 import { getProfileCompleteness } from "@/modules/seeker/profile/utils/profile-completeness";
 import { seekerService } from "@/services/seeker.service";
 import type { CertificationItem } from "@/services/seeker.service";
 import type { ApplicationDefaultsInput } from "@/lib/validations/application-defaults.schema";
+import type { ProjectInput } from "@/lib/validations/project.schema";
 
 /*
  * ProfilePage
@@ -40,6 +42,13 @@ export default function ProfilePage() {
     staleTime: 60_000,
   });
   const applicationDefaults = applicationDefaultsData?.data ?? null;
+
+  const { data: projectsData } = useQuery<{ data: { projects: ProjectInput[] } }>({
+    queryKey: ["seeker-projects"],
+    queryFn: seekerService.getProjects,
+    staleTime: 60_000,
+  });
+  const projects = projectsData?.data.projects ?? [];
 
   if (isLoading) {
     return (
@@ -88,6 +97,7 @@ export default function ProfilePage() {
       <EducationSection items={profile.educations} />
       <SkillsSection skills={profile.skills} />
       <CertificationsSection items={certifications} />
+      <ProjectsSection items={projects} />
       <ApplicationDefaultsSection defaults={applicationDefaults} />
     </div>
   );

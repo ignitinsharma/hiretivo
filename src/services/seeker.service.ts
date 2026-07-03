@@ -2,6 +2,7 @@ import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { CertificationInput } from '@/lib/validations/certification.schema';
 import type { ApplicationDefaultsInput } from '@/lib/validations/application-defaults.schema';
+import type { ProjectInput } from '@/lib/validations/project.schema';
 import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
 import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
 import type {
@@ -137,5 +138,14 @@ export const seekerService = {
 
   updateApplicationDefaults: async (payload: ApplicationDefaultsInput): Promise<void> => {
     await apiClient.put('/seeker/application-defaults', payload);
+  },
+
+  getProjects: async (): Promise<DataResponse<{ projects: ProjectInput[] }>> => {
+    const { data } = await apiClient.get<DataResponse<{ projects: ProjectInput[] }>>('/seeker/projects');
+    return data;
+  },
+
+  updateProjects: async (projects: ProjectInput[]): Promise<void> => {
+    await apiClient.put('/seeker/projects', { projects });
   },
 };

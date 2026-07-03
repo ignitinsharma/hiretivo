@@ -11,6 +11,8 @@ import { WorkExperienceSection } from "@/modules/seeker/settings/components/Work
 import { EducationSection } from "@/modules/seeker/settings/components/EducationSection";
 import { CertificationsSection } from "@/modules/seeker/settings/components/CertificationsSection";
 import { ApplicationDefaultsSection } from "@/modules/seeker/settings/components/ApplicationDefaultsSection";
+import { ProjectsSection } from "@/modules/seeker/settings/components/ProjectsSection";
+import { SelfIdSection } from "@/modules/seeker/settings/components/SelfIdSection";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 /*
@@ -40,7 +42,9 @@ export function SeekerSettingsPanels() {
       <WorkExperienceSection />
       <EducationSection />
       <CertificationsSection />
+      <ProjectsSection />
       <ApplicationDefaultsSection />
+      <SelfIdSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
     </main>

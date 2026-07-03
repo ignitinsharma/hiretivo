@@ -1,5 +1,5 @@
 import { ProfileSectionCard } from "@/modules/seeker/profile/components/ProfileSectionCard";
-import { WorkAuthStatus } from "@/constants/enums";
+import { WorkAuthStatus, SelfIdGender, SelfIdAnswer } from "@/constants/enums";
 import type { ApplicationDefaultsInput } from "@/lib/validations/application-defaults.schema";
 
 interface ApplicationDefaultsSectionProps {
@@ -15,8 +15,25 @@ const WORK_AUTH_LABELS: Record<WorkAuthStatus, string> = {
   [WorkAuthStatus.OTHER]: "Other",
 };
 
+const GENDER_LABELS: Record<SelfIdGender, string> = {
+  [SelfIdGender.MALE]: "Male",
+  [SelfIdGender.FEMALE]: "Female",
+  [SelfIdGender.NONBINARY]: "Non-binary",
+  [SelfIdGender.PREFER_NOT]: "Prefer not to say",
+};
+
+const ANSWER_LABELS: Record<SelfIdAnswer, string> = {
+  [SelfIdAnswer.YES]: "Yes",
+  [SelfIdAnswer.NO]: "No",
+  [SelfIdAnswer.PREFER_NOT]: "Prefer not to say",
+};
+
 function displayValue(value: string | null | undefined): string {
   return value && value.trim() ? value : "Not set";
+}
+
+function isUsCountry(countryCode: string | null | undefined): boolean {
+  return (countryCode ?? "").trim().toUpperCase() === "US";
 }
 
 /*
@@ -36,6 +53,15 @@ export function ApplicationDefaultsSection({ defaults }: ApplicationDefaultsSect
     ["Work Authorization", defaults?.workAuth ? WORK_AUTH_LABELS[defaults.workAuth] : "Not set"],
     ["Authorized Country", displayValue(defaults?.authorizedCountry)],
   ];
+
+  if (isUsCountry(defaults?.countryCode)) {
+    rows.push(
+      ["Self-ID Gender", defaults?.selfIdGender ? GENDER_LABELS[defaults.selfIdGender] : "Not set"],
+      ["Self-ID Ethnicity", displayValue(defaults?.selfIdEthnicity)],
+      ["Veteran Status", defaults?.veteranStatus ? ANSWER_LABELS[defaults.veteranStatus] : "Not set"],
+      ["Disability Status", defaults?.disabilityStatus ? ANSWER_LABELS[defaults.disabilityStatus] : "Not set"],
+    );
+  }
 
   return (
     <ProfileSectionCard

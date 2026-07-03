@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/constants/enums";
 import { dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
 import { ApplicationDefaultsSchema } from "@/lib/validations/application-defaults.schema";
+import { encryptField, decryptField } from "@/lib/crypto/field-crypto";
 
 /*
  * GET /api/seeker/application-defaults
@@ -33,7 +34,15 @@ export async function GET() {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ data: seekerProfile.applicationDefaults });
+  const { applicationDefaults } = seekerProfile;
+  const data = applicationDefaults && {
+    ...applicationDefaults,
+    selfIdEthnicity: applicationDefaults.selfIdEthnicity
+      ? decryptField(applicationDefaults.selfIdEthnicity)
+      : null,
+  };
+
+  return NextResponse.json({ data: data ?? null });
 }
 
 /*
@@ -85,6 +94,12 @@ export async function PUT(req: NextRequest) {
     willingRelocate: parsed.data.willingRelocate ?? null,
     startImmediately: parsed.data.startImmediately ?? null,
     additionalNotes: parsed.data.additionalNotes || null,
+    selfIdGender: parsed.data.selfIdGender || null,
+    selfIdEthnicity: parsed.data.selfIdEthnicity
+      ? encryptField(parsed.data.selfIdEthnicity)
+      : null,
+    veteranStatus: parsed.data.veteranStatus || null,
+    disabilityStatus: parsed.data.disabilityStatus || null,
   };
 
   await prisma.applicationDefaults.upsert({
