@@ -7,6 +7,7 @@ import { computeKeywordStats } from "@/lib/apply/keyword-match";
 import { seekerService } from "@/services/seeker.service";
 import { ApplyStepper } from "@/modules/seeker/apply/components/ApplyStepper";
 import { StepOptimize } from "@/modules/seeker/apply/components/StepOptimize";
+import { StepCover } from "@/modules/seeker/apply/components/StepCover";
 import { useApplication } from "@/modules/seeker/apply/hooks/use-application";
 import { useApplyWizard } from "@/modules/seeker/apply/hooks/use-apply-wizard";
 
@@ -23,7 +24,7 @@ interface WizardShellProps {
  */
 export function WizardShell({ applicationId }: WizardShellProps) {
   const { data, isLoading, isError, refetch } = useApplication(applicationId);
-  const { state, goToStep, setResume, setReservationHandle } = useApplyWizard();
+  const { state, goToStep, setResume, setCoverLetter, setReservationHandle } = useApplyWizard();
 
   if (isLoading) {
     return <PageSkeleton lines={6} />;
@@ -78,7 +79,14 @@ export function WizardShell({ applicationId }: WizardShellProps) {
           />
         )}
         {state.step === WizardStep.COVER && (
-          <StepPlaceholder label="Cover letter" onNext={() => goToStep(WizardStep.SUBMIT)} />
+          <StepCover
+            application={data}
+            coverLetter={state.coverLetter}
+            reservationHandle={state.reservationHandle}
+            onGenerated={setCoverLetter}
+            onReservationConsumed={() => setReservationHandle(null)}
+            onNext={() => goToStep(WizardStep.SUBMIT)}
+          />
         )}
         {state.step === WizardStep.SUBMIT && (
           <StepPlaceholder label="Submit" onNext={() => goToStep(WizardStep.DONE)} />
