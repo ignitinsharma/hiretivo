@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizeMode } from "@/constants/enums";
@@ -53,6 +54,15 @@ export function StepOptimize({ application, resume, onOptimized, onResumeChange,
     queryFn: seekerService.getOptimizeMode,
     staleTime: 60_000,
   });
+  // Soft gate — a proactive heads-up before they spend a run. The server
+  // (reserveSeekerCredit, Phase 4) is the real enforcement point regardless
+  // of what this shows; Phase 8 makes this hard (blocks entry entirely).
+  const { data: creditsData } = useQuery<{ data: { remaining: number; limit: number } }>({
+    queryKey: ["seeker-credits"],
+    queryFn: seekerService.getCreditStatus,
+    staleTime: 30_000,
+  });
+  const isOutOfCredits = creditsData ? creditsData.data.remaining <= 0 : false;
 
   const keywordPreview = useMemo(() => {
     if (!settings) return null;
@@ -112,6 +122,15 @@ export function StepOptimize({ application, resume, onOptimized, onResumeChange,
       {keywordPreview && (
         <p className="text-sm text-brand-foreground">
           You match {keywordPreview.requiredMatched} of {application.requiredSkills.length} required skills.
+        </p>
+      )}
+      {isOutOfCredits && (
+        <p className="text-sm text-brand-danger">
+          You&apos;re out of AI credits this month.{" "}
+          <Link href="/pricing" className="font-medium underline">
+            Upgrade
+          </Link>{" "}
+          to keep tailoring.
         </p>
       )}
       {error && <p className="text-sm text-brand-danger">{error}</p>}

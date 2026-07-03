@@ -162,6 +162,11 @@ export const seekerService = {
     await apiClient.patch('/seeker/optimize-mode', { optimizeMode });
   },
 
+  getCreditStatus: async (): Promise<DataResponse<{ remaining: number; limit: number }>> => {
+    const { data } = await apiClient.get<DataResponse<{ remaining: number; limit: number }>>('/seeker/credits');
+    return data;
+  },
+
   createApplication: async (jobId: string): Promise<DataResponse<{ id: string }>> => {
     const { data } = await apiClient.post<DataResponse<{ id: string }>>('/seeker/applications', { jobId });
     return data;
