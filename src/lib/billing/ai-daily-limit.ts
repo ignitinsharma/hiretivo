@@ -95,6 +95,20 @@ export const MONTHLY_CREDITS: Record<PlanTier, number> = {
   [PlanTier.SCALE]: 1000,
 };
 
+/*
+ * Ladder-A display names (Phase 8, Option A remap): the PlanTier enum keeps
+ * its recruiter-era member names (STARTER/GROWTH/SCALE), only the seeker-
+ * facing label changes. SCALE is hidden in seeker UI — it renders as "Max"
+ * (same grant as GROWTH) so a defensively-unremoved SCALE row never shows a
+ * nonexistent seeker tier.
+ */
+export const PLAN_DISPLAY_NAMES: Record<PlanTier, string> = {
+  [PlanTier.FREE]: "Free",
+  [PlanTier.STARTER]: "Pro",
+  [PlanTier.GROWTH]: "Max",
+  [PlanTier.SCALE]: "Max",
+};
+
 const SEEKER_CREDIT_WINDOW_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
 function seekerCreditKey(userId: string): string {
