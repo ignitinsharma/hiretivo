@@ -7,9 +7,6 @@ import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useUIStore } from '@/store/use-ui-store';
-import { useVerificationStatus } from '@/hooks/use-verification-status';
-import { ApplyType } from '@/constants/enums';
 import { useSaveJob, useSavedJobs, useUnsaveJob } from '@/modules/seeker/saved-jobs/queries/use-saved-jobs';
 import { seekerService, type SeekerFeedResponse } from '@/services/seeker.service';
 import { useFeedQuery, feedQueryKey } from '@/modules/seeker/feed/queries/use-feed-query';
@@ -29,15 +26,13 @@ interface FeedViewProps {
 }
 
 /* FeedView
- * Client orchestrator for the /seeker/feed page: URL-synced filters, the filter-aware
+ * Client orchestrator for the /dashboard/browse page: URL-synced filters, the filter-aware
  * feed query, save/pass mutations, the detail drawer, and infinite scroll.
  * @param companies - distinct company names passed to FeedFilterBar's multiselect */
 export function FeedView({ companies }: FeedViewProps) {
   const { filters, clearFilters, activeCount } = useFeedFilters();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { openApplyModal } = useUIStore();
-  const hiretivo = useVerificationStatus();
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeedQuery(filters);
   const { data: savedJobs } = useSavedJobs();
@@ -79,10 +74,10 @@ export function FeedView({ companies }: FeedViewProps) {
     },
   });
 
-  // Starts a wizard run for the new assisted-apply flow (EXTERNAL/ATS jobs
-  // only — legacy INTERNAL jobs keep the old ApplyJobModal below). A 409
-  // means a run already exists for this job; route into that one instead
-  // of erroring, since the seeker is just trying to get back to applying.
+  // Starts a wizard run — every seeker apply goes through the assisted-apply
+  // flow regardless of the job's legacy applyType (ApplyJobModal is no
+  // longer mounted on any seeker surface — see D2). A 409 means a run
+  // already exists for this job; route into that one instead of erroring.
   const applyWizardMutation = useMutation({
     mutationFn: (jobId: string) => seekerService.createApplication(jobId),
     onSuccess: (res) => router.push(`/dashboard/applications/${res.data.id}`),
@@ -94,17 +89,6 @@ export function FeedView({ companies }: FeedViewProps) {
       toast.error(err.message || 'Could not start your application. Try again.');
     },
   });
-
-  // Legacy verification wall — the pivot design explicitly drops it for the
-  // assisted-apply (ApplyType.EXTERNAL) flow, so this only gates legacy
-  // INTERNAL jobs below (applied per-job at the FeedJobCard callsite).
-  const resolveApplyLockedLabel = (): string | undefined => {
-    if (hiretivo.isVerified) return undefined;
-    if (hiretivo.status === 'PENDING' || hiretivo.status === 'IN_REVIEW') return 'Verification pending';
-    if (hiretivo.status === 'REJECTED') return 'Fix profile to apply';
-    return 'Get verified to apply';
-  };
-  const applyLockedLabel = resolveApplyLockedLabel();
 
   const setJobSaving = (jobId: string, isSaving: boolean) => {
     setSavingJobIds((current) => {
@@ -187,15 +171,10 @@ export function FeedView({ companies }: FeedViewProps) {
               isSaved={savedJobIds.has(job.id)}
               isSaving={savingJobIds.has(job.id)}
               isDismissing={dismissingJobId === job.id}
-              applyLockedLabel={job.applyType === ApplyType.EXTERNAL ? undefined : applyLockedLabel}
               onToggleSave={() => handleToggleSave(job.id)}
               onPass={() => dismissMutation.mutate(job.id)}
               onOpen={() => setSelectedJobId(job.id)}
-              onApply={() =>
-                job.applyType === ApplyType.EXTERNAL
-                  ? applyWizardMutation.mutate(job.id)
-                  : openApplyModal(job.id, job.title, job.companyName, job.applyType, job.externalApplyUrl)
-              }
+              onApply={() => applyWizardMutation.mutate(job.id)}
             />
           ))}
           {isFetchingNextPage && (

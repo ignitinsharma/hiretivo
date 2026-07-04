@@ -10,6 +10,7 @@ import type { SeekerSettingsData } from "@/services/seeker.service";
 import type { ApplicationDefaultsInput } from "@/lib/validations/application-defaults.schema";
 import { CheatsheetPanel } from "@/modules/seeker/apply/components/CheatsheetPanel";
 import { formatResumeAsText } from "@/modules/seeker/apply/utils/format-resume-text";
+import { buildSubmittedFormRows } from "@/modules/seeker/apply/utils/build-submitted-form-rows";
 import { ApplySubmitLayout } from "@/constants/enums";
 import type { ApplicationDetail, SubmittedFormField } from "@/modules/seeker/apply/types/apply.types";
 import type { ResumeDocument } from "@/modules/seeker/profile/types/resume-document.types";
@@ -18,7 +19,7 @@ interface StepSubmitProps {
   application: ApplicationDetail;
   resume: ResumeDocument;
   coverLetter: string;
-  onFinalized: (tailoredResumeUrl: string, submittedFormData: SubmittedFormField[]) => void;
+  onFinalized: (tailoredResumeUrl: string | null, submittedFormData: SubmittedFormField[]) => void;
 }
 
 /*
@@ -49,22 +50,10 @@ export function StepSubmit({ application, resume, coverLetter, onFinalized }: St
     staleTime: 60_000,
   });
 
-  const rows: SubmittedFormField[] = useMemo(() => {
-    const s = settings?.data;
-    const d = defaultsData?.data;
-    return [
-      { fieldKey: "fullName", label: "Full name", value: s?.name ?? "" },
-      { fieldKey: "email", label: "Email", value: s?.email ?? "" },
-      { fieldKey: "phone", label: "Phone", value: d?.phone ?? "" },
-      { fieldKey: "addressLine", label: "Address", value: d?.addressLine ?? "" },
-      { fieldKey: "city", label: "City", value: d?.city ?? "" },
-      { fieldKey: "state", label: "State", value: d?.state ?? "" },
-      { fieldKey: "postalCode", label: "Postal code", value: d?.postalCode ?? "" },
-      { fieldKey: "linkedinUrl", label: "LinkedIn", value: d?.linkedinUrl ?? "" },
-      { fieldKey: "workAuth", label: "Work authorization", value: d?.workAuth ?? "" },
-      { fieldKey: "needsSponsorship", label: "Needs sponsorship", value: d?.needsSponsorship ? "Yes" : "No" },
-    ];
-  }, [settings, defaultsData]);
+  const rows: SubmittedFormField[] = useMemo(
+    () => buildSubmittedFormRows(settings?.data, defaultsData?.data),
+    [settings, defaultsData],
+  );
 
   const handleFinalize = async () => {
     setIsFinalizing(true);
