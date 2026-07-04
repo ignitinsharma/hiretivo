@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,8 @@ import type { CertificationItem, SeekerSettingsData } from "@/services/seeker.se
 import type { ProjectInput } from "@/lib/validations/project.schema";
 import { buildApplyAiProfile } from "@/modules/seeker/apply/utils/build-apply-profile";
 import { ResumeEditor } from "@/modules/seeker/apply/components/ResumeEditor";
+import { useCredits, SEEKER_CREDITS_QUERY_KEY } from "@/hooks/use-credits";
+import { useUIStore } from "@/store/use-ui-store";
 import type { ApplicationDetail } from "@/modules/seeker/apply/types/apply.types";
 import type { ResumeDocument } from "@/modules/seeker/profile/types/resume-document.types";
 
@@ -33,6 +35,8 @@ interface StepOptimizeProps {
 export function StepOptimize({ application, resume, onOptimized, onResumeChange, onNext }: StepOptimizeProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const openPaidFeatureModal = useUIStore((s) => s.openPaidFeatureModal);
 
   const { data: settings, isLoading: settingsLoading } = useQuery<{ data: SeekerSettingsData }>({
     queryKey: ["seeker-settings"],
@@ -54,14 +58,11 @@ export function StepOptimize({ application, resume, onOptimized, onResumeChange,
     queryFn: seekerService.getOptimizeMode,
     staleTime: 60_000,
   });
-  // Soft gate — a proactive heads-up before they spend a run. The server
-  // (reserveSeekerCredit, Phase 4) is the real enforcement point regardless
-  // of what this shows; Phase 8 makes this hard (blocks entry entirely).
-  const { data: creditsData } = useQuery<{ data: { remaining: number; limit: number } }>({
-    queryKey: ["seeker-credits"],
-    queryFn: seekerService.getCreditStatus,
-    staleTime: 30_000,
-  });
+  // Hard gate (Phase 8) — blocks generation entirely once exhausted; the
+  // server (reserveSeekerCredit, Phase 4) still enforces this regardless, but
+  // this stops the wasted round-trip and shows the upsell instead of a
+  // generic error string.
+  const { data: creditsData } = useCredits();
   const isOutOfCredits = creditsData ? creditsData.data.remaining <= 0 : false;
 
   const keywordPreview = useMemo(() => {
@@ -72,6 +73,14 @@ export function StepOptimize({ application, resume, onOptimized, onResumeChange,
 
   const handleGenerate = async () => {
     if (!settings) return;
+    if (isOutOfCredits) {
+      openPaidFeatureModal({
+        feature: "ai_credits",
+        title: "Out of AI credits this month",
+        description: "Upgrade to Pro (400/mo) or Max (1000/mo) to keep tailoring resumes.",
+      });
+      return;
+    }
     setIsGenerating(true);
     setError(null);
     try {
@@ -91,6 +100,7 @@ export function StepOptimize({ application, resume, onOptimized, onResumeChange,
         profile,
       });
       onOptimized(doc, reservationHandle);
+      queryClient.invalidateQueries({ queryKey: SEEKER_CREDITS_QUERY_KEY });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed. Your credit was not used.");
     } finally {

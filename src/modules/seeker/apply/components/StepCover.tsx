@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,8 @@ import { seekerService } from "@/services/seeker.service";
 import type { CertificationItem, SeekerSettingsData } from "@/services/seeker.service";
 import type { ProjectInput } from "@/lib/validations/project.schema";
 import { buildApplyAiProfile } from "@/modules/seeker/apply/utils/build-apply-profile";
+import { useCredits, SEEKER_CREDITS_QUERY_KEY } from "@/hooks/use-credits";
+import { useUIStore } from "@/store/use-ui-store";
 import type { ApplicationDetail } from "@/modules/seeker/apply/types/apply.types";
 
 interface StepCoverProps {
@@ -41,6 +43,12 @@ export function StepCover({
 }: StepCoverProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const openPaidFeatureModal = useUIStore((s) => s.openPaidFeatureModal);
+  // Only "Regenerate" spends a fresh credit — the first generate redeems the
+  // optimize step's already-reserved handle, so it's never gated here.
+  const { data: creditsData } = useCredits();
+  const isOutOfCredits = coverLetter ? (creditsData ? creditsData.data.remaining <= 0 : false) : false;
 
   const { data: settings, isLoading: settingsLoading } = useQuery<{ data: SeekerSettingsData }>({
     queryKey: ["seeker-settings"],
@@ -65,6 +73,14 @@ export function StepCover({
 
   const handleGenerate = async () => {
     if (!settings) return;
+    if (isOutOfCredits) {
+      openPaidFeatureModal({
+        feature: "ai_credits",
+        title: "Out of AI credits this month",
+        description: "Regenerating a cover letter spends another credit. Upgrade to Pro or Max for more.",
+      });
+      return;
+    }
     setIsGenerating(true);
     setError(null);
     try {
@@ -86,6 +102,9 @@ export function StepCover({
       });
       onGenerated(text);
       onReservationConsumed();
+      if (!reservationHandle) {
+        queryClient.invalidateQueries({ queryKey: SEEKER_CREDITS_QUERY_KEY });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed. Your credit was not used.");
     } finally {
