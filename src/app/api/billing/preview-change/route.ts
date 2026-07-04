@@ -5,7 +5,7 @@ import {
   getPlanChangeDirection,
   getProductPeriod,
 } from "@/constants/billing";
-import { BillingPeriod, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { BillingPeriod, PlanTier, PricingTierId } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -37,7 +37,6 @@ const previewChangeRateLimiter = createRateLimiter(
  *
  * Error responses:
  *   401  Unauthorized
- *   403  Forbidden (non-RECRUITER role)
  *   429  Too many requests
  *   400  Invalid planId / already on this plan / subscription not active
  *   502  Dodo API unavailable
@@ -49,21 +48,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  /* ── 2. Role guard — recruiters only ── */
-  if (session.user.role !== UserRole.RECRUITER) {
-    return NextResponse.json(
-      { error: "This endpoint is for recruiters only" },
-      { status: 403 },
-    );
-  }
-
-  /* ── 3. Rate limit — 30 req/min per userId (read tier) ── */
+  /* ── 2. Rate limit — 30 req/min per userId (read tier) ── */
   const { success } = await previewChangeRateLimiter.limit(session.user.id);
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  /* ── 4. Validate query params ── */
+  /* ── 3. Validate query params ── */
   const planId = req.nextUrl.searchParams.get("planId");
   const periodParam = req.nextUrl.searchParams.get("period");
   const parsed = ChangePlanRequestSchema.safeParse({
@@ -79,7 +70,7 @@ export async function GET(req: NextRequest) {
   const targetPricingTierId: PricingTierId = parsed.data.planId;
   const requestedPeriod: BillingPeriod | undefined = parsed.data.period;
 
-  /* ── 5. Load user + active subscription from DB ── */
+  /* ── 4. Load user + active subscription from DB ── */
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
@@ -108,7 +99,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  /* ── 6. Determine change direction + resolve target period ── */
+  /* ── 5. Determine change direction + resolve target period ── */
   // Prisma PlanTier and local PlanTier share identical string values — double-cast is safe.
   const currentPlanTier = user.plan as unknown as PlanTier;
   const targetPlanTier = targetPricingTierId.toUpperCase() as PlanTier;
@@ -138,7 +129,7 @@ export async function GET(req: NextRequest) {
   const effectiveDirection: "upgrade" | "downgrade" =
     planDirection === "same" ? "upgrade" : planDirection;
 
-  /* ── 7. Downgrade: no immediate charge ── */
+  /* ── 6. Downgrade: no immediate charge ── */
   if (effectiveDirection === "downgrade") {
     return NextResponse.json(
       {
@@ -153,7 +144,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  /* ── 8. Upgrade: call Dodo previewChangePlan ── */
+  /* ── 7. Upgrade: call Dodo previewChangePlan ── */
 
   const targetProductId = getDodoProductId(targetPricingTierId, targetPeriod);
   if (!targetProductId) {

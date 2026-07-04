@@ -6,7 +6,7 @@ import {
   getPlanChangeDirection,
   getProductPeriod,
 } from "@/constants/billing";
-import { BillingPeriod, PlanTier, PricingTierId, UserRole } from "@/constants/enums";
+import { BillingPeriod, PlanTier, PricingTierId } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -17,7 +17,9 @@ const changePlanRateLimiter = createRateLimiter("billing-change-plan", 5, "1 m")
 
 /*
  * POST /api/billing/change-plan
- * Executes an in-app subscription plan switch for RECRUITER users.
+ * Executes an in-app subscription plan switch for the authenticated user
+ * (recruiter marketplace tiers, or Phase 8 seeker AI-credit tiers under the
+ * same PlanTier/PricingTierId — Option-A remap, no role split needed here).
  *
  * Upgrades apply immediately with prorated billing (charged today via Dodo).
  * Downgrades are scheduled for the next billing date — no immediate charge.
@@ -35,7 +37,7 @@ const changePlanRateLimiter = createRateLimiter("billing-change-plan", 5, "1 m")
  *
  * Error responses:
  *   401  Unauthorized
- *   403  Forbidden (non-RECRUITER role or unverified email)
+ *   403  Forbidden (unverified email)
  *   429  Too many requests
  *   400  Body invalid / not on an active plan / already on this plan / product unavailable
  *   502  Dodo API call failed
@@ -47,27 +49,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  /* ── 2. Role guard — recruiters only ── */
-  if (session.user.role !== UserRole.RECRUITER) {
-    return NextResponse.json(
-      { error: "This endpoint is for recruiters only" },
-      { status: 403 },
-    );
-  }
-
-  /* ── 3. Verified email guard ── */
+  /* ── 2. Verified email guard ── */
   const verificationError = await requireVerifiedEmailForTrustedAction(
     session.user.id,
   );
   if (verificationError) return verificationError;
 
-  /* ── 4. Rate limit — 5 req/min per userId (write tier) ── */
+  /* ── 3. Rate limit — 5 req/min per userId (write tier) ── */
   const { success } = await changePlanRateLimiter.limit(session.user.id);
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  /* ── 5. Validate request body ── */
+  /* ── 4. Validate request body ── */
   const body: unknown = await req.json().catch(() => null);
   const parsed = ChangePlanRequestSchema.safeParse(body);
   if (!parsed.success) {
@@ -79,7 +73,7 @@ export async function POST(req: NextRequest) {
   const targetPricingTierId: PricingTierId = parsed.data.planId;
   const requestedPeriod: BillingPeriod | undefined = parsed.data.period;
 
-  /* ── 6. Load user + active subscription from DB ── */
+  /* ── 5. Load user + active subscription from DB ── */
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
@@ -108,7 +102,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  /* ── 7. Determine direction + resolve target period — server-side only ── */
+  /* ── 6. Determine direction + resolve target period — server-side only ── */
   const currentPlanTier = user.plan as unknown as PlanTier;
   const targetPlanTier = targetPricingTierId.toUpperCase() as PlanTier;
   const planDirection = getPlanChangeDirection(currentPlanTier, targetPlanTier);
@@ -136,7 +130,7 @@ export async function POST(req: NextRequest) {
   const direction: "upgrade" | "downgrade" =
     planDirection === "same" ? "upgrade" : planDirection;
 
-  /* ── 8. Resolve target Dodo product ID ── */
+  /* ── 7. Resolve target Dodo product ID ── */
   const targetProductId = getDodoProductId(targetPricingTierId, targetPeriod);
   if (!targetProductId) {
     return NextResponse.json(
@@ -145,7 +139,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  /* ── 9a. Upgrade path — prorated charge today ── */
+  /* ── 8a. Upgrade path — prorated charge today ── */
   if (direction === "upgrade") {
     try {
       // changePlan returns void — success = no throw
@@ -185,7 +179,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  /* ── 9b. Downgrade path — scheduled for next renewal, no charge today ── */
+  /* ── 8b. Downgrade path — scheduled for next renewal, no charge today ── */
   try {
     await dodo.subscriptions.changePlan(
       subscription.dodoSubscriptionId,
