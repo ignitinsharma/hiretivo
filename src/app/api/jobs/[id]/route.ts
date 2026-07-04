@@ -99,6 +99,7 @@ export async function GET(
       currency: job.currency,
       experienceLevel: job.experienceLevel,
       category: job.category,
+      location: job.location,
       applyType: job.applyType,
       externalApplyUrl: job.externalApplyUrl,
       companyId: company.companyId,

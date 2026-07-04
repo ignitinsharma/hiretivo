@@ -43,6 +43,10 @@ const SELECT_FILTERS = [
 export function FeedFilterBar({ companies }: FeedFilterBarProps) {
   const { filters, setFilter, clearFilters, activeCount } = useFeedFilters();
   const [searchInput, setSearchInput] = useState(filters.search ?? '');
+  const [companySearch, setCompanySearch] = useState('');
+  const visibleCompanies = companySearch.trim()
+    ? companies.filter((c) => c.toLowerCase().includes(companySearch.trim().toLowerCase()))
+    : companies;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -93,11 +97,24 @@ export function FeedFilterBar({ companies }: FeedFilterBarProps) {
             Companies{filters.companies?.length ? ` (${filters.companies.length})` : ''}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="max-h-64 overflow-y-auto p-2">
+        <PopoverContent className="max-h-72 overflow-y-auto p-2">
+          {companies.length > 8 && (
+            <Input
+              aria-label="Search companies"
+              placeholder="Search companies"
+              value={companySearch}
+              onChange={(e) => setCompanySearch(e.target.value)}
+              className="mb-2"
+              autoFocus
+            />
+          )}
           {companies.length === 0 && (
             <p className="p-2 text-sm text-brand-foreground-muted">No companies yet</p>
           )}
-          {companies.map((company) => (
+          {companies.length > 0 && visibleCompanies.length === 0 && (
+            <p className="p-2 text-sm text-brand-foreground-muted">No companies match &quot;{companySearch}&quot;</p>
+          )}
+          {visibleCompanies.map((company) => (
             <label key={company} className="flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-brand-surface">
               <Checkbox
                 checked={filters.companies?.includes(company) ?? false}

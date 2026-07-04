@@ -211,7 +211,20 @@ export function TopMatchesRow() {
         ))}
       </div>
 
-      <FeedJobDrawer jobId={selectedJobId} open={!!selectedJobId} onOpenChange={(open) => !open && setSelectedJobId(null)} />
+      <FeedJobDrawer
+        jobId={selectedJobId}
+        open={!!selectedJobId}
+        onOpenChange={(open) => !open && setSelectedJobId(null)}
+        isSaved={!!selectedJobId && savedJobIds.has(selectedJobId)}
+        isSaving={!!selectedJobId && savingJobIds.has(selectedJobId)}
+        onToggleSave={() => selectedJobId && handleToggleSave(selectedJobId)}
+        onPass={() => {
+          if (!selectedJobId) return;
+          dismissMutation.mutate(selectedJobId);
+          setSelectedJobId(null);
+        }}
+        onApply={() => selectedJobId && applyWizardMutation.mutate(selectedJobId)}
+      />
     </div>
   );
 }
