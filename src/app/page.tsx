@@ -46,7 +46,7 @@ export default async function Home() {
     redirect(
       session.user.role === UserRole.RECRUITER
         ? "/recruiter/dashboard"
-        : "/seeker/dashboard",
+        : "/dashboard",
     );
   }
 

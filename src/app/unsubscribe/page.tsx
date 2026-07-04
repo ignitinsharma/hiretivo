@@ -44,7 +44,7 @@ export default function UnsubscribePage({ searchParams }: UnsubscribePageProps) 
         )}
 
         <Link
-          href="/seeker/dashboard"
+          href="/dashboard"
           className="inline-block bg-brand-primary text-brand-primary-foreground font-semibold text-sm px-6 py-3 rounded-lg hover:bg-brand-primary-dk transition-colors"
         >
           Go to Dashboard
@@ -52,7 +52,7 @@ export default function UnsubscribePage({ searchParams }: UnsubscribePageProps) 
 
         <p className="mt-4 text-xs text-brand-foreground-secondary">
           Changed your mind?{' '}
-          <Link href="/seeker/dashboard" className="text-brand-foreground-muted underline underline-offset-2">
+          <Link href="/dashboard" className="text-brand-foreground-muted underline underline-offset-2">
             Re-enable job alerts
           </Link>
         </p>

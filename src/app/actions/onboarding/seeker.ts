@@ -31,7 +31,7 @@ import { z } from "zod";
 type ActionResult = { success: true } | { success: false; error: string };
 type MissingSeekerOnboardingStep = 1 | 2 | 3 | 4 | 5;
 type CompleteSeekerOnboardingResult =
-  | { success: true; redirectTo: "/seeker/dashboard" }
+  | { success: true; redirectTo: "/dashboard" }
   | { success: false; error: string; missingStep: MissingSeekerOnboardingStep };
 
 const FROM_EMAIL =
@@ -827,7 +827,7 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
     console.error("[completeSeekerOnboarding] Admin notification failed (non-fatal):", err);
   });
 
-  return { success: true, redirectTo: "/seeker/dashboard" };
+  return { success: true, redirectTo: "/dashboard" };
 }
 
 /*

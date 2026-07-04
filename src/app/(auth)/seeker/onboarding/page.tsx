@@ -86,7 +86,7 @@ export default async function SeekerOnboardingPage() {
   if (PROGRESSIVE_ONBOARDING) {
     // No review wall in the pivot — onboardingCompleted alone means "done, go browse".
     if (user?.onboardingCompleted === true) {
-      redirect("/seeker/dashboard");
+      redirect("/dashboard");
     }
     return (
       <>

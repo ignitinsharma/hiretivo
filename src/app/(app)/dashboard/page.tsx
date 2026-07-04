@@ -1,16 +1,19 @@
-import { LayoutDashboard } from "lucide-react";
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { CreditsBanner } from "@/modules/seeker/dashboard/components/CreditsBanner";
+import { TopMatchesRow } from "@/modules/seeker/dashboard/components/TopMatchesRow";
+import { ApplicationsTable } from "@/modules/seeker/dashboard/components/ApplicationsTable";
 
 /*
  * DashboardPage
- * Seeker home — match-ranked job feed lands here in Phase 2.
+ * Seeker home (Section B rebuild) — credits banner, top job matches, and the
+ * full applications table. No greeting/profile-strength/quick-stats — the
+ * pivot dashboard is apply-activity-first, ditto the Tsenta layout.
  */
 export default function DashboardPage() {
   return (
-    <PlaceholderScreen
-      icon={LayoutDashboard}
-      title="Your dashboard"
-      description="Your match-ranked job feed and apply activity will appear here."
-    />
+    <div>
+      <CreditsBanner />
+      <TopMatchesRow />
+      <ApplicationsTable />
+    </div>
   );
 }

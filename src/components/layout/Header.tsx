@@ -158,7 +158,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
             session
               ? isRecruiter
                 ? "/recruiter/dashboard"
-                : "/seeker/dashboard"
+                : "/dashboard"
               : "/"
           }
           className="flex items-center"
@@ -267,7 +267,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
                   <DropdownMenuSeparator className="bg-brand-border" />
                   <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2">
                     <Link
-                      href={isSeeker ? "/seeker/settings" : "/recruiter/settings"}
+                      href={isSeeker ? "/settings" : "/recruiter/settings"}
                       className="flex items-center gap-2 font-semibold"
                     >
                       <Settings className="w-4 h-4" />

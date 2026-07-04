@@ -154,7 +154,7 @@ function SeekerRegisterContent() {
       const dest =
         session.user.role === UserRole.RECRUITER
           ? "/recruiter/dashboard"
-          : "/seeker/dashboard";
+          : "/dashboard";
       router.replace(dest);
     }
   }, [status, session, router, hasOAuthRoleMismatch, isHandlingOAuthMismatch]);
