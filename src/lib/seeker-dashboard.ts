@@ -37,16 +37,16 @@ const FIELD_LABELS: Record<CoreField, string> = {
 };
 
 const FIELD_HREFS: Record<CoreField, string> = {
-  headline: '/seeker/settings',
-  bio: '/seeker/settings',
-  location: '/seeker/settings',
-  yearsExperience: '/seeker/settings',
-  workPreference: '/seeker/settings',
-  primaryRole: '/seeker/settings',
-  salaryMin: '/seeker/settings',
-  salaryMax: '/seeker/settings',
-  availability: '/seeker/settings',
-  resumeKey: '/seeker/settings',
+  headline: '/settings',
+  bio: '/settings',
+  location: '/settings',
+  yearsExperience: '/settings',
+  workPreference: '/settings',
+  primaryRole: '/settings',
+  salaryMin: '/settings',
+  salaryMax: '/settings',
+  availability: '/settings',
+  resumeKey: '/settings',
 };
 
 type PartialSeekerProfile = Partial<Record<CoreField, unknown>>;

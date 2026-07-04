@@ -106,7 +106,7 @@ export function SavedJobsList() {
           to revisit.
         </p>
         <Button asChild className="mt-6" variant="primary">
-          <a href="/seeker/dashboard">Browse recommendations</a>
+          <a href="/dashboard/browse">Browse recommendations</a>
         </Button>
       </Card>
     );

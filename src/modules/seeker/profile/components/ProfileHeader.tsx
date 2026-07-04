@@ -60,7 +60,7 @@ export function ProfileHeader({
           <p className="text-xs text-brand-foreground-muted">Profile complete</p>
         </div>
         <Button variant="primary" size="sm" asChild>
-          <a href="/seeker/settings">Edit profile</a>
+          <a href="/settings">Edit profile</a>
         </Button>
       </div>
     </div>

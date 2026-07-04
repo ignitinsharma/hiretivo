@@ -109,7 +109,7 @@ export async function sendWeeklyDigestEmail(input: SendWeeklyDigestEmailInput): 
 
                     <!-- CTA -->
                     <div style="margin-top:28px; text-align:center;">
-                      <a href="${input.baseUrl}/seeker/dashboard"
+                      <a href="${input.baseUrl}/dashboard"
                          style="display:inline-block; background:#7560ff; color:#ffffff; font-size:15px; font-weight:600; padding:12px 28px; border-radius:8px; text-decoration:none;">
                         View All Matches
                       </a>
@@ -137,7 +137,7 @@ export async function sendWeeklyDigestEmail(input: SendWeeklyDigestEmailInput): 
 
   const text = `Hi ${input.seekerName},\n\nYour top job matches this week:\n\n${
     input.jobs.map(j => `• ${j.title} at ${j.companyName} — ${j.score}% match\n  ${input.baseUrl}/jobs/${j.id}`).join('\n\n')
-  }\n\nView all matches: ${input.baseUrl}/seeker/dashboard\n\nUnsubscribe: ${input.unsubscribeUrl}`;
+  }\n\nView all matches: ${input.baseUrl}/dashboard\n\nUnsubscribe: ${input.unsubscribeUrl}`;
 
   await sendEmail({ from: FROM_EMAIL, to: input.toEmail, subject, html, text });
 }

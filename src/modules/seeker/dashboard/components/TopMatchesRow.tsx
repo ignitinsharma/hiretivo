@@ -20,7 +20,7 @@ const TOP_MATCHES_COUNT = 5;
 /* TopMatchesRow
  * Dashboard "Top job matches" row — curated top-5 by match score (no filters), with an
  * "Apply to all" action that stashes the queue in useUIStore().applyQueue (Phase-5 seam)
- * and opens the first job's apply modal. "View all" links to the full /seeker/feed. */
+ * and opens the first job's apply modal. "View all" links to the full /dashboard/browse. */
 export function TopMatchesRow() {
   const { openApplyModal, enqueueApply } = useUIStore();
   const hiretivo = useVerificationStatus();
@@ -111,7 +111,7 @@ export function TopMatchesRow() {
           <h2 className="text-xl font-bold text-brand-foreground">Top job matches</h2>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/seeker/feed" className="text-sm font-semibold text-brand-primary hover:underline">
+          <Link href="/dashboard/browse" className="text-sm font-semibold text-brand-primary hover:underline">
             View all →
           </Link>
           <Button

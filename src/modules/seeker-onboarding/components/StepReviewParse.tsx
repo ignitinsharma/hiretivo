@@ -170,7 +170,7 @@ export function StepReviewParse() {
       setServerError(result.error);
       return;
     }
-    router.push("/seeker/dashboard");
+    router.push("/dashboard");
     router.refresh();
   };
 
