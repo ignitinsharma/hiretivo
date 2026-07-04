@@ -16,16 +16,13 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  BillingPeriod,
-  PricingTierId,
-  UserRole,
-  PlanTier,
-} from "@/constants/enums";
+import { BillingPeriod, PlanTier, PricingTierId } from "@/constants/enums";
 import { useUIStore } from "@/store/use-ui-store";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
 import { isAllowedCheckoutReturnTo } from "@/lib/billing/checkout-return";
 import { PlanChangeModal } from "@/components/shared/PlanChangeModal";
+
+const CLIENT_PLAN_RANK: Record<string, number> = { FREE: 0, STARTER: 1, GROWTH: 2, SCALE: 3 };
 
 // ─── Table cell class constants ───────────────────────────────────────────────
 
@@ -44,20 +41,18 @@ type PlanValue = string | boolean | null;
 interface FeatureRow {
   feature: string;
   free: PlanValue;
-  starter: PlanValue;
-  growth: PlanValue;
-  scale: PlanValue;
+  pro: PlanValue;
+  max: PlanValue;
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Talent pool unlocks", free: "3", starter: "10/mo", growth: "30/mo", scale: "Unlimited" },
-  { feature: "Active job posts", free: "1", starter: "2", growth: "Unlimited", scale: "Unlimited" },
-  { feature: "Applicant profiles", free: "25/job", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
-  { feature: "Full contact details", free: null, starter: true, growth: true, scale: true },
-  { feature: "AI summaries, JD & skills", free: "3/day", starter: "Unlimited", growth: "Unlimited", scale: "Unlimited" },
-  { feature: "Interview scheduling", free: null, starter: true, growth: true, scale: true },
-  { feature: "Talent pool access", free: "Blurred", starter: true, growth: true, scale: true },
-  { feature: "Priority support", free: null, starter: true, growth: true, scale: true },
+  { feature: "AI-tailored applications", free: "8/mo", pro: "400/mo", max: "1000/mo" },
+  { feature: "Match-ranked job feed", free: true, pro: true, max: true },
+  { feature: "ATS-safe resume + cover letter", free: true, pro: true, max: true },
+  { feature: "Application tracker + notes", free: true, pro: true, max: true },
+  { feature: "Add your own job link", free: true, pro: true, max: true },
+  { feature: "Interview-rate analytics", free: null, pro: true, max: true },
+  { feature: "Priority support", free: null, pro: null, max: true },
 ];
 
 // ─── FAQ data ─────────────────────────────────────────────────────────────────
@@ -69,24 +64,27 @@ interface FaqItem {
 
 const FAQ_ITEMS: FaqItem[] = [
   {
+    question: "What counts as one AI credit?",
+    answer:
+      "1 credit = 1 job tailored — an AI-optimized resume and a matching cover letter for that job, bundled together. Regenerating either after your first attempt spends another credit.",
+  },
+  {
+    question: "What happens if generation fails?",
+    answer:
+      "If the AI generation fails before we save anything, your credit is automatically refunded — you're never charged for a failed attempt.",
+  },
+  {
+    question: "Do unused credits roll over?",
+    answer: "No — credits reset at the start of each calendar month, regardless of your billing date.",
+  },
+  {
     question: "Can I change plans later?",
     answer:
-      "Yes. You can upgrade any time from the pricing page. If you need to downgrade, contact support and we will handle it within one billing cycle.",
+      "Yes. Upgrades apply immediately with a prorated charge. Downgrades take effect at your next billing date, so you keep your current credits until then.",
   },
   {
-    question: "What payment methods do you accept?",
-    answer:
-      "Checkout is handled securely through our billing provider. Credit/debit cards and major payment methods are available at checkout.",
-  },
-  {
-    question: "Do unused unlocks roll over?",
-    answer:
-      "Paid talent pool unlock quotas reset each billing period. Free trial unlocks (3) are one-time and never reset.",
-  },
-  {
-    question: "What happens to my listings if I downgrade?",
-    answer:
-      "Your existing listings remain, but Free plan limits apply immediately after downgrade. Existing unlocks are preserved.",
+    question: "Is there a watermark on my resume?",
+    answer: "Never, on any plan. It's your resume — a watermark only hurts your chances with employers.",
   },
 ];
 
@@ -146,7 +144,7 @@ function PricingCardFeatureList({
 
 /*
  * PricingCard
- * Single tier card for the pricing page. Handles free, paid, and custom (enterprise) tiers.
+ * Single Ladder-A tier card (Free/Pro/Max) for the seeker pricing page.
  */
 function PricingCard({
   tier,
@@ -156,22 +154,17 @@ function PricingCard({
   isPending = false,
 }: PricingCardProps) {
   const isHighlighted = tier.highlighted === true;
-  const isCustom = tier.isCustom === true;
+  const isFree = tier.id === PricingTierId.FREE;
 
   const isCurrentPlan =
     (userPlan === PlanTier.STARTER && tier.id === PricingTierId.STARTER) ||
     (userPlan === PlanTier.GROWTH && tier.id === PricingTierId.GROWTH) ||
-    (userPlan === PlanTier.SCALE && tier.id === PricingTierId.SCALE);
+    (userPlan === PlanTier.SCALE && tier.id === PricingTierId.GROWTH);
 
   const displayedCtaText = isCurrentPlan ? "Manage billing" : tier.cta;
   const ribbonLabel = isCurrentPlan ? "Current plan" : isHighlighted ? "Most Popular" : null;
 
-  const displayedPrice = (() => {
-    if (tier.monthlyPrice === null) return null;
-    if (isAnnual && tier.annualTotal !== null) return tier.annualTotal;
-    return tier.monthlyPrice;
-  })();
-
+  const displayedPrice = isAnnual ? tier.annualTotal : tier.monthlyPrice;
   const billingSuffix = isAnnual ? "/yr" : "/mo";
   const priceFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
@@ -209,35 +202,28 @@ function PricingCard({
           {tier.name}
         </h3>
 
-        {isCustom ? (
-          <>
-            <div className="flex items-baseline gap-1 min-h-12">
-              <span className="text-4xl font-bold text-slate-900">Custom</span>
-            </div>
-            <p className="mt-2 text-slate-400 text-[10px]">Pricing available after consultation</p>
-          </>
+        <div className="flex items-baseline gap-1">
+          <span className={cn("text-4xl font-bold", isHighlighted ? "text-white" : "text-slate-900")}>
+            ${priceFormatter.format(displayedPrice)}
+          </span>
+          {!isFree && (
+            <span className={cn("text-sm ml-1", isHighlighted ? "text-gray-200" : "text-slate-500")}>
+              {billingSuffix}
+            </span>
+          )}
+        </div>
+        {isFree ? (
+          <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
         ) : (
-          <>
-            <div className="flex items-baseline gap-1">
-              <span className={cn("text-4xl font-bold", isHighlighted ? "text-white" : "text-slate-900")}>
-                ${displayedPrice === null ? "" : priceFormatter.format(displayedPrice)}
-              </span>
-              {tier.id !== PricingTierId.FREE && (
-                <span className={cn("text-sm ml-1", isHighlighted ? "text-gray-200" : "text-slate-500")}>
-                  {billingSuffix}
-                </span>
-              )}
-            </div>
-            {tier.id === PricingTierId.FREE && (
-              <p className="mt-2 text-slate-400 text-[10px]">Forever free</p>
-            )}
-          </>
+          <p className={cn("mt-2 text-[10px]", isHighlighted ? "text-gray-200" : "text-slate-400")}>
+            {tier.monthlyCredits} AI-tailored applications / month
+          </p>
         )}
       </div>
 
-      {!isCustom && tier.id !== PricingTierId.FREE && (
+      {!isFree && (
         <div className={cn("p-2.5 rounded-lg mb-6 text-center", isHighlighted ? "bg-white/10" : "bg-gray-50")}>
-          {isAnnual && tier.annualSavings !== null && tier.annualTotal !== null ? (
+          {isAnnual ? (
             <p className={cn("text-[10px] font-bold", isHighlighted ? "text-white" : "text-black")}>
               Save ${priceFormatter.format(tier.annualSavings)}/yr · ${priceFormatter.format(tier.annualTotal)} billed annually
             </p>
@@ -249,30 +235,23 @@ function PricingCard({
         </div>
       )}
 
-      {tier.id === PricingTierId.FREE && <div className="h-px bg-slate-100 mb-6" />}
-      {isCustom && <div className="h-px bg-slate-100 mb-6" />}
+      {isFree && <div className="h-px bg-slate-100 mb-6" />}
 
       <PricingCardFeatureList features={tier.features} highlighted={isHighlighted} />
 
-      {isCustom ? (
-        <Link href="/contact" className="w-full mt-auto">
-          <Button variant="default" size="lg" className="w-full">{tier.cta}</Button>
-        </Link>
-      ) : (
-        <Button
-          variant={isHighlighted ? "primary" : "secondary"}
-          size="lg"
-          className={cn(
-            "w-full mt-auto",
-            isHighlighted && "transition-all duration-200 hover:px-14",
-          )}
-          loading={isPending}
-          loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
-          onClick={() => onCtaClick(tier.id)}
-        >
-          {displayedCtaText}
-        </Button>
-      )}
+      <Button
+        variant={isHighlighted ? "primary" : "secondary"}
+        size="lg"
+        className={cn(
+          "w-full mt-auto",
+          isHighlighted && "transition-all duration-200 hover:px-14",
+        )}
+        loading={isPending}
+        loadingText={isCurrentPlan ? "Opening billing..." : "Opening checkout..."}
+        onClick={() => onCtaClick(tier.id)}
+      >
+        {displayedCtaText}
+      </Button>
     </div>
   );
 }
@@ -281,16 +260,15 @@ function PricingCompareTable() {
   return (
     <section className="py-24 px-6 overflow-x-auto border-t border-brand-border-light">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-slate-900 mb-16">Compare features</h2>
-        <div className="min-w-[700px]">
+        <h2 className="text-3xl font-bold text-center text-slate-900 mb-16">Compare plans</h2>
+        <div className="min-w-[600px]">
           <table className="w-full border-collapse">
             <thead>
               <tr className="text-left border-b border-brand-border">
                 <th className={cn(TD_BASE, "font-bold text-slate-500 uppercase tracking-wider")}>Feature</th>
                 <th className={cn(TD_BASE, "font-bold text-slate-900")}>Free</th>
-                <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>Starter</th>
-                <th className={cn(TD_BASE, "font-bold text-slate-900")}>Growth</th>
-                <th className={cn(TD_BASE, "font-bold text-slate-900")}>Scale</th>
+                <th className={cn(CELL_PRO, "font-bold rounded-t-xl")}>Pro</th>
+                <th className={cn(TD_BASE, "font-bold text-slate-900")}>Max</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border-light">
@@ -298,9 +276,8 @@ function PricingCompareTable() {
                 <tr key={row.feature} className={idx === FEATURE_ROWS.length - 1 ? "border-b-0" : ""}>
                   <td className={CELL_LABEL}>{row.feature}</td>
                   <FeatureCell value={row.free} />
-                  <FeatureCell value={row.starter} isHighlighted />
-                  <FeatureCell value={row.growth} />
-                  <FeatureCell value={row.scale} />
+                  <FeatureCell value={row.pro} isHighlighted />
+                  <FeatureCell value={row.max} />
                 </tr>
               ))}
             </tbody>
@@ -351,8 +328,9 @@ function PricingFaqSection() {
 
 /*
  * PricingClient
- * Client-side pricing page. Handles plan detection, checkout initiation,
- * and billing portal redirect for existing paid customers.
+ * Client-side seeker pricing page (Phase 8, Ladder A). Handles plan
+ * detection, checkout initiation, and billing portal redirect for existing
+ * paying seekers.
  */
 export function PricingClient() {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -386,7 +364,7 @@ export function PricingClient() {
 
   async function handleCtaClick(tierId: string) {
     if (tierId === PricingTierId.FREE) {
-      router.push("/register");
+      router.push(session?.user ? "/dashboard" : "/register");
       return;
     }
 
@@ -395,21 +373,13 @@ export function PricingClient() {
       return;
     }
 
-    if (session.user.role === UserRole.SEEKER) {
-      toast.error("This plan is for recruiters only");
-      return;
-    }
-
-    // Current-plan holder → open billing portal
-    const isPaidTier =
-      tierId === PricingTierId.STARTER ||
-      tierId === PricingTierId.GROWTH ||
-      tierId === PricingTierId.SCALE;
+    const isPaidTier = tierId === PricingTierId.STARTER || tierId === PricingTierId.GROWTH;
     const planMatchesTier =
       (userPlan === PlanTier.STARTER && tierId === PricingTierId.STARTER) ||
       (userPlan === PlanTier.GROWTH && tierId === PricingTierId.GROWTH) ||
-      (userPlan === PlanTier.SCALE && tierId === PricingTierId.SCALE);
+      (userPlan === PlanTier.SCALE && tierId === PricingTierId.GROWTH);
 
+    // Current-plan holder → open billing portal
     if (planMatchesTier) {
       setPendingTier(tierId);
       try {
@@ -427,13 +397,10 @@ export function PricingClient() {
 
     // Paid user clicking a different paid tier → open plan change modal
     if (isPaidTier && userPlan && userPlan !== PlanTier.FREE) {
-      const TIER_NAMES: Record<string, string> = {
-        starter: "Starter", growth: "Growth", scale: "Scale",
-      };
-      // Determine direction client-side for UX (server will revalidate)
-      const PLAN_RANK: Record<string, number> = { FREE: 0, STARTER: 1, GROWTH: 2, SCALE: 3 };
-      const currentRank = PLAN_RANK[userPlan] ?? 0;
-      const targetRank = PLAN_RANK[tierId.toUpperCase()] ?? 0;
+      const TIER_NAMES: Record<string, string> = { starter: "Pro", growth: "Max" };
+      // Determine direction client-side for UX (server re-validates via getPlanChangeDirection)
+      const currentRank = CLIENT_PLAN_RANK[userPlan] ?? 0;
+      const targetRank = CLIENT_PLAN_RANK[tierId.toUpperCase()] ?? 0;
       const mode = targetRank > currentRank ? "upgrade" : "downgrade";
       setPlanChangeModal({
         open: true,
@@ -476,15 +443,14 @@ export function PricingClient() {
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-6">
-            Pricing that scales with your hiring
+            Apply smarter, not more
           </h1>
           <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
-            Access India&apos;s verified engineers with clear talent pool unlocks and applicant profile limits.
+            AI-tailored resumes and cover letters, honest match scores, and an assisted
+            apply flow — tailored, never fabricated.
           </p>
         </div>
       </section>
-
-      {/* <WhyHiretivo /> */}
 
       {/* Billing toggle + Cards */}
       <section className="py-12 px-6 text-center">
@@ -514,15 +480,15 @@ export function PricingClient() {
               >
                 Annual
                 <span className="bg-brand-primary text-white text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider pointer-events-none">
-                  Save 17%
+                  2 months free
                 </span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* 5-card grid (Free + 3 paid + Enterprise) */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch px-4 relative z-0">
+        {/* 3-card grid (Free + Pro + Max) */}
+        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch px-4 relative z-0">
           {PLAN_TIERS.map((tier) => (
             <PricingCard
               key={tier.id}

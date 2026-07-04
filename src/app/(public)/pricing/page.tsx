@@ -5,7 +5,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 
 export const metadata = generatePageMetadata({
   title: "Pricing",
-  description: "Pricing that scales with your hiring needs.",
+  description: "AI-tailored resumes and cover letters, priced by credits. Free 8/mo, Pro 400/mo, Max 1000/mo.",
   path: "/pricing",
 });
 
