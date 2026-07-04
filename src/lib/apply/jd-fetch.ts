@@ -1,4 +1,6 @@
-import dns from "node:dns/promises";
+import dns from "node:dns";
+import http from "node:http";
+import https from "node:https";
 import net from "node:net";
 import { AiMessageRole, AtsSource } from "@/constants/enums";
 import { detectAtsFromUrl } from "@/lib/ats/registry";
@@ -42,35 +44,115 @@ function isPrivateOrReservedIp(ip: string): boolean {
 }
 
 /*
- * assertPublicHttpUrl
- * Rejects non-http(s) schemes and resolves the hostname (or reads it
- * directly when it's already a literal IP) to block SSRF into
- * loopback/private/link-local/cloud-metadata addresses. Re-run on every
- * redirect hop, not just the initial URL.
+ * pinnedLookup
+ * Custom `lookup` for http(s).request — Node's net module calls this to
+ * resolve the host and connects to whatever address it returns, so
+ * validating here (instead of a separate dns.lookup-then-fetch) closes the
+ * DNS-rebinding TOCTOU window: there is no gap between "resolve" and
+ * "connect" for an attacker's DNS to flip the record in.
+ * Honors `options.all` — Happy Eyeballs (autoSelectFamily, on by default)
+ * calls net's default lookup with `all:true` and expects the array-form
+ * callback; passing back the single-address form in that case makes net.js
+ * blow up with a cryptic "Invalid IP address: undefined".
  */
-async function assertPublicHttpUrl(rawUrl: string): Promise<URL> {
-  const parsed = new URL(rawUrl);
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error("Unsupported URL scheme");
-  }
-  const hostname = parsed.hostname;
-  if (net.isIP(hostname)) {
-    if (isPrivateOrReservedIp(hostname)) throw new Error("Blocked host");
-    return parsed;
-  }
-  const records = await dns.lookup(hostname, { all: true });
-  if (records.length === 0 || records.some((r) => isPrivateOrReservedIp(r.address))) {
-    throw new Error("Blocked host");
-  }
-  return parsed;
+function pinnedLookup(
+  hostname: string,
+  options: dns.LookupOptions,
+  callback:
+    | ((err: NodeJS.ErrnoException | null, address: string, family: number) => void)
+    | ((err: NodeJS.ErrnoException | null, addresses: dns.LookupAddress[]) => void),
+): void {
+  dns.lookup(hostname, { all: true }, (err, addresses) => {
+    if (err) return (callback as (e: NodeJS.ErrnoException) => void)(err);
+    if (!addresses || addresses.length === 0) {
+      return (callback as (e: NodeJS.ErrnoException) => void)(new Error("DNS resolution failed") as NodeJS.ErrnoException);
+    }
+    if (addresses.some((a) => isPrivateOrReservedIp(a.address))) {
+      return (callback as (e: NodeJS.ErrnoException) => void)(new Error("Blocked host") as NodeJS.ErrnoException);
+    }
+    if (options.all) {
+      (callback as (err: null, addresses: dns.LookupAddress[]) => void)(null, addresses);
+      return;
+    }
+    const chosen = addresses[0];
+    (callback as (err: null, address: string, family: number) => void)(null, chosen.address, chosen.family);
+  });
+}
+
+/*
+ * fetchOnce
+ * Single HTTP(S) request (no redirect following) using pinnedLookup to
+ * connect only to a pre-validated, non-private address while still sending
+ * the real hostname (Host header, TLS SNI/servername) so cert validation
+ * and virtual-hosted sites work normally. Body is streamed with a hard byte
+ * cap instead of buffered unbounded.
+ */
+function fetchOnce(
+  target: URL,
+): Promise<{ status: number; location: string | null; contentType: string; body: Buffer } | null> {
+  return new Promise((resolve) => {
+    if (target.protocol !== "http:" && target.protocol !== "https:") {
+      resolve(null);
+      return;
+    }
+    const hostnameIsIp = net.isIP(target.hostname) !== 0;
+    if (hostnameIsIp && isPrivateOrReservedIp(target.hostname)) {
+      resolve(null);
+      return;
+    }
+
+    const client = target.protocol === "https:" ? https : http;
+    const req = client.request(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname,
+        port: target.port || (target.protocol === "https:" ? 443 : 80),
+        path: `${target.pathname}${target.search}`,
+        method: "GET",
+        headers: { "User-Agent": "Hiretivo/1.0 (+https://hiretivo.com)", Host: target.host },
+        timeout: 8000,
+        // Literal-IP URLs skip the lookup (nothing to resolve); pinnedLookup
+        // handles hostnames and is what actually closes the TOCTOU gap.
+        lookup: hostnameIsIp ? undefined : pinnedLookup,
+      },
+      (res) => {
+        const status = res.statusCode ?? 0;
+        const location = typeof res.headers.location === "string" ? res.headers.location : null;
+        const contentType = res.headers["content-type"] ?? "";
+        const contentLength = res.headers["content-length"];
+        if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+          res.destroy();
+          resolve(null);
+          return;
+        }
+
+        const chunks: Buffer[] = [];
+        let total = 0;
+        res.on("data", (chunk: Buffer) => {
+          total += chunk.length;
+          if (total > MAX_BODY_BYTES) {
+            res.destroy();
+            resolve(null);
+            return;
+          }
+          chunks.push(chunk);
+        });
+        res.on("end", () => resolve({ status, location, contentType, body: Buffer.concat(chunks) }));
+        res.on("error", () => resolve(null));
+      },
+    );
+    req.on("timeout", () => req.destroy());
+    req.on("error", () => resolve(null));
+    req.end();
+  });
 }
 
 /*
  * safeFetchHtml
  * Fetches a seeker-pasted URL with SSRF and resource-exhaustion guards:
- * scheme + DNS-resolved-IP validated on every redirect hop (redirects are
- * followed manually, never automatically), and the body is streamed with a
- * hard byte cap instead of buffered via res.text().
+ * every redirect hop connects only to a pinned, pre-validated non-private
+ * address (see pinnedLookup — no separate lookup-then-fetch TOCTOU window),
+ * and the body is capped at MAX_BODY_BYTES instead of buffered unbounded.
  * @returns { ok:true, body } on a safe, readable text/html response, else { ok:false }
  */
 async function safeFetchHtml(rawUrl: string): Promise<{ ok: true; body: string } | { ok: false }> {
@@ -78,47 +160,24 @@ async function safeFetchHtml(rawUrl: string): Promise<{ ok: true; body: string }
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     let target: URL;
     try {
-      target = await assertPublicHttpUrl(currentUrl);
+      target = new URL(currentUrl);
     } catch {
       return { ok: false };
     }
 
-    const res = await fetch(target, {
-      headers: { "User-Agent": "Hiretivo/1.0 (+https://hiretivo.com)" },
-      redirect: "manual",
-      signal: AbortSignal.timeout(8000),
-    });
+    const res = await fetchOnce(target);
+    if (!res) return { ok: false };
 
     if (res.status >= 300 && res.status < 400) {
-      const location = res.headers.get("location");
-      if (!location) return { ok: false };
-      currentUrl = new URL(location, target).toString();
+      if (!res.location) return { ok: false };
+      currentUrl = new URL(res.location, target).toString();
       continue;
     }
 
-    if (!res.ok) return { ok: false };
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/html")) return { ok: false };
+    if (res.status < 200 || res.status >= 300) return { ok: false };
+    if (!res.contentType.includes("text/html")) return { ok: false };
 
-    const contentLength = res.headers.get("content-length");
-    if (contentLength && Number(contentLength) > MAX_BODY_BYTES) return { ok: false };
-
-    const reader = res.body?.getReader();
-    if (!reader) return { ok: false };
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_BODY_BYTES) {
-        await reader.cancel();
-        return { ok: false };
-      }
-      chunks.push(value);
-    }
-    const body = Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf-8");
-    return { ok: true, body };
+    return { ok: true, body: res.body.toString("utf-8") };
   }
   return { ok: false };
 }
