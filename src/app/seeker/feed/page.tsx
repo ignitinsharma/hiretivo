@@ -1,6 +1,7 @@
 import { JobStatus } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { FeedView } from '@/modules/seeker/feed/components/FeedView';
+import { AddLinkCard } from '@/modules/seeker/apply/components/AddLinkCard';
 
 /*
  * SeekerFeedPage
@@ -28,6 +29,9 @@ export default async function SeekerFeedPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-brand-foreground tracking-tight">Job Feed</h1>
         <p className="mt-2 text-lg text-brand-foreground-muted">Match-ranked jobs, filtered your way.</p>
+      </div>
+      <div className="mb-6">
+        <AddLinkCard />
       </div>
       <FeedView companies={companies} />
     </div>

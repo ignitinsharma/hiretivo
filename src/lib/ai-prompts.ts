@@ -693,3 +693,45 @@ export function parseResumeDocument(raw: string): ResumeDocument | null {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// JD Extraction (Pivot Phase 7 — "add your own link")
+// ---------------------------------------------------------------------------
+
+export interface JdExtractInput {
+  /** Raw text: stripped page HTML for generic-fetch, or the seeker's pasted JD. Truncated to 8000 chars by caller. */
+  rawText: string;
+  /** URL for context only; never trusted as content. */
+  sourceUrl: string | null;
+}
+
+/*
+ * buildJdExtractMessages
+ * Constructs the system + user message pair asking the model to structure a
+ * free-text job posting (fetched HTML or a seeker's pasted JD) into a title,
+ * company, clean description, and up to 12 standardised skills. Extraction
+ * only — if the text isn't a job posting, return empty fields, never invent.
+ * @param input - { rawText, sourceUrl }
+ * @returns { system, user } for openrouter.chat.completions
+ */
+export function buildJdExtractMessages(input: JdExtractInput): { system: string; user: string } {
+  const text = input.rawText.slice(0, 8000);
+
+  return {
+    system: `You are a job-posting extraction engine. Given raw text scraped from a job posting page (or pasted directly by a candidate), extract the title, company, a clean plain-text description, and up to 12 standardised technical skills.
+
+Return ONLY a valid JSON object with exactly these keys: {"title":"","company":null,"description":"","skills":[]} — no markdown, no code fences, no explanation.
+
+Rules:
+- "title": the job title as stated, else ""
+- "company": the hiring company's name if stated, else null — never guess from the URL
+- "description": the job description body as clean plain text (strip nav/footer/boilerplate), else ""
+- "skills": up to 12 standardised skill names candidates would search for (e.g. "TypeScript" not "type-safe JavaScript"), else []
+- If the text is not a job posting (e.g. a login wall, an error page, unrelated content), return {"title":"","company":null,"description":"","skills":[]}
+- Never invent a company, title, or skill not evidenced in the text.`,
+
+    user: input.sourceUrl ? `Source URL: ${input.sourceUrl}\n\n${text}` : text,
+  };
+}
+
+export const JD_EXTRACT_CONFIG = { max_tokens: 1200, temperature: 0.1 } as const;

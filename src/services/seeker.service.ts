@@ -172,6 +172,17 @@ export const seekerService = {
     return data;
   },
 
+  /* POST /api/seeker/apply/from-link — either a new PASTED_LINK Application
+   * id, or needsManualPaste:true asking the caller to re-submit with pastedText. */
+  applyFromLink: async (
+    input: { url: string; pastedText?: string },
+  ): Promise<DataResponse<{ applicationId: string }> | { needsManualPaste: true; reason: string }> => {
+    const { data } = await apiClient.post<
+      DataResponse<{ applicationId: string }> | { needsManualPaste: true; reason: string }
+    >('/seeker/apply/from-link', input);
+    return data;
+  },
+
   getApplication: async (id: string): Promise<DataResponse<ApplicationDetail>> => {
     const { data } = await apiClient.get<DataResponse<ApplicationDetail>>(`/seeker/applications/${id}`);
     return data;
