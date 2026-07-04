@@ -6,12 +6,9 @@ import type { ProjectInput } from '@/lib/validations/project.schema';
 import type { OptimizeMode } from '@/constants/enums';
 import type { JobDetailResponse, JobListItem } from '@/modules/jobs/types/job.types';
 import type { FeedFilters } from '@/modules/seeker/feed/types/feed.types';
-import type {
-  ProfileStrengthSummary,
-  SeekerDashboardData,
-  SeekerInterview,
-} from '@/modules/seeker/dashboard/types/dashboard.types';
+import type { ProfileStrengthSummary } from '@/modules/seeker/dashboard/types/dashboard.types';
 import type { ApplicationDetail, SubmittedFormField, ApplyKeywordStats } from '@/modules/seeker/apply/types/apply.types';
+import type { DashboardApplicationSummary } from '@/modules/seeker/dashboard/types/applications-table.types';
 import type { ResumeDocument } from '@/modules/seeker/profile/types/resume-document.types';
 import type { ResumeOptimizeRequest, CoverLetterRequest } from '@/lib/validations/apply-ai.schema';
 
@@ -89,11 +86,6 @@ export const seekerService = {
     return data;
   },
 
-  getDashboardSummary: async (): Promise<SeekerDashboardData> => {
-    const { data } = await apiClient.get<DataResponse<SeekerDashboardData>>('/seeker/dashboard');
-    return data.data;
-  },
-
   updateDigestPreference: async (enabled: boolean): Promise<void> => {
     await apiClient.patch('/seeker/digest', { enabled });
   },
@@ -109,11 +101,6 @@ export const seekerService = {
 
   updateSettings: async (payload: Partial<SeekerSettingsInput>): Promise<void> => {
     await apiClient.patch('/seeker/settings', payload);
-  },
-
-  getUpcomingInterviews: async (): Promise<SeekerInterview[]> => {
-    const { data } = await apiClient.get<DataResponse<SeekerInterview[]>>('/seeker/interviews');
-    return data.data;
   },
 
   /* getJobDetail — reuses the public GET /api/jobs/[id] endpoint (already auth-aware for match data). */
@@ -169,6 +156,13 @@ export const seekerService = {
 
   createApplication: async (jobId: string): Promise<DataResponse<{ id: string }>> => {
     const { data } = await apiClient.post<DataResponse<{ id: string }>>('/seeker/applications', { jobId });
+    return data;
+  },
+
+  /* GET /api/seeker/applications — full list backing the /dashboard applications
+   * table and the /dashboard/tracker kanban (Applications + passed/DismissedJob rows). */
+  getMyDashboardApplications: async (): Promise<DataResponse<DashboardApplicationSummary[]>> => {
+    const { data } = await apiClient.get<DataResponse<DashboardApplicationSummary[]>>('/seeker/applications');
     return data;
   },
 
