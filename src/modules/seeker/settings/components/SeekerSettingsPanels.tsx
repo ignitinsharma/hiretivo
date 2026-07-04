@@ -14,6 +14,7 @@ import { ApplicationDefaultsSection } from "@/modules/seeker/settings/components
 import { ProjectsSection } from "@/modules/seeker/settings/components/ProjectsSection";
 import { SelfIdSection } from "@/modules/seeker/settings/components/SelfIdSection";
 import { OptimizeModeSection } from "@/modules/seeker/settings/components/OptimizeModeSection";
+import { PlansSection } from "@/modules/seeker/settings/components/PlansSection";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 /*
@@ -47,6 +48,7 @@ export function SeekerSettingsPanels() {
       <ApplicationDefaultsSection />
       <SelfIdSection />
       <OptimizeModeSection />
+      <PlansSection />
       <ResumeSection resumeKey={settings?.resumeKey} />
       <PasswordSecuritySection />
     </main>
