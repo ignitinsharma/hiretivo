@@ -55,6 +55,7 @@ export interface JobDetailResponse {
     currency: string | null;
     experienceLevel: string | null;
     category: string | null;
+    location: string | null;
     applyType: string;
     externalApplyUrl: string | null;
     companyName: string;

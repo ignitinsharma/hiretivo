@@ -124,11 +124,16 @@ export function FeedView({ companies }: FeedViewProps) {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const savedCount = savedJobs?.pages[0]?.pagination.total ?? 0;
+
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-3">
         <FeedFilterBar companies={companies} />
       </div>
+      <p className="mb-6 text-sm text-brand-foreground-muted">
+        {savedCount > 0 ? `${savedCount} saved job${savedCount === 1 ? '' : 's'}` : 'No saved jobs yet'}
+      </p>
 
       {isLoading ? (
         <div className="flex flex-col gap-5">
@@ -187,7 +192,22 @@ export function FeedView({ companies }: FeedViewProps) {
         </div>
       )}
 
-      <FeedJobDrawer jobId={selectedJobId} open={!!selectedJobId} onOpenChange={(open) => !open && setSelectedJobId(null)} />
+      <FeedJobDrawer
+        jobId={selectedJobId}
+        open={!!selectedJobId}
+        onOpenChange={(open) => !open && setSelectedJobId(null)}
+        isSaved={!!selectedJobId && savedJobIds.has(selectedJobId)}
+        isSaving={!!selectedJobId && savingJobIds.has(selectedJobId)}
+        isDismissing={dismissingJobId === selectedJobId}
+        onToggleSave={() => selectedJobId && handleToggleSave(selectedJobId)}
+        onPass={() => {
+          if (!selectedJobId) return;
+          dismissMutation.mutate(selectedJobId);
+          setSelectedJobId(null);
+        }}
+        onApply={() => selectedJobId && applyWizardMutation.mutate(selectedJobId)}
+        searchTerm={filters.search}
+      />
     </div>
   );
 }
