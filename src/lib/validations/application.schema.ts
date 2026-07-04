@@ -98,11 +98,19 @@ const ResumeDocumentSchema = z.object({
     .max(20),
 });
 
-/* POST /api/seeker/applications/[id]/finalize */
+/*
+ * POST /api/seeker/applications/[id]/finalize
+ * All fields optional at the schema level — the route enforces the real
+ * contract: `resume` is required only the first time (before
+ * tailoredResumeKey exists); `submittedFormData` is what actually moves a
+ * row from Needs-you to Submitted, and can arrive in a later call (Section D5
+ * Approve-all) once the PDF was already rendered by an earlier call (D5
+ * Apply-to-all's batch-generate step).
+ */
 export const finalizeApplicationSchema = z.object({
-  resume: ResumeDocumentSchema,
-  coverLetter: z.string().trim().max(10_000),
-  submittedFormData: z.array(SubmittedFormFieldSchema).max(60),
+  resume: ResumeDocumentSchema.optional(),
+  coverLetter: z.string().trim().max(10_000).optional(),
+  submittedFormData: z.array(SubmittedFormFieldSchema).max(60).optional(),
 });
 
 export type CreateApplicationWizardInput = z.infer<typeof createApplicationWizardSchema>;

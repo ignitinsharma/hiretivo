@@ -2,11 +2,17 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { Search, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useMyApplications } from '@/modules/seeker/dashboard/hooks/use-my-applications';
+import { seekerService } from '@/services/seeker.service';
+import type { SeekerSettingsData } from '@/services/seeker.service';
+import type { ApplicationDefaultsInput } from '@/lib/validations/application-defaults.schema';
+import { buildSubmittedFormRows } from '@/modules/seeker/apply/utils/build-submitted-form-rows';
+import { useMyApplications, myApplicationsQueryKey } from '@/modules/seeker/dashboard/hooks/use-my-applications';
 import {
   DASHBOARD_TABS,
   DASHBOARD_TAB_LABELS,
@@ -54,14 +60,16 @@ function statusCellLabel(row: DashboardApplicationSummary): string {
  * ApplicationsTable
  * The /dashboard "All applications" table — every application (+ passed
  * jobs) grouped into tabs by lifecycle stage, searchable by company.
- * "Approve all" batch-confirms rows sitting in Needs-you (finalized, not yet
- * submitted); with today's finalize semantics that tab is always empty (see
- * DashboardApplicationSummary doc), so the button stays disabled until a
- * future finalize split makes it reachable — kept here so no UI rework is
- * needed when that ships.
+ * "Approve all" (Section D5) batch-confirms every row sitting in Needs-you —
+ * rows Apply-to-all already rendered a resume for but hasn't submitted yet.
+ * Builds one submittedFormData snapshot from settings + application defaults
+ * and posts it to each row's finalize (no resume/coverLetter — already
+ * rendered, so no re-render, no second PDF, no credit spent). Failures are
+ * isolated per row.
  */
 export function ApplicationsTable() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: rows, isLoading, isError, refetch } = useMyApplications();
   const [activeTab, setActiveTab] = useState<DashboardTab>(DashboardTab.ALL);
   const [search, setSearch] = useState('');
@@ -96,6 +104,45 @@ export function ApplicationsTable() {
     () => tabbed.filter(({ tab }) => tab === DashboardTab.NEEDS_YOU).map(({ row }) => row),
     [tabbed],
   );
+
+  const { data: settings } = useQuery<{ data: SeekerSettingsData }>({
+    queryKey: ['seeker-settings'],
+    queryFn: seekerService.getSettings,
+    staleTime: 60_000,
+    enabled: needsYouRows.length > 0,
+  });
+  const { data: defaultsData } = useQuery<{ data: ApplicationDefaultsInput | null }>({
+    queryKey: ['seeker-application-defaults'],
+    queryFn: seekerService.getApplicationDefaults,
+    staleTime: 60_000,
+    enabled: needsYouRows.length > 0,
+  });
+
+  const approveAllMutation = useMutation({
+    mutationFn: async () => {
+      const submittedFormData = buildSubmittedFormRows(settings?.data, defaultsData?.data);
+      const results = await Promise.all(
+        needsYouRows.map((row) =>
+          seekerService
+            .finalizeApplication(row.id, { submittedFormData })
+            .then(() => true)
+            .catch(() => false),
+        ),
+      );
+      return results.filter(Boolean).length;
+    },
+    onSuccess: (succeeded) => {
+      if (succeeded > 0) void queryClient.invalidateQueries({ queryKey: myApplicationsQueryKey });
+      const failed = needsYouRows.length - succeeded;
+      if (failed === 0) {
+        toast.success(`Submitted ${succeeded} application${succeeded === 1 ? '' : 's'}.`);
+      } else {
+        toast.success(`Submitted ${succeeded} of ${needsYouRows.length} applications.`);
+        toast.error(`${failed} failed to submit — try again from the wizard.`);
+      }
+    },
+    onError: () => toast.error('Could not approve applications. Try again.'),
+  });
 
   const handleRowOpen = (row: DashboardApplicationSummary) => {
     if (row.kind !== 'application') return;
@@ -154,8 +201,13 @@ export function ApplicationsTable() {
           <Button asChild variant="secondary" size="sm">
             <a href="/dashboard/tracker">Open tracker</a>
           </Button>
-          <Button variant="secondary" size="sm" disabled={needsYouRows.length === 0}>
-            Approve all
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={needsYouRows.length === 0 || approveAllMutation.isPending}
+            onClick={() => approveAllMutation.mutate()}
+          >
+            {approveAllMutation.isPending ? 'Approving…' : 'Approve all'}
           </Button>
         </div>
       </div>
@@ -207,7 +259,7 @@ export function ApplicationsTable() {
                   </td>
                   <td className="px-4 py-3 text-brand-foreground-muted">{row.isFinalized ? 'Ready' : 'Off'}</td>
                   <td className="px-4 py-3 text-brand-foreground-muted">
-                    {row.hasSubmittedForm ? 'Ready' : 'Off'}
+                    {row.hasCoverLetter ? 'Ready' : 'Off'}
                   </td>
                   <td className="px-4 py-3 text-brand-foreground">{statusCellLabel(row)}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-brand-foreground-muted">

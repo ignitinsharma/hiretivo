@@ -195,10 +195,14 @@ export const seekerService = {
     await apiClient.patch(`/seeker/applications/${id}`, payload);
   },
 
+  /* finalizeApplication — `resume` is required only the first call (before a
+   * PDF exists); `submittedFormData` is what actually confirms submission and
+   * can arrive in a later, separate call (Section D5 Approve-all) against an
+   * already-rendered row. See the route's doc comment for the full contract. */
   finalizeApplication: async (
     id: string,
-    payload: { resume: unknown; coverLetter: string; submittedFormData: SubmittedFormField[] },
-  ): Promise<DataResponse<{ tailoredResumeUrl: string }>> => {
+    payload: Partial<{ resume: unknown; coverLetter: string; submittedFormData: SubmittedFormField[] }>,
+  ): Promise<DataResponse<{ tailoredResumeUrl: string | null }>> => {
     const { data } = await apiClient.post<DataResponse<{ tailoredResumeUrl: string }>>(
       `/seeker/applications/${id}/finalize`,
       payload,

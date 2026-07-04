@@ -22,6 +22,7 @@ export interface DashboardApplicationSummary {
   status: ApplicationStatus | null;
   source: ApplySource | null;
   isFinalized: boolean;
+  hasCoverLetter: boolean;
   hasSubmittedForm: boolean;
   hasGenerationError: boolean;
   applyUrl: string | null;
