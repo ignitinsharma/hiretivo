@@ -1,8 +1,16 @@
 import { z } from "zod";
 
-/* Client + server input for POST /api/seeker/apply/from-link. */
+/* Client + server input for POST /api/seeker/apply/from-link. Only http(s)
+ * is accepted — jd-fetch.ts still re-validates scheme + resolved IP before
+ * fetching (defense in depth against SSRF), this just rejects obviously
+ * unsafe schemes (javascript:, file:, ftp:, ...) at the boundary. */
 export const ApplyFromLinkSchema = z.object({
-  url: z.string().trim().url("Enter a valid job posting URL.").max(2048),
+  url: z
+    .string()
+    .trim()
+    .url("Enter a valid job posting URL.")
+    .max(2048)
+    .refine((value) => /^https?:\/\//i.test(value), "Only http:// or https:// URLs are supported."),
   pastedText: z.string().trim().max(20000).optional(),
 });
 export type ApplyFromLinkInput = z.infer<typeof ApplyFromLinkSchema>;

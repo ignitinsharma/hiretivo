@@ -1,3 +1,5 @@
+import dns from "node:dns/promises";
+import net from "node:net";
 import { AiMessageRole, AtsSource } from "@/constants/enums";
 import { detectAtsFromUrl } from "@/lib/ats/registry";
 import { fetchGreenhouseJobs } from "@/lib/ats/normalizers/greenhouse.normalizer";
@@ -10,6 +12,116 @@ import { buildJdExtractMessages, JD_EXTRACT_CONFIG } from "@/lib/ai-prompts";
 import { JdExtractOutputSchema } from "@/lib/validations/apply-from-link.schema";
 
 const LOGIN_WALL_HOSTS = ["linkedin.com", "indeed.com", "glassdoor.com"];
+const MAX_REDIRECTS = 5;
+const MAX_BODY_BYTES = 2_000_000; // 2MB cap before we ever strip/truncate — bounds memory on a hostile response
+
+/*
+ * isPrivateOrReservedIp
+ * True for loopback/private/link-local/reserved ranges (incl. cloud metadata
+ * hosts at 169.254.169.254) — anything a public job posting should never
+ * resolve to.
+ */
+function isPrivateOrReservedIp(ip: string): boolean {
+  if (net.isIPv4(ip)) {
+    const [a, b] = ip.split(".").map(Number);
+    if (a === 10 || a === 127 || a === 0) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    return false;
+  }
+  if (net.isIPv6(ip)) {
+    const lower = ip.toLowerCase();
+    if (lower === "::1" || lower === "::") return true;
+    if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // ULA fc00::/7
+    if (lower.startsWith("fe80")) return true; // link-local
+    if (lower.startsWith("::ffff:")) return isPrivateOrReservedIp(lower.slice(7));
+    return false;
+  }
+  return true; // unrecognized host — treat as unsafe
+}
+
+/*
+ * assertPublicHttpUrl
+ * Rejects non-http(s) schemes and resolves the hostname (or reads it
+ * directly when it's already a literal IP) to block SSRF into
+ * loopback/private/link-local/cloud-metadata addresses. Re-run on every
+ * redirect hop, not just the initial URL.
+ */
+async function assertPublicHttpUrl(rawUrl: string): Promise<URL> {
+  const parsed = new URL(rawUrl);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Unsupported URL scheme");
+  }
+  const hostname = parsed.hostname;
+  if (net.isIP(hostname)) {
+    if (isPrivateOrReservedIp(hostname)) throw new Error("Blocked host");
+    return parsed;
+  }
+  const records = await dns.lookup(hostname, { all: true });
+  if (records.length === 0 || records.some((r) => isPrivateOrReservedIp(r.address))) {
+    throw new Error("Blocked host");
+  }
+  return parsed;
+}
+
+/*
+ * safeFetchHtml
+ * Fetches a seeker-pasted URL with SSRF and resource-exhaustion guards:
+ * scheme + DNS-resolved-IP validated on every redirect hop (redirects are
+ * followed manually, never automatically), and the body is streamed with a
+ * hard byte cap instead of buffered via res.text().
+ * @returns { ok:true, body } on a safe, readable text/html response, else { ok:false }
+ */
+async function safeFetchHtml(rawUrl: string): Promise<{ ok: true; body: string } | { ok: false }> {
+  let currentUrl = rawUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    let target: URL;
+    try {
+      target = await assertPublicHttpUrl(currentUrl);
+    } catch {
+      return { ok: false };
+    }
+
+    const res = await fetch(target, {
+      headers: { "User-Agent": "Hiretivo/1.0 (+https://hiretivo.com)" },
+      redirect: "manual",
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("location");
+      if (!location) return { ok: false };
+      currentUrl = new URL(location, target).toString();
+      continue;
+    }
+
+    if (!res.ok) return { ok: false };
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("text/html")) return { ok: false };
+
+    const contentLength = res.headers.get("content-length");
+    if (contentLength && Number(contentLength) > MAX_BODY_BYTES) return { ok: false };
+
+    const reader = res.body?.getReader();
+    if (!reader) return { ok: false };
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) {
+        await reader.cancel();
+        return { ok: false };
+      }
+      chunks.push(value);
+    }
+    const body = Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf-8");
+    return { ok: true, body };
+  }
+  return { ok: false };
+}
 
 /* Which path produced the ParsedJd (or why parsing could not complete). */
 export enum JdParseStrategy {
@@ -165,13 +277,8 @@ export async function fetchJdFromLink(
       };
     }
 
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Hiretivo/1.0 (+https://hiretivo.com)" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(8000),
-    });
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!res.ok || !contentType.includes("text/html")) {
+    const fetched = await safeFetchHtml(url);
+    if (!fetched.ok) {
       return {
         ok: false,
         needsManualPaste: true,
@@ -179,8 +286,7 @@ export async function fetchJdFromLink(
       };
     }
 
-    const body = await res.text();
-    const stripped = stripHtml(body);
+    const stripped = stripHtml(fetched.body);
     if (stripped.length < 200) {
       return {
         ok: false,
