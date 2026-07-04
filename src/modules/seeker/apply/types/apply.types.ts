@@ -44,7 +44,11 @@ export type ApplyKeywordStats = KeywordStats;
 /*
  * SubmittedFormField
  * One ATS-form answer captured at finalize — extension-ready (Phase 8.5
- * autofill reads this same shape).
+ * autofill reads this same shape). Contract is FINAL as of Section C:
+ * fieldKey stays a plain string (not an enum) on purpose — it's an open set
+ * keyed by ApplicationDefaults/settings field names today, and by
+ * ATS-specific DOM field ids once the Phase 8.5 extension starts writing to
+ * it. Do not add required fields without checking the extension's reader.
  */
 export interface SubmittedFormField {
   fieldKey: string;

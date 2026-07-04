@@ -462,3 +462,26 @@ export enum WizardStep {
   SUBMIT = "submit",
   DONE = "done",
 }
+
+/*
+ * CheatsheetSection
+ * Grouped headings on the StepSubmit cheatsheet (Phase 8.5 extension keeps
+ * reading this same grouping to render its own ATS-side sections).
+ */
+export enum CheatsheetSection {
+  PERSONAL_INFO = "personal-info",
+  CONTACT = "contact",
+  WORK_AUTH = "work-auth",
+  RESUME = "resume",
+  COVER_LETTER = "cover-letter",
+}
+
+/*
+ * ApplySubmitLayout
+ * StepSubmit's view toggle — simple (cheatsheet + open-in-new-tab link) vs
+ * split (cheatsheet beside an embedded ATS iframe). Split is desktop-only.
+ */
+export enum ApplySubmitLayout {
+  SIMPLE = "simple",
+  SPLIT = "split",
+}
