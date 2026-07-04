@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getDodoProductId, DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
-import { PlanTier, UserRole } from "@/constants/enums";
+import { PlanTier } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -16,21 +16,15 @@ function getAppUrl(req: NextRequest): string {
 
 /*
  * POST /api/billing/checkout
- * Creates a Dodo Payments subscription checkout session for STARTER/GROWTH/SCALE plans.
- * Requires RECRUITER role and a verified email address.
+ * Creates a Dodo Payments subscription checkout session for STARTER/GROWTH/SCALE plans
+ * (Phase 8: seeker AI-credit tiers, Option-A remap — same product IDs, seeker-facing
+ * labels are Free/Pro/Max). Requires a verified email address.
  * Returns a payment_link URL to redirect the user to.
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (session.user.role !== UserRole.RECRUITER) {
-    return NextResponse.json(
-      { error: "This plan is for recruiters only" },
-      { status: 403 },
-    );
   }
 
   const verificationError = await requireVerifiedEmailForTrustedAction(

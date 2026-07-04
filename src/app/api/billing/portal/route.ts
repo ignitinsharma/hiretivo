@@ -11,13 +11,15 @@ function getAppUrl(req: NextRequest): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
 }
 
+/*
+ * POST /api/billing/portal
+ * Opens the Dodo billing portal for the authenticated user's subscription.
+ * Returns to /settings (seeker) or /recruiter/settings, matching the caller's role.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.user.role !== UserRole.RECRUITER) {
-    return NextResponse.json({ error: "This plan is for recruiters only" }, { status: 403 });
   }
   const { success } = await portalRateLimiter.limit(session.user.id);
   if (!success) {
@@ -31,8 +33,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No billing account found" }, { status: 400 });
   }
   const appUrl = getAppUrl(req);
+  const returnPath = session.user.role === UserRole.RECRUITER ? "/recruiter/settings" : "/settings";
   const portal = await dodo.customers.customerPortal.create(user.billingCustomerId, {
-    return_url: `${appUrl}/recruiter/settings`,
+    return_url: `${appUrl}${returnPath}`,
   });
   return NextResponse.json({ data: { url: portal.link } }, { status: 200 });
 }
