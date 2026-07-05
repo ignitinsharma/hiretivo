@@ -55,6 +55,7 @@ enum AppStatus {
 enum ApplySource {
   FEED
   PASTED_LINK
+  MANUAL
 }
 
 enum WorkType {

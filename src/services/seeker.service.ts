@@ -11,9 +11,17 @@ import type { ApplicationDetail, SubmittedFormField, ApplyKeywordStats } from '@
 import type { DashboardApplicationSummary } from '@/modules/seeker/dashboard/types/applications-table.types';
 import type { ResumeDocument } from '@/modules/seeker/profile/types/resume-document.types';
 import type { ResumeOptimizeRequest, CoverLetterRequest } from '@/lib/validations/apply-ai.schema';
+import type { ManualApplicationInput } from '@/lib/validations/application.schema';
 
 interface DataResponse<T> {
   data: T;
+}
+
+/* TrackerImportSummary — GET /api/seeker/tracker/import response shape (Section F3). */
+export interface TrackerImportSummary {
+  created: number;
+  skipped: number;
+  errors: Array<{ row: number; reason: string }>;
 }
 
 export interface CertificationItem extends CertificationInput {
@@ -230,5 +238,17 @@ export const seekerService = {
       payload,
     );
     return data.data;
+  },
+
+  /* POST /api/seeker/applications — manual branch (no jobId). Section F3 Add-application modal. */
+  createManualApplication: async (payload: ManualApplicationInput): Promise<DataResponse<{ id: string }>> => {
+    const { data } = await apiClient.post<DataResponse<{ id: string }>>('/seeker/applications', payload);
+    return data;
+  },
+
+  /* POST /api/seeker/tracker/import — CSV text body, per-row created/skipped/error summary. */
+  importTrackerCsv: async (csv: string): Promise<DataResponse<TrackerImportSummary>> => {
+    const { data } = await apiClient.post<DataResponse<TrackerImportSummary>>('/seeker/tracker/import', { csv });
+    return data;
   },
 };

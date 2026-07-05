@@ -1,16 +1,11 @@
-import { LineChart } from "lucide-react";
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { TrackerKanbanBoard } from "@/modules/seeker/tracker/components/TrackerKanbanBoard";
 
 /*
  * TrackerPage
- * Application tracker + interview-rate analytics — built in Phase 6.
+ * Server shell for the application tracker kanban (Section F, canonical
+ * /dashboard/tracker route). All data-fetching + drag/drop lives client-side
+ * in TrackerKanbanBoard (own header row, so this shell has no page title).
  */
 export default function TrackerPage() {
-  return (
-    <PlaceholderScreen
-      icon={LineChart}
-      title="Application tracker"
-      description="Track every application and watch your interview rate — coming in Phase 6."
-    />
-  );
+  return <TrackerKanbanBoard />;
 }

@@ -41,6 +41,12 @@ export const writeRateLimiter = createRateLimiter("write", 10, "1 m");
 /** Public signup/registration-style endpoints. */
 export const registerRateLimiter = createRateLimiter("register", 10, "1 m");
 
+/** GET /api/seeker/tracker/export — CSV download (Section F3, per plan spec). */
+export const trackerExportRateLimiter = createRateLimiter("tracker-export", 5, "1 m");
+
+/** POST /api/seeker/tracker/import — CSV bulk-create (Section F3, per plan spec). */
+export const trackerImportRateLimiter = createRateLimiter("tracker-import", 3, "1 m");
+
 /*
  * getRateLimitIp
  * Extracts the best available client IP from proxy headers.

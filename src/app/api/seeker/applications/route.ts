@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ApplicationStatus, ApplySource, JobStatus, UserRole } from "@/constants/enums";
+import { createManualApplication, loadExistingApplicationDedupKeys } from "@/lib/applications/create-manual-application";
+import { resolveApplicationCompany } from "@/lib/applications/resolve-application-company";
 import { prisma } from "@/lib/prisma";
-import { resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
-import { createApplicationWizardSchema } from "@/lib/validations/application.schema";
+import { createApplicationWizardSchema, manualApplicationSchema } from "@/lib/validations/application.schema";
 import type { DashboardApplicationSummary } from "@/modules/seeker/dashboard/types/applications-table.types";
 
 /*
@@ -13,37 +14,6 @@ import type { DashboardApplicationSummary } from "@/modules/seeker/dashboard/typ
  */
 function isPrismaUniqueConstraintError(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
-}
-
-/*
- * resolveApplicationCompany
- * FEED applications resolve company via the joined Job (admin-posted uses
- * Job's own company* fields; recruiter-posted uses RecruiterProfile).
- * PASTED_LINK applications have no Job row — use the Application's own
- * external* snapshot captured at add-link time (Phase 7).
- */
-function resolveApplicationCompany(app: {
-  externalCompanyName: string | null;
-  job: {
-    isAdminPosted: boolean;
-    companyName: string | null;
-    companyLogoUrl: string | null;
-    recruiter: { recruiterProfile: { companyName: string | null; logo: string | null } | null } | null;
-  } | null;
-}): { companyName: string; companyLogoUrl: string | null } {
-  if (!app.job) {
-    return { companyName: app.externalCompanyName ?? "Unknown company", companyLogoUrl: null };
-  }
-  if (app.job.isAdminPosted) {
-    return {
-      companyName: app.job.companyName ?? "Unknown company",
-      companyLogoUrl: app.job.companyLogoUrl ?? null,
-    };
-  }
-  return {
-    companyName: app.job.recruiter?.recruiterProfile?.companyName ?? "Unknown company",
-    companyLogoUrl: resolveLogoUrl(app.job.recruiter?.recruiterProfile?.logo ?? null),
-  };
 }
 
 /*
@@ -85,6 +55,7 @@ export async function GET() {
         externalJobUrl: true,
         externalTitle: true,
         externalCompanyName: true,
+        notes: true,
         createdAt: true,
         job: {
           select: {
@@ -136,7 +107,9 @@ export async function GET() {
       hasCoverLetter: app.coverLetter !== null,
       hasSubmittedForm: app.submittedFormData !== null,
       hasGenerationError: false,
+      isManualEntry: (app.source as unknown as ApplySource) === ApplySource.MANUAL,
       applyUrl: app.job?.externalApplyUrl ?? app.externalJobUrl ?? null,
+      notes: app.notes,
       createdAt: app.createdAt.toISOString(),
     };
   });
@@ -161,7 +134,9 @@ export async function GET() {
         hasCoverLetter: false,
         hasSubmittedForm: false,
         hasGenerationError: false,
+        isManualEntry: false,
         applyUrl: null,
+        notes: null,
         createdAt: d.createdAt.toISOString(),
       } satisfies DashboardApplicationSummary;
     });
@@ -175,18 +150,25 @@ export async function GET() {
 
 /*
  * POST /api/seeker/applications
- * Starts an apply-wizard run against a feed job: creates the Application row
- * the wizard tailors artifacts onto. Dedups on `@@unique([jobId, seekerId])` —
- * a second call for the same job returns 409 with the existing id so the
- * caller can route into that run instead of starting a duplicate.
- * > DEVIATION: AppStatus has no draft/in-progress member (DATA-MODEL is
- * canon and doesn't define one), so this row is created with the schema
- * default `status: APPLIED` immediately, before the wizard's finalize step
- * (Task 8) actually submits anything. The row's real "was this submitted"
- * signal is `tailoredResumeKey`/`submittedFormData` being non-null, not
- * `status` — Phase 6's tracker must filter on that, not on status alone.
- * Request body: createApplicationWizardSchema. Response: {data:{id}} 201,
- * or {error, id} 409 when a run already exists for this job.
+ * Two branches on the same route, distinguished by whether the body has a
+ * `jobId`:
+ *  - {jobId} — starts an apply-wizard run against a feed job (original
+ *    behavior; see the wizard-branch DEVIATION note below).
+ *  - {companyName, jobTitle, ...} — Section F3: manual entry (Add-application
+ *    modal or one CSV-import row). Creates an ApplySource.MANUAL row with no
+ *    Job and no AI artifacts, deduped by company+role or externalJobUrl
+ *    (create-manual-application.ts). Response: {data:{id}} 201, or
+ *    {error, outcome:"duplicate"} 409.
+ * > DEVIATION (wizard branch): AppStatus has no draft/in-progress member
+ * (DATA-MODEL is canon and doesn't define one), so this row is created with
+ * the schema default `status: APPLIED` immediately, before the wizard's
+ * finalize step (Task 8) actually submits anything. The row's real "was this
+ * submitted" signal is `tailoredResumeKey`/`submittedFormData` being
+ * non-null, not `status` — Phase 6's tracker must filter on that, not on
+ * status alone.
+ * Request body: createApplicationWizardSchema OR manualApplicationSchema.
+ * Response: {data:{id}} 201, or {error, id} 409 when a wizard run already
+ * exists for this job.
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -202,14 +184,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
+  const seekerId = session.user.id;
   const body = await req.json().catch(() => null);
+
+  if (body && typeof body === "object" && !("jobId" in body)) {
+    const manualParsed = manualApplicationSchema.safeParse(body);
+    if (!manualParsed.success) {
+      return NextResponse.json({ error: manualParsed.error.flatten() }, { status: 400 });
+    }
+    const existingKeys = await loadExistingApplicationDedupKeys(seekerId);
+    const result = await createManualApplication(
+      seekerId,
+      {
+        ...manualParsed.data,
+        status: manualParsed.data.status as ApplicationStatus | undefined,
+        appliedAt: manualParsed.data.appliedAt ? new Date(manualParsed.data.appliedAt) : undefined,
+      },
+      existingKeys,
+    );
+    if (result.outcome === "duplicate") {
+      return NextResponse.json(
+        { error: "You already have an application for this company and role" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json({ data: { id: result.id } }, { status: 201 });
+  }
+
   const parsed = createApplicationWizardSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
   const { jobId } = parsed.data;
-  const seekerId = session.user.id;
 
   const job = await prisma.job.findFirst({
     where: { id: jobId, status: JobStatus.OPEN },

@@ -39,6 +39,7 @@ function toStatusMappable(row: DashboardApplicationSummary): StatusMappableAppli
     hasSubmittedForm: row.hasSubmittedForm,
     hasGenerationError: row.hasGenerationError,
     isSkipped: row.kind === 'dismissed',
+    isManualEntry: row.isManualEntry,
   };
 }
 

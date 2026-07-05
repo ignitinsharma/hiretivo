@@ -68,6 +68,8 @@ export const APPLICATION_STATUS_VALUES = [
 export enum ApplySource {
   FEED = "FEED",
   PASTED_LINK = "PASTED_LINK",
+  /** Section F: manually logged (Add-application modal) or CSV-imported row — no Job, no AI artifacts. */
+  MANUAL = "MANUAL",
 }
 
 export enum JobType {
