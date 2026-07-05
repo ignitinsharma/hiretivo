@@ -60,9 +60,9 @@ export const LEGACY_SEEKER_HEADER_ITEMS: LegacySeekerNavItem[] = [
 export const SEEKER_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Browse jobs", href: "/dashboard/browse", icon: Search },
-  { label: "Inbox", href: "/dashboard/inbox", icon: Inbox, badge: "coming soon", disabled: true },
+  { label: "Inbox", href: "/dashboard/inbox", icon: Inbox, badge: "Soon", disabled: true },
   { label: "Tracker", href: "/dashboard/tracker", icon: LineChart },
-  { label: "Networking", href: "/dashboard/networking", icon: Network, badge: "beta" },
+  { label: "Networking", href: "/dashboard/networking", icon: Network, badge: "Beta" },
   { label: "Profile", href: "/profile", icon: UserCircle },
   { label: "Settings", href: "/settings", icon: Settings },
   { label: "Help", href: "/help", icon: LifeBuoy },
