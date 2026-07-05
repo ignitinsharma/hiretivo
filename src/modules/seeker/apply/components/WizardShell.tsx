@@ -32,17 +32,26 @@ export function WizardShell({ applicationId }: WizardShellProps) {
   const [tailoredResumeUrl, setTailoredResumeUrl] = useState<string | null>(null);
   const [submittedFormData, setSubmittedFormData] = useState<SubmittedFormField[] | null>(null);
 
-  // Re-opening an already-finalized application jumps straight to Done
-  // instead of restarting the wizard at Optimize.
+  // Re-opening an already-SUBMITTED application jumps straight to Done.
+  // tailoredResumeKey alone isn't enough to gate on: a "Needs-you" row
+  // (finalized resume, no submittedFormData yet — e.g. landed there via
+  // Apply-to-all/D5) has tailoredResumeKey set too, and jumping it to Done
+  // rendered a false "Application recorded" success state over an empty
+  // Submitted-form tab (Section H edge case). Anything short of fully
+  // submitted falls through to the wizard's default Optimize start, which
+  // regenerates resume+cover via AI (the same path an In-flight reopen
+  // already takes) so StepSubmit gets a real ResumeDocument to work with —
+  // there's no persisted draft ResumeDocument to resume from instead
+  // (Phase 5's documented schema gap).
   useEffect(() => {
-    if (data?.tailoredResumeKey && state.step === WizardStep.OPTIMIZE) {
+    if (data?.tailoredResumeKey && data?.submittedFormData && state.step === WizardStep.OPTIMIZE) {
       setTailoredResumeUrl(data.tailoredResumeUrl);
       setSubmittedFormData(data.submittedFormData);
       setCoverLetter(data.coverLetter ?? "");
       goToStep(WizardStep.DONE);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.tailoredResumeKey]);
+  }, [data?.tailoredResumeKey, data?.submittedFormData]);
 
   if (isLoading) {
     return <PageSkeleton lines={6} />;

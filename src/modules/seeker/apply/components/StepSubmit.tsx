@@ -85,6 +85,22 @@ export function StepSubmit({ application, resume, coverLetter, onFinalized }: St
         we don&apos;t submit it for you. Use the cheatsheet below to fill in any ATS fields quickly.
       </p>
 
+      {!defaultsLoading && !defaultsData?.data && (
+        <p className="rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-foreground-muted">
+          Your application defaults (phone, address, work authorization) aren&apos;t set yet, so
+          those cheatsheet fields will show &quot;Not set.&quot;{" "}
+          <a
+            href="/settings#application-defaults"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-brand-primary hover:underline"
+          >
+            Fill them in
+          </a>{" "}
+          — opens in a new tab, your progress here is kept.
+        </p>
+      )}
+
       {application.applyUrl && (
         <div className="hidden items-center gap-2 lg:flex">
           <span className="text-xs font-medium uppercase tracking-wider text-brand-foreground-secondary">
