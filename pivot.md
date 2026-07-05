@@ -88,7 +88,7 @@ Build order (each step ships independently: own branch off staging, own PR, own 
   E: Browse + job drawer                [branch: feature/pivot-e-browse]       — DONE
   F: Tracker kanban                     [branch: feature/pivot-f-tracker]      — DONE
   G: UI polish + shell wiring           [branch: feature/pivot-g-polish]       — DONE
-  H: Cross-cutting edge cases           [branch: feature/pivot-h-edges]
+  H: Cross-cutting edge cases           [branch: feature/pivot-h-edges]       — DONE
 
   NOTE: A and B both landed on branch feature/pivot-ts-a1-routes (not yet
   merged/PR'd to staging as of end of B — do that before or during C).
@@ -1550,29 +1550,162 @@ G3. Brand-theme ditto pass
 
 ---
 
-SECTION H — Cross-cutting edge cases (verify as a final gate)
+SECTION H — Cross-cutting edge cases (verify as a final gate) [DONE — branch feature/pivot-h-edges]
 
 - Out of credits: block BEFORE creating an application (on Apply click) → upsell modal.
   Apply-to-all stops at remaining quota, reports how many queued of N.
+  ACTUAL: REAL GAP FOUND + FIXED. "Apply to all" already blocked before
+  creating anything (`handleApplyToAll` in TopMatchesRow), but the single-job
+  Apply button on every job card (TopMatchesRow AND FeedView, both the card
+  and the drawer) called `applyWizardMutation.mutate(jobId)` directly with
+  zero credit check — it always created the Application row, and the actual
+  block only happened one step later inside the wizard (StepOptimize's Phase-8
+  hard gate). At 0 credits this created a real orphaned In-flight row per job
+  clicked, forever stuck since generation could never succeed. Added
+  `handleApply(jobId)` in both TopMatchesRow.tsx and FeedView.tsx — checks
+  `creditStatus.remaining <= 0` and opens `PaidFeatureModal` BEFORE calling
+  `applyWizardMutation.mutate`, matching `handleApplyToAll`'s existing pattern
+  exactly. Re-applying to a job with an EXISTING application still works
+  regardless of credits (the mutation's own 409-routes-to-existing-id handling
+  is untouched) — the gate only blocks creating a brand-new row.
 - Duplicate apply: unique [jobId,seekerId] / [seekerId,externalJobUrl] → open existing
   application, never error (409 → route into existing id — already handled).
+  ACTUAL: VERIFIED, no changes — confirmed via code read of both
+  applyWizardMutation onError handlers (TopMatchesRow + FeedView): 409 with an
+  echoed id routes into the existing application instead of erroring.
 - Abandoned wizard: app sits In-flight/Needs-you; re-open resumes:
   finalized → StepDone; else regenerate from stored keywordStats (resume is
   regeneration via AI, user can edit in ResumeEditor before proceeding).
+  ACTUAL: REAL BUG FOUND + FIXED (the whole reason this is a "final gate"
+  section, not a rubber stamp). WizardShell's re-open effect jumped straight
+  to StepDone whenever `data.tailoredResumeKey` was set — but per D4/F1's own
+  status contract, a "Needs-you" application (landed there via Apply-to-all/
+  D5's partial finalize: resume+cover generated, NOT yet submitted) has
+  `tailoredResumeKey` set too. Reopening one rendered a false "Application
+  recorded" ✓ success screen (StepDone) over a permanently-empty "Submitted
+  form" tab — the seeker would believe they'd applied when they never saw the
+  cheatsheet or clicked "I submitted." This was reachable both from the
+  dashboard table (row click → wizard route, any row) and the tracker
+  (Needs-you rows land in the tracker's Applied column too — deriveTrackerColumn
+  only checks isFinalized, not hasSubmittedForm — and F1's reopen-wizard card
+  icon routes into the same broken path).
+  FIX (root cause, not a patch): narrowed WizardShell's jump condition to
+  `data.tailoredResumeKey && data.submittedFormData` — Done only fires for a
+  TRULY submitted application. A Needs-you reopen now falls through to the
+  wizard's default Optimize start instead, which regenerates resume+cover via
+  AI (the exact same path an In-flight reopen already took, so no new code
+  needed) and lands the user on a real StepSubmit cheatsheet they can act on.
+  DEVIATION (documented, not silently accepted): this makes a Needs-you
+  reopen cost a fresh AI credit for the regeneration, since there is no
+  persisted draft ResumeDocument to resume from instead (Phase 5's own
+  documented schema gap — only the rendered PDF key is stored, not the
+  structured JSON the cheatsheet needs). Same accepted trade-off already
+  documented for cover-letter regeneration after a spent reservation handle
+  (Phase 5). The alternative — persisting the full ResumeDocument JSON so a
+  reopen can skip regeneration — is a real schema addition, out of scope for
+  an edge-case-fix section.
 - Pasted-link fetch fail: manual JD-paste fallback (built).
+  ACTUAL: VERIFIED, no changes — Phase 7's `needsManualPaste` fallback in
+  `jd-fetch.ts` is untouched by any later section; AddLinkModal still wires it.
 - Stale/closed job: "Posted X ago, may be closed" hint; ATS URL may 404 → graceful;
   still allow mark-applied/skip.
+  ACTUAL: VERIFIED, no changes needed. FeedJobCard already renders a "May be
+  closed" badge when `differenceInDays(now, publishedAtIso) > STALE_JOB_DAYS`.
+  A 404'ing `applyUrl` can't block anything in-app — Apply just opens it in a
+  new tab (no server-side URL health check), and "I submitted"/"Pass" never
+  depend on the ATS page actually loading — already graceful by construction.
 - Credit reserved but generation fails: refund (built). Cover letter regeneration
   after handle spent → reserves new credit (documented in cover-letter route).
+  ACTUAL: VERIFIED, no changes — Phase 4/5's reservation-handle refund and
+  regen-reserves-fresh-credit behavior are untouched by any section since.
 - External job missing applyUrl: hide "Open ATS", show "View original" only.
+  ACTUAL: VERIFIED, no changes. StepSubmit already gates the entire "Open job
+  application" link + split-view toggle behind `application.applyUrl` — when
+  absent, neither renders, so there's no dead "Open ATS" affordance. ("View
+  original" itself is a Browse/drawer-only affordance per Section E2, not part
+  of the wizard's submit step — nothing to wire here.)
 - Resume PDF render failure: error state, no finalize, no status/credit change.
+  ACTUAL: VERIFIED, no changes. Read the finalize route in full: if
+  `renderResumePdf` throws, the throw happens BEFORE the single
+  `prisma.application.update` call — no partial write, no status/credit
+  touched (finalize never touches credits at all; Phase 4 already
+  reserved/refunded at generation time). StepSubmit's `catch` surfaces the
+  error and never calls `onFinalized`, matching "error state, no finalize."
 - Incomplete profile / missing ApplicationDefaults: prompt to fill before first apply.
+  ACTUAL: REAL GAP FOUND + FIXED (partial nudge existed, not where it's
+  needed). `/profile`'s `ApplicationDefaultsSection` already shows an empty-
+  state nudge ("Complete before your first apply") linking to
+  `/settings#application-defaults` — but only if the seeker happens to visit
+  `/profile` first; nothing surfaced the prompt at the actual point of first
+  apply. Added an inline banner in StepSubmit.tsx, shown only when
+  `ApplicationDefaults` was never created at all (`!defaultsData?.data`,
+  distinct from individual empty fields, which already render "Not set" per
+  Section C1 and aren't worth nagging about), linking to the same
+  `/settings#application-defaults` anchor. Opens in a new tab (`target=
+  "_blank"`) rather than the same tab — navigating away in-place would lose
+  the wizard's client-side `state.resume`/`state.coverLetter` (session-only,
+  same schema gap noted above), so the copy explicitly says "your progress
+  here is kept." This is a nudge, not a block — StepSubmit's cheatsheet and
+  finalize both already work fine with zero ApplicationDefaults set (all
+  fields optional per the schema).
 - Recruiter-role account on flag-off: middleware redirect.
+  ACTUAL: VERIFIED, no changes — `middleware.ts`'s `RECRUITER_ENABLED` gate
+  (Section A) is untouched by every later section.
 - Legacy /seeker/* deep links (old emails): redirect via A1.
+  ACTUAL: VERIFIED, no changes — `LEGACY_SEEKER_REDIRECTS` (Section A) intact.
 - Mobile: sidebar collapse, wizard stepper as horizontal scroll, table + kanban in
   overflow-x-auto containers; body never scrolls horizontally.
+  ACTUAL: VERIFIED, no changes needed. Sidebar collapse (G-era AppSidebar),
+  ApplicationsTable (`overflow-x-auto`, Section B3) and TrackerKanbanBoard
+  (`overflow-x-auto`, Section F1) all correctly contain their own horizontal
+  scroll; `AppShellClient`'s `<main overflow-x-hidden>` (Section B1/G)
+  guarantees the page body itself never does. DEVIATION (better than spec'd,
+  not a bug): `ApplyStepper` is NOT a horizontal-scroll strip on mobile — it's
+  `flex-col` (vertically stacked) below `lg:` and only goes horizontal at
+  `lg:` and up. A vertical stack for a 4-step list needs no scroll container
+  at all and can't overflow; flagging the deviation from the plan's literal
+  wording rather than "fixing" a component that's already safer than what was
+  asked for.
 - Optimistic mutations: all PATCH/POST/DELETE use TanStack Query optimistic updates
   with rollback on error; loading states on buttons.
+  ACTUAL: Audited every mutation across dashboard/browse/tracker/wizard.
+  Already optimistic+rollback: useSaveJob/useUnsaveJob (shared by dashboard +
+  browse), FeedView's dismiss (Pass), the tracker's drag-to-change-status
+  (Section F2) and its three-dot dropdown fallback (same mutation). Loading
+  states confirmed present on Apply-to-all, Approve-all, CSV import, and
+  Add-application buttons (`isPending`-gated disabled + label swap).
+  REAL GAP FOUND + FIXED: TopMatchesRow's dismiss (Pass) mutation — the exact
+  same action as FeedView's — had no `onMutate`/rollback, only invalidating
+  on `onSettled`. Same action behaved differently depending on which page you
+  passed a job from (instant removal on Browse, a beat of lag on Dashboard).
+  Added the identical `onMutate`(optimistic filter + snapshot)/`onError`
+  (rollback + toast) pair FeedView already uses, against the same
+  `feedQueryKey({})` cache shape. NOT changed: CSV import and the
+  Add-application modal stay non-optimistic on purpose — both produce
+  server-determined final data (import's created/skipped/error counts, the
+  new row's real id) that can't be meaningfully guessed client-side; their
+  existing loading-state-then-invalidate pattern is the correct one for a
+  bulk/create action, not a gap.
+  pnpm tsc --noEmit, pnpm lint, pnpm build all clean after every fix above.
+
+SECTION H SUMMARY: 5 real gaps found and fixed at the root (out-of-credits
+pre-check missing on single Apply, the Needs-you-reopen false-success bug,
+missing ApplicationDefaults nudge, TopMatchesRow's non-optimistic Pass, plus
+the PaidFeatureModal hex color already fixed in G's sweep and referenced
+here since it's this section's own "out of credits" surface); 8 edge cases
+verified already correct with zero changes; 1 deviation flagged as better-
+than-spec (ApplyStepper's vertical mobile layout). No test seeker credentials
+in this session (same recurring constraint as every prior section) — verified
+by full code trace of every touched route/component + tsc/lint/build, not a
+live browser run. **Recommended before merging to main:** one real seeker
+session exercising the out-of-credits block on a single Apply click and the
+Needs-you reopen flow specifically, since both are freshly-changed control
+flow this section, not just re-confirmed old behavior.
+
+v1 (Sections A-H) is now code-complete across all branches, PR'd to staging.
+Not scoped for v1 (see "Not scoped" list at the end of this file): Chrome
+extension autofill, server-side auto-submit, mobile native, inbox/networking/
+multi-language/enterprise SSO.
 
 ---
 

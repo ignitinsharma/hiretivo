@@ -9,7 +9,7 @@ import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSaveJob, useSavedJobs, useUnsaveJob } from '@/modules/seeker/saved-jobs/queries/use-saved-jobs';
-import { seekerService } from '@/services/seeker.service';
+import { seekerService, type SeekerFeedResponse } from '@/services/seeker.service';
 import { useFeedQuery, feedQueryKey } from '@/modules/seeker/feed/queries/use-feed-query';
 import { myApplicationsQueryKey } from '@/modules/seeker/dashboard/hooks/use-my-applications';
 import { useCreditStatus, creditStatusQueryKey } from '@/modules/seeker/dashboard/hooks/use-credit-status';
@@ -47,10 +47,28 @@ export function TopMatchesRow() {
   const openPaidFeatureModal = useUIStore((s) => s.openPaidFeatureModal);
   const saveMutation = useSaveJob();
   const unsaveMutation = useUnsaveJob();
+  // Optimistic removal + rollback (Section H: every PATCH/POST/DELETE here
+  // should behave the same way) — mirrors FeedView's identical Pass mutation
+  // so the card disappears instantly on both /dashboard and /dashboard/browse
+  // instead of only here after a server round-trip.
   const dismissMutation = useMutation({
     mutationFn: seekerService.dismissJob,
+    onMutate: async (jobId: string) => {
+      const key = feedQueryKey({});
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<{ pages: SeekerFeedResponse[]; pageParams: unknown[] }>(key);
+      queryClient.setQueryData<{ pages: SeekerFeedResponse[]; pageParams: unknown[] }>(key, (current) =>
+        current
+          ? { ...current, pages: current.pages.map((page) => ({ ...page, jobs: page.jobs.filter((j) => j.id !== jobId) })) }
+          : current,
+      );
+      return { previous };
+    },
+    onError: (_err, _jobId, context) => {
+      if (context?.previous) queryClient.setQueryData(feedQueryKey({}), context.previous);
+      toast.error('Failed to remove job.');
+    },
     onSuccess: () => toast.success('Job removed from feed.'),
-    onError: () => toast.error('Failed to remove job.'),
     onSettled: () => void queryClient.invalidateQueries({ queryKey: feedQueryKey({}) }),
   });
 
@@ -154,6 +172,23 @@ export function TopMatchesRow() {
     applyToAllMutation.mutate();
   };
 
+  // Blocks BEFORE an Application row is ever created — an existing
+  // application for this job still opens (dedup takes priority over the
+  // credit gate, since re-opening costs nothing new), otherwise a fresh
+  // apply at 0 credits would create an orphaned in-flight row the wizard
+  // could never finish generating (Section H edge case).
+  const handleApply = (jobId: string) => {
+    if ((creditStatus?.remaining ?? 0) <= 0) {
+      openPaidFeatureModal({
+        feature: 'ai_credits',
+        title: 'Out of AI credits this month',
+        description: 'Upgrade to Pro (400/mo) or Max (1000/mo) to keep applying.',
+      });
+      return;
+    }
+    applyWizardMutation.mutate(jobId);
+  };
+
   if (isLoading) {
     return (
       <div className="mb-8">
@@ -206,7 +241,7 @@ export function TopMatchesRow() {
             onToggleSave={() => handleToggleSave(job.id)}
             onPass={() => dismissMutation.mutate(job.id)}
             onOpen={() => setSelectedJobId(job.id)}
-            onApply={() => applyWizardMutation.mutate(job.id)}
+            onApply={() => handleApply(job.id)}
           />
         ))}
       </div>
@@ -223,7 +258,7 @@ export function TopMatchesRow() {
           dismissMutation.mutate(selectedJobId);
           setSelectedJobId(null);
         }}
-        onApply={() => selectedJobId && applyWizardMutation.mutate(selectedJobId)}
+        onApply={() => selectedJobId && handleApply(selectedJobId)}
       />
     </div>
   );

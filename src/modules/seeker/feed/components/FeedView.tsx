@@ -11,6 +11,8 @@ import { useSaveJob, useSavedJobs, useUnsaveJob } from '@/modules/seeker/saved-j
 import { seekerService, type SeekerFeedResponse } from '@/services/seeker.service';
 import { useFeedQuery, feedQueryKey } from '@/modules/seeker/feed/queries/use-feed-query';
 import { useFeedFilters } from '@/modules/seeker/feed/hooks/use-feed-filters';
+import { useCreditStatus } from '@/modules/seeker/dashboard/hooks/use-credit-status';
+import { useUIStore } from '@/store/use-ui-store';
 import { FeedFilterBar } from '@/modules/seeker/feed/components/FeedFilterBar';
 import { FeedJobCard } from '@/modules/seeker/feed/components/FeedJobCard';
 import { FeedJobDrawer } from '@/modules/seeker/feed/components/FeedJobDrawer';
@@ -36,6 +38,8 @@ export function FeedView({ companies }: FeedViewProps) {
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeedQuery(filters);
   const { data: savedJobs } = useSavedJobs();
+  const { data: creditStatus } = useCreditStatus();
+  const openPaidFeatureModal = useUIStore((s) => s.openPaidFeatureModal);
   const saveMutation = useSaveJob();
   const unsaveMutation = useUnsaveJob();
 
@@ -89,6 +93,22 @@ export function FeedView({ companies }: FeedViewProps) {
       toast.error(err.message || 'Could not start your application. Try again.');
     },
   });
+
+  // Blocks BEFORE an Application row is ever created (Section H edge case) —
+  // mirrors TopMatchesRow's handleApply so both Apply surfaces agree on when
+  // the upsell fires; an existing application for this job still opens via
+  // the mutation's own 409 handling below.
+  const handleApply = (jobId: string) => {
+    if ((creditStatus?.remaining ?? 0) <= 0) {
+      openPaidFeatureModal({
+        feature: 'ai_credits',
+        title: 'Out of AI credits this month',
+        description: 'Upgrade to Pro (400/mo) or Max (1000/mo) to keep applying.',
+      });
+      return;
+    }
+    applyWizardMutation.mutate(jobId);
+  };
 
   const setJobSaving = (jobId: string, isSaving: boolean) => {
     setSavingJobIds((current) => {
@@ -179,7 +199,7 @@ export function FeedView({ companies }: FeedViewProps) {
               onToggleSave={() => handleToggleSave(job.id)}
               onPass={() => dismissMutation.mutate(job.id)}
               onOpen={() => setSelectedJobId(job.id)}
-              onApply={() => applyWizardMutation.mutate(job.id)}
+              onApply={() => handleApply(job.id)}
             />
           ))}
           {isFetchingNextPage && (
@@ -205,7 +225,7 @@ export function FeedView({ companies }: FeedViewProps) {
           dismissMutation.mutate(selectedJobId);
           setSelectedJobId(null);
         }}
-        onApply={() => selectedJobId && applyWizardMutation.mutate(selectedJobId)}
+        onApply={() => selectedJobId && handleApply(selectedJobId)}
         searchTerm={filters.search}
       />
     </div>
