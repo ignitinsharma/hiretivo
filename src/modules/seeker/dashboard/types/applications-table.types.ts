@@ -25,6 +25,9 @@ export interface DashboardApplicationSummary {
   hasCoverLetter: boolean;
   hasSubmittedForm: boolean;
   hasGenerationError: boolean;
+  /** True for ApplySource.MANUAL rows (Add-application modal / CSV import) — see status-map.ts's isManualEntry doc. */
+  isManualEntry: boolean;
   applyUrl: string | null;
+  notes: string | null;
   createdAt: string;
 }

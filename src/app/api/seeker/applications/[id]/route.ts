@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
@@ -121,9 +122,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 /*
  * PATCH /api/seeker/applications/[id]
  * Whitelisted partial artifact save as the wizard advances (draft resume
- * key, cover letter text, submitted-form snapshot, keyword stats). `status`
- * here only ever confirms the row's existing APPLIED default — the tracker
- * (Phase 6) owns every later transition.
+ * key, cover letter text, submitted-form snapshot, keyword stats), PLUS the
+ * tracker's (Section F2) drag-and-drop status transitions. When `status` is
+ * present and differs from the row's current value, appends a
+ * {from, to, timestamp} entry to the Json `statusLog` array — a same-value
+ * write (drag to the same column) is a no-op on the log.
  * Request body: patchApplicationSchema. Response: {data:{id}}.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -143,7 +146,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const existing = await prisma.application.findUnique({
     where: { id },
-    select: { seekerId: true },
+    select: { seekerId: true, status: true, statusLog: true },
   });
   if (!existing || existing.seekerId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -155,9 +158,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const { status: nextStatus, ...rest } = parsed.data;
+  const data: Prisma.ApplicationUpdateInput = { ...rest };
+  if (nextStatus) {
+    // Prisma's generated AppStatus is nominally distinct from the mirrored
+    // src/constants/enums.ts ApplicationStatus (same string values) — cast
+    // at this API boundary only, matching the GET route above.
+    data.status = nextStatus as unknown as Prisma.ApplicationUpdateInput["status"];
+    if (nextStatus !== existing.status) {
+      const priorLog = Array.isArray(existing.statusLog) ? existing.statusLog : [];
+      data.statusLog = [
+        ...priorLog,
+        { from: existing.status, to: nextStatus, timestamp: new Date().toISOString() },
+      ] as Prisma.InputJsonValue;
+    }
+  }
+
   await prisma.application.update({
     where: { id },
-    data: parsed.data,
+    data,
   });
 
   return NextResponse.json({ data: { id } }, { status: 200 });

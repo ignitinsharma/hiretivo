@@ -1,9 +1,24 @@
 import { z } from "zod";
-import { ApplicationStatus } from "@/constants/enums";
+import { APPLICATION_STATUS_VALUES } from "@/constants/enums";
 
 /* POST /api/seeker/applications — starts a wizard run against a feed job. */
 export const createApplicationWizardSchema = z.object({
   jobId: z.cuid(),
+});
+
+/*
+ * POST /api/seeker/applications — manual entry branch (Section F3). No
+ * jobId: the Add-application modal and CSV import both create an
+ * ApplySource.MANUAL row from these fields alone. Company + role are the
+ * only required fields per the plan; everything else defaults sensibly.
+ */
+export const manualApplicationSchema = z.object({
+  companyName: z.string().trim().min(1).max(200),
+  jobTitle: z.string().trim().min(1).max(200),
+  status: z.enum(APPLICATION_STATUS_VALUES).optional(),
+  appliedAt: z.iso.datetime().optional(),
+  notes: z.string().trim().max(2000).optional(),
+  externalJobUrl: z.url().max(500).optional(),
 });
 
 /* Mirrors SubmittedFormField (apply.types.ts) — one ATS-form answer. */
@@ -24,9 +39,12 @@ const KeywordStatsSchema = z.object({
 
 /*
  * PATCH /api/seeker/applications/[id] — partial artifact save as the wizard
- * advances. `status` only ever transitions APPLIED (the row's created
- * default) forward to itself here; the tracker (Phase 6) owns later
- * transitions (REVIEWING, INTERVIEW, …).
+ * advances, PLUS the tracker's (Section F2) status transitions. `status` now
+ * accepts the full ApplicationStatus enum — the wizard itself only ever
+ * writes APPLIED (its created default), while the tracker kanban's
+ * drag-and-drop writes any member as the seeker moves a card between
+ * columns. The route appends a statusLog entry whenever `status` actually
+ * changes value.
  */
 export const patchApplicationSchema = z
   .object({
@@ -34,7 +52,7 @@ export const patchApplicationSchema = z
     coverLetter: z.string().trim().max(10_000),
     submittedFormData: z.array(SubmittedFormFieldSchema).max(60),
     keywordStats: KeywordStatsSchema,
-    status: z.literal(ApplicationStatus.APPLIED),
+    status: z.enum(APPLICATION_STATUS_VALUES),
   })
   .partial();
 
@@ -114,5 +132,6 @@ export const finalizeApplicationSchema = z.object({
 });
 
 export type CreateApplicationWizardInput = z.infer<typeof createApplicationWizardSchema>;
+export type ManualApplicationInput = z.infer<typeof manualApplicationSchema>;
 export type PatchApplicationInput = z.infer<typeof patchApplicationSchema>;
 export type FinalizeApplicationInput = z.infer<typeof finalizeApplicationSchema>;
