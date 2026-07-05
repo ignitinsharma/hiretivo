@@ -46,7 +46,7 @@ export function PaidFeatureModal() {
           <DialogTitle className="text-center text-2xl font-semibold tracking-tight text-foreground">
             {title || 'Unlock Pro Features'}
           </DialogTitle>
-          <DialogDescription className="text-center text-[#868685]">
+          <DialogDescription className="text-center text-brand-foreground-muted">
             {description || 'Upgrade to Pro to access all features.'}
           </DialogDescription>
         </DialogHeader>
