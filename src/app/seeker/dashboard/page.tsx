@@ -5,6 +5,7 @@ import { RecommendedJobsList } from "@/modules/seeker/dashboard/components/Recom
 import { SeekerDashboardSidebar } from "@/modules/seeker/dashboard/components/SeekerDashboardSidebar";
 import { UpcomingInterviewsCard } from "@/modules/seeker/dashboard/components/UpcomingInterviewsCard";
 import { RejectionCallout } from "@/modules/seeker/dashboard/components/RejectionCallout";
+import { AddCustomJobButton } from "@/modules/seeker/dashboard/components/AddCustomJobButton";
 
 /*
  * SeekerDashboardPage
@@ -40,6 +41,9 @@ export default async function SeekerDashboardPage() {
         <p className="text-brand-foreground-muted mt-2 text-lg">
           Your personalized job market is ready.
         </p>
+        <div className="mt-4">
+          <AddCustomJobButton />
+        </div>
       </div>
 
       <UpcomingInterviewsCard />

@@ -5,6 +5,10 @@ interface UIState {
   openLoginModal: () => void;
   closeLoginModal: () => void;
 
+  isAddCustomJobModalOpen: boolean;
+  openAddCustomJobModal: () => void;
+  closeAddCustomJobModal: () => void;
+
   isApplyModalOpen: boolean;
   applyJobId: string | null;
   selectedJobId: string | null;
@@ -57,6 +61,10 @@ export const useUIStore = create<UIState>((set) => ({
   isLoginModalOpen: false,
   openLoginModal: () => set({ isLoginModalOpen: true }),
   closeLoginModal: () => set({ isLoginModalOpen: false }),
+
+  isAddCustomJobModalOpen: false,
+  openAddCustomJobModal: () => set({ isAddCustomJobModalOpen: true }),
+  closeAddCustomJobModal: () => set({ isAddCustomJobModalOpen: false }),
 
   isApplyModalOpen: false,
   applyJobId: null,
