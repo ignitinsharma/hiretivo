@@ -20,7 +20,7 @@ export function NavLink({ href, label, className }: NavLinkProps) {
         'font-semibold text-sm transition-colors',
         isActive
           ? 'text-brand-primary font-semibold'
-          : 'text-muted-foreground hover:text-black',
+          : 'text-muted-foreground hover:text-brand-foreground',
         className
       )}
     >

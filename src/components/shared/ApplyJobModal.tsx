@@ -154,10 +154,10 @@ export function ApplyJobModal() {
               <Briefcase className="h-8 w-8 text-brand-primary" />
             </div>
 
-            <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
+            <DialogTitle className="text-xl font-bold tracking-tight text-brand-foreground">
               Did you apply?
             </DialogTitle>
-            <DialogDescription className="mt-2 text-sm text-slate-500">
+            <DialogDescription className="mt-2 text-sm text-brand-foreground-muted">
               We&apos;ve opened the company site in a new tab. Did you complete
               your application there?
             </DialogDescription>
@@ -190,10 +190,10 @@ export function ApplyJobModal() {
     <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader className="pt-2 pb-4">
-          <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900">
+          <DialogTitle className="text-2xl font-bold tracking-tight text-brand-foreground">
             Apply for {selectedJobTitle || "this position"}
           </DialogTitle>
-          <p className="text-slate-500 font-medium mt-1">
+          <p className="text-brand-foreground-muted font-medium mt-1">
             at {selectedCompanyName || "this company"}
           </p>
         </DialogHeader>
@@ -203,11 +203,11 @@ export function ApplyJobModal() {
             <div className="flex justify-between items-end mb-2">
               <Label
                 htmlFor="interest"
-                className="text-sm font-bold text-slate-900"
+                className="text-sm font-bold text-brand-foreground"
               >
                 What interests you about working for this company?
               </Label>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-foreground-secondary">
                 Optional
               </span>
             </div>

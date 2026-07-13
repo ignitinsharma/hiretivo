@@ -19,10 +19,7 @@ interface SessionExpiredPageProps {
 export default function SessionExpiredPage({
   searchParams,
 }: SessionExpiredPageProps) {
-  const loginPath =
-    searchParams?.role === "recruiter"
-      ? "/recruiter/login"
-      : "/seeker/login";
+  const loginPath = "/seeker/login";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

@@ -78,26 +78,26 @@ export function JobDetailSidebar({
     <aside className="w-full lg:w-80 space-y-6 lg:sticky lg:top-24 shrink-0">
       <div className="bg-white border border-brand-border rounded-xl p-5">
         <div className="flex justify-between items-start mb-4">
-          <h3 className="font-bold text-slate-900 text-lg">Quick Apply</h3>
-          <span className="px-2 py-1 bg-gray-100 text-black text-[10px] font-bold uppercase rounded leading-none">
+          <h3 className="font-bold text-brand-foreground text-lg">Quick Apply</h3>
+          <span className="px-2 py-1 bg-brand-surface text-brand-foreground text-[10px] font-bold uppercase rounded leading-none">
             Actively Hiring
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-50 p-3 rounded-xl border border-brand-border">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
-              Posted
-            </p>
-            <p className="text-sm font-bold">
-              {job.publishedAt
-                ? new Date(job.publishedAt).toLocaleDateString()
-                : "Recently"}
-            </p>
-          </div>
-          <div className="bg-slate-50 p-3 rounded-xl border border-brand-border">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">
-              Company
+            <div className="bg-brand-surface p-3 rounded-xl border border-brand-border">
+              <p className="text-[10px] font-bold text-brand-foreground-muted uppercase mb-1">
+                Posted
+              </p>
+              <p className="text-sm font-bold">
+                {job.publishedAt
+                  ? new Date(job.publishedAt).toLocaleDateString()
+                  : "Recently"}
+              </p>
+            </div>
+            <div className="bg-brand-surface p-3 rounded-xl border border-brand-border">
+              <p className="text-[10px] font-bold text-brand-foreground-muted uppercase mb-1">
+                Company
             </p>
             <p className="text-sm font-bold">{job.companyName}</p>
           </div>
@@ -144,7 +144,7 @@ export function JobDetailSidebar({
 
       {/* Match Score Section */}
       <div className="bg-white rounded-xl border border-brand-border p-5">
-        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+        <h3 className="text-sm font-bold text-brand-foreground uppercase tracking-wider mb-4">
           Match Score
         </h3>
 
@@ -154,7 +154,7 @@ export function JobDetailSidebar({
         matchBreakdown.length > 0 ? (
           <>
             {matchScore !== null && (
-              <div className="text-4xl font-extrabold text-primary mb-4">
+              <div className="text-4xl font-bold text-primary mb-4">
                 {matchScore}%
               </div>
             )}
@@ -164,7 +164,7 @@ export function JobDetailSidebar({
                   key={skill.skillId}
                   className="flex items-center justify-between"
                 >
-                  <span className="text-sm text-slate-700">
+                  <span className="text-sm text-brand-foreground">
                     {skill.skillName}
                   </span>
                   <Badge
@@ -172,7 +172,7 @@ export function JobDetailSidebar({
                       "text-xs",
                       skill.isMatch
                         ? "bg-primary/10 text-primary hover:bg-primary/20"
-                        : "bg-slate-100 text-slate-500 hover:bg-slate-200",
+                        : "bg-brand-surface text-brand-foreground-muted hover:bg-brand-surface",
                     )}
                   >
                     {skill.isMatch ? "Match" : "Missing"}
@@ -184,7 +184,7 @@ export function JobDetailSidebar({
         ) : (
           <div className="relative">
             <div className="blur-sm select-none">
-              <div className="text-4xl font-extrabold text-primary mb-4">
+              <div className="text-4xl font-bold text-primary mb-4">
                 85%
               </div>
               <div className="space-y-2">
@@ -203,8 +203,8 @@ export function JobDetailSidebar({
               </div>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-lg">
-              <Lock className="w-6 h-6 text-slate-400 mb-2" />
-              <p className="text-sm font-semibold text-slate-700">
+              <Lock className="w-6 h-6 text-brand-foreground-secondary mb-2" />
+              <p className="text-sm font-semibold text-brand-foreground">
                 Sign in to see your match
               </p>
               <Link href="/seeker/login">
@@ -219,7 +219,7 @@ export function JobDetailSidebar({
 
       <div className="bg-white border border-brand-border rounded-xl overflow-hidden">
         <div className="p-5 border-b border-brand-border flex justify-between items-center">
-          <h3 className="font-bold text-slate-900">Compare Similar</h3>
+          <h3 className="font-bold text-brand-foreground">Compare Similar</h3>
           <span className="text-xs font-medium text-primary">
             {recommendedJobs.length} Available
           </span>
@@ -232,21 +232,21 @@ export function JobDetailSidebar({
                 {job.companyName.charAt(0)}
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                <p className="text-xs font-bold text-brand-foreground line-clamp-1">
                   {job.title}
                 </p>
-                <p className="text-[10px] text-slate-500">{job.companyName}</p>
+                <p className="text-[10px] text-brand-foreground-muted">{job.companyName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-slate-200 text-slate-600 text-[10px] font-bold rounded">
+              <span className="px-2 py-0.5 bg-brand-surface text-brand-foreground-muted text-[10px] font-bold rounded">
                 Current
               </span>
             </div>
           </div>
 
           {recommendedJobs.length === 0 && (
-            <p className="p-4 text-sm text-slate-500">
+            <p className="p-4 text-sm text-brand-foreground-muted">
               No similar jobs available right now.
             </p>
           )}
@@ -255,10 +255,10 @@ export function JobDetailSidebar({
             <Link
               key={similarJob.id}
               href={`/jobs/${similarJob.id}`}
-              className="p-4 block hover:bg-slate-50 transition-colors group"
+              className="p-4 block hover:bg-brand-surface transition-colors group"
             >
               <div className="flex gap-3 mb-2">
-                <div className="w-8 h-8 bg-white border border-brand-border rounded flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">
+                <div className="w-8 h-8 bg-white border border-brand-border rounded flex items-center justify-center text-brand-foreground-secondary font-bold text-xs shrink-0">
                   {similarJob.companyLogoUrl ? (
                     <Image
                       src={similarJob.companyLogoUrl}
@@ -272,10 +272,10 @@ export function JobDetailSidebar({
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-primary line-clamp-1 transition-colors">
+                  <p className="text-xs font-bold text-brand-foreground group-hover:text-primary line-clamp-1 transition-colors">
                     {similarJob.title}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-brand-foreground-muted">
                     {similarJob.companyName} • {similarJob.salaryRange}
                   </p>
                 </div>

@@ -4,11 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
-import {
-  Briefcase,
-  LayoutDashboard,
-  Send,
-} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { AccountMenu } from "@/components/shared/AccountMenu";
@@ -17,28 +12,15 @@ import { SEEKER_NAV_ITEMS } from "@/constants/nav";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { seekerService } from "@/services/seeker.service";
 
-/** Nav items to show — only Jobs and Applied Jobs per D-18. */
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
-  (item) => item.href !== "/seeker/settings" && item.href !== "/contact",
+  (item) => item.href !== "/seeker/settings",
 );
 
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  briefcase: Briefcase,
-  'layout-dashboard': LayoutDashboard,
-  send: Send,
-};
-
-/*
- * SeekerHeader
- * Sticky top navigation bar for all /seeker/* routes.
- * Shows logo, primary nav links, verification badge, and account menu.
- */
 export function SeekerHeader() {
   const pathname = usePathname();
   const hiretivo = useVerificationStatus();
   const { status } = useSession();
 
-  /* Read from the same prefetched cache as the settings page — no extra network request. */
   const { data: settingsData } = useQuery<{ data: { image?: string | null } }>({
     queryKey: ["seeker-settings"],
     queryFn: seekerService.getSettings,
@@ -60,7 +42,7 @@ export function SeekerHeader() {
           {NAV_ITEMS.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const Icon = ICON_MAP[item.iconName] ?? Briefcase;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
@@ -69,7 +51,7 @@ export function SeekerHeader() {
                   "flex items-center gap-2 font-bold text-sm transition-colors",
                   isActive
                     ? "text-primary border-b-2 border-primary pb-0.5"
-                    : "text-slate-600 hover:text-primary pb-0.5 border-b-2 border-white",
+                    : "text-brand-foreground-muted hover:text-primary pb-0.5 border-b-2 border-white",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >

@@ -11,7 +11,7 @@ import { EngineerCTASection } from "@/components/home/EngineerCTASection";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { UserRole } from "@/constants/enums";
+
 import { generatePageMetadata } from "@/lib/metadata";
 
 const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
@@ -37,17 +37,9 @@ export default async function Home() {
   const session = await auth();
   if (session?.user) {
     if (session.user.onboardingCompleted === false) {
-      redirect(
-        session.user.role === UserRole.RECRUITER
-          ? "/recruiter/onboarding"
-          : "/seeker/onboarding",
-      );
+      redirect("/seeker/onboarding");
     }
-    redirect(
-      session.user.role === UserRole.RECRUITER
-        ? "/recruiter/dashboard"
-        : "/seeker/dashboard",
-    );
+    redirect("/seeker/dashboard");
   }
 
   return (

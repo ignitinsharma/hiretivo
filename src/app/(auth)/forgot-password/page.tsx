@@ -35,13 +35,13 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f5f7] px-4 py-12 ">
+    <main className="flex min-h-screen items-center justify-center bg-brand-surface px-4 py-12">
       <section className="mx-auto w-full max-w-md rounded-xl border border-brand-border bg-white p-8">
         <div className="mb-8 space-y-3">
-          <h1 className="font-display text-4xl font-bold leading-tight text-foreground ">
+          <h1 className="font-bold text-3xl md:text-4xl leading-tight tracking-tight text-brand-foreground">
             Forgot your password?
           </h1>
-          <p className="text-[18px] font-semibold leading-[1.44] tracking-[-0.108px] text-[#454745] ">
+          <p className="text-lg font-medium leading-relaxed text-brand-foreground-muted">
             Enter your email and we will send a reset link if the account
             exists.
           </p>
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div className="space-y-6">
-            <p className="rounded-xl bg-gray-100 p-4 text-sm font-semibold leading-6 text-foreground">
+            <p className="rounded-xl bg-brand-surface p-4 text-sm font-semibold leading-6 text-brand-foreground">
               If an account exists for that email, a reset link is on the way.
               Check your inbox.
             </p>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                 {...form.register("email")}
               />
               {form.formState.errors.email && (
-                <p className="text-sm font-semibold text-[#d03238]">
+                <p className="text-sm font-semibold text-brand-danger">
                   {form.formState.errors.email.message}
                 </p>
               )}

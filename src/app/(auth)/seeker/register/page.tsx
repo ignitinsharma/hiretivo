@@ -43,16 +43,16 @@ const SeekerSignupLeft = (
       >
         <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
       </svg>
-      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-slate-900 mb-6">
+      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-brand-foreground mb-6">
         Work should fit your life, not the other way around.
       </h1>
 
-      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-border/50 max-w-md transform rotate-1 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl border border-brand-border/50 max-w-md transform rotate-1 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-brand-surface rounded-full flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-gray-600"
+                className="w-5 h-5 text-brand-foreground-muted"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -66,28 +66,28 @@ const SeekerSignupLeft = (
               </svg>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-foreground-secondary">
                 Daily Match
               </p>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-brand-foreground">
                 Just for you
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-medium text-slate-400">2m ago</span>
+          <span className="text-[10px] font-medium text-brand-foreground-secondary">2m ago</span>
         </div>
-        <div className="bg-slate-50 p-4 rounded-xl flex items-center gap-4 border border-brand-border-light">
-          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-600">
+        <div className="bg-brand-surface p-4 rounded-xl flex items-center gap-4 border border-brand-border-light">
+          <div className="w-12 h-12 rounded-lg bg-brand-surface flex items-center justify-center font-bold text-brand-foreground-muted">
             S
           </div>
           <div>
-            <h4 className="font-bold text-sm text-slate-900">
+            <h4 className="font-bold text-sm text-brand-foreground">
               Senior Product Architect
             </h4>
-            <p className="text-xs text-slate-500">Remote • $140k - $180k</p>
+            <p className="text-xs text-brand-foreground-muted">Remote • $140k - $180k</p>
           </div>
           <div className="ml-auto">
-            <Button variant="primary" size="sm" className="rounded-full">
+            <Button variant="primary" size="sm" className="rounded-lg">
               Apply
             </Button>
           </div>
@@ -151,10 +151,7 @@ function SeekerRegisterContent() {
       !hasOAuthRoleMismatch &&
       !isHandlingOAuthMismatch
     ) {
-      const dest =
-        session.user.role === UserRole.RECRUITER
-          ? "/recruiter/dashboard"
-          : "/seeker/dashboard";
+      const dest = "/seeker/dashboard";
       router.replace(dest);
     }
   }, [status, session, router, hasOAuthRoleMismatch, isHandlingOAuthMismatch]);
@@ -281,7 +278,7 @@ function SeekerRegisterContent() {
 
         <div className="relative flex items-center">
           <div className="grow border-t border-brand-border"></div>
-          <span className="shrink mx-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">
+          <span className="shrink mx-4 text-[10px] font-bold text-brand-foreground-secondary uppercase tracking-[0.2em] whitespace-nowrap">
             OR CONTINUE WITH EMAIL
           </span>
           <div className="grow border-t border-brand-border"></div>
@@ -291,7 +288,7 @@ function SeekerRegisterContent() {
           <div className="space-y-2">
             <Label
               htmlFor="name"
-              className="text-sm font-bold text-slate-900 block"
+              className="text-sm font-bold text-brand-foreground block"
             >
               Full Name
             </Label>
@@ -300,7 +297,7 @@ function SeekerRegisterContent() {
               type="text"
               placeholder="John Doe"
               autoComplete="name"
-              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-brand-foreground-secondary text-brand-foreground"
               {...form.register("name")}
             />
             {form.formState.errors.name && (
@@ -314,14 +311,14 @@ function SeekerRegisterContent() {
             <div className="flex items-center gap-2">
               <Label
                 htmlFor="email"
-                className="text-sm font-bold text-slate-900 block"
+                className="text-sm font-bold text-brand-foreground block"
               >
                 Email
               </Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600 cursor-help" />
+                    <Info className="h-3.5 w-3.5 text-brand-foreground-secondary hover:text-brand-foreground-muted cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-sm leading-relaxed">
                     <p>
@@ -337,7 +334,7 @@ function SeekerRegisterContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-brand-foreground-secondary text-brand-foreground"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -350,7 +347,7 @@ function SeekerRegisterContent() {
           <div className="space-y-2">
             <Label
               htmlFor="password"
-              className="text-sm font-bold text-slate-900 block"
+              className="text-sm font-bold text-brand-foreground block"
             >
               Password
             </Label>
@@ -358,7 +355,7 @@ function SeekerRegisterContent() {
               id="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
-              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-brand-foreground-secondary text-brand-foreground"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -381,7 +378,7 @@ function SeekerRegisterContent() {
             <div className="grid gap-1.5 leading-none">
               <label
                 htmlFor="acceptTerms"
-                className="text-sm font-medium leading-relaxed text-slate-600 cursor-pointer"
+                className="text-sm font-medium leading-relaxed text-brand-foreground-muted cursor-pointer"
               >
                 I agree to the{" "}
                 <Link
@@ -420,7 +417,7 @@ function SeekerRegisterContent() {
         </form>
 
         <footer className="pt-4 text-center">
-          <p className="text-slate-600 font-medium">
+          <p className="text-brand-foreground-muted font-medium">
             Already have an account?
             <Link
               href="/seeker/login"

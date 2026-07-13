@@ -75,7 +75,7 @@ export function InitialsAvatar({
       'border-2 border-brand-primary ring-2 ring-brand-primary/15 group-hover:border-brand-primary',
   );
   const fallbackClassName = cn(
-    'inline-flex select-none items-center justify-center rounded-full bg-gray-100 font-semibold text-black',
+    'inline-flex select-none items-center justify-center rounded-full bg-brand-surface font-semibold text-brand-foreground',
     SIZE_CLASSES[size],
     className,
     verified &&

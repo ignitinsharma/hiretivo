@@ -174,7 +174,7 @@ export default function AboutPage() {
                 <div key={stat.label} className="group text-center">
                   <div
                     className={cn(
-                      "text-5xl font-extrabold transition-transform duration-300 group-hover:scale-110 md:text-6xl",
+                      "text-5xl font-bold transition-transform duration-300 group-hover:scale-110 md:text-6xl",
                       stat.colorClass,
                     )}
                   >

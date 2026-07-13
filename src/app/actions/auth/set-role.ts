@@ -23,6 +23,6 @@ export async function setUserRole(role: UserRole): Promise<RoleResult> {
   });
   await unstable_update({ user: { role: role as Role, onboardingStep: 1 } });
 
-  const redirectTo = role === UserRole.SEEKER ? "/seeker/onboarding" : "/recruiter/onboarding";
+  const redirectTo = "/seeker/onboarding";
   return { success: true, redirectTo };
 }

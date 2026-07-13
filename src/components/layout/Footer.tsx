@@ -17,16 +17,16 @@ const SOCIAL_LINKS = [
 export function Footer({ className }: FooterProps) {
   return (
     <footer
-      className={cn("grainy-bg bg-black border border-white/10 rounded-3xl pt-24 pb-8 mx-4 md:mx-8 mb-8", className)}
+      className={cn("bg-brand-surface border border-brand-border rounded-xl pt-24 pb-8 mx-4 md:mx-8 mb-8", className)}
       data-purpose="main-footer"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex flex-col md:flex-row justify-between gap-12 mb-16">
           <div className="md:max-w-md">
             <Link href="/" className="inline-block mb-6">
-              <Logo variant="white" size="lg" />
+              <Logo size="lg" />
             </Link>
-            <p className="text-gray-500 text-base mb-8">
+            <p className="text-brand-foreground-muted text-base mb-8">
               Hiretivo helps startups hire verified Indian engineers with clear
               skills, salary expectations, and availability before the first
               call.
@@ -38,7 +38,7 @@ export function Footer({ className }: FooterProps) {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-brand-primary hover:text-white transition-colors"
+                  className="w-10 h-10 bg-brand-border rounded-lg flex items-center justify-center text-brand-foreground-muted hover:bg-brand-primary hover:text-white transition-colors"
                   aria-label={label}
                 >
                   <Icon className="w-4 h-4" />
@@ -49,34 +49,34 @@ export function Footer({ className }: FooterProps) {
 
           <div className="grid grid-cols-2 gap-16 max-w-md shrink-0">
             <div>
-              <h5 className="text-white font-semibold mb-4 text-sm">Company</h5>
+              <h5 className="text-brand-foreground font-semibold mb-4 text-sm">Company</h5>
               <ul className="space-y-3 text-sm">
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/about">About</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how">How It Works</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/pricing">Pricing</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/recruiter/register">Post a Job</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/about">About</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/how">How It Works</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/pricing">Pricing</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/recruiter/register">Post a Job</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/contact">Contact</Link></li>
                 <li><BookCallButton variant="footer" /></li>
               </ul>
             </div>
             <div>
-              <h5 className="text-white font-semibold mb-4 text-sm">Legal</h5>
+              <h5 className="text-brand-foreground font-semibold mb-4 text-sm">Legal</h5>
               <ul className="space-y-3 text-sm">
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/privacy">Privacy Policy</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/terms">Terms of Service</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/privacy">Privacy Policy</Link></li>
+                <li><Link className="text-brand-foreground-muted hover:text-brand-foreground transition-colors" href="/terms">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
         </div>
 
         <div className="text-center mb-8 overflow-hidden">
-          <span className="text-white text-[120px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter leading-none opacity-5 select-none" aria-hidden="true">
+          <span className="text-brand-foreground text-[120px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter leading-none opacity-5 select-none" aria-hidden="true">
             HIRETIVO
           </span>
         </div>
 
-        <div className="pt-8 border-t border-white/10 text-center">
-          <p className="text-gray-600 text-sm">© 2026 Hiretivo. All rights reserved.</p>
+        <div className="pt-8 border-t border-brand-border text-center">
+          <p className="text-brand-foreground-secondary text-sm">© 2026 Hiretivo. All rights reserved.</p>
         </div>
       </div>
     </footer>

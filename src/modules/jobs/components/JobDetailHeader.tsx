@@ -69,15 +69,15 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
 
   return (
     <>
-      <nav className="flex items-center gap-2 mb-8 text-sm font-medium text-slate-500">
+      <nav className="flex items-center gap-2 mb-8 text-sm font-medium text-brand-foreground-muted">
         <Link href="/jobs" className="hover:text-primary">Jobs</Link>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-slate-900">{job.title}</span>
+        <span className="text-brand-foreground">{job.title}</span>
       </nav>
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-white border border-brand-border rounded-2xl flex items-center justify-center overflow-hidden shadow-sm">
+          <div className="w-20 h-20 bg-white border border-brand-border rounded-xl flex items-center justify-center overflow-hidden">
             {job.companyLogoUrl ? (
               <Image
                 src={job.companyLogoUrl}
@@ -87,40 +87,40 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
                 className="w-full h-full object-contain"
               />
             ) : (
-              <div className="w-full h-full bg-slate-100 rounded-xl flex items-center justify-center text-primary font-bold text-2xl">
+              <div className="w-full h-full bg-brand-surface rounded-xl flex items-center justify-center text-primary font-bold text-2xl">
                 {job.companyName.charAt(0)}
               </div>
             )}
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-brand-foreground tracking-tight mb-2">
               {job.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 text-base">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-brand-foreground-muted text-base">
               {job.companyId ? (
                 <Link
                   href={`/companies/${job.companyId}`}
-                  className="font-semibold text-slate-900 transition-colors hover:text-primary"
+                  className="font-semibold text-brand-foreground transition-colors hover:text-primary"
                 >
                   {job.companyName}
                 </Link>
               ) : (
-                <span className="font-semibold text-slate-900">{job.companyName}</span>
+                <span className="font-semibold text-brand-foreground">{job.companyName}</span>
               )}
-              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+              <span className="w-1 h-1 bg-brand-border rounded-full"></span>
               <span>{job.jobType.replace('_', ' ')}</span>
-              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+              <span className="w-1 h-1 bg-brand-border rounded-full"></span>
               <span>{formatSalary(job.salaryMin, job.salaryMax, job.currency)}</span>
               {job.workType && (
                 <>
-                  <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                  <span className="w-1 h-1 bg-brand-border rounded-full"></span>
                   <span className="flex items-center gap-1">
-                    <Globe2 className="w-4 h-4 text-black" />
+                    <Globe2 className="w-4 h-4 text-brand-foreground" />
                     {job.workType === WorkType.REMOTE ? '100% Remote' : job.workType}
                   </span>
                 </>
               )}
-              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+              <span className="w-1 h-1 bg-brand-border rounded-full"></span>
               <span className="flex items-center gap-1 text-brand-foreground-muted">
                 <Users className="w-4 h-4" />
                 {formatApplicantCount(job.applicantCount)}

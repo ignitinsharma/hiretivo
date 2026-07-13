@@ -60,7 +60,7 @@ export function AuthLayout({
               {backHref ? (
                 <Link
                   href={backHref}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-foreground-muted hover:text-brand-foreground transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
@@ -78,11 +78,11 @@ export function AuthLayout({
               )}
             </div>
 
-            <h2 className="font-bold text-3xl text-slate-900 tracking-tight mb-2">
+            <h2 className="font-bold text-3xl text-brand-foreground tracking-tight mb-2">
               {title}
             </h2>
             {description && (
-              <p className="text-slate-500 font-medium">{description}</p>
+              <p className="text-brand-foreground-muted font-medium">{description}</p>
             )}
           </header>
 
@@ -91,19 +91,19 @@ export function AuthLayout({
           <div className="mt-8 flex flex-wrap justify-center gap-6">
             <Link
               href="/privacy"
-              className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
+              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
+              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
             >
               Terms of Service
             </Link>
             <Link
               href="/help"
-              className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
+              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
             >
               Help Center
             </Link>

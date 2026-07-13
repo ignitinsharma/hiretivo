@@ -141,12 +141,12 @@ export function SkillsTagInput({
                 e.preventDefault();
                 addSkillByName(skill.name);
               }}
-              className="flex w-full items-center px-3 py-2 text-sm text-slate-700 hover:bg-gray-50 first:rounded-t-md last:rounded-b-md"
+              className="flex w-full items-center px-3 py-2 text-sm text-brand-foreground hover:bg-brand-surface first:rounded-t-md last:rounded-b-md"
             >
-              <Plus className="mr-2 h-3 w-3 text-slate-400" />
+              <Plus className="mr-2 h-3 w-3 text-brand-foreground-secondary" />
               {skill.name}
               {skill.category && (
-                <span className="ml-auto text-xs text-slate-400">{skill.category}</span>
+                <span className="ml-auto text-xs text-brand-foreground-secondary">{skill.category}</span>
               )}
             </button>
           ))}
