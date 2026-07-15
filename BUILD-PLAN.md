@@ -26,7 +26,7 @@
 | 4 | ATS URL scrape flow — auto-try then fallback, or explicit choice upfront? | ✅ **RESOLVED (with a tradeoff to be aware of).** Auto-try first via a strict domain allowlist (see Phase 1 security section). URLs not on the allowlist go straight to the paste-JD fallback — including some legitimate self-hosted careers pages that run on Greenhouse/Lever under the hood but live on the company's own domain. This is the safe default; revisit if users complain URLs "don't work" often. |
 | 5 | Does a failed/timed-out AI generation consume quota? | ✅ **RESOLVED.** No — quota only decrements when the AI response is schema-valid and successfully saved. Enforced server-side via `GenerationQuota` table + `checkGenerationQuota()` / `consumeGenerationQuota()`. |
 | 6 | Multiple base resumes (e.g. separate Dev track vs. PM track)? | ✅ **RESOLVED — deferred to Phase 9.** Single master `profileId` for now. Editor is the workaround for track-specific tailoring in the meantime. `ResumeBase` model designed and ready to add later without breaking existing data if this becomes a real pain point. |
-| 7 | Where does a user's first master profile get created? | ✅ **RESOLVED.** Lazily, during onboarding Step 2 — user uploads PDF → Gemini 2.5 Flash vision parses it → saved as `MasterResume`. If the user skips Step 2 ("Skip — I'll do it later"), `MasterResume` stays null and is created on first "Generate Resume" attempt instead, which prompts for upload at that point. |
+| 7 | Where does a user's first master profile get created? | ✅ **RESOLVED & BUILT.** Lazily, during onboarding Step 2 — user uploads PDF → Gemini 2.5 Flash vision parses it → saved as `MasterResume`. If the user skips Step 2 ("Skip — I'll do it later"), `MasterResume` stays null and is created on first "Generate Resume" attempt instead, which prompts for upload at that point. Vision parser at `src/lib/ai/resume-parser.ts`, upload+parse route at `POST /api/resume/upload`. |
 
 ---
 
@@ -258,7 +258,7 @@ Download
 ### Checklist (additions)
 - [x] Gemini 2.5 Flash configured as primary model in OpenRouter for parsing/tailoring/cover-letter routes
 - [x] Gemini 2.5 Flash-Lite configured for URL-confidence-check / classification routes only
-- [ ] Vision-based resume parsing replaces `pdf-parse`/`mammoth` text-extraction as the primary path
+- [x] Vision-based resume parsing replaces `pdf-parse`/`mammoth` text-extraction as the primary path
 - [x] Hourly rate limit implemented server-side, independent of monthly quota, applies to all tiers including "unlimited"
 - [x] Separate resume-upload rate limit implemented (10/hour, all tiers) — distinct key from the generation limiter above
 
@@ -387,22 +387,22 @@ The scraper takes a user-supplied URL and feeds it to an AI provider that fetche
 All AI calls (JD parsing, resume optimization, cover letter generation) are wrapped in `withRetry()` — 2 retries, exponential backoff, 20–30s timeout per attempt. Returns `null` on exhausted retries rather than throwing, so callers can fall back to the paste-JD prompt or an error toast instead of crashing the flow.
 
 ### Edge Cases (must handle before Phase 1 is "done")
-- [ ] No resume uploaded yet → block Apply, prompt upload first
-- [ ] Uploaded resume is image-based PDF / unparseable → clear error, don't silently produce empty JSON
-- [ ] JD text pasted is too short / not JD-like (e.g. <50 words) → validation warning, allow override
+- [ ] No resume uploaded yet → block Apply, prompt upload first (handled by 409 response in generate route, but Apply flow UI not yet wired)
+- [x] Uploaded resume is image-based PDF / unparseable → clear 422 error from `POST /api/resume/upload`, no silent empty JSON
+- [x] JD text pasted is too short / not JD-like (e.g. <50 words) → validation warning, allow override via `forceGenerate: true`
 - [x] ATS URL scrape returns empty/low-confidence/non-allowlisted → auto-fallback to paste-JD prompt (see Open Decision #4, Security section)
 - [x] AI optimizer/parser call times out or errors → retry with backoff, then fail gracefully without consuming quota (`withRetry`, Open Decision #5)
 - [x] AI optimizer returns malformed JSON or missing required fields → reject output, return `ai_error` instead of saving partial data — **never render fabricated fields** (enforced by `ResumeDocumentSchema.safeParse()` in `tailorResume()`)
 - [x] AI optimizer system prompt constrained to only use data present in input JSON — no inventing companies, titles, dates, or metrics (hard constraint in `buildTailorResumeMessages()` system prompt + schema validation)
-- [ ] Where is the user's first master profile created — signup or first Apply click? (Open Decision #7 — still unresolved)
+- [x] Where is the user's first master profile created — signup or first Apply click? (Open Decision #7 — resolved in Open Decisions table, built via `POST /api/resume/upload`)
 
 ### Checklist
-- [ ] Resume upload + parse working end-to-end
-- [ ] JD paste path working
+- [x] Resume upload + parse working end-to-end (`POST /api/resume/upload` uploads R2 → Gemini Vision parse → MasterResume save)
+- [ ] JD paste path fully wired in UI (route accepts jdText; Apply flow integration is Phase 3 UI work)
 - [x] ATS URL scrape path working with allowlist validation + fallback
 - [x] AI calls wrapped in retry/timeout handler
-- [ ] AI optimizer producing schema-valid, non-fabricated output
-- [ ] Master profile creation flow decided and built (Open Decision #7)
+- [x] AI optimizer producing schema-valid, non-fabricated output (prompt constraint + `ResumeDocumentSchema.safeParse()`)
+- [x] Master profile creation flow decided and built (via `POST /api/resume/upload`)
 - [ ] Manually tested against 10+ real JDs by Nitin himself before moving to Phase 2
 
 ---

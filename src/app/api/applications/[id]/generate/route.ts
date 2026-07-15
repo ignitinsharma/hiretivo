@@ -6,6 +6,7 @@ import { tailorResume } from "@/lib/ai/resume-tailor";
 
 const generateRequestSchema = z.object({
   jdText: z.string().min(1, "JD text is required"),
+  forceGenerate: z.boolean().optional(),
 });
 
 /*
@@ -59,6 +60,15 @@ export async function POST(
   if (!parsed.success) {
     return NextResponse.json(
       { error: "validation_error", message: parsed.error.flatten().fieldErrors?.jdText?.[0] ?? "Invalid request" },
+      { status: 422 },
+    );
+  }
+
+  // JD text quality check — warn if too short but allow override with forceGenerate
+  const wordCount = parsed.data.jdText.trim().split(/\s+/).length;
+  if (wordCount < 50 && !parsed.data.forceGenerate) {
+    return NextResponse.json(
+      { error: "jd_too_short", message: "Job description seems too short (<50 words). Add more detail or use forceGenerate to proceed anyway.", wordCount },
       { status: 422 },
     );
   }
