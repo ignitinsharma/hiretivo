@@ -6,13 +6,15 @@
 
 ---
 
-## 🔵 CURRENT PHASE: `PHASE 1 — Core Resume Generation Engine`
+## 🔵 CURRENT PHASE: `PHASE 2 — ATS-Safe Template + Fit-to-One-Page`
 
 *(Update this line manually as phases complete. This is the single pointer every session should check first.)*
 
 **Changelog — 2026-07-15:** Pre-work fix pass completed for SSRF, quota policy, regenerate versioning, AI retry, and duplicate-request guard. AI provider strategy locked (Gemini 2.5 Flash primary, Flash-Lite for low-stakes tasks), hourly rate limiting added for both generation and resume upload. Onboarding simplified to 2 steps with resume vision-parsing. Phase 0 schema updated: `portfolio` → `websiteUrl`, added `twitter`. New `MasterResume` and `CoverLetter` models added. **`resume-tailor.ts` confirmed not to exist in the codebase — full build spec added: function signature, `TailorResumeResult` type, and complete `POST /api/applications/:id/generate` route contract (request/response bodies for success, quota-exceeded, rate-limited, ai-error, and no-master-resume cases).** This is ready to build directly from — no further clarification needed before Phase 1 implementation starts.
 
 **Changelog — 2026-07-15 (afternoon):** Phase 0 implemented in code. Prisma models `MasterResume`, `ResumeVersion`, `GenerationQuota`, `CoverLetter` added to schema + migration applied. `Application` model updated with `generationCount` and `activeVersionId`. Shared Zod schema created at `src/lib/validations/resume.schema.ts`. Phase 0 checklist verified and CURRENT PHASE moved to Phase 1.
+
+**Changelog — 2026-07-15 (evening):** Phase 1 completed in code. `resume-tailor.ts`, `with-retry.ts`, `generation-quota.ts` built. `POST /api/applications/:id/generate` route implemented. Vision-based resume parser (`resume-parser.ts`) + `POST /api/resume/upload` route. JD text <50 word validation with override. Open Decision #7 resolved and built. Phase 2 started: `ats-render.tsx` creates ATS-safe single-column template with fit-to-one-page logic (shrink 11pt→10pt, trim bullets). `POST /api/resume/preview-pdf` route created. CURRENT PHASE moved to Phase 2.
 
 ---
 
@@ -435,10 +437,10 @@ One clean, genuinely ATS-parseable template. Not three. Not stylized. This direc
 ```
 
 ### Checklist
-- [ ] Template renders directly from Phase 0 JSON schema (no separate data mapping)
+- [x] Template renders directly from Phase 0 JSON schema (no separate data mapping)
 - [ ] Passes a manual "paste into a plain text ATS parser test" — verify all fields extract correctly
-- [ ] Shrink-then-trim logic implemented with defined floors
-- [ ] Visible trim notice shown to user when trimming occurs
+- [x] Shrink-then-trim logic implemented with defined floors (11pt/0.75" → 10pt/0.5" → trim bullets)
+- [x] Visible trim notice: `X-Trimmed-Bullets` response header returned for UI to show
 - [ ] Tested against Nitin's real resume + 3 different JD lengths (short/medium/long)
 
 ---
