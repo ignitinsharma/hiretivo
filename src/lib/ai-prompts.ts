@@ -308,7 +308,121 @@ Example output: {"core":["TypeScript","React","Node.js","PostgreSQL"],"secondary
   };
 }
 
+export interface MatchAnalysis {
+  matched_requirements: string[];
+  missing_requirements: string[];
+  match_score: number;
+}
+
+export interface CoverLetterOutput {
+  greeting: string;
+  body_paragraphs: string[];
+  closing: string;
+  signoff: string;
+}
+
+export interface CoverLetterInput {
+  jobTitle: string;
+  company: string;
+  jdText: string;
+  resumeName: string;
+  resumeSummary: string;
+  resumeSkills: string[];
+}
+
+export function buildCoverLetterPrompt(input: CoverLetterInput): { system: string; user: string } {
+  return {
+    system: `You are a professional cover letter writer. Write a compelling, concise cover letter tailored to the job description and candidate profile.
+
+Rules:
+- Return ONLY a valid JSON object with exactly these keys: {"greeting": "...", "body_paragraphs": ["..."], "closing": "...", "signoff": "..."}
+- greeting: A professional salutation (e.g. "Dear Hiring Team,")
+- body_paragraphs: 2-3 concise paragraphs connecting the candidate's experience to the job requirements
+- closing: A brief closing statement
+- signoff: The candidate's name and any contact info
+- No markdown, no code fences, no explanation — only valid JSON
+- Keep each paragraph under 4 sentences
+- Be specific to the job and company — avoid generic templates`,
+    user: `Job Title: ${input.jobTitle}
+Company: ${input.company}
+Job Description: ${input.jdText}
+
+Candidate Name: ${input.resumeName}
+Candidate Summary: ${input.resumeSummary}
+Candidate Skills: ${input.resumeSkills.join(", ")}`,
+  };
+}
+
 export const SKILL_SUGGEST_CONFIG = {
   max_tokens: 350,
   temperature: 0.1,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Resume Tailoring (Phase 1 — core generation engine)
+// ---------------------------------------------------------------------------
+
+export interface TailorResumePromptInput {
+  resumeJson: string;  // serialized ResumeDocument
+  jdText: string;
+}
+
+/*
+ * buildTailorResumeMessages
+ * Constructs the system + user message pair for AI resume tailoring.
+ * The model receives the full master resume JSON and job description,
+ * then returns a tailored resume in the same Phase 0 schema shape plus matchMeta.
+ *
+ * CRITICAL CONSTRAINT: the model must ONLY rewrite/reorder/rephrase data that
+ * exists in the input resume. It must NEVER invent companies, titles, dates,
+ * metrics, or other experience not present in the input.
+ */
+export function buildTailorResumeMessages(input: TailorResumePromptInput) {
+  return {
+    system: `You are an expert resume optimiser. Your job is to tailor a candidate's resume to a specific job description — rewriting bullet points, reordering experience, and adjusting the summary to maximise keyword match — while NEVER fabricating experience that isn't in the source resume.
+
+INPUT:
+- resumeJson: the candidate's master resume (canonical JSON)
+- jdText: the full job description to tailor for
+
+OUTPUT: Return ONLY a valid JSON object with exactly two keys:
+
+1. "resume" — the tailored resume. Must be the same JSON schema as the input, with these modifications allowed:
+   - Rewrite bullet points to use stronger action verbs and include JD keywords naturally
+   - Reorder experience entries so the most relevant roles appear first
+   - Rewrite the summary to match the JD's tone and emphasis
+   - Adjust skill category order to put relevant skills first
+   - Assign priority (1=highest) to each bullet — used for fit-to-one-page trimming
+   - Populate matchMeta.matchScore (0-100) reflecting overall JD fit
+
+2. "matchMeta" — keyword analysis object:
+   - matchScore: number 0-100 estimating how well the resume matches the JD
+   - addedKeywords: strings that appear in the JD and were added or emphasised in the tailored resume
+   - missingKeywords: important JD keywords NOT found in the candidate's resume
+   - requiredSkillsMatched: count of required skills (from JD) found in resume
+   - requiredSkillsTotal: total required skills found in JD
+   - preferredSkillsMatched: count of preferred skills found in resume
+   - preferredSkillsTotal: total preferred skills found in JD
+
+HARD RULES:
+- NEVER invent companies, titles, dates, numeric metrics, or any experience not present in the input resume
+- Do NOT remove or change dates, company names, or job titles
+- You may rephrase bullet text and write stronger descriptions, but the factual content (what the person did) must remain faithful to the source
+- Bullet priority: 1 = most important/relevant to this JD, higher numbers = less relevant
+- The output "resume" object must include all the same top-level keys and structure as the input
+- If the JD is too vague or short to extract meaningful keywords, return empty arrays for missingKeywords/addedKeywords and a matchScore of 0
+- Return valid JSON only — no markdown, no code fences, no explanation`,
+    user: `=== MASTER RESUME (JSON) ===
+${input.resumeJson}
+
+=== JOB DESCRIPTION ===
+${input.jdText}
+
+Generate the tailored resume and match analysis as a single JSON object following the structure above.`,
+  };
+}
+
+export const TAILOR_RESUME_CONFIG = {
+  max_tokens: 4096,
+  temperature: 0.3,
 } as const;

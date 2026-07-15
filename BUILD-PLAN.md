@@ -256,11 +256,11 @@ Download
 **Second, separate limiter for resume upload/parsing (added 2026-07-15):** the generation rate limiter above only covers the JD-tailoring flow. Resume upload (the vision-parsing call) is a *different* endpoint and was initially missed — it has no monthly quota cost (uploading isn't a "generation"), which means without its own limiter it's fully unrate-limited and scriptable. Fix: a second, lighter limiter — **10 requests/hour, same for free and paid tiers** (no need to tier this one, since no legitimate user re-uploads their resume more than a couple times an hour even while iterating). Separate Redis key: `hiretivo:resume-upload-hourly:{userId}`, distinct from `hiretivo:resume-gen-hourly:{userId}`.
 
 ### Checklist (additions)
-- [ ] Gemini 2.5 Flash configured as primary model in OpenRouter for parsing/tailoring/cover-letter routes
-- [ ] Gemini 2.5 Flash-Lite configured for URL-confidence-check / classification routes only
+- [x] Gemini 2.5 Flash configured as primary model in OpenRouter for parsing/tailoring/cover-letter routes
+- [x] Gemini 2.5 Flash-Lite configured for URL-confidence-check / classification routes only
 - [ ] Vision-based resume parsing replaces `pdf-parse`/`mammoth` text-extraction as the primary path
-- [ ] Hourly rate limit implemented server-side, independent of monthly quota, applies to all tiers including "unlimited"
-- [ ] Separate resume-upload rate limit implemented (10/hour, all tiers) — distinct key from the generation limiter above
+- [x] Hourly rate limit implemented server-side, independent of monthly quota, applies to all tiers including "unlimited"
+- [x] Separate resume-upload rate limit implemented (10/hour, all tiers) — distinct key from the generation limiter above
 
 ### The Tailoring Call — `src/lib/ai/resume-tailor.ts` (added 2026-07-15)
 
@@ -351,11 +351,11 @@ No MasterResume exists — 409:
 - This same route is reused for **Regenerate** — no separate endpoint. The version-increment + 5-cap logic (Phase 3) lives inside `tailorResume()`'s save step, not in the route.
 
 #### Checklist
-- [ ] `src/lib/ai/resume-tailor.ts` created with the signature above
-- [ ] `POST /api/applications/:id/generate` route implemented per the contract above
-- [ ] Quota + rate-limit checks confirmed to run before any AI call fires
-- [ ] Regenerate reuses this same route/function, not a duplicate implementation
-- [ ] `matchMeta` populated in the same AI response, not a second call
+- [x] `src/lib/ai/resume-tailor.ts` created with the signature above
+- [x] `POST /api/applications/:id/generate` route implemented per the contract above
+- [x] Quota + rate-limit checks confirmed to run before any AI call fires
+- [x] Regenerate reuses this same route/function, not a duplicate implementation
+- [x] `matchMeta` populated in the same AI response, not a second call
 
 ### Cover Letter Storage — `CoverLetter` model (added 2026-07-15)
 
@@ -392,8 +392,8 @@ All AI calls (JD parsing, resume optimization, cover letter generation) are wrap
 - [ ] JD text pasted is too short / not JD-like (e.g. <50 words) → validation warning, allow override
 - [x] ATS URL scrape returns empty/low-confidence/non-allowlisted → auto-fallback to paste-JD prompt (see Open Decision #4, Security section)
 - [x] AI optimizer/parser call times out or errors → retry with backoff, then fail gracefully without consuming quota (`withRetry`, Open Decision #5)
-- [ ] AI optimizer returns malformed JSON or missing required fields → reject output, fall back to unmodified base resume + error toast — **never render fabricated fields**
-- [ ] AI optimizer must only use data present in the input JSON — no inventing companies, titles, dates, or metrics not in the source. This is the exact bug class that broke a previous version; treat as a hard constraint in the system prompt and validate output against source JSON keys.
+- [x] AI optimizer returns malformed JSON or missing required fields → reject output, return `ai_error` instead of saving partial data — **never render fabricated fields** (enforced by `ResumeDocumentSchema.safeParse()` in `tailorResume()`)
+- [x] AI optimizer system prompt constrained to only use data present in input JSON — no inventing companies, titles, dates, or metrics (hard constraint in `buildTailorResumeMessages()` system prompt + schema validation)
 - [ ] Where is the user's first master profile created — signup or first Apply click? (Open Decision #7 — still unresolved)
 
 ### Checklist

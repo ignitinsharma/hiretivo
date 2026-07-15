@@ -42,6 +42,20 @@ export const writeRateLimiter = createRateLimiter("write", 10, "1 m");
 export const registerRateLimiter = createRateLimiter("register", 10, "1 m");
 
 /*
+ * Resume generation hourly rate limit — tiered.
+ * Free: 5/hr, Paid: 15/hr.
+ * Select at call site based on user's plan tier.
+ */
+export const resumeGenFreeLimiter = createRateLimiter("resume-gen-free", 5, "1 h");
+export const resumeGenPaidLimiter = createRateLimiter("resume-gen-paid", 15, "1 h");
+
+/*
+ * Resume upload/parsing rate limit — 10/hr, all tiers.
+ * Separate key from the generation limiter — distinct rate limit for a distinct endpoint.
+ */
+export const resumeUploadLimiter = createRateLimiter("resume-upload", 10, "1 h");
+
+/*
  * getRateLimitIp
  * Extracts the best available client IP from proxy headers.
  * Returns "unknown" when no IP-like header is present.
