@@ -9,6 +9,7 @@ import { stripHtml } from "@/lib/utils";
 const generateRequestSchema = z.object({
   jdText: z.string().optional(),
   forceGenerate: z.boolean().optional(),
+  baseResumeJson: z.any().optional(),
 });
 
 /*
@@ -69,6 +70,7 @@ export async function POST(
   // Resolve jdText — from body or job description
   let jdText: string;
   let forceGenerate = false;
+  let baseResumeJson: unknown = undefined;
 
   try {
     const body = await request.json();
@@ -82,6 +84,7 @@ export async function POST(
     } else if (parsed.success) {
       jdText = parsed.data.jdText?.trim() ?? "";
       forceGenerate = parsed.data.forceGenerate ?? false;
+      baseResumeJson = parsed.data.baseResumeJson;
       if (!jdText && application.job.description) {
         jdText = stripHtml(application.job.description).trim();
         forceGenerate = true;
@@ -127,10 +130,11 @@ export async function POST(
   });
 
   // Call the core tailoring function
+  const resolvedBaseResume = (baseResumeJson ?? masterResume.resumeJson) as unknown as import("@/lib/validations/resume.schema").ResumeDocument;
   const result = await tailorResume({
     userId: session.user.id,
     applicationId: id,
-    masterResumeJson: masterResume.resumeJson as unknown as import("@/lib/validations/resume.schema").ResumeDocument,
+    masterResumeJson: resolvedBaseResume,
     jdText,
     jobSkills,
   });

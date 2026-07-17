@@ -55,9 +55,7 @@ function renderDiff(segments: DiffSegment[]): React.ReactNode {
 
 function buildContactLine(doc: ResumeDocument): string {
   const p = doc.personalInfo;
-  return [p.email, p.phone, p.location, p.linkedin, p.github, p.websiteUrl]
-    .filter(Boolean)
-    .join("  ·  ");
+  return [p.email, p.phone, p.location].filter(Boolean).join("  ·  ");
 }
 
 export function ResumePreviewContent({
@@ -73,6 +71,11 @@ export function ResumePreviewContent({
   } | null;
 }) {
   const contactLine = buildContactLine(doc);
+  const contactUrls = [
+    { label: "LinkedIn", url: doc.personalInfo.linkedin },
+    { label: "GitHub", url: doc.personalInfo.github },
+    { label: "Portfolio", url: doc.personalInfo.websiteUrl },
+  ].filter(({ url }) => url);
 
   return (
     <div className="bg-white p-8 max-w-[210mm] mx-auto font-sans">
@@ -81,7 +84,22 @@ export function ResumePreviewContent({
           {doc.personalInfo.name}
         </h1>
         {contactLine && (
-          <p className="text-[9px] text-[#6b7280] mb-2.5">{contactLine}</p>
+          <p className="text-[9px] text-[#6b7280] mb-0.5">{contactLine}</p>
+        )}
+        {contactUrls.length > 0 && (
+          <p className="text-[9px] text-[#6b7280] mb-2.5 flex flex-wrap gap-x-3 gap-y-0.5">
+            {contactUrls.map(({ label, url }) => (
+              <a
+                key={label}
+                href={url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-primary hover:underline"
+              >
+                {label}
+              </a>
+            ))}
+          </p>
         )}
       </div>
 
@@ -188,7 +206,14 @@ export function ResumePreviewContent({
                 {p.name}
               </p>
               {p.link && (
-                <p className="text-[9px] text-[#0a0a0a]">{p.link}</p>
+                <a
+                  href={p.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[9px] text-brand-primary hover:underline"
+                >
+                  {p.link}
+                </a>
               )}
               {p.bullets.map((b) => (
                 <p

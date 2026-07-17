@@ -189,6 +189,14 @@ export enum InterviewStatus {
   NO_SHOW = "NO_SHOW",
 }
 
+export enum PipelineStage {
+  NOT_APPLIED = "NOT_APPLIED",
+  APPLIED = "APPLIED",
+  INTERVIEWING = "INTERVIEWING",
+  OFFER = "OFFER",
+  REJECTED = "REJECTED",
+}
+
 export const INTERVIEW_STATUS_VALUES = [
   InterviewStatus.SCHEDULED,
   InterviewStatus.COMPLETED,

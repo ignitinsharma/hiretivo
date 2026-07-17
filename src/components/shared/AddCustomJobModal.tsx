@@ -185,7 +185,7 @@ export function AddCustomJobModal() {
         </DialogHeader>
 
         {(state === "preview" || state === "confirming") && preview ? (
-          <div className="space-y-5">
+          <div className="space-y-5 max-h-[70vh] overflow-y-auto">
             <div className="rounded-xl border border-brand-border bg-brand-surface p-5 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10">
@@ -236,6 +236,7 @@ export function AddCustomJobModal() {
                 Edit
               </Button>
               <Button
+                variant="primary"
                 className="flex-1"
                 onClick={handleConfirm}
                 disabled={state === "confirming"}

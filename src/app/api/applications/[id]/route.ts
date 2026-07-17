@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { computeResumeMatch, type JobSkillInput } from "@/lib/resume-match";
 import { diffSummary, diffBullets } from "@/lib/resume-diff";
 import type { ResumeDocument, ResumeMatchMeta } from "@/lib/validations/resume.schema";
-import { AutomationStatus } from "@/constants/enums";
+import { AutomationStatus, PipelineStage } from "@/constants/enums";
 import { stripHtml } from "@/lib/utils";
 import { z } from "zod";
 
@@ -143,7 +143,9 @@ export async function GET(
 /*
  * PATCH /api/applications/:id
  * Supports:
- *   { action: "mark_applied" } — sets automationStatus to SUBMITTED
+ *   { action: "mark_applied" }           — sets automationStatus to SUBMITTED, pipelineStage to APPLIED
+ *   { action: "update_pipeline_stage", pipelineStage } — sets only pipelineStage
+ *   { action: "revert_to_not_applied" }  — clears automationStatus, sets pipelineStage to NOT_APPLIED
  */
 export async function PATCH(
   request: NextRequest,
@@ -163,9 +165,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const parsed = z.object({
-    action: z.enum(["mark_applied"]),
-  }).safeParse(body);
+  const parsed = z.discriminatedUnion("action", [
+    z.object({ action: z.literal("mark_applied") }),
+    z.object({
+      action: z.literal("update_pipeline_stage"),
+      pipelineStage: z.enum([
+        PipelineStage.APPLIED,
+        PipelineStage.INTERVIEWING,
+        PipelineStage.OFFER,
+        PipelineStage.REJECTED,
+      ]),
+    }),
+    z.object({ action: z.literal("revert_to_not_applied") }),
+  ]).safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
@@ -180,11 +192,31 @@ export async function PATCH(
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  if (parsed.data.action === "mark_applied") {
-    await prisma.application.update({
-      where: { id },
-      data: { automationStatus: AutomationStatus.SUBMITTED },
-    });
+  switch (parsed.data.action) {
+    case "mark_applied":
+      await prisma.application.update({
+        where: { id },
+        data: {
+          automationStatus: AutomationStatus.SUBMITTED,
+          pipelineStage: PipelineStage.APPLIED,
+        },
+      });
+      break;
+    case "update_pipeline_stage":
+      await prisma.application.update({
+        where: { id },
+        data: { pipelineStage: parsed.data.pipelineStage },
+      });
+      break;
+    case "revert_to_not_applied":
+      await prisma.application.update({
+        where: { id },
+        data: {
+          automationStatus: null,
+          pipelineStage: PipelineStage.NOT_APPLIED,
+        },
+      });
+      break;
   }
 
   return NextResponse.json({ success: true });

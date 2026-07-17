@@ -102,6 +102,14 @@ enum InterviewStatus {
   NO_SHOW
 }
 
+enum PipelineStage {
+  NOT_APPLIED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -401,6 +409,8 @@ model Application {
   automationStatus AutomationStatus? @map("automation_status")
   failureReason    String?               @map("failure_reason")
 
+  pipelineStage PipelineStage @default(NOT_APPLIED) @map("pipeline_stage")
+
   coverLetter String? @db.Text
   aiSummary   String?
 
@@ -422,6 +432,7 @@ model Application {
   @@index([status])
   @@index([jobId, status])
   @@index([activeVersionId])
+  @@index([pipelineStage])
 }
 
 // MasterResume — canonical, document-only storage for the user's uploaded/parsed base resume.

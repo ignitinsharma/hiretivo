@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { Loader2, Plus, Trash2, GripVertical, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 
+export interface ResumeEditorHandle {
+  getForm: () => ResumeDocument;
+}
+
 interface ResumeEditorProps {
   doc: ResumeDocument;
+  versionId?: string;
   onSaved: (version: { id: string; version: number }) => void;
 }
 
@@ -15,9 +20,20 @@ function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-export function ResumeEditor({ doc, onSaved }: ResumeEditorProps) {
+export const ResumeEditor = forwardRef<ResumeEditorHandle, ResumeEditorProps>(
+  function ResumeEditor({ doc, versionId, onSaved }, ref) {
   const [form, setForm] = useState<ResumeDocument>(() => deepClone(doc));
   const [saving, setSaving] = useState(false);
+
+  const prevVersionId = useRef(versionId);
+  useEffect(() => {
+    if (prevVersionId.current !== versionId) {
+      setForm(deepClone(doc));
+      prevVersionId.current = versionId;
+    }
+  }, [versionId, doc]);
+
+  useImperativeHandle(ref, () => ({ getForm: () => form }), [form]);
 
   const set = <K extends keyof ResumeDocument>(
     key: K,
@@ -361,7 +377,7 @@ export function ResumeEditor({ doc, onSaved }: ResumeEditorProps) {
       return { ...prev, projects: projs };
     });
   }
-}
+});
 
 function Section({
   title,

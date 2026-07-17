@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -9,6 +9,7 @@ import {
   Circle,
   Check,
   Download,
+  ExternalLink,
   Loader2,
   RefreshCw,
   Send,
@@ -17,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResumePreviewContent } from "@/modules/applications/components/ResumePreviewContent";
-import { ResumeEditor } from "@/modules/applications/components/ResumeEditor";
+import { ResumeEditor, type ResumeEditorHandle } from "@/modules/applications/components/ResumeEditor";
 import { AiRewritePanel } from "@/modules/applications/components/AiRewritePanel";
 import { QuotaBadge } from "@/modules/applications/components/QuotaBadge";
 import { toast } from "sonner";
@@ -81,6 +82,8 @@ export function ApplicationPageClient() {
   );
   const [prevMatchMeta, setPrevMatchMeta] = useState<ResumeMatchMeta | null>(null);
   const [applying, setApplying] = useState(false);
+  const [linkBannerDismissed, setLinkBannerDismissed] = useState(false);
+  const editorRef = useRef<ResumeEditorHandle>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["application", applicationId],
@@ -100,10 +103,13 @@ export function ApplicationPageClient() {
     if (!data || !visibleVersion?.resumeJson) return;
     setDownloading(true);
     try {
+      const docToDownload = activeTab === "editor"
+        ? (editorRef.current?.getForm() ?? visibleVersion.resumeJson)
+        : visibleVersion.resumeJson;
       const res = await fetch("/api/resume/preview-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeJson: visibleVersion.resumeJson }),
+        body: JSON.stringify({ resumeJson: docToDownload }),
       });
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
@@ -124,9 +130,16 @@ export function ApplicationPageClient() {
     setPrevMatchMeta(data?.matchMeta ?? null);
     setRegenerating(true);
     try {
+      const baseResume = activeTab === "editor" ? editorRef.current?.getForm() : undefined;
       const res = await fetch(
         `/api/applications/${applicationId}/generate?forceGenerate=true`,
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(baseResume ? { baseResumeJson: baseResume } : {}),
+          }),
+        },
       );
       const json = await res.json();
       if (!res.ok) {
@@ -195,6 +208,8 @@ export function ApplicationPageClient() {
 
   const meta = data.matchMeta;
   const resumeDoc = visibleVersion?.resumeJson as ResumeDocument | undefined;
+  const effectiveResumeJson =
+    activeTab === "editor" ? (editorRef.current?.getForm() ?? resumeDoc) : resumeDoc;
 
   return (
     <div className="space-y-6">
@@ -220,6 +235,22 @@ export function ApplicationPageClient() {
           </p>
         </div>
       </div>
+
+      {/* Link verification banner */}
+      {!linkBannerDismissed && data.automationStatus === "READY" && resumeDoc && hasLinks(resumeDoc) && (
+        <div className="rounded-xl border border-brand-primary/20 bg-brand-primary/5 p-4 flex items-center gap-3">
+          <ExternalLink className="h-4 w-4 text-brand-primary shrink-0" />
+          <p className="flex-1 text-sm text-brand-foreground">
+            Before submitting, download your resume and verify all links work. If not, update them in the Editor.
+          </p>
+          <button
+            onClick={() => setLinkBannerDismissed(true)}
+            className="text-brand-foreground-muted hover:text-brand-foreground shrink-0 text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -293,6 +324,17 @@ export function ApplicationPageClient() {
 <p className="text-xs text-brand-foreground leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto">
   {data.job.description ?? "No description available"}
 </p>
+{data.job.externalApplyUrl && (
+  <a
+    href={data.job.externalApplyUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center gap-1 text-xs text-brand-primary hover:underline mt-2"
+  >
+    <ExternalLink className="h-3 w-3" />
+    View original job description
+  </a>
+)}
           </Card>
 
           {/* Added Keywords */}
@@ -404,27 +446,45 @@ export function ApplicationPageClient() {
             </Card>
           )}
 
-          {/* Actions — only I've Applied */}
+          {/* Actions */}
           <Card>
             <h3 className="text-sm font-bold text-brand-foreground mb-3">
               Actions
             </h3>
-            <Button
-              variant={data.automationStatus === "SUBMITTED" ? "default" : "secondary"}
-              size="sm"
-              className="w-full"
-              onClick={handleMarkApplied}
-              disabled={data.automationStatus === "SUBMITTED" || applying}
-            >
-              {data.automationStatus === "SUBMITTED" ? (
-                <Check className="mr-1.5 h-4 w-4" />
-              ) : applying ? (
+            {data.automationStatus === "GENERATING" ? (
+              <Button variant="secondary" size="sm" className="w-full" disabled>
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="mr-1.5 h-4 w-4" />
-              )}
-              {data.automationStatus === "SUBMITTED" ? "Applied ✓" : "I&apos;ve Applied"}
-            </Button>
+                Generating resume...
+              </Button>
+            ) : data.automationStatus === "FAILED" ? (
+              <Button variant="secondary" size="sm" className="w-full" disabled>
+                Resume generation failed
+              </Button>
+            ) : data.automationStatus === "SUBMITTED" ? (
+              <Button variant="default" size="sm" className="w-full" disabled>
+                <Check className="mr-1.5 h-4 w-4" />
+                Applied ✓
+              </Button>
+            ) : !data.activeVersion ? (
+              <Button variant="secondary" size="sm" className="w-full" disabled>
+                Generate a resume first
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-full"
+                onClick={handleMarkApplied}
+                disabled={applying}
+              >
+                {applying ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="mr-1.5 h-4 w-4" />
+                )}
+                I've applied
+              </Button>
+            )}
           </Card>
 
           {/* Quota */}
@@ -548,7 +608,7 @@ export function ApplicationPageClient() {
               <div className="border-t border-brand-border px-5 py-4">
                 <AiRewritePanel
                   applicationId={applicationId}
-                  resumeJson={resumeDoc}
+                  resumeJson={effectiveResumeJson ?? resumeDoc}
                   onAccepted={(version) => {
                     setActiveTab("resume");
                     setSelectedVersionId(version.id);
@@ -565,15 +625,47 @@ export function ApplicationPageClient() {
                     <ResumePreviewContent doc={resumeDoc} newlyAddedSkills={meta?.addedKeywords ?? []} contentDiff={data.contentDiff ?? undefined} />
                   </div>
                 ) : data.automationStatus === "GENERATING" ? (
-                  <div className="space-y-3 p-5">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-4/6" />
-                    <div className="pt-2 space-y-2">
+                  <div className="space-y-5 p-5 min-h-[900px]">
+                    {/* Name + contact */}
+                    <Skeleton className="h-6 w-2/3" />
+                    <Skeleton className="h-3 w-3/4" />
+                    {/* Summary */}
+                    <div className="pt-1 space-y-2">
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                    </div>
+                    {/* Skills */}
+                    <div className="pt-1 space-y-2">
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                    {/* Experience */}
+                    <div className="pt-1 space-y-4">
                       <Skeleton className="h-4 w-1/3" />
-                      <Skeleton className="h-20 w-full" />
-                      <Skeleton className="h-4 w-1/3" />
+                      <div className="space-y-2 pl-4">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-4/6" />
+                      </div>
+                      <div className="space-y-2 pl-4">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                      </div>
+                    </div>
+                    {/* Education */}
+                    <div className="pt-1 space-y-2">
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                    {/* Projects */}
+                    <div className="pt-1 space-y-2">
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-4 w-2/3" />
                       <Skeleton className="h-20 w-full" />
                     </div>
                   </div>
@@ -599,7 +691,9 @@ export function ApplicationPageClient() {
               ) : activeTab === "editor" ? (
                 resumeDoc ? (
                   <ResumeEditor
+                    ref={editorRef}
                     doc={resumeDoc}
+                    versionId={visibleVersion?.id}
                     onSaved={(version) => {
                       setActiveTab("resume");
                       setSelectedVersionId(version.id);
@@ -622,6 +716,11 @@ export function ApplicationPageClient() {
       </div>
     </div>
   );
+}
+
+function hasLinks(doc: ResumeDocument): boolean {
+  const p = doc.personalInfo;
+  return !!(p.linkedin || p.github || p.websiteUrl);
 }
 
 function Card({

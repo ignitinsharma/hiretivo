@@ -5,6 +5,7 @@ import {
   Page,
   Text,
   View,
+  Link,
   StyleSheet,
 } from "@react-pdf/renderer";
 import { PDFDocument } from "pdf-lib";
@@ -105,14 +106,41 @@ function AtsResumePDF({ doc, fontSize, marginInches }: AtsResumeProps) {
   const s = buildStyles(fontSize, marginInches);
   const p = doc.personalInfo;
 
-  const contactParts = [p.email, p.phone, p.location, p.linkedin, p.github, p.websiteUrl, p.twitter].filter(Boolean);
+  const contactParts = [p.email, p.phone, p.location, p.twitter].filter(Boolean);
+  const urlFields = [
+    { label: "LinkedIn", url: p.linkedin },
+    { label: "GitHub", url: p.github },
+    { label: "Portfolio", url: p.websiteUrl },
+  ].filter(({ url }) => url);
+  const hasContact = contactParts.length > 0 || urlFields.length > 0;
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
         <Text style={s.name}>{p.name}</Text>
-        {contactParts.length > 0 && (
-          <Text style={s.contactLine}>{contactParts.join("  |  ")}</Text>
+        {hasContact && (
+          <Text style={s.contactLine}>
+            {contactParts.map((part, i) => (
+              <React.Fragment key={`c-${i}`}>
+                {i > 0 && <Text>  |  </Text>}
+                <Text>{part}</Text>
+              </React.Fragment>
+            ))}
+            {urlFields.length > 0 && contactParts.length > 0 && (
+              <Text>  |  </Text>
+            )}
+            {urlFields.map(({ label, url }, i) => (
+              <React.Fragment key={`u-${i}`}>
+                {i > 0 && <Text>  |  </Text>}
+                <Link
+                  src={url!}
+                  style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                  {label}: {url}
+                </Link>
+              </React.Fragment>
+            ))}
+          </Text>
         )}
 
         {doc.summary ? (
@@ -152,8 +180,16 @@ function AtsResumePDF({ doc, fontSize, marginInches }: AtsResumeProps) {
             {doc.projects.filter((p) => p.bullets.length > 0).map((proj) => (
               <View key={proj.id} style={s.projectItem}>
                 <Text style={s.projectTitle}>
-                  {proj.name}{proj.link ? ` — ${proj.link}` : ""}
+                  {proj.name}
                 </Text>
+                {proj.link ? (
+                  <Link
+                    src={proj.link}
+                    style={{ color: "#2563eb", textDecoration: "underline", fontSize: fontSize - 0.5 }}
+                  >
+                    {proj.link}
+                  </Link>
+                ) : null}
                 {proj.bullets
                   .sort((a, b) => a.priority - b.priority)
                   .map((b) => (

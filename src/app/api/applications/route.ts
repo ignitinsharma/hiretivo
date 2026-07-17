@@ -184,6 +184,7 @@ export async function GET() {
       status: true,
       automationStatus: true,
       failureReason: true,
+      pipelineStage: true,
       createdAt: true,
       job: {
         select: {
@@ -274,6 +275,7 @@ export async function GET() {
         : (job.recruiter.recruiterProfile?.fundingType ?? null),
       automationStatus: application.automationStatus,
       failureReason: application.failureReason,
+      pipelineStage: application.pipelineStage,
       skills: job.skills.map((jobSkill) => jobSkill.skill.name),
       matchedSkillNames: job.skills
         .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))
