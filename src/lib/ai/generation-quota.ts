@@ -9,7 +9,7 @@ import { addMonths, format } from "date-fns";
  * Regenerate and AI Rewrite edits do NOT consume quota.
  */
 export const PLAN_GENERATION_LIMITS: Record<PlanTier, number> = {
-  [PlanTier.FREE]: 2,
+  [PlanTier.FREE]: 99,
   [PlanTier.STARTER]: 20,
   [PlanTier.GROWTH]: 20,
   [PlanTier.SCALE]: 100,

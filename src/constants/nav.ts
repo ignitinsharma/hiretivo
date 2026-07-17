@@ -17,10 +17,10 @@ export interface NavItem {
 }
 
 export const SEEKER_NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/seeker/dashboard", icon: LayoutDashboard },
-  { label: "Generate resume", href: "/seeker/generate-resume", icon: FileText },
-  { label: "Browse jobs", href: "/seeker/browse", icon: Search },
-  { label: "Tracker", href: "/seeker/tracker", icon: LineChart },
-  { label: "Profile", href: "/seeker/profile", icon: UserCircle },
-  { label: "Settings", href: "/seeker/settings", icon: Settings },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Generate resume", href: "/generate-resume", icon: FileText },
+  { label: "Browse jobs", href: "/dashboard/browse", icon: Search },
+  { label: "Tracker", href: "/dashboard/tracker", icon: LineChart },
+  { label: "Profile", href: "/profile", icon: UserCircle },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];

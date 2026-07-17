@@ -57,7 +57,7 @@ export const ResumeLanguageSchema = z.object({
 });
 
 export const ResumeMatchMetaSchema = z.object({
-  matchScore: z.number().min(0).max(100).nullable(),
+  matchScore: z.number().min(0).max(100),
   addedKeywords: z.array(z.string()),
   missingKeywords: z.array(z.string()),
   requiredSkillsMatched: z.number(),
@@ -70,7 +70,7 @@ export const ResumePersonalInfoSchema = z.object({
   name: z.string(),
   email: z.string(),
   phone: z.string(),
-  location: z.string(),
+  location: z.string().nullable(),
   linkedin: z.string().nullable(),
   github: z.string().nullable(),
   websiteUrl: z.string().nullable(),
@@ -105,7 +105,7 @@ export const ResumeDocumentSchema = z.object({
 
   languages: z.array(ResumeLanguageSchema),
 
-  matchMeta: ResumeMatchMetaSchema,
+  matchMeta: ResumeMatchMetaSchema.optional(),
 });
 
 export type ResumeDocument = z.infer<typeof ResumeDocumentSchema>;

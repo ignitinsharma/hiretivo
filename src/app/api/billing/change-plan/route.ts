@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
     await prisma.subscription.update({
       where: { userId: session.user.id },
       data: {
-        scheduledPlan: targetPlan,
+        scheduledPlan: targetPlan as "FREE" | "STARTER" | "GROWTH" | "SCALE",
         scheduledChangeAt: subscription.currentPeriodEnd,
       },
     });

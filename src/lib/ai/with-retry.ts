@@ -23,7 +23,11 @@ export async function withRetry<T>(
       return result;
     } catch (err) {
       clearTimeout(timer);
-      if (attempt === maxRetries) return null;
+      if (attempt === maxRetries) {
+        if (err instanceof Error) console.error("[withRetry] All retries exhausted:", err.message);
+        return null;
+      }
+      console.warn("[withRetry] Attempt", attempt + 1, "failed, retrying:", err instanceof Error ? err.message : err);
       const delay = baseDelayMs * Math.pow(2, attempt);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }

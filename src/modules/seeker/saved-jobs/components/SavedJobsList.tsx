@@ -106,7 +106,7 @@ export function SavedJobsList() {
           to revisit.
         </p>
         <Button asChild className="mt-6" variant="primary">
-          <a href="/seeker/dashboard">Browse recommendations</a>
+          <a href="/dashboard">Browse recommendations</a>
         </Button>
       </Card>
     );
@@ -150,7 +150,6 @@ export function SavedJobsList() {
                       savedJob.job.id,
                       savedJob.job.title,
                       savedJob.job.companyName,
-                      savedJob.job.applyType,
                       savedJob.job.externalApplyUrl,
                     );
                   }

@@ -4,9 +4,11 @@ import {
   Bookmark,
   BriefcaseBusiness,
   Clock,
+  FileText,
   MapPin,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
@@ -180,6 +182,13 @@ export function JobCard({
                 Not interested
               </Button>
             )}
+            <Link
+              href={`/resume-preview?jobId=${job.id}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-4 py-2 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
+            >
+              <FileText className="h-4 w-4" />
+              Resume
+            </Link>
             {applyLockedLabel ? (
               <Button
                 variant="secondary"

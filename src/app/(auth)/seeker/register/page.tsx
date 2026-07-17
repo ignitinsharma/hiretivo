@@ -151,7 +151,7 @@ function SeekerRegisterContent() {
       !hasOAuthRoleMismatch &&
       !isHandlingOAuthMismatch
     ) {
-      const dest = "/seeker/dashboard";
+      const dest = "/dashboard";
       router.replace(dest);
     }
   }, [status, session, router, hasOAuthRoleMismatch, isHandlingOAuthMismatch]);

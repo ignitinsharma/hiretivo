@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { AutomationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { tailorResume } from "@/lib/ai/resume-tailor";
+import { stripHtml } from "@/lib/utils";
 
 const generateRequestSchema = z.object({
-  jdText: z.string().min(1, "JD text is required"),
+  jdText: z.string().optional(),
   forceGenerate: z.boolean().optional(),
 });
 
@@ -14,6 +16,7 @@ const generateRequestSchema = z.object({
  * Generates a tailored resume for the given application.
  * Thin wrapper around tailorResume() — handles auth, ownership checks, and HTTP mapping.
  * Reused for Regenerate (version-increment logic lives inside tailorResume()).
+ * If jdText is not provided, uses the job's stored description.
  */
 export async function POST(
   request: NextRequest,
@@ -26,15 +29,26 @@ export async function POST(
 
   const { id } = await params;
 
-  // Fetch Application, confirm it belongs to this user
+  // Fetch Application with job, confirm it belongs to this user
   const application = await prisma.application.findFirst({
     where: { id, seekerId: session.user.id },
-    select: { id: true },
+    select: {
+      id: true,
+      job: {
+        select: {
+          description: true,
+          skills: { select: { skill: { select: { name: true } } } },
+        },
+      },
+    },
   });
 
   if (!application) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
+
+  const jobSkills: string[] =
+    application.job.skills?.map((js) => js.skill.name) ?? [];
 
   // Check MasterResume exists
   const masterResume = await prisma.masterResume.findUnique({
@@ -42,48 +56,92 @@ export async function POST(
   });
 
   if (!masterResume) {
+    await prisma.application.update({
+      where: { id },
+      data: { automationStatus: AutomationStatus.FAILED, failureReason: "No master resume found — upload one first" },
+    });
     return NextResponse.json(
       { error: "no_master_resume", message: "Upload your resume to get started" },
       { status: 409 },
     );
   }
 
-  // Parse and validate request body
-  let body: unknown;
+  // Resolve jdText — from body or job description
+  let jdText: string;
+  let forceGenerate = false;
+
   try {
-    body = await request.json();
+    const body = await request.json();
+    const parsed = generateRequestSchema.safeParse(body);
+    if (!parsed.success && !body?.jdText) {
+      // No body provided or missing jdText — use job description
+      jdText = application.job.description
+        ? stripHtml(application.job.description).trim()
+        : "";
+      forceGenerate = true;
+    } else if (parsed.success) {
+      jdText = parsed.data.jdText?.trim() ?? "";
+      forceGenerate = parsed.data.forceGenerate ?? false;
+      if (!jdText && application.job.description) {
+        jdText = stripHtml(application.job.description).trim();
+        forceGenerate = true;
+      }
+    } else {
+      jdText = application.job.description
+        ? stripHtml(application.job.description).trim()
+        : "";
+      forceGenerate = true;
+    }
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    // JSON parse failed — use job description
+    jdText = application.job.description
+      ? stripHtml(application.job.description).trim()
+      : "";
+    forceGenerate = true;
   }
 
-  const parsed = generateRequestSchema.safeParse(body);
-  if (!parsed.success) {
+  if (!jdText) {
+    await prisma.application.update({
+      where: { id },
+      data: { automationStatus: AutomationStatus.FAILED, failureReason: "No job description available" },
+    });
     return NextResponse.json(
-      { error: "validation_error", message: parsed.error.flatten().fieldErrors?.jdText?.[0] ?? "Invalid request" },
+      { error: "validation_error", message: "No job description available to generate from." },
       { status: 422 },
     );
   }
 
   // JD text quality check — warn if too short but allow override with forceGenerate
-  const wordCount = parsed.data.jdText.trim().split(/\s+/).length;
-  if (wordCount < 50 && !parsed.data.forceGenerate) {
+  const wordCount = jdText.split(/\s+/).length;
+  if (wordCount < 5 && !forceGenerate) {
     return NextResponse.json(
-      { error: "jd_too_short", message: "Job description seems too short (<50 words). Add more detail or use forceGenerate to proceed anyway.", wordCount },
+      { error: "jd_too_short", message: "Job description seems too short (<5 words). Add more detail or use forceGenerate to proceed anyway.", wordCount },
       { status: 422 },
     );
   }
+
+  // Set status to GENERATING
+  await prisma.application.update({
+    where: { id },
+    data: { automationStatus: AutomationStatus.GENERATING },
+  });
 
   // Call the core tailoring function
   const result = await tailorResume({
     userId: session.user.id,
     applicationId: id,
     masterResumeJson: masterResume.resumeJson as unknown as import("@/lib/validations/resume.schema").ResumeDocument,
-    jdText: parsed.data.jdText,
+    jdText,
+    jobSkills,
   });
 
   // Map result to HTTP response
   switch (result.status) {
     case "success":
+      await prisma.application.update({
+        where: { id },
+        data: { automationStatus: AutomationStatus.READY },
+      });
       return NextResponse.json({
         resumeVersionId: result.resumeVersion.id,
         version: result.resumeVersion.version,
@@ -105,6 +163,10 @@ export async function POST(
 
     case "ai_error":
     case "validation_error":
+      await prisma.application.update({
+        where: { id },
+        data: { automationStatus: AutomationStatus.FAILED, failureReason: "AI generation failed — please retry" },
+      });
       return NextResponse.json(
         { error: result.status === "ai_error" ? "ai_error" : "validation_error", message: "We couldn't generate your resume right now. Please try again." },
         { status: 422 },

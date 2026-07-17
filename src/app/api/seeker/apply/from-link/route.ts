@@ -7,6 +7,28 @@ import {
   type JobPreview,
 } from "@/lib/validations/apply-from-link.schema";
 import { parseJobFromUrl, parseJobFromText } from "@/lib/ai/jd-parser";
+import { extractCandidateSkillsFromJD, reconcileAndInsertSkills } from "@/lib/ai/skill-catalog-extractor";
+import { upsertJobSkillIds } from "@/services/ats-job-fetcher.service";
+import { SkillLevel } from "@/constants/enums";
+import { JobStatus } from "@/constants/enums";
+
+async function enrichAndLinkJobSkills(jobId: string, description: string): Promise<void> {
+  const candidates = await extractCandidateSkillsFromJD(description);
+  if (candidates.length === 0) return;
+  const result = await reconcileAndInsertSkills(candidates);
+  if (result.created.length === 0 && result.aliasesAdded.length === 0) return;
+  const allSkills = await prisma.skill.findMany({ select: { id: true, name: true, aliases: true } });
+  const skillIds = upsertJobSkillIds(
+    [...new Set([...result.created.map((s) => s.name), ...result.aliasesAdded.map((a) => a.skillName)])],
+    allSkills,
+  );
+  if (skillIds.length > 0) {
+    await prisma.jobSkill.createMany({
+      data: skillIds.map((skillId) => ({ jobId, skillId, level: SkillLevel.INTERMEDIATE })),
+      skipDuplicates: true,
+    });
+  }
+}
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -56,10 +78,12 @@ export async function POST(req: Request) {
         description: jobData.description,
         jobType: "FULL_TIME",
         applyType: "EXTERNAL",
-        status: "PUBLIC",
+        status: JobStatus.OPEN,
         companyName: jobData.company,
       },
     });
+
+    await enrichAndLinkJobSkills(job.id, jobData.description);
 
     const application = await prisma.application.create({
       data: {
@@ -125,11 +149,13 @@ export async function POST(req: Request) {
       description: jobData.description,
       jobType: "FULL_TIME",
       applyType: "EXTERNAL",
-      status: "PUBLIC",
+      status: JobStatus.OPEN,
       externalApplyUrl: url,
       companyName: jobData.company,
     },
   });
+
+  await enrichAndLinkJobSkills(job.id, jobData.description);
 
   const application = await prisma.application.create({
     data: {

@@ -54,6 +54,8 @@ export const PLAN_RANK: Record<PlanTier, number> = {
   [PlanTier.STARTER]: 1,
   [PlanTier.GROWTH]: 2,
   [PlanTier.SCALE]: 3,
+  [PlanTier.PRO]: 1,
+  [PlanTier.UNLIMITED]: 2,
 };
 
 /*
@@ -101,6 +103,8 @@ export function getPlanTierId(plan: PlanTier): PricingTierId {
     [PlanTier.STARTER]: PricingTierId.STARTER,
     [PlanTier.GROWTH]: PricingTierId.GROWTH,
     [PlanTier.SCALE]: PricingTierId.SCALE,
+    [PlanTier.PRO]: PricingTierId.PRO,
+    [PlanTier.UNLIMITED]: PricingTierId.UNLIMITED,
   };
   return map[plan];
 }

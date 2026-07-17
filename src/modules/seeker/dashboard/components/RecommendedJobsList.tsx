@@ -115,10 +115,9 @@ export function RecommendedJobsList() {
     jobId: string,
     title?: string,
     companyName?: string,
-    applyType?: string,
     externalApplyUrl?: string | null,
   ) => {
-    openApplyModal(jobId, title, companyName, applyType, externalApplyUrl);
+    openApplyModal(jobId, title, companyName, externalApplyUrl);
   };
 
   const setJobSaving = (
@@ -280,7 +279,7 @@ export function RecommendedJobsList() {
           <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
             Add your skills and experience so we can recommend jobs tailored to you.
           </p>
-          <Link href="/seeker/settings">
+          <Link href="/settings">
             <Button variant="primary" className="mt-6">
               <UserCog className="h-4 w-4" />
               Update Profile
@@ -341,7 +340,6 @@ export function RecommendedJobsList() {
                       job.id,
                       job.title,
                       job.companyName,
-                      job.applyType,
                       job.externalApplyUrl,
                     )
             }

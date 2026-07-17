@@ -365,6 +365,7 @@ export const SKILL_SUGGEST_CONFIG = {
 export interface TailorResumePromptInput {
   resumeJson: string;  // serialized ResumeDocument
   jdText: string;
+  jobSkills?: string[];
 }
 
 /*
@@ -378,6 +379,10 @@ export interface TailorResumePromptInput {
  * metrics, or other experience not present in the input.
  */
 export function buildTailorResumeMessages(input: TailorResumePromptInput) {
+  const skillsSection = input.jobSkills?.length
+    ? input.jobSkills.join(", ")
+    : "None extracted — infer relevant skills from the JD text below";
+
   return {
     system: `You are an expert resume optimiser. Your job is to tailor a candidate's resume to a specific job description — rewriting bullet points, reordering experience, and adjusting the summary to maximise keyword match — while NEVER fabricating experience that isn't in the source resume.
 
@@ -385,40 +390,54 @@ INPUT:
 - resumeJson: the candidate's master resume (canonical JSON)
 - jdText: the full job description to tailor for
 
-OUTPUT: Return ONLY a valid JSON object with exactly two keys:
+OUTPUT FORMAT — CRITICAL: Return a JSON object where the resume data is wrapped INSIDE a "resume" key. The top-level object MUST have exactly one key: "resume". Do NOT place resume fields directly at the top level.
 
-1. "resume" — the tailored resume. Must be the same JSON schema as the input, with these modifications allowed:
-   - Rewrite bullet points to use stronger action verbs and include JD keywords naturally
-   - Reorder experience entries so the most relevant roles appear first
-   - Rewrite the summary to match the JD's tone and emphasis
-   - Adjust skill category order to put relevant skills first
-   - Assign priority (1=highest) to each bullet — used for fit-to-one-page trimming
-   - Populate matchMeta.matchScore (0-100) reflecting overall JD fit
+RESUME SHAPE — the value of "resume" must follow this structure (truncated example):
 
-2. "matchMeta" — keyword analysis object:
-   - matchScore: number 0-100 estimating how well the resume matches the JD
-   - addedKeywords: strings that appear in the JD and were added or emphasised in the tailored resume
-   - missingKeywords: important JD keywords NOT found in the candidate's resume
-   - requiredSkillsMatched: count of required skills (from JD) found in resume
-   - requiredSkillsTotal: total required skills found in JD
-   - preferredSkillsMatched: count of preferred skills found in resume
-   - preferredSkillsTotal: total preferred skills found in JD
+{
+  "resume": {
+    "personalInfo": {
+      "name": "...",
+      "email": "...",
+      ...
+    },
+    "summary": "...",
+    "experience": [ ... ],
+    "education": [ ... ],
+    "skills": { "categories": [...] },
+    "projects": [ ... ],
+    "certifications": [ ... ],
+    "languages": [ ... ]
+  }
+}
+
+ALL resume fields go INSIDE "resume", never at the top level directly.
+
+Modifications allowed inside the resume object:
+- Rewrite bullet points to use stronger action verbs and include JD keywords naturally
+- Reorder experience entries so the most relevant roles appear first
+- Rewrite the summary to match the JD's tone and emphasis
+- Adjust skill category order to put relevant skills first
+- Assign priority (1=highest) to each bullet — used for fit-to-one-page trimming
+- If a skill from REQUIRED SKILLS is missing from the candidate's resume, you may add it to the Skills section. You may reference skill categories generically in the summary ONLY if consistent with the candidate's existing real experience. You must NOT add or imply any new skill inside experience bullet points — bullets are governed by the existing HARD RULE: never invent experience not present in the input resume.
 
 HARD RULES:
 - NEVER invent companies, titles, dates, numeric metrics, or any experience not present in the input resume
 - Do NOT remove or change dates, company names, or job titles
 - You may rephrase bullet text and write stronger descriptions, but the factual content (what the person did) must remain faithful to the source
 - Bullet priority: 1 = most important/relevant to this JD, higher numbers = less relevant
-- The output "resume" object must include all the same top-level keys and structure as the input
-- If the JD is too vague or short to extract meaningful keywords, return empty arrays for missingKeywords/addedKeywords and a matchScore of 0
+- The resume object must include all the same top-level keys as the input (personalInfo, summary, experience, education, skills, projects, certifications, languages)
 - Return valid JSON only — no markdown, no code fences, no explanation`,
     user: `=== MASTER RESUME (JSON) ===
 ${input.resumeJson}
 
+=== REQUIRED SKILLS (from job description) ===
+${skillsSection}
+
 === JOB DESCRIPTION ===
 ${input.jdText}
 
-Generate the tailored resume and match analysis as a single JSON object following the structure above.`,
+Generate the tailored resume as a single JSON object following the structure above.`,
   };
 }
 

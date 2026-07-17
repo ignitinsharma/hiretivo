@@ -4,7 +4,6 @@ import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { R2_KEYS, uploadFile } from "@/lib/r2";
 import { resumeUploadLimiter } from "@/lib/rate-limit";
-import { parseResumeWithVision } from "@/lib/ai/resume-parser";
 import {
   RESUME_MAX_BYTES,
   RESUME_MIME_TYPES,
@@ -13,10 +12,8 @@ import { sniffedTypeAllowed } from "@/lib/validations/file-signature";
 
 /*
  * POST /api/resume/upload
- * Uploads a resume PDF, parses it with Gemini Vision, saves as MasterResume.
- * Also updates SeekerProfile.resumeKey for backward compatibility.
- *
- * Flow: upload R2 → vision parse → validate schema → save MasterResume → return parsed data
+ * Uploads a resume PDF to R2 for persistent storage.
+ * Parsing happens asynchronously after onboarding — see POST /api/resume/parse.
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -54,47 +51,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Upload to R2 for persistent storage
-  const key = R2_KEYS.resume(session.user.id);
-  await uploadFile(file, key);
+  const r2configured = !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY);
+  let key: string;
 
-  // Parse with Gemini Vision
-  const pdfBuffer = Buffer.from(bytes);
-  const parsed = await parseResumeWithVision(pdfBuffer);
-
-  if (!parsed) {
-    // Upload succeeded but parsing failed — save key anyway for backward compat
-    await prisma.seekerProfile.update({
-      where: { userId: session.user.id },
-      data: { resumeKey: key },
-    });
-
-    return NextResponse.json(
-      { error: "Could not parse resume. Please try a different file." },
-      { status: 422 },
-    );
+  if (r2configured) {
+    key = R2_KEYS.resume(session.user.id);
+    await uploadFile(file, key);
+  } else {
+    const base64 = Buffer.from(bytes).toString("base64");
+    key = `data:${file.type};base64,${base64}`;
   }
 
-  // Replace placeholder with real profileId
-  parsed.profileId = session.user.id;
-
-  // Save as MasterResume (upsert — one per user)
-  await prisma.masterResume.upsert({
-    where: { userId: session.user.id },
-    update: { resumeJson: parsed },
-    create: { userId: session.user.id, resumeJson: parsed },
-  });
-
-  // Update SeekerProfile.resumeKey for backward compat
   await prisma.seekerProfile.update({
     where: { userId: session.user.id },
     data: { resumeKey: key },
   });
 
   return NextResponse.json({
-    data: {
-      parsed: true,
-      resumeJson: parsed,
-    },
+    data: { key },
   });
 }

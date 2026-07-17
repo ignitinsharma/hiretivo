@@ -4,7 +4,6 @@ import { Footer } from '@/components/layout/Footer';
 import { JobDetailHeader } from '@/modules/jobs/components/JobDetailHeader';
 import { JobDetailContent } from '@/modules/jobs/components/JobDetailContent';
 import { JobDetailSidebar } from '@/modules/jobs/components/JobDetailSidebar';
-import { ApplyJobModal } from '@/components/shared/ApplyJobModal';
 import { auth } from '@/auth';
 import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
@@ -254,7 +253,6 @@ export default async function JobDescriptionPage({
         </div>
       </main>
       <Footer />
-      <ApplyJobModal />
     </div>
   );
 }

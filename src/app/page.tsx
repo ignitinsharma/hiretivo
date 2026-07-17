@@ -1,13 +1,9 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { HeroRecruiterSection } from "@/components/home/HeroRecruiterSection";
-import { StatsBarSection } from "@/components/home/StatsBarSection";
-import { FeaturedEngineersSection } from "@/components/home/FeaturedEngineersSection";
+import { HeroSection } from "@/components/home/HeroSection";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
-import { AiFeaturesSection } from "@/components/home/AiFeaturesSection";
-import { WhyVerifiedSection } from "@/components/home/WhyVerifiedSection";
-import { TestimonialsSection } from "@/components/home/TestimonialsSection";
-import { EngineerCTASection } from "@/components/home/EngineerCTASection";
+import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { SeekerCTASection } from "@/components/home/SeekerCTASection";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -17,16 +13,16 @@ import { generatePageMetadata } from "@/lib/metadata";
 const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 
 export const metadata = generatePageMetadata({
-  title: "Hire verified Indian engineers for your startup.",
+  title: "Stop copy-pasting. Start landing. | Hiretivo",
   description:
-    "Every engineer is manually reviewed, proof-checked, and salary-transparent. Browse the verified talent pool and hire in 7 days.",
+    "Paste any job link and get a tailored, ATS-ready resume in seconds. Browse jobs, generate AI resumes, apply, and track everything in one place.",
 });
 
 /*
  * Home
- * Public homepage for Hiretivo — verified Indian engineer marketplace.
- * Recruiter-first: dark hero with blurred engineer cards, inline stats,
- * how-it-works, why-verified pillars, and an engineer CTA band.
+ * Public homepage for Hiretivo — seeker-first landing page.
+ * 4 sections: Hero (outcome tagline), How It Works (3-step workflow),
+ * Features (3 differentiator cards), and CTA (free sign-up).
  * Authenticated users redirect to their dashboard immediately.
  */
 export default async function Home() {
@@ -39,21 +35,17 @@ export default async function Home() {
     if (session.user.onboardingCompleted === false) {
       redirect("/seeker/onboarding");
     }
-    redirect("/seeker/dashboard");
+    redirect("/dashboard");
   }
 
   return (
     <>
       <Header />
       <main className="overflow-x-hidden">
-        <HeroRecruiterSection />
-        <StatsBarSection />
-        <FeaturedEngineersSection />
+        <HeroSection />
         <HowItWorksSection />
-        <AiFeaturesSection />
-        <WhyVerifiedSection />
-        <TestimonialsSection />
-        <EngineerCTASection />
+        <FeaturesSection />
+        <SeekerCTASection />
       </main>
       <Footer />
     </>

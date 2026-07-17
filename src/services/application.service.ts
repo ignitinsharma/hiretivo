@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { apiClient } from '@/lib/axios';
+import { ApplicationStatus } from '@/constants/enums';
 import type { CreateApplicationInput } from '@/lib/validations/application';
 import type { SeekerApplicationItem } from '@/modules/seeker/applications/types/application.types';
 
@@ -23,8 +24,13 @@ interface ApplicationApiItem {
 }
 
 export const applicationService = {
-  applyToJob: async (payload: CreateApplicationInput): Promise<void> => {
-    await apiClient.post('/applications', payload);
+  applyToJob: async (payload: CreateApplicationInput): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/applications', payload);
+    return data;
+  },
+
+  generateResume: async (applicationId: string): Promise<void> => {
+    await apiClient.post(`/applications/${applicationId}/generate`);
   },
 
   getMyApplications: async (): Promise<SeekerApplicationItem[]> => {
@@ -42,5 +48,9 @@ export const applicationService = {
       skills: application.skills,
       appliedAt: format(new Date(application.appliedAt), 'MMM d, yyyy'),
     }));
+  },
+
+  updateApplicationStatus: async (applicationId: string, status: ApplicationStatus): Promise<void> => {
+    await apiClient.patch(`/applications/${applicationId}/status`, { status });
   },
 };

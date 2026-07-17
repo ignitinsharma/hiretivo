@@ -4,10 +4,30 @@ import { z } from "zod";
 import { WorkType, SkillLevel, JobType } from "@/constants/enums";
 
 export const step1Schema = z.object({
-  situation: z.string().trim().min(1, "Situation is required").max(500, "Situation must be under 500 characters"),
-  experienceLevel: z.string().trim().max(100, "Experience level must be under 100 characters"),
-  city: z.string().min(2, "City must be at least 2 characters").max(100).regex(/^[^,]+$/, "City name cannot contain commas"),
-  state: z.string().min(1, "State is required"),
+  name: z.string().trim().min(1, "Full name is required").max(200, "Name must be under 200 characters"),
+  phone: z.string().trim().min(5, "Phone number is required").max(20, "Phone must be under 20 characters"),
+  linkedinUrl: z
+    .string()
+    .trim()
+    .min(1, "LinkedIn URL is required")
+    .url("Invalid URL")
+    .refine((u) => /linkedin\.com\/in\//i.test(u), "Must be a LinkedIn profile URL (linkedin.com/in/...)"),
+  githubUrl: z
+    .string()
+    .trim()
+    .url("Invalid URL")
+    .refine((u) => /github\.com\//i.test(u), "Must be a GitHub profile URL (github.com/...)")
+    .nullable()
+    .optional()
+    .or(z.literal("")),
+  portfolioUrl: z
+    .string()
+    .trim()
+    .url("Invalid URL")
+    .nullable()
+    .optional()
+    .or(z.literal("")),
+  situation: z.string().trim().min(1, "Current situation is required"),
 });
 
 export const step2Schema = z.object({

@@ -13,6 +13,7 @@ export interface TailorResumeInput {
   applicationId: string;
   masterResumeJson: ResumeDocument;
   jdText: string;
+  jobSkills?: string[];
 }
 
 export type TailorResumeResult =
@@ -31,7 +32,7 @@ export interface ResumeVersionResponse {
 
 interface AiTailorResponse {
   resume: ResumeDocument;
-  matchMeta: ResumeMatchMeta;
+  matchMeta?: ResumeMatchMeta;
 }
 
 function parseAiResponse(raw: string): AiTailorResponse | null {
@@ -42,10 +43,19 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
       .replace(/\s*```$/i, "");
     const parsed = JSON.parse(cleaned);
 
-    if (!parsed.resume || !parsed.matchMeta) return null;
+    if (!parsed.resume) {
+      // Fallback: AI may return resume fields flat at top level (no "resume" wrapper)
+      if (typeof parsed.summary === "string" || Array.isArray(parsed.experience)) {
+        console.warn("[resume-tailor] AI returned flat resume — applying fallback");
+        return { resume: parsed as ResumeDocument, matchMeta: undefined };
+      }
+      console.error("[resume-tailor] AI response missing resume field:", Object.keys(parsed).join(", "));
+      return null;
+    }
 
     return parsed as AiTailorResponse;
-  } catch {
+  } catch (err) {
+    console.error("[resume-tailor] JSON parse failed:", err, "\nRaw:", raw);
     return null;
   }
 }
@@ -65,7 +75,7 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
 export async function tailorResume(
   input: TailorResumeInput,
 ): Promise<TailorResumeResult> {
-  const { userId, applicationId, masterResumeJson, jdText } = input;
+  const { userId, applicationId, masterResumeJson, jdText, jobSkills } = input;
 
   // 1. Quota check — before any AI call
   const quota = await checkGenerationQuota(userId);
@@ -97,6 +107,7 @@ export async function tailorResume(
   const { system, user: userMessage } = buildTailorResumeMessages({
     resumeJson: JSON.stringify(masterResumeJson),
     jdText,
+    jobSkills,
   });
 
   const aiResult = await withRetry(async () => {
@@ -136,6 +147,7 @@ export async function tailorResume(
 
   const validation = ResumeDocumentSchema.safeParse(tailored);
   if (!validation.success) {
+    console.error("[resume-tailor] Schema validation failed:", validation.error.format());
     return { status: "ai_error", reason: "malformed_response" };
   }
 
@@ -171,7 +183,15 @@ export async function tailorResume(
       id: resumeVersion.id,
       version: resumeVersion.version,
       resumeJson: validation.data,
-      matchMeta: parsed.matchMeta,
+      matchMeta: parsed.matchMeta ?? {
+        matchScore: 0,
+        addedKeywords: [],
+        missingKeywords: [],
+        requiredSkillsMatched: 0,
+        requiredSkillsTotal: 0,
+        preferredSkillsMatched: 0,
+        preferredSkillsTotal: 0,
+      },
     },
   };
 }

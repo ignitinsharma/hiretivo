@@ -29,7 +29,7 @@ import {
 
 function getSafeRedirectPath(value: string | null): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/seeker/dashboard";
+    return "/dashboard";
   }
 
   return value;

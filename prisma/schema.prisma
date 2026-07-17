@@ -204,6 +204,7 @@ model SeekerProfile {
   currency        String?
   availability    String?
   resumeKey       String?
+  phone           String?
 
   websiteUrl      String?
   linkedinUrl     String?
@@ -237,6 +238,7 @@ model Skill {
   name     String @unique
   slug     String @unique
   category String
+  aliases  String[] @default([])
 
   seekerSkills SeekerSkill[]
   jobSkills    JobSkill[]
@@ -397,6 +399,7 @@ model Application {
   matchScore  Int
 
   automationStatus AutomationStatus? @map("automation_status")
+  failureReason    String?               @map("failure_reason")
 
   coverLetter String? @db.Text
   aiSummary   String?

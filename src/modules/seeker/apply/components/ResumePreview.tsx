@@ -1,6 +1,13 @@
 "use client";
 
-import { ResumeSectionHeading } from "@/constants/enums";
+enum ResumeSectionHeading {
+  SUMMARY = "SUMMARY",
+  SKILLS = "SKILLS",
+  EXPERIENCE = "EXPERIENCE",
+  EDUCATION = "EDUCATION",
+  CERTIFICATIONS = "CERTIFICATIONS",
+  PROJECTS = "PROJECTS",
+}
 import type {
   ResumeDocument,
   ResumeExperience,
@@ -19,7 +26,7 @@ function buildContactLine(contact: ResumeDocument["contact"]): string {
 function SectionHeading({ heading }: { heading: string }) {
   return (
     <div className="mt-2.5 mb-1 pb-0.5 border-b border-[#e5e7eb]">
-      <span className="text-[11px] font-bold text-[#7560ff]">{heading}</span>
+      <span className="text-[11px] font-bold text-[#0a0a0a]">{heading}</span>
     </div>
   );
 }
@@ -124,7 +131,7 @@ function ProjectsSection({ items }: { items: ResumeProject[] }) {
         <div key={`${p.title}-${i}`} className="mb-1">
           <p className="text-[10px] font-bold text-[#0a0a0a]">{p.title}</p>
           {p.url ? (
-            <p className="text-[9px] text-[#7560ff]">{p.url}</p>
+            <p className="text-[9px] text-[#0a0a0a]">{p.url}</p>
           ) : null}
           {p.description ? (
             <p className="text-[10px] text-[#0a0a0a]">{p.description}</p>

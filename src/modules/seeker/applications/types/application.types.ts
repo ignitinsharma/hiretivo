@@ -1,4 +1,4 @@
-import { ApplicationStatus, JobStatus } from '@/constants/enums';
+import { ApplicationStatus, AutomationStatus, JobStatus } from '@/constants/enums';
 
 export interface SeekerApplicationItem {
   id: string;
@@ -15,6 +15,8 @@ export interface SeekerApplicationItem {
   companyIndustry?: string | null;
   companySize?: string | null;
   companyFundingType?: string | null;
+  automationStatus?: AutomationStatus | null;
+  failureReason?: string | null;
   skills?: string[];
   matchedSkillNames?: string[];
   missingSkills?: string[];

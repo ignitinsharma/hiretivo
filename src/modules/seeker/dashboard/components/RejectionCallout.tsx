@@ -39,7 +39,7 @@ export function RejectionCallout({ status, verificationNotes }: RejectionCallout
         className="rounded-lg text-xs font-semibold shrink-0 self-start"
         asChild
       >
-        <Link href="/seeker/onboarding">Update &amp; Resubmit →</Link>
+        <Link href="/seeker/onboarding">Update & Resubmit →</Link>
       </Button>
     </div>
   );

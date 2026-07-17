@@ -37,6 +37,10 @@ export async function getFreeVisibleApplicationIds(
   const visible = new Set<string>();
 
   for (const row of rows) {
+    if (!row.jobId) {
+      visible.add(row.id);
+      continue;
+    }
     const seen = perJobCount.get(row.jobId) ?? 0;
     if (seen < FREE_APPLICANT_LIMIT) {
       visible.add(row.id);

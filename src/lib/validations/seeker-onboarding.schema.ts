@@ -4,20 +4,9 @@ import { isValidState, isValidCity } from '@/modules/india-location';
 
 export type {
   SeekerSituation,
-  ExperienceLevel,
-  YearsOfExperience,
-  JobType,
-  JobCategory,
-  Currency,
-  Availability,
-  SalaryRange,
   ResumeFile,
   Step1Data,
-  Step2Data,
   Step3Data,
-  Step4Data,
-  SeekerOnboardingData,
-  SeekerOnboardingStep,
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
 /*

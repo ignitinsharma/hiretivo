@@ -166,7 +166,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       req,
       effectiveRole === Role.RECRUITER
         ? "/recruiter/dashboard"
-        : "/seeker/dashboard",
+        : "/dashboard",
       effectiveRole,
     );
   }

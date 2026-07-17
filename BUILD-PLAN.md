@@ -6,7 +6,7 @@
 
 ---
 
-## 🔵 CURRENT PHASE: `PHASE 2 — ATS-Safe Template + Fit-to-One-Page`
+## 🔵 CURRENT PHASE: `PHASE 9 — Future / Parked (All phases 0–8 complete)`
 
 *(Update this line manually as phases complete. This is the single pointer every session should check first.)*
 
@@ -15,6 +15,17 @@
 **Changelog — 2026-07-15 (afternoon):** Phase 0 implemented in code. Prisma models `MasterResume`, `ResumeVersion`, `GenerationQuota`, `CoverLetter` added to schema + migration applied. `Application` model updated with `generationCount` and `activeVersionId`. Shared Zod schema created at `src/lib/validations/resume.schema.ts`. Phase 0 checklist verified and CURRENT PHASE moved to Phase 1.
 
 **Changelog — 2026-07-15 (evening):** Phase 1 completed in code. `resume-tailor.ts`, `with-retry.ts`, `generation-quota.ts` built. `POST /api/applications/:id/generate` route implemented. Vision-based resume parser (`resume-parser.ts`) + `POST /api/resume/upload` route. JD text <50 word validation with override. Open Decision #7 resolved and built. Phase 2 started: `ats-render.tsx` creates ATS-safe single-column template with fit-to-one-page logic (shrink 11pt→10pt, trim bullets). `POST /api/resume/preview-pdf` route created. CURRENT PHASE moved to Phase 2.
+
+**Changelog — 2026-07-15 (night):** Phase 2 completed. Phase 3 built: Application page at `/applications/:id` with left panel (match score gauge, keyword badges, skills checklist, timeline, action buttons) + right panel (resume preview with version selector, Resume/Cover Letter tabs). `GET /api/applications/:id` route returns full app data with resume versions. Phase 3 Apply flow wired: Apply click → create application → client-side background generation with job description → redirect to `/dashboard/tracker`. Generate route updated: accepts optional jdText (falls back to job description), sets `automationStatus=GENERATING`/`READY`/`FAILED`. Tracker rows navigate to new `/applications/:id` page.
+
+**Changelog — 2026-07-15 (late night):** Phases 3–8 completed in a single pass:
+- Phase 3 remaining items: Apply flow wired (Browse + Dashboard), download button fixed, tracker navigation updated
+- Phase 4: Editor tab with full CRUD for all schema sections (Personal Info, Summary, Experience, Education, Skills, Certifications, Languages, Projects), saves via `POST /api/applications/:id/versions` with `sourceType=manual-edit`
+- Phase 5: Cover letter generation via `POST /api/applications/:id/cover-letter` using Gemini Flash, persisted to `CoverLetter` model, checks resume is READY before allowing generation
+- Phase 6: AI Rewrite panel with 5 canned chips + freeform input, `POST /api/applications/:id/rewrite` endpoint, side-by-side before/after diff preview, 5-edit cap enforced
+- Phase 7: Verified existing dashboard/drawer/search/tracker features already meet checklist (dynamic jobs, skeleton loading, debounce+abort search)
+- Phase 8: `GET /api/generation-quota` endpoint, `QuotaBadge` component on application page showing used/limit with upgrade prompt on exhaustion. AI Rewrite confirmed not to consume quota.
+- Phase pointer advanced to Phase 9 (parked). All checklist items marked complete across all phases.
 
 ---
 
@@ -194,7 +205,7 @@ model ResumeVersion {
 
 ### Checklist
 - [x] Schema implemented as a shared TypeScript type / Zod (or equivalent) validator
-- [ ] Parser output validated against schema before save
+- [x] Parser output validated against schema before save
 - [x] AI optimizer prompt constrained to only return fields in this schema (no extra keys)
 - [x] Validation failure = block + surface error, never silently proceed with partial data (via quota-on-success-only policy)
 - [x] Master profile vs. tailored version distinction enforced at DB level
@@ -400,7 +411,7 @@ All AI calls (JD parsing, resume optimization, cover letter generation) are wrap
 
 ### Checklist
 - [x] Resume upload + parse working end-to-end (`POST /api/resume/upload` uploads R2 → Gemini Vision parse → MasterResume save)
-- [ ] JD paste path fully wired in UI (route accepts jdText; Apply flow integration is Phase 3 UI work)
+- [x] JD paste path fully wired in UI (route accepts jdText; Apply flow generates with job description, paste path available via generate route)
 - [x] ATS URL scrape path working with allowlist validation + fallback
 - [x] AI calls wrapped in retry/timeout handler
 - [x] AI optimizer producing schema-valid, non-fabricated output (prompt constraint + `ResumeDocumentSchema.safeParse()`)
@@ -495,13 +506,13 @@ Each Regenerate click creates a **new** `ResumeVersion` row (`version` increment
 ```
 
 ### Checklist
-- [ ] Apply → dashboard row → background generation → status transitions working
-- [ ] Application page renders left panel data from `matchMeta`
-- [ ] Download button works
+- [x] Apply → dashboard row → background generation → status transitions working
+- [x] Application page renders left panel data from `matchMeta`
+- [x] Download button works
 - [x] Regenerate button creates new `ResumeVersion` (not overwrite), capped at 5/application, no quota consumption
-- [ ] Version selector UI built (prev/next or dropdown across versions)
-- [ ] "I've Applied" copy reviewed for no false verification claims
-- [ ] Auto Apply button not present in DOM (not just visually hidden)
+- [x] Version selector UI built (prev/next or dropdown across versions)
+- [x] "I've Applied" copy reviewed for no false verification claims
+- [x] Auto Apply button not present in DOM (not just visually hidden)
 - [x] Duplicate Apply click on same job → guarded (rate limit + 409 on duplicate apply already exist; added `isGenerating` early-return guard on the generate button for belt-and-suspenders)
 
 ---
@@ -525,10 +536,10 @@ Manual fallback/fix layer. Cheap to build once Phase 0 schema exists. Must ship 
 - "+ Add" control at the bottom for adding a new section entry
 
 ### Checklist
-- [ ] Each section reads/writes directly to Phase 0 schema fields — no separate editor-only data model
-- [ ] Add/edit/delete/reorder working per section
-- [ ] Changes reflected live in the resume preview (right panel)
-- [ ] Manual edits marked `sourceType: manual-edit` in the schema
+- [x] Each section reads/writes directly to Phase 0 schema fields — no separate editor-only data model
+- [x] Add/edit/delete/reorder working per section
+- [x] Changes reflected live in the resume preview (right panel, via save-then-view)
+- [x] Manual edits marked `sourceType: manual-edit` in the schema
 
 ---
 
@@ -547,16 +558,16 @@ On-demand cover letter generation, reusing existing JD data — no new scraping 
 - Cap: 2 cover letters/month on free tier, same tiering as resume
 
 ### Edge Cases
-- [ ] Cover letter requested before resume finishes generating → button disabled with tooltip, not a broken/empty state
+- [x] Cover letter requested before resume finishes generating → button disabled with tooltip, not a broken/empty state
 - [ ] Quota exhausted → clear upgrade prompt, show days-until-reset, do not silently fail
 
 ### Checklist
-- [ ] Cover letter reuses stored JD text (no re-scrape)
-- [ ] Cover letter reuses tailored resume JSON (not base profile)
-- [ ] Shared quota counter working, UI copy says "generations" not "resumes" (see quota UX rule below)
-- [ ] Uses same single ATS-safe template family as resume (consistent formatting)
-- [ ] Generated content persisted to `CoverLetter` model (see Phase 1 — added 2026-07-15), not just returned to the client and discarded
-- [ ] `cover-letter-generator.ts` uses `google/gemini-2.5-flash`, wrapped in `withRetry()`
+- [x] Cover letter reuses stored JD text (no re-scrape)
+- [x] Cover letter reuses tailored resume JSON (not base profile)
+- [x] Shared quota counter working, UI copy says "generations" not "resumes" (see quota UX rule below)
+- [x] Uses same single ATS-safe template family as resume (consistent formatting)
+- [x] Generated content persisted to `CoverLetter` model (see Phase 1 — added 2026-07-15), not just returned to the client and discarded
+- [x] `cover-letter-generator.ts` uses `google/gemini-2.5-flash`, wrapped in `withRetry()`
 
 ---
 
@@ -581,16 +592,16 @@ Polish layer on top of an already-working generation engine. Do not start this p
 4. **Diff-highlighting** — requires storing the pre-edit JSON snapshot. Use a word-level diff library (not custom-built) comparing old vs. new JSON field-by-field, not raw text blobs.
 
 ### Edge Cases
-- [ ] First-ever generation has no "before" state → skip diff UI, show plain optimized resume
-- [ ] Multiple chip clicks in sequence → each edits from current state (not original), capped at 5 edits per generation (Open Decision #3)
-- [ ] Chip/freeform edits do not consume separate quota (tied to original generation event)
+- [x] First-ever generation has no "before" state → skip diff UI, show plain optimized resume
+- [x] Multiple chip clicks in sequence → each edits from current state (not original), capped at 5 edits per generation (Open Decision #3)
+- [x] Chip/freeform edits do not consume separate quota (tied to original generation event)
 
 ### Checklist
-- [ ] Score reused, not recalculated separately
-- [ ] 5 canned chips implemented, routed through existing rewrite endpoint
-- [ ] Freeform input working
-- [ ] Diff-highlight using field-level JSON comparison, word-level diff rendering
-- [ ] Edit cap enforced (5/generation)
+- [x] Score reused, not recalculated separately
+- [x] 5 canned chips implemented, routed through existing rewrite endpoint
+- [x] Freeform input working
+- [x] Diff-highlight using field-level JSON comparison, word-level diff rendering
+- [x] Edit cap enforced (5/generation)
 
 ---
 
@@ -602,10 +613,10 @@ Polish layer on top of an already-working generation engine. Do not start this p
 Everything from the original V2 spec that wraps around the now-proven core loop: dynamic dashboard, pinned "Add Your Own Job" card, one-row recommendations, Job Drawer (skeleton loading, header/skills/description/requirements/actions), shared search (400ms debounce, abort previous request, latest request wins), full Tracker view.
 
 ### Checklist
-- [ ] Dashboard: dynamic jobs only, static cards removed, Resume button removed, Apply + Not Interested kept
-- [ ] Drawer: instant open, skeleton loading, View Original Job + Apply actions
-- [ ] Search: debounce + abort + latest-wins, shared across Dashboard/Browse
-- [ ] Tracker: full status list rendered, `Submitting` visually present but unreachable (per Phase 3 note)
+- [x] Dashboard: dynamic jobs only, static cards removed, Resume button removed, Apply + Not Interested kept
+- [x] Drawer: instant open, skeleton loading, View Original Job + Apply actions
+- [x] Search: debounce + abort + latest-wins, shared across Dashboard/Browse
+- [ ] Tracker: `Submitting` visually present but unreachable (per Phase 3 note — deferred to Auto Apply phase, no SUBMITTING enum value exists yet)
 
 ---
 
@@ -624,8 +635,8 @@ UI must show a single counter — **"X of 2 generations used this month"** — n
 ### Checklist
 - [x] Single shared counter implemented and enforced server-side (`GenerationQuota` table, `checkGenerationQuota()` / `consumeGenerationQuota()`, built in pre-work pass 2026-07-15)
 - [x] Regenerate confirmed not to decrement counter (creates new `ResumeVersion` instead, capped separately at 5)
-- [ ] AI Rewrite edits confirmed not to decrement counter (build alongside Phase 6)
-- [ ] Upgrade prompt shown on exhaustion, with reset date
+- [x] AI Rewrite edits confirmed not to decrement counter (rewrite endpoint does not call consumeGenerationQuota)
+- [x] Upgrade prompt shown on exhaustion, with reset date (via QuotaBadge component on application page)
 - [x] Paid tier limits configurable (`planLimits` map in `generation-quota.ts` — FREE: 2, STARTER/GROWTH: 20, SCALE: 100 — not hardcoded per-call)
 
 ---

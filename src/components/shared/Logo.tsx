@@ -9,13 +9,13 @@ interface LogoProps {
 }
 
 const sizeClasses: Record<NonNullable<LogoProps["size"]>, string> = {
-  sm: "h-6 w-auto",
+  sm: "h-5 w-auto",
   md: "h-8 w-auto",
   lg: "h-11 w-auto",
 };
 
 const dimensionMap: Record<NonNullable<LogoProps["size"]>, { width: number; height: number }> = {
-  sm: { width: 120, height: 24 },
+  sm: { width: 100, height: 20 },
   md: { width: 130, height: 36 },
   lg: { width: 160, height: 44 },
 };

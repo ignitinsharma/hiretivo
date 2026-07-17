@@ -46,7 +46,7 @@ export async function normalizeAshbyJob(
   companyName: string,
   companyWebsite: string,
   companyLogoUrl: string | null,
-  skills: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): Promise<NormalizedJob> {
   const description = stripHtml(raw.descriptionHtml || '');
   const locationStr = raw.location || 'Remote';
@@ -91,7 +91,7 @@ export async function fetchAshbyJobs(
   companyName: string,
   companyWebsite: string,
   companyLogoUrl: string | null,
-  skills: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): Promise<NormalizedJob[]> {
   const url = `https://api.ashbyhq.com/posting-api/job-board/${boardToken}?includeCompensation=true`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Hiretivo/1.0' } });

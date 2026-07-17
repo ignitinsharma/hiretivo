@@ -157,7 +157,8 @@ export function AddCustomJobModal() {
       }
 
       handleClose();
-      router.push(`/seeker/generate-resume?applicationId=${data.applicationId}`);
+      fetch(`/api/applications/${data.applicationId}/generate`, { method: "POST" }).catch(() => {});
+      router.push(`/applications/${data.applicationId}`);
     } catch {
       setError("Network error. Please try again.");
       setState("error");

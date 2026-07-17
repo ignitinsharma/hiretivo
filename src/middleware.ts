@@ -39,7 +39,7 @@ export default auth((req) => {
     if (session && pathname === "/") {
       const dest = session.user?.onboardingCompleted === false
         ? "/seeker/onboarding"
-        : "/seeker/dashboard";
+        : "/dashboard";
       return NextResponse.redirect(new URL(dest, req.url));
     }
     return NextResponse.next();
@@ -53,7 +53,10 @@ export default auth((req) => {
 
   if (!session) {
     if (isLoginOrRegister) return NextResponse.next();
-    if (pathname.startsWith("/seeker/"))
+    if (pathname.startsWith("/dashboard") ||
+        pathname.startsWith("/settings") ||
+        pathname.startsWith("/profile") ||
+        pathname.startsWith("/generate-resume"))
       return NextResponse.redirect(new URL("/seeker/login", req.url));
     return NextResponse.next();
   }
@@ -61,13 +64,13 @@ export default auth((req) => {
   if (isLoginOrRegister) {
     const dest = session.user?.onboardingCompleted === false
       ? "/seeker/onboarding"
-      : "/seeker/dashboard";
+      : "/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));
   }
 
   if (isOnboardingRoute) {
     if (session?.user?.onboardingCompleted) {
-      return NextResponse.redirect(new URL("/seeker/dashboard", req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }

@@ -7,54 +7,19 @@ export interface ProfileStrengthResult {
   filledWeight: number
 }
 
-/*
- * computeOnboardingStrength
- * Computes live profile strength from onboarding store state.
- * Used in the side rail to show real-time feedback as the engineer fills their profile.
- * Returns percentage (0-100), tier label, and next recommended action.
- */
 export function computeOnboardingStrength(state: {
-  step1: { situation: string | null; experienceLevel: string | null; city?: string | null; state?: string | null }
-  step2: { primaryRole: string; yearsOfExperience: string | null; skills: string[] }
-  proofOfWork: { githubUrl: string; projects: Array<unknown> }
-  experience: { workExperiences: Array<unknown> }
-  compensation: {
-    headline: string
-    bio: string
-    salaryMin: number | null
-    salaryMax: number | null
-    availability: string | null
-    resume: unknown | null
-  }
+  step1: { name: string; phone: string; linkedinUrl: string; githubUrl: string | null; portfolioUrl: string | null; situation: string | null }
+  step3: { resume: unknown | null }
 }): ProfileStrengthResult {
   let filledWeight = 0
 
-  // Group A — About you (12 total)
-  if (state.step1.situation) filledWeight += 4
-  if (state.step1.experienceLevel) filledWeight += 4
-  if (state.step1.city && state.step1.state) filledWeight += 4
-
-  // Group B — Role & skills (18 total)
-  if (state.step2.primaryRole.trim().length > 0) filledWeight += 6
-  if (state.step2.yearsOfExperience) filledWeight += 6
-  if (state.step2.skills.length >= 1) filledWeight += 6
-
-  // Group C — Proof of work (25 total)
-  const githubValid =
-    state.proofOfWork.githubUrl.trim().length > 0 &&
-    state.proofOfWork.githubUrl.startsWith('https://github.com')
-  if (githubValid) filledWeight += 15
-  if (state.proofOfWork.projects.length >= 1) filledWeight += 10
-
-  // Group D — Experience (20 total)
-  if (state.experience.workExperiences.length >= 1) filledWeight += 20
-
-  // Group E — Compensation (25 total)
-  if (state.compensation.salaryMin !== null) filledWeight += 5
-  if (state.compensation.salaryMax !== null) filledWeight += 5
-  if (state.compensation.availability) filledWeight += 5
-  if (state.compensation.headline.trim().length > 0) filledWeight += 5
-  if (state.compensation.bio.trim().length > 20) filledWeight += 5
+  if (state.step1.name.trim()) filledWeight += 12
+  if (state.step1.phone.trim()) filledWeight += 12
+  if (state.step1.linkedinUrl.trim()) filledWeight += 12
+  if (state.step1.githubUrl?.trim()) filledWeight += 12
+  if (state.step1.portfolioUrl?.trim()) filledWeight += 12
+  if (state.step1.situation) filledWeight += 20
+  if (state.step3.resume) filledWeight += 20
 
   const percentage = Math.min(100, filledWeight)
 
@@ -70,22 +35,18 @@ export function computeOnboardingStrength(state: {
             : 'Expert'
 
   let nextAction: string
-  if (!state.proofOfWork.githubUrl.startsWith('https://github.com')) {
-    nextAction = "Add your GitHub profile to reach Strong — it's the #1 reviewer signal"
-  } else if (state.proofOfWork.projects.length === 0) {
-    nextAction = 'Add at least 1 project to boost your approval odds by 3×'
-  } else if (state.experience.workExperiences.length === 0) {
-    nextAction = 'Add work experience to build reviewer trust'
-  } else if (state.compensation.bio.trim().length <= 20) {
-    nextAction = 'Write a bio (20+ chars) to complete your profile'
-  } else if (state.compensation.headline.trim().length === 0) {
-    nextAction = 'Add a professional headline'
-  } else if (state.compensation.salaryMin === null) {
-    nextAction = 'Set your salary expectation in USD'
-  } else if (state.compensation.availability === null) {
-    nextAction = 'Set your availability'
+  if (!state.step1.situation) {
+    nextAction = 'Tell us your current situation to get started'
+  } else if (!state.step1.name.trim()) {
+    nextAction = 'Enter your full name'
+  } else if (!state.step1.phone.trim()) {
+    nextAction = 'Add your phone number for recruiters to reach you'
+  } else if (!state.step1.linkedinUrl.trim()) {
+    nextAction = 'Add your LinkedIn profile — the #1 signal recruiters look for'
+  } else if (!state.step3.resume) {
+    nextAction = 'Upload your resume to enable AI-powered job applications'
   } else {
-    nextAction = 'Your profile is strong — submit for verification!'
+    nextAction = 'Your profile is ready — start applying!'
   }
 
   return { percentage, tier, nextAction, filledWeight }

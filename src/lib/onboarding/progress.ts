@@ -1,14 +1,10 @@
 import { Prisma } from "@prisma/client";
-import { isCanonicalLocation } from "@/modules/india-location";
 
-export type SeekerOnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type SeekerOnboardingStep = 1 | 2;
 export type RecruiterOnboardingStep = 1 | 2 | 3 | 4;
 
 export interface SeekerOnboardingDraft {
   experienceLevel?: string | null;
-  yearsOfExperience?: string | null;
-  jobType?: string | null;
-  category?: string | null;
   resumeSkipped?: boolean;
 }
 
@@ -25,16 +21,6 @@ export interface OnboardingDraft {
 
 export interface SeekerProgressProfile {
   situation: string | null;
-  primaryRole: string | null;
-  availability: string | null;
-  skillsCount: number;
-  githubUrl?: string | null;
-  hasProjects?: boolean;
-  workExperiencesCount?: number;
-  educationsCount?: number;
-  resumeKey?: string | null;
-  headline?: string | null;
-  location?: string | null;
 }
 
 export interface RecruiterProgressProfile {
@@ -69,9 +55,6 @@ export function parseOnboardingDraft(
   if (isRecord(value.seeker)) {
     draft.seeker = {
       experienceLevel: asNullableString(value.seeker.experienceLevel),
-      yearsOfExperience: asNullableString(value.seeker.yearsOfExperience),
-      jobType: asNullableString(value.seeker.jobType),
-      category: asNullableString(value.seeker.category),
       resumeSkipped:
         typeof value.seeker.resumeSkipped === "boolean"
           ? value.seeker.resumeSkipped
@@ -118,7 +101,7 @@ export function nextProgressStep(
 }
 
 function isSeekerStep(value: number | null | undefined): value is SeekerOnboardingStep {
-  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6;
+  return value === 1 || value === 2;
 }
 
 function isRecruiterStep(
@@ -131,24 +114,8 @@ export function resolveSeekerOnboardingStep(
   storedStep: number | null | undefined,
   profile: SeekerProgressProfile | null | undefined,
 ): SeekerOnboardingStep {
-  // Hard gate: step 1 — situation AND canonical India location required
-  if (!profile?.situation || !isCanonicalLocation(profile.location)) return 1;
-
-  // Hard gate: step 2 — primary role + at least 1 skill required
-  if (!profile.primaryRole || profile.skillsCount === 0) return 2;
-
-  // Hard gate: step 3 — GitHub URL + at least 1 project required
-  if (!profile.githubUrl || !profile.hasProjects) return 3;
-
-  // Hard gate: step 4 — at least 1 work experience and 1 education entry required
-  if ((profile.workExperiencesCount ?? 0) === 0 || (profile.educationsCount ?? 0) === 0) return 4;
-
-  // Hard gate: step 5 — availability, headline, and resumeKey required
-  if (!profile.availability || !profile.headline || !profile.resumeKey) return 5;
-
-  // All steps complete — review step
-  if (isSeekerStep(storedStep) && storedStep >= 6) return 6;
-  return 6;
+  if (!profile?.situation) return 1;
+  return 2;
 }
 
 export function resolveRecruiterOnboardingStep(

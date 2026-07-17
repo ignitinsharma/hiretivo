@@ -1,24 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, Download, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OptimizeMode } from "@/constants/enums";
-import { seekerService } from "@/services/seeker.service";
-import type { CertificationItem, SeekerSettingsData } from "@/services/seeker.service";
-import type { ProjectInput } from "@/lib/validations/project.schema";
-import type { MatchAnalysis, CoverLetterOutput } from "@/lib/ai-prompts";
-import { buildApplyAiProfile } from "@/modules/seeker/apply/utils/build-apply-profile";
-import { ResumePreview } from "@/modules/seeker/apply/components/ResumePreview";
+import { seekerService, type SeekerSettingsData } from "@/services/seeker.service";
+import { jobService } from "@/services/job.service";
 import { JdInputPanel } from "@/modules/seeker/generate-resume/components/JdInputPanel";
+import { EditableResumePreview } from "@/modules/seeker/generate-resume/components/EditableResumePreview";
 import { MatchAnalysisPanel } from "@/modules/seeker/generate-resume/components/MatchAnalysisPanel";
-import { CoverLetterPanel } from "@/modules/seeker/generate-resume/components/CoverLetterPanel";
-import { useCredits, SEEKER_CREDITS_QUERY_KEY } from "@/hooks/use-credits";
-import { useUIStore } from "@/store/use-ui-store";
+import { EditableCoverLetter } from "@/modules/seeker/generate-resume/components/EditableCoverLetter";
 import type { ResumeDocument } from "@/modules/seeker/profile/types/resume-document.types";
+import type { MatchAnalysis, CoverLetterOutput } from "@/lib/ai-prompts";
 
 interface JdInput {
   jdText: string;
@@ -26,100 +20,170 @@ interface JdInput {
   company: string;
 }
 
-/*
- * GenerateResumeShell
- * Orchestrates the standalone resume-tailoring flow. Side-by-side layout: left
- * panel for JD input + match analysis + cover letter, right panel shows a
- * realistic resume preview. Generation is explicit — the user must click
- * "Generate resume" to start; nothing auto-generates.
- */
-export function GenerateResumeShell() {
+function buildDefaultResume(settings: SeekerSettingsData): ResumeDocument {
+  return {
+    fullName: settings.name || "Your Name",
+    headline: settings.headline || "",
+    contact: {
+      email: settings.email || "",
+      location: settings.location || "",
+      websiteUrl: settings.websiteUrl || "",
+      linkedinUrl: settings.linkedinUrl || "",
+      githubUrl: settings.githubUrl || "",
+    },
+    summary: settings.bio || "",
+    skillGroups: settings.skills.length > 0
+      ? [{ category: "Skills", skills: settings.skills.map((s) => s.name) }]
+      : [],
+    experience: (settings.workExperiences || []).map((exp) => ({
+      title: exp.title,
+      company: exp.company,
+      startDate: exp.startDate,
+      endDate: exp.endDate || "",
+      isCurrent: exp.isCurrent,
+      bullets: exp.description ? [exp.description] : [],
+    })),
+    education: (settings.educations || []).map((edu) => ({
+      institution: edu.institution,
+      degree: edu.degree || "",
+      major: edu.major || "",
+      graduationDate: edu.graduationDate || "",
+    })),
+    certifications: [],
+    projects: [],
+  };
+}
+
+interface GenerateResumeShellProps {
+  jobId?: string;
+  applicationId?: string;
+}
+
+export function GenerateResumeShell({ jobId, applicationId }: GenerateResumeShellProps) {
   const [jdInput, setJdInput] = useState<JdInput>({ jdText: "", jobTitle: "", company: "" });
   const [resume, setResume] = useState<ResumeDocument | null>(null);
   const [coverLetter, setCoverLetter] = useState<CoverLetterOutput | null>(null);
   const [matchAnalysis, setMatchAnalysis] = useState<MatchAnalysis | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingCl, setIsGeneratingCl] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const queryClient = useQueryClient();
-  const openPaidFeatureModal = useUIStore((s) => s.openPaidFeatureModal);
+
 
   const { data: settings, isLoading: settingsLoading } = useQuery<{ data: SeekerSettingsData }>({
     queryKey: ["seeker-settings"],
     queryFn: seekerService.getSettings,
     staleTime: 60_000,
   });
-  const { data: certData } = useQuery<{ data: { certifications: CertificationItem[] } }>({
-    queryKey: ["seeker-certifications"],
-    queryFn: seekerService.getCertifications,
-    staleTime: 60_000,
-  });
-  const { data: projectsData } = useQuery<{ data: { projects: ProjectInput[] } }>({
-    queryKey: ["seeker-projects"],
-    queryFn: seekerService.getProjects,
-    staleTime: 60_000,
-  });
-  const { data: optimizeModeData } = useQuery<{ data: { optimizeMode: OptimizeMode } }>({
-    queryKey: ["seeker-optimize-mode"],
-    queryFn: seekerService.getOptimizeMode,
-    staleTime: 60_000,
-  });
-  const { data: creditsData } = useCredits();
-  const isOutOfCredits = creditsData ? creditsData.data.remaining <= 0 : false;
+
+  useEffect(() => {
+    if (!jobId) return;
+
+    jobService.getJobById(jobId).then((res) => {
+      const job = res.job;
+      setJdInput({
+        jdText: job.description || "",
+        jobTitle: job.title || "",
+        company: job.companyName || "",
+      });
+    }).catch(() => {
+      // silently fail — user can paste JD manually
+    });
+  }, [jobId]);
 
   const handleJdChange = useCallback((input: JdInput) => {
     setJdInput(input);
     setError(null);
   }, []);
 
+  const handleResumeChange = useCallback((doc: ResumeDocument) => {
+    setResume(doc);
+  }, []);
+
   const handleGenerate = async () => {
     if (!settings || !jdInput.jdText.trim()) return;
-    if (isOutOfCredits) {
-      openPaidFeatureModal({
-        feature: "ai_credits",
-        title: "Out of AI credits this month",
-        description: "Upgrade to Pro (400/mo) or Max (1000/mo) to keep tailoring resumes.",
-      });
-      return;
-    }
     setIsGenerating(true);
     setError(null);
 
     try {
-      const profile = buildApplyAiProfile(
-        settings.data,
-        certData?.data.certifications ?? [],
-        projectsData?.data.projects ?? [],
-      );
-      const tone = optimizeModeData?.data.optimizeMode ?? OptimizeMode.HONEST;
-
-      const { resume: doc, matchAnalysis: ma } = await seekerService.optimizeResume({
-        jdText: jdInput.jdText,
-        jobTitle: jdInput.jobTitle || "Untitled Position",
-        company: jdInput.company || "Company",
-        tone,
-        profile,
-        requiredSkills: [],
-        preferredSkills: [],
+      const defaultResume = buildDefaultResume(settings.data);
+      setResume(defaultResume);
+      setMatchAnalysis({
+        matched_requirements: [],
+        missing_requirements: [],
+        match_score: 0,
       });
-      setResume(doc);
-      setMatchAnalysis(ma);
-
-      const { coverLetter: cl } = await seekerService.generateCoverLetter({
-        jdText: jdInput.jdText,
-        jobTitle: jdInput.jobTitle || "Untitled Position",
-        company: jdInput.company || "Company",
-        tone,
-        profile,
-        requiredSkills: [],
-        preferredSkills: [],
-      });
-      setCoverLetter(cl);
-
-      queryClient.invalidateQueries({ queryKey: SEEKER_CREDITS_QUERY_KEY });
+      setCoverLetter(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed. Please try again.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!resume) return;
+    setIsDownloading(true);
+
+    try {
+      const res = await fetch("/api/seeker/apply/preview-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resume }),
+      });
+
+      if (!res.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${resume.fullName.replace(/\s+/g, "_")}_Resume.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCoverLetterChange = useCallback((cl: CoverLetterOutput) => {
+    setCoverLetter(cl);
+  }, []);
+
+  const handleGenerateCoverLetter = async () => {
+    if (!jdInput.jdText.trim()) return;
+    setIsGeneratingCl(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/seeker/apply/cover-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobTitle: jdInput.jobTitle,
+          company: jdInput.company,
+          jdText: jdInput.jdText,
+          resumeName: resume?.fullName || "Candidate",
+          resumeSummary: resume?.summary || "",
+          resumeSkills: (resume?.skillGroups || []).flatMap((g) => g.skills),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || "Failed to generate cover letter");
+      }
+
+      const json = await res.json();
+      setCoverLetter(json.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate cover letter.");
+    } finally {
+      setIsGeneratingCl(false);
     }
   };
 
@@ -130,60 +194,65 @@ export function GenerateResumeShell() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Left panel — JD input + controls + match analysis + cover letter */}
-      <div className="flex flex-col gap-6 w-full lg:w-[420px] shrink-0">
-        <div className="rounded-xl border border-brand-border bg-white p-6">
-          <JdInputPanel value={jdInput} onChange={handleJdChange} />
-          <div className="mt-4 flex items-center gap-3">
-            {isOutOfCredits && (
-              <p className="text-xs text-brand-danger">
-                You&apos;re out of AI credits this month.{" "}
-                <Link href="/pricing" className="font-medium underline">
-                  Upgrade
-                </Link>{" "}
-                to keep tailoring.
-              </p>
-            )}
-            {!isOutOfCredits && (
+    <div className="space-y-6">
+      {/* JD input */}
+      <div className="rounded-xl border border-brand-border bg-white p-6">
+        <JdInputPanel value={jdInput} onChange={handleJdChange} />
+        <div className="mt-4 flex items-center gap-3">
+          <Button variant="primary" size="sm" onClick={handleGenerate} disabled={!canGenerate}>
+            {isGenerating ? (
               <>
-                <Button variant="primary" size="sm" onClick={handleGenerate} disabled={!canGenerate}>
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="animate-spin mr-1.5" />
-                      Generating…
-                    </>
-                  ) : (
-                    "Generate resume"
-                  )}
-                </Button>
-                {error && <p className="text-xs text-brand-danger">{error}</p>}
+                <Loader2 className="animate-spin mr-1.5" />
+                Generating…
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-1.5 h-4 w-4" />
+                Generate resume
               </>
             )}
-          </div>
+          </Button>
+          {error && <p className="text-xs text-brand-danger">{error}</p>}
         </div>
-
-        {matchAnalysis && <MatchAnalysisPanel analysis={matchAnalysis} />}
-        {coverLetter && <CoverLetterPanel coverLetter={coverLetter} />}
       </div>
 
-      {/* Right panel — realistic resume preview */}
-      <div className="flex-1 min-w-0">
-        <div className="rounded-xl border border-brand-border bg-white p-1 overflow-hidden">
-          {resume ? (
-            <ResumePreview doc={resume} />
-          ) : (
-            <div className="flex items-center justify-center py-24 text-sm text-brand-foreground-muted">
-              <div className="text-center">
-                <p className="mb-2">Your tailored resume will appear here</p>
-                <p className="text-xs text-brand-foreground-secondary">
-                  Paste a job description and click Generate to get started
-                </p>
-              </div>
-            </div>
+      {resume && (
+        <div className="space-y-6">
+          {/* Action bar */}
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" size="sm" onClick={handleDownload} disabled={isDownloading}>
+              {isDownloading ? (
+                <Loader2 className="animate-spin mr-1.5 h-4 w-4" />
+              ) : (
+                <Download className="mr-1.5 h-4 w-4" />
+              )}
+              Download PDF
+            </Button>
+
+            <Button variant="ghost" size="sm" onClick={handleGenerateCoverLetter} disabled={isGeneratingCl}>
+              {isGeneratingCl ? (
+                <Loader2 className="animate-spin mr-1.5 h-4 w-4" />
+              ) : (
+                <Sparkles className="mr-1.5 h-4 w-4" />
+              )}
+              Generate cover letter
+            </Button>
+          </div>
+
+          {/* Editable resume preview */}
+          <EditableResumePreview doc={resume} onChange={handleResumeChange} />
+
+          {/* Match analysis */}
+          {matchAnalysis && (
+            <MatchAnalysisPanel analysis={matchAnalysis} />
+          )}
+
+          {/* Cover letter */}
+          {coverLetter && (
+            <EditableCoverLetter coverLetter={coverLetter} onChange={handleCoverLetterChange} />
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

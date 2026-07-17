@@ -6,8 +6,7 @@
 
 @layer base {
   :root {
-    /* Monochrome Design System */
-    --background: 0 0% 100%;
+    --background: 220 14% 97%;
     --foreground: 0 0% 4%;
 
     --card: 0 0% 100%;
@@ -36,6 +35,9 @@
     --ring: 248 100% 69%;
 
     --radius: 0.5rem;
+    --radius-card: 16px;
+    --radius-input: 14px;
+    --radius-pill: 9999px;
   }
 }
 

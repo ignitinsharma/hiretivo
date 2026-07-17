@@ -68,8 +68,11 @@ export interface SeekerSettingsData {
 }
 
 export const seekerService = {
-  getFeed: async (params?: { cursor?: string; limit?: number }): Promise<SeekerFeedResponse> => {
-    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params });
+  getFeed: async (
+    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string },
+    signal?: AbortSignal,
+  ): Promise<SeekerFeedResponse> => {
+    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params, signal });
     return data;
   },
 

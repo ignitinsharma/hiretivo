@@ -308,7 +308,7 @@ export default function AboutPage() {
                   className="w-full rounded-[2rem] border-2 border-white/20 bg-transparent px-10 py-7 text-lg font-bold text-white transition-all hover:bg-white/5 sm:w-auto"
                   asChild
                 >
-                  <Link href="/recruiter/register">Hire a Professional</Link>
+                  <Link href="/seeker/register">Start Your Search</Link>
                 </Button>
               </div>
             </div>
