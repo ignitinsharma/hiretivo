@@ -507,7 +507,7 @@ export function ApplicationPageClient() {
                   label="Resume Generated"
                   time={data.versions[data.versions.length - 1].createdAt}
                   isLatest={data.automationStatus !== "SUBMITTED"}
-                  dot="bg-brand-primary"
+                  dot="bg-gray-500"
                 />
               )}
               {data.automationStatus === "SUBMITTED" && (

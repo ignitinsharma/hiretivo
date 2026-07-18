@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronRight, FileText, Globe2, PenLine, Users } from 'lucide-react';
+import { ChevronRight, Globe2, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUIStore } from '@/store/use-ui-store';
@@ -129,20 +129,6 @@ export function JobDetailHeader({ job, isAuth, userRole }: JobDetailHeaderProps)
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={`/generate-resume?jobId=${job.id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-6 py-3 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
-          >
-            <FileText className="h-4 w-4" />
-            Resume
-          </Link>
-          <Link
-            href={`/generate-resume?jobId=${job.id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-6 py-3 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
-          >
-            <PenLine className="h-4 w-4" />
-            Cover Letter
-          </Link>
           <SaveJobButton
             jobId={job.id}
             isAuth={isAuth}

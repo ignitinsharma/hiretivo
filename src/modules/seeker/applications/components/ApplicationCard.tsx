@@ -1,6 +1,5 @@
 import React from "react";
-import { BriefcaseBusiness, Clock, FileText, MapPin, PenLine } from "lucide-react";
-import Link from "next/link";
+import { BriefcaseBusiness, Clock, MapPin } from "lucide-react";
 
 import { ApplicationStatus, JobStatus } from "@/constants/enums";
 import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
@@ -93,20 +92,6 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       salaryRange={application.salaryRange}
       footerRight={
         <div className="flex items-center gap-2">
-          <Link
-            href={`/generate-resume?jobId=${application.jobId}`}
-            className="inline-flex items-center gap-1 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
-          >
-            <FileText className="h-3.5 w-3.5" />
-            Resume
-          </Link>
-          <Link
-            href={`/generate-resume?jobId=${application.jobId}`}
-            className="inline-flex items-center gap-1 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
-          >
-            <PenLine className="h-3.5 w-3.5" />
-            Cover Letter
-          </Link>
           {application.jobStatus === JobStatus.DELETED ? (
             <JobClosedBadge />
           ) : (

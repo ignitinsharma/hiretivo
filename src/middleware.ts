@@ -55,8 +55,7 @@ export default auth((req) => {
     if (isLoginOrRegister) return NextResponse.next();
     if (pathname.startsWith("/dashboard") ||
         pathname.startsWith("/settings") ||
-        pathname.startsWith("/profile") ||
-        pathname.startsWith("/generate-resume"))
+        pathname.startsWith("/profile"))
       return NextResponse.redirect(new URL("/seeker/login", req.url));
     return NextResponse.next();
   }

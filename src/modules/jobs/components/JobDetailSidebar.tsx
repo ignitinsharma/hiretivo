@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import { Lock, ArrowRight, FileText, PenLine } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
 
 import { UserRole } from "@/constants/enums";
 import { cn } from "@/lib/utils";
@@ -138,20 +138,7 @@ export function JobDetailSidebar({
             className="w-full py-3"
             unsavedLabel="Save for later"
           />
-          <Link
-            href={`/generate-resume?jobId=${job.id}`}
-            className="flex items-center justify-center gap-1.5 w-full rounded-lg border border-brand-border bg-white px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
-          >
-            <FileText className="h-4 w-4" />
-            Resume
-          </Link>
-          <Link
-            href={`/generate-resume?jobId=${job.id}`}
-            className="flex items-center justify-center gap-1.5 w-full rounded-lg border border-brand-border bg-white px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand-surface"
-          >
-            <PenLine className="h-4 w-4" />
-            Cover Letter
-          </Link>
+
         </div>
       </div>
 

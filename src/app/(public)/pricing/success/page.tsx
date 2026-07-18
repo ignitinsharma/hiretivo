@@ -27,11 +27,6 @@ function PricingSuccessContent() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>
-          <Button asChild size="lg" variant="secondary">
-            <Link href="/generate-resume">
-              Generate a Resume
-            </Link>
-          </Button>
         </div>
       </section>
     </main>
