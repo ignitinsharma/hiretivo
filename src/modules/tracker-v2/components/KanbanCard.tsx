@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Loader2, RefreshCw } from "lucide-react";
+import { format } from "date-fns";
 import { AutomationStatus, PipelineStage } from "@/constants/enums";
 import type { SeekerApplicationItem } from "@/modules/seeker/applications/types/application.types";
 
@@ -26,7 +27,7 @@ export function KanbanCardOverlay({ app }: { app: SeekerApplicationItem }) {
       <CardInner
         companyName={companyName}
         jobTitle={app.jobTitle}
-        appliedAt={app.appliedAt}
+        createdDate={format(new Date(app.createdAt), "MMM d, yyyy")}
         isGenerating={isNotApplied && isGenerating}
         isFailed={isNotApplied && isFailed}
       />
@@ -112,7 +113,7 @@ export function KanbanCard({ app, onRetry, retryingId }: KanbanCardProps) {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <span className="text-[11px] text-brand-foreground-secondary whitespace-nowrap">
-            {app.appliedAt}
+            {format(new Date(app.createdAt), "MMM d, yyyy")}
           </span>
           <div className="w-5 h-5 flex items-center justify-center text-brand-foreground-secondary pointer-events-none">
             <GripVertical className="w-3.5 h-3.5" />
@@ -127,13 +128,13 @@ export function KanbanCard({ app, onRetry, retryingId }: KanbanCardProps) {
 function CardInner({
   companyName,
   jobTitle,
-  appliedAt,
+  createdDate,
   isGenerating,
   isFailed,
 }: {
   companyName: string;
   jobTitle: string;
-  appliedAt: string;
+  createdDate: string;
   isGenerating: boolean;
   isFailed: boolean;
 }) {
@@ -163,7 +164,7 @@ function CardInner({
       </div>
       <div className="flex items-center gap-1 shrink-0">
         <span className="text-[11px] text-brand-foreground-secondary whitespace-nowrap">
-          {appliedAt}
+          {createdDate}
         </span>
         <div className="w-5 h-5 flex items-center justify-center text-brand-foreground-secondary">
           <GripVertical className="w-3.5 h-3.5" />

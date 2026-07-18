@@ -42,6 +42,7 @@ export async function GET(
           title: true,
           companyName: true,
           externalApplyUrl: true,
+          applyType: true,
           description: true,
           skills: {
             select: {
@@ -199,6 +200,7 @@ export async function PATCH(
         data: {
           automationStatus: AutomationStatus.SUBMITTED,
           pipelineStage: PipelineStage.APPLIED,
+          appliedAt: new Date(),
         },
       });
       break;

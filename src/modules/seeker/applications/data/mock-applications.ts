@@ -8,7 +8,8 @@ export const MOCK_APPLICATIONS: SeekerApplicationItem[] = [
     jobTitle: 'Senior Product Designer',
     companyName: 'TechVision Inc',
     status: ApplicationStatus.INTERVIEW,
-    appliedAt: 'Oct 12',
+    appliedAt: "Oct 12",
+    createdAt: "2024-10-12T00:00:00.000Z",
   },
   {
     id: 'app-2',
@@ -16,7 +17,8 @@ export const MOCK_APPLICATIONS: SeekerApplicationItem[] = [
     jobTitle: 'UX Researcher',
     companyName: 'Global Nexus',
     status: ApplicationStatus.REVIEWING,
-    appliedAt: 'Oct 10',
+    appliedAt: "Oct 10",
+    createdAt: "2024-10-10T00:00:00.000Z",
   },
   {
     id: 'app-3',
@@ -24,7 +26,8 @@ export const MOCK_APPLICATIONS: SeekerApplicationItem[] = [
     jobTitle: 'Frontend Developer',
     companyName: 'Creative Flow',
     status: ApplicationStatus.APPLIED,
-    appliedAt: 'Oct 05',
+    appliedAt: "Oct 05",
+    createdAt: "2024-10-05T00:00:00.000Z",
   },
   {
     id: 'app-4',
@@ -32,7 +35,8 @@ export const MOCK_APPLICATIONS: SeekerApplicationItem[] = [
     jobTitle: 'Product Manager',
     companyName: 'Horizon Soft',
     status: ApplicationStatus.REJECTED,
-    appliedAt: 'Sep 28',
+    appliedAt: "Sep 28",
+    createdAt: "2024-09-28T00:00:00.000Z",
   },
   {
     id: 'app-5',
@@ -40,7 +44,8 @@ export const MOCK_APPLICATIONS: SeekerApplicationItem[] = [
     jobTitle: 'DevOps Engineer',
     companyName: 'Cloud Nine',
     status: ApplicationStatus.INTERVIEW,
-    appliedAt: 'Sep 15',
+    appliedAt: "Sep 15",
+    createdAt: "2024-09-15T00:00:00.000Z",
   },
   {
     id: 'app-6',
@@ -48,6 +53,7 @@ export const MOCK_APPLICATIONS: SeekerApplicationItem[] = [
     jobTitle: 'Back-end Developer',
     companyName: 'Skyline Solutions',
     status: ApplicationStatus.REVIEWING,
-    appliedAt: 'Sep 12',
+    appliedAt: "Sep 12",
+    createdAt: "2024-09-12T00:00:00.000Z",
   },
 ];

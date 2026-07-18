@@ -49,6 +49,7 @@ interface ApplicationDetail {
     title: string;
     companyName: string;
     externalApplyUrl: string | null;
+    applyType: string;
     description: string | null;
     skills: string[];
   };
@@ -588,6 +589,18 @@ export function ApplicationPageClient() {
                   )}
                   Download PDF
                 </Button>
+                {data.job.applyType === "EXTERNAL" && data.job.externalApplyUrl && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      window.open(data.job.externalApplyUrl!, "_blank", "noopener,noreferrer")
+                    }
+                  >
+                    <ExternalLink className="mr-1.5 h-4 w-4" />
+                    View job posting
+                  </Button>
+                )}
                 <Button
                   variant="secondary"
                   size="sm"

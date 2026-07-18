@@ -13,7 +13,10 @@ interface SeekerNavLinkProps {
 
 export function SeekerNavLink({ href, icon: Icon, label }: SeekerNavLinkProps) {
   const pathname = usePathname();
-  const isActive = pathname === href || pathname.startsWith(`${href}/`);
+  const isActive =
+    href === "/dashboard"
+      ? pathname === href
+      : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Link

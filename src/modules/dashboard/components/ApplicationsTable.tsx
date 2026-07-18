@@ -1,26 +1,19 @@
 "use client";
 
 import React from "react";
-import { Search, ExternalLink, Eye, MoreHorizontal } from "lucide-react";
+import { Search, Eye, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import { applicationService } from "@/services/application.service";
-import { ApplicationStatus } from "@/constants/enums";
+import { ApplicationStatus, AutomationStatus } from "@/constants/enums";
 import { Button } from "@/components/ui/button";
 import type { SeekerApplicationItem } from "@/modules/seeker/applications/types/application.types";
 
 type Tab = "All" | ApplicationStatus;
 
 const STATUS_TABS: Tab[] = ["All", ApplicationStatus.APPLIED, ApplicationStatus.REVIEWING, ApplicationStatus.INTERVIEW, ApplicationStatus.OFFER, ApplicationStatus.HIRED, ApplicationStatus.REJECTED];
-
-const STATUS_COLORS: Record<string, string> = {
-  [ApplicationStatus.APPLIED]: "text-blue-600 bg-blue-50",
-  [ApplicationStatus.REVIEWING]: "text-purple-600 bg-purple-50",
-  [ApplicationStatus.INTERVIEW]: "text-emerald-600 bg-emerald-50",
-  [ApplicationStatus.OFFER]: "text-amber-600 bg-amber-50",
-  [ApplicationStatus.HIRED]: "text-green-600 bg-green-50",
-  [ApplicationStatus.REJECTED]: "text-red-600 bg-red-50",
-};
 
 const STATUS_LABELS: Record<string, string> = {
   [ApplicationStatus.APPLIED]: "Applied",
@@ -31,7 +24,25 @@ const STATUS_LABELS: Record<string, string> = {
   [ApplicationStatus.REJECTED]: "Rejected",
 };
 
+function getDynamicStatus(app: SeekerApplicationItem): { label: string; className: string } {
+  if (app.automationStatus === AutomationStatus.SUBMITTED) {
+    return { label: "Applied", className: "text-green-600 bg-green-50" };
+  }
+  if (app.automationStatus === AutomationStatus.READY) {
+    return { label: "Resume Generated", className: "text-amber-600 bg-amber-50" };
+  }
+  return { label: "Not Ready", className: "text-gray-600 bg-gray-100" };
+}
+
+function getAppliedColumn(app: SeekerApplicationItem): string {
+  if (app.automationStatus === AutomationStatus.SUBMITTED && app.appliedAt) {
+    return formatDistanceToNow(new Date(app.appliedAt), { addSuffix: true });
+  }
+  return "\u2014";
+}
+
 export function ApplicationsTable() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = React.useState<Tab>("All");
 
   const { data: applications = [], isLoading } = useQuery({
@@ -84,7 +95,6 @@ export function ApplicationsTable() {
           <thead>
             <tr className="border-t border-brand-border">
               <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Company</th>
-              <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Resume</th>
               <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Status</th>
               <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Applied</th>
               <th className="w-12 px-5 py-3"></th>
@@ -93,52 +103,66 @@ export function ApplicationsTable() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-sm text-gray-400">Loading...</td>
+                <td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-400">Loading...</td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-sm text-gray-400">
+                <td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-400">
                   No applications yet. Start applying to jobs to see them here.
                 </td>
               </tr>
             ) : (
-              filtered.map((app) => (
-                <tr key={app.id} className="border-t border-brand-border hover:bg-gray-50/50 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-pill bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
-                        {app.companyName[0]}
+              filtered.map((app) => {
+                const dynamicStatus = getDynamicStatus(app);
+                return (
+                  <tr
+                    key={app.id}
+                    className="border-t border-brand-border hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/applications/${app.id}`)}
+                  >
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-pill bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
+                          {app.companyName[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{app.companyName}</p>
+                          <p className="text-xs text-gray-500">{app.jobTitle}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{app.companyName}</p>
-                        <p className="text-xs text-gray-500">{app.jobTitle}</p>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${dynamicStatus.className}`}>
+                        {dynamicStatus.label}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-sm text-gray-500">
+                      {getAppliedColumn(app)}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1">
+                        <button
+                          className="w-7 h-7 rounded-pill flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          aria-label="View details"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/applications/${app.id}`);
+                          }}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          className="w-7 h-7 rounded-pill flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          aria-label="More options"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-1.5">
-                      <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-sm text-gray-600">Resume</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${STATUS_COLORS[app.status] ?? "text-gray-600 bg-gray-100"}`}>
-                      {STATUS_LABELS[app.status] ?? app.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-sm text-gray-500">{app.appliedAt}</td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-1">
-                      <button className="w-7 h-7 rounded-pill flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100" aria-label="View details">
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      <button className="w-7 h-7 rounded-pill flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100" aria-label="More options">
-                        <MoreHorizontal className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

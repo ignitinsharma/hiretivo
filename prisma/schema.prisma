@@ -424,6 +424,8 @@ model Application {
   generationCount Int    @default(0)
   activeVersionId String?
 
+  appliedAt DateTime? @map("applied_at")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

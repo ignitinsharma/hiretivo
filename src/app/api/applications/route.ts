@@ -185,6 +185,7 @@ export async function GET() {
       automationStatus: true,
       failureReason: true,
       pipelineStage: true,
+      appliedAt: true,
       createdAt: true,
       job: {
         select: {
@@ -284,7 +285,8 @@ export async function GET() {
       description: job.description ? stripHtml(job.description) : null,
       applicantCount: job._count.applications,
       status: application.status,
-      appliedAt: application.createdAt.toISOString(),
+      appliedAt: application.appliedAt?.toISOString() ?? null,
+      createdAt: application.createdAt.toISOString(),
     });
   }),
   );

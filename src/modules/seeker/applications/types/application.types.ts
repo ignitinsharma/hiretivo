@@ -23,5 +23,6 @@ export interface SeekerApplicationItem {
   missingSkills?: string[];
   description?: string | null;
   status: ApplicationStatus;
-  appliedAt: string;
+  appliedAt: string | null;
+  createdAt: string;
 }

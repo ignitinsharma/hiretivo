@@ -12,6 +12,8 @@ import { SEEKER_NAV_ITEMS } from "@/constants/nav";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { seekerService } from "@/services/seeker.service";
 import { Menu, X } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGenerationQuota } from "@/hooks/use-generation-quota";
 
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
   (item) => item.href !== "/profile" && item.href !== "/settings",
@@ -43,7 +45,9 @@ export function AppHeader() {
         >
           {NAV_ITEMS.map((item) => {
             const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+              item.href === "/dashboard"
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
               <Link
@@ -65,10 +69,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-pill border border-brand-border text-xs font-medium text-gray-700">
-            <span className="text-brand-primary font-semibold">13</span>
-            <span className="text-gray-500">left</span>
-          </div>
+          <QuotaDisplay />
           <AccountMenu
             settingsHref="/settings"
             fallbackName="Job Seeker"
@@ -92,7 +93,9 @@ export function AppHeader() {
         <nav className="md:hidden border-t border-brand-border bg-white px-4 py-3 space-y-1">
           {NAV_ITEMS.map((item) => {
             const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+              item.href === "/dashboard"
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
               <Link
@@ -115,5 +118,35 @@ export function AppHeader() {
         </nav>
       )}
     </header>
+  );
+}
+
+function QuotaDisplay() {
+  const { data: quota, isLoading } = useGenerationQuota();
+
+  if (isLoading) {
+    return (
+      <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-pill border border-brand-border text-xs font-medium text-gray-700">
+        <Skeleton className="h-4 w-8" />
+        <span className="text-gray-500">left</span>
+      </div>
+    );
+  }
+
+  if (!quota || quota.plan === "SCALE") {
+    return (
+      <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-pill border border-brand-border text-xs font-medium text-gray-700">
+        <span className="text-brand-primary font-semibold">Unlimited</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-pill border border-brand-border text-xs font-medium text-gray-700">
+      <span className="text-brand-primary font-semibold">
+        {Math.max(0, quota.limit - quota.used)}
+      </span>
+      <span className="text-gray-500">left</span>
+    </div>
   );
 }
