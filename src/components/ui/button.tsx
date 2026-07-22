@@ -11,23 +11,23 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border border-input bg-white text-gray-700 font-medium hover:bg-gray-50 rounded-pill h-10 px-4 py-2",
+          "border border-input bg-white text-gray-700 font-medium hover:bg-gray-50 rounded-md h-10 px-4 py-2",
         primary:
-          "bg-brand-primary text-white font-bold rounded-pill h-10 px-5 py-2.5 hover:bg-brand-primary-dark active:bg-[#4a37c9]",
+          "bg-brand-primary text-white font-bold rounded-md h-10 px-5 py-2.5 hover:bg-brand-primary-dark active:bg-[#4a37c9]",
         destructive:
-          "bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 rounded-pill h-10 px-4 py-2",
+          "bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 rounded-md h-10 px-4 py-2",
         secondary:
-          "bg-white text-gray-700 font-medium border border-brand-border hover:bg-gray-50 rounded-pill h-10 px-4 py-2",
+          "bg-white text-gray-700 font-medium border border-brand-border hover:bg-gray-50 rounded-md h-10 px-4 py-2",
         ghost:
-          "font-medium hover:bg-gray-50 hover:text-foreground rounded-pill h-10 px-4 py-2",
+          "font-medium hover:bg-gray-50 hover:text-foreground rounded-md h-10 px-4 py-2",
         link: "font-medium text-foreground underline-offset-4 hover:underline h-auto px-0 py-0",
       },
       size: {
-        sm: "h-9 rounded-pill px-3 text-xs",
+        sm: "h-9 rounded-md px-3 text-xs",
         default: "h-10 px-4 py-2",
-        lg: "h-12 rounded-pill px-8 text-base",
-        icon: "h-10 w-10 rounded-pill",
-        "icon-sm": "h-8 w-8 rounded-pill",
+        lg: "h-12 rounded-md px-8 text-base",
+        icon: "h-10 w-10 rounded-md",
+        "icon-sm": "h-8 w-8 rounded-md",
       },
     },
     defaultVariants: {

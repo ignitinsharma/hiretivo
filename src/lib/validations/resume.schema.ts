@@ -106,6 +106,7 @@ export const ResumeDocumentSchema = z.object({
   languages: z.array(ResumeLanguageSchema),
 
   matchMeta: ResumeMatchMetaSchema.optional(),
+  missingSkills: z.array(z.string()).optional(),
 });
 
 export type ResumeDocument = z.infer<typeof ResumeDocumentSchema>;

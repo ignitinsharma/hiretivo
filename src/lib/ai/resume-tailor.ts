@@ -1,4 +1,4 @@
-import { openrouter, getAIModel } from "@/lib/openrouter";
+import { openrouter, getResumeGenerateModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { checkGenerationQuota, consumeGenerationQuota } from "@/lib/ai/generation-quota";
 import { resumeGenFreeLimiter, resumeGenPaidLimiter } from "@/lib/rate-limit";
@@ -14,6 +14,7 @@ export interface TailorResumeInput {
   masterResumeJson: ResumeDocument;
   jdText: string;
   jobSkills?: string[];
+  jobTitle?: string;
 }
 
 export type TailorResumeResult =
@@ -33,6 +34,7 @@ export interface ResumeVersionResponse {
 interface AiTailorResponse {
   resume: ResumeDocument;
   matchMeta?: ResumeMatchMeta;
+  missingSkills?: string[];
 }
 
 function parseAiResponse(raw: string): AiTailorResponse | null {
@@ -47,13 +49,17 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
       // Fallback: AI may return resume fields flat at top level (no "resume" wrapper)
       if (typeof parsed.summary === "string" || Array.isArray(parsed.experience)) {
         console.warn("[resume-tailor] AI returned flat resume — applying fallback");
-        return { resume: parsed as ResumeDocument, matchMeta: undefined };
+        return { resume: parsed as ResumeDocument, matchMeta: undefined, missingSkills: parsed.missingSkills };
       }
       console.error("[resume-tailor] AI response missing resume field:", Object.keys(parsed).join(", "));
       return null;
     }
 
-    return parsed as AiTailorResponse;
+    return {
+      resume: parsed.resume,
+      matchMeta: parsed.matchMeta,
+      missingSkills: parsed.missingSkills,
+    } as AiTailorResponse;
   } catch (err) {
     console.error("[resume-tailor] JSON parse failed:", err, "\nRaw:", raw);
     return null;
@@ -75,7 +81,7 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
 export async function tailorResume(
   input: TailorResumeInput,
 ): Promise<TailorResumeResult> {
-  const { userId, applicationId, masterResumeJson, jdText, jobSkills } = input;
+  const { userId, applicationId, masterResumeJson, jdText, jobSkills, jobTitle } = input;
 
   // 1. Quota check — before any AI call
   const quota = await checkGenerationQuota(userId);
@@ -108,11 +114,12 @@ export async function tailorResume(
     resumeJson: JSON.stringify(masterResumeJson),
     jdText,
     jobSkills,
+    jobTitle,
   });
 
   const aiResult = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
-      model: getAIModel(),
+      model: getResumeGenerateModel(),
       messages: [
         { role: "system", content: system },
         { role: "user", content: userMessage },
@@ -121,15 +128,25 @@ export async function tailorResume(
       max_tokens: TAILOR_RESUME_CONFIG.max_tokens,
     });
 
-    return completion.choices?.[0]?.message?.content ?? "";
+    return {
+      content: completion.choices?.[0]?.message?.content ?? "",
+      finishReason: completion.choices?.[0]?.finish_reason ?? null,
+    };
   });
 
   if (!aiResult) {
     return { status: "ai_error", reason: "timeout" };
   }
 
+  if (aiResult.finishReason === "length") {
+    console.warn("[resume-tailor] Truncated output — finish_reason=length", {
+      userId,
+      jdLength: jdText.length,
+    });
+  }
+
   // 5. Parse AI response
-  const parsed = parseAiResponse(aiResult);
+  const parsed = parseAiResponse(aiResult.content);
   if (!parsed) {
     return { status: "ai_error", reason: "malformed_response" };
   }
@@ -143,6 +160,7 @@ export async function tailorResume(
     applicationId,
     sourceType: "ai-generated",
     generatedAt: new Date().toISOString(),
+    missingSkills: parsed.missingSkills,
   };
 
   const validation = ResumeDocumentSchema.safeParse(tailored);

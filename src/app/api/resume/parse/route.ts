@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl } from "@/lib/r2";
-import { parseResumeWithVision } from "@/lib/ai/resume-parser";
+import { parseResumeWithVision, isResumeSuspiciouslyThin } from "@/lib/ai/resume-parser";
 
 /*
  * POST /api/resume/parse
@@ -68,6 +68,11 @@ export async function POST(_req: NextRequest) {
 
   console.log("[parse] Resume parsed and validated successfully");
 
+  const warnings = isResumeSuspiciouslyThin(parsed);
+  if (warnings.length > 0) {
+    console.warn("[parse] Thin resume detected:", warnings);
+  }
+
   parsed.profileId = session.user.id;
 
   await prisma.masterResume.upsert({
@@ -77,6 +82,6 @@ export async function POST(_req: NextRequest) {
   });
 
   return NextResponse.json({
-    data: { parsed: true },
+    data: { parsed: true, ...(warnings.length > 0 ? { warnings } : {}) },
   });
 }

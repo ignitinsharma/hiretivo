@@ -37,6 +37,7 @@ export async function POST(
       id: true,
       job: {
         select: {
+          title: true,
           description: true,
           skills: { select: { skill: { select: { name: true } } } },
         },
@@ -137,6 +138,7 @@ export async function POST(
     masterResumeJson: resolvedBaseResume,
     jdText,
     jobSkills,
+    jobTitle: application.job.title,
   });
 
   // Map result to HTTP response

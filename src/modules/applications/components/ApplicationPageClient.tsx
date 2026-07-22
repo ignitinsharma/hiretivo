@@ -10,6 +10,7 @@ import {
   Check,
   Download,
   ExternalLink,
+  Info,
   Loader2,
   RefreshCw,
   Send,
@@ -26,6 +27,46 @@ import type {
   ResumeDocument,
   ResumeMatchMeta,
 } from "@/lib/validations/resume.schema";
+
+const TOOL_GROUPS: Record<string, string[]> = {
+  Analytics: ["GA4", "Segment", "Amplitude", "Mixpanel", "Heap", "PostHog", "Plausible", "Google Analytics"],
+  "Feature Flags": ["LaunchDarkly", "Statsig", "Optimizely", "Split", "Unleash"],
+  DevOps: ["Docker", "Kubernetes", "Terraform", "AWS", "GCP", "Azure", "Jenkins", "GitHub Actions"],
+  Frontend: ["React", "Vue", "Angular", "Svelte", "Next.js", "Nuxt", "HTML", "CSS"],
+  Backend: ["Node.js", "Django", "Rails", "Spring", "Express", "FastAPI", "REST APIs", "GraphQL"],
+  Database: ["PostgreSQL", "MySQL", "MongoDB", "Redis", "DynamoDB", "Prisma"],
+  Design: ["Figma", "Sketch", "Adobe XD", "InVision", "Wireframing"],
+  "Project Management": ["Jira", "Linear", "Asana", "Notion", "ClickUp", "Trello"],
+  Testing: ["Jest", "Vitest", "Cypress", "Playwright", "Selenium", "Mocha"],
+};
+
+function findBestCategory(
+  skill: string,
+  categories: { name: string; items: string[] }[],
+): number {
+  const s = skill.toLowerCase();
+
+  for (let i = 0; i < categories.length; i++) {
+    const c = categories[i].name.toLowerCase();
+    if (c.includes(s) || s.includes(c)) return i;
+  }
+
+  for (const [group, members] of Object.entries(TOOL_GROUPS)) {
+    const inGroup = members.some(
+      (m) => m.toLowerCase() === s || s.includes(m.toLowerCase()),
+    );
+    if (!inGroup) continue;
+    for (let i = 0; i < categories.length; i++) {
+      if (categories[i].name.toLowerCase().includes(group.toLowerCase())) return i;
+      const hasSibling = categories[i].items.some((item) =>
+        members.some((m) => item.toLowerCase() === m.toLowerCase()),
+      );
+      if (hasSibling) return i;
+    }
+  }
+
+  return 0;
+}
 
 interface ApplicationVersion {
   id: string;
@@ -84,6 +125,8 @@ export function ApplicationPageClient() {
   const [prevMatchMeta, setPrevMatchMeta] = useState<ResumeMatchMeta | null>(null);
   const [applying, setApplying] = useState(false);
   const [linkBannerDismissed, setLinkBannerDismissed] = useState(false);
+  const [pendingSkill, setPendingSkill] = useState<string | null>(null);
+  const [savingSkill, setSavingSkill] = useState<string | null>(null);
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -155,6 +198,33 @@ export function ApplicationPageClient() {
       setPrevMatchMeta(null);
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const handleAddMissingSkill = async (skill: string) => {
+    if (!resumeDoc) return;
+    setSavingSkill(skill);
+    try {
+      const next = JSON.parse(JSON.stringify(resumeDoc)) as ResumeDocument;
+      next.missingSkills = (next.missingSkills ?? []).filter((s) => s !== skill);
+      const catIdx = findBestCategory(skill, next.skills.categories);
+      next.skills.categories[catIdx] = {
+        ...next.skills.categories[catIdx],
+        items: [...next.skills.categories[catIdx].items, skill],
+      };
+      const res = await fetch(`/api/applications/${applicationId}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeJson: next }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      toast.success(`"${skill}" added to resume`);
+      queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+      setPendingSkill(null);
+    } catch {
+      toast.error("Failed to add skill");
+    } finally {
+      setSavingSkill(null);
     }
   };
 
@@ -634,8 +704,56 @@ export function ApplicationPageClient() {
             <div className="p-5 pt-2">
               {activeTab === "resume" ? (
                 resumeDoc ? (
-                  <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-                    <ResumePreviewContent doc={resumeDoc} newlyAddedSkills={meta?.addedKeywords ?? []} contentDiff={data.contentDiff ?? undefined} />
+                  <div>
+                    {resumeDoc.missingSkills && resumeDoc.missingSkills.length > 0 && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Info className="h-4 w-4 text-amber-600 shrink-0" />
+                          <p className="text-sm text-amber-900">
+                            Skills to consider adding if accurate:
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {resumeDoc.missingSkills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="inline-flex items-center gap-1 rounded-md bg-amber-100 border border-amber-200 px-2 py-0.5 text-xs text-amber-900"
+                            >
+                              {skill}
+                              {pendingSkill === skill ? (
+                                <span className="inline-flex items-center gap-1 ml-1">
+                                  <span className="text-[10px] text-amber-700">Add?</span>
+                                  <button
+                                    onClick={() => handleAddMissingSkill(skill)}
+                                    disabled={savingSkill === skill}
+                                    className="text-green-600 hover:text-green-800 font-bold disabled:opacity-50"
+                                  >
+                                    {savingSkill === skill ? "..." : "Yes"}
+                                  </button>
+                                  <button
+                                    onClick={() => setPendingSkill(null)}
+                                    disabled={savingSkill === skill}
+                                    className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                                  >
+                                    No
+                                  </button>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => setPendingSkill(skill)}
+                                  className="text-amber-600 hover:text-green-600 font-bold"
+                                >
+                                  +
+                                </button>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
+                      <ResumePreviewContent doc={resumeDoc} newlyAddedSkills={meta?.addedKeywords ?? []} contentDiff={data.contentDiff ?? undefined} />
+                    </div>
                   </div>
                 ) : data.automationStatus === "GENERATING" ? (
                   <div className="space-y-5 p-5 min-h-[900px]">

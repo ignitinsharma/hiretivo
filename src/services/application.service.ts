@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import { apiClient } from '@/lib/axios';
 import { ApplicationStatus } from '@/constants/enums';
 import type { CreateApplicationInput } from '@/lib/validations/application';
@@ -19,8 +20,7 @@ interface ApplicationApiItem {
   companyFundingType: string | null;
   skills: string[];
   status: SeekerApplicationItem['status'];
-  appliedAt: string | null;
-  createdAt: string;
+  appliedAt: string;
   pipelineStage?: string;
 }
 
@@ -48,8 +48,7 @@ export const applicationService = {
       companyFundingType: application.companyFundingType,
       skills: application.skills,
       pipelineStage: application.pipelineStage as SeekerApplicationItem['pipelineStage'],
-      appliedAt: application.appliedAt,
-      createdAt: application.createdAt,
+      appliedAt: format(new Date(application.appliedAt), 'MMM d, yyyy'),
     }));
   },
 

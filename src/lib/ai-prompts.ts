@@ -366,6 +366,7 @@ export interface TailorResumePromptInput {
   resumeJson: string;  // serialized ResumeDocument
   jdText: string;
   jobSkills?: string[];
+  jobTitle?: string;
 }
 
 /*
@@ -389,8 +390,9 @@ export function buildTailorResumeMessages(input: TailorResumePromptInput) {
 INPUT:
 - resumeJson: the candidate's master resume (canonical JSON)
 - jdText: the full job description to tailor for
+- jobTitle: the target role title from the job description
 
-OUTPUT FORMAT — CRITICAL: Return a JSON object where the resume data is wrapped INSIDE a "resume" key. The top-level object MUST have exactly one key: "resume". Do NOT place resume fields directly at the top level.
+OUTPUT FORMAT — CRITICAL: Return a JSON object with "resume" as the primary key and optionally "missingSkills". The top-level object MUST have "resume" and may have "missingSkills". Do NOT place resume fields directly at the top level.
 
 RESUME SHAPE — the value of "resume" must follow this structure (truncated example):
 
@@ -408,10 +410,11 @@ RESUME SHAPE — the value of "resume" must follow this structure (truncated exa
     "projects": [ ... ],
     "certifications": [ ... ],
     "languages": [ ... ]
-  }
+  },
+  "missingSkills": ["Skill A", "Skill B"]
 }
 
-ALL resume fields go INSIDE "resume", never at the top level directly.
+ALL resume fields go INSIDE "resume", never at the top level directly. missingSkills goes at the top level alongside "resume", not inside it.
 
 Modifications allowed inside the resume object:
 - Rewrite bullet points to use stronger action verbs and include JD keywords naturally
@@ -419,7 +422,18 @@ Modifications allowed inside the resume object:
 - Rewrite the summary to match the JD's tone and emphasis
 - Adjust skill category order to put relevant skills first
 - Assign priority (1=highest) to each bullet — used for fit-to-one-page trimming
-- If a skill from REQUIRED SKILLS is missing from the candidate's resume, you may add it to the Skills section. You may reference skill categories generically in the summary ONLY if consistent with the candidate's existing real experience. You must NOT add or imply any new skill inside experience bullet points — bullets are governed by the existing HARD RULE: never invent experience not present in the input resume.
+
+SKILLS SECTION RULE:
+- You may ONLY include a skill in the Skills section if it is explicitly present somewhere in the input resume JSON — in existing skills, experience bullets, project descriptions, or certifications.
+- Do NOT infer skills from the tech stack. If React or Next.js is listed but HTML, CSS, or JS are not mentioned anywhere in the text, those belong in missingSkills — not in the Skills section. Infer zero skills.
+- If a skill from REQUIRED SKILLS is not present anywhere in the input resume, do NOT add it, do NOT imply it, and do NOT reference it in the summary.
+- Instead, list it in a new top-level output field "missingSkills": ["skill1", "skill2"].
+
+TITLE & SUMMARY ALIGNMENT RULE:
+- Compare jobTitle against the FULL breadth of the candidate's real experience in the input resume JSON — across all employment, projects, and skills — not just their current summary framing or stated job titles.
+- If the candidate's real experience supports a broader or adjacent framing that better matches jobTitle (e.g. resume is titled "Frontend Developer" but experience includes backend work like Node.js APIs, Prisma, PostgreSQL, and jobTitle is "Full Stack Engineer"), rewrite the summary and reorder/re-emphasize existing bullets to reflect that broader framing.
+- You are REORDERING AND REFRAMING existing truthful content. Never add new skills, technologies, accomplishments, or job titles not present in the source resume.
+- If the candidate's real experience does NOT support the JD's target role framing (e.g. jobTitle is "Senior DevOps Engineer" but the resume has zero infrastructure, CI/CD, or cloud-ops experience anywhere), do NOT force the framing — keep the honest framing and let the natural match score reflect the gap.
 
 HARD RULES:
 - NEVER invent companies, titles, dates, numeric metrics, or any experience not present in the input resume
@@ -430,6 +444,9 @@ HARD RULES:
 - Return valid JSON only — no markdown, no code fences, no explanation`,
     user: `=== MASTER RESUME (JSON) ===
 ${input.resumeJson}
+
+=== TARGET ROLE ===
+${input.jobTitle ?? "Not specified"}
 
 === REQUIRED SKILLS (from job description) ===
 ${skillsSection}
@@ -442,6 +459,6 @@ Generate the tailored resume as a single JSON object following the structure abo
 }
 
 export const TAILOR_RESUME_CONFIG = {
-  max_tokens: 4096,
+  max_tokens: 8192,
   temperature: 0.3,
 } as const;

@@ -1,5 +1,22 @@
-import { openrouter, getAIModel } from "@/lib/openrouter";
+import { openrouter, getResumeParseModel } from "@/lib/openrouter";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
+
+export function isResumeSuspiciouslyThin(resume: ResumeDocument): string[] {
+  const warnings: string[] = [];
+  if (resume.experience.length === 0) warnings.push("No experience entries parsed");
+  if (resume.skills.categories.length === 0 || resume.skills.categories.every((c) => c.items.length === 0)) {
+    warnings.push("No skills parsed");
+  } else {
+    const totalSkills = resume.skills.categories.reduce((sum, c) => sum + c.items.length, 0);
+    if (totalSkills < 3) warnings.push("Very few skills parsed");
+  }
+  resume.experience.forEach((exp, i) => {
+    if (!exp.bullets || exp.bullets.length === 0) {
+      warnings.push(`Experience entry ${i} (${exp.company}) has no bullets`);
+    }
+  });
+  return warnings;
+}
 
 export const USER_ID_PLACEHOLDER = "__profile_placeholder__";
 
@@ -106,7 +123,7 @@ JSON template:
   try {
     console.log("[parseResumeWithVision] Sending PDF to AI, base64 size:", (base64.length / 1024).toFixed(0), "KB");
     const completion = await openrouter.chat.completions.create({
-      model: getAIModel(),
+      model: getResumeParseModel(),
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },

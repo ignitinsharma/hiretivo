@@ -13,6 +13,3 @@
 
 # Workflow
 - When modifying schema, data models, or business logic — confirm the current state (exact values, existing behavior) before implementing changes. Show your findings before touching the code. Confidence: 0.70
-
-[cmd]: https://commandcode.ai/
-
