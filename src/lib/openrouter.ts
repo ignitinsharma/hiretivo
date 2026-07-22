@@ -24,12 +24,12 @@ export const openrouter = provider === 'gemini'
 
 /*
  * AI_MODEL config per task type.
- * Gemini 2.5 Flash = primary model for parsing, tailoring, cover-letter generation.
+ * DeepSeek V4 Pro = primary model for generation (tailoring, cover letters, JD extraction).
  * Gemini 2.5 Flash-Lite = low-stakes classification (URL confidence, etc.).
  * Override with env vars for dev/testing.
  */
 const MODEL_DEFAULTS = {
-  primary: 'google/gemini-2.5-flash',
+  primary: 'deepseek/deepseek-v4-pro',
   lite: 'google/gemini-2.5-flash-lite',
 } as const;
 
@@ -39,4 +39,14 @@ export function getAIModel(): string {
 
 export function getLiteAIModel(): string {
   return process.env.AI_LITE_MODEL ?? MODEL_DEFAULTS.lite;
+}
+
+/*
+ * RESUME_MODEL — model for all resume tasks (parsing, tailoring, cover letters, rewrites).
+ * Defaults to DeepSeek V4 Pro.
+ * Override via RESUME_MODEL env var.
+ */
+export function getResumeModel(): string {
+  const model = process.env.RESUME_MODEL?.trim();
+  return model || 'deepseek/deepseek-v4-pro';
 }

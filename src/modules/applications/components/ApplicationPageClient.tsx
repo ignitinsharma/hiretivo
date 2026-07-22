@@ -147,9 +147,7 @@ export function ApplicationPageClient() {
     if (!data || !visibleVersion?.resumeJson) return;
     setDownloading(true);
     try {
-      const docToDownload = activeTab === "editor"
-        ? (editorRef.current?.getForm() ?? visibleVersion.resumeJson)
-        : visibleVersion.resumeJson;
+      const docToDownload = displayDoc ?? resumeDoc;
       const res = await fetch("/api/resume/preview-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -174,7 +172,7 @@ export function ApplicationPageClient() {
     setPrevMatchMeta(data?.matchMeta ?? null);
     setRegenerating(true);
     try {
-      const baseResume = activeTab === "editor" ? editorRef.current?.getForm() : undefined;
+      const baseResume = editorRef.current?.getForm();
       const res = await fetch(
         `/api/applications/${applicationId}/generate?forceGenerate=true`,
         {
@@ -279,8 +277,7 @@ export function ApplicationPageClient() {
 
   const meta = data.matchMeta;
   const resumeDoc = visibleVersion?.resumeJson as ResumeDocument | undefined;
-  const effectiveResumeJson =
-    activeTab === "editor" ? (editorRef.current?.getForm() ?? resumeDoc) : resumeDoc;
+  const displayDoc = editorRef.current?.getForm() ?? resumeDoc;
 
   return (
     <div className="space-y-6">
@@ -691,7 +688,7 @@ export function ApplicationPageClient() {
               <div className="border-t border-brand-border px-5 py-4">
                 <AiRewritePanel
                   applicationId={applicationId}
-                  resumeJson={effectiveResumeJson ?? resumeDoc}
+                  resumeJson={displayDoc ?? resumeDoc}
                   onAccepted={(version) => {
                     setActiveTab("resume");
                     setSelectedVersionId(version.id);
@@ -752,7 +749,7 @@ export function ApplicationPageClient() {
                       </div>
                     )}
                     <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-                      <ResumePreviewContent doc={resumeDoc} newlyAddedSkills={meta?.addedKeywords ?? []} contentDiff={data.contentDiff ?? undefined} />
+                      <ResumePreviewContent doc={displayDoc ?? resumeDoc} newlyAddedSkills={meta?.addedKeywords ?? []} contentDiff={data.contentDiff ?? undefined} />
                     </div>
                   </div>
                 ) : data.automationStatus === "GENERATING" ? (
@@ -820,7 +817,14 @@ export function ApplicationPageClient() {
                   </div>
                 )
               ) : activeTab === "editor" ? (
-                resumeDoc ? (
+                null
+              ) : (
+                <CoverLetterPanel applicationId={applicationId} />
+              )}
+
+              {/* Always-mounted editor (hidden when not active) for state persistence across tab switches */}
+              {resumeDoc && (
+                <div style={{ display: activeTab === "editor" ? "block" : "none" }}>
                   <ResumeEditor
                     ref={editorRef}
                     doc={resumeDoc}
@@ -831,15 +835,14 @@ export function ApplicationPageClient() {
                       queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
                     }}
                   />
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <p className="text-sm text-brand-foreground-muted">
-                      Generate a resume first before editing
-                    </p>
-                  </div>
-                )
-              ) : (
-                <CoverLetterPanel applicationId={applicationId} />
+                </div>
+              )}
+              {!resumeDoc && activeTab === "editor" && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <p className="text-sm text-brand-foreground-muted">
+                    Generate a resume first before editing
+                  </p>
+                </div>
               )}
             </div>
           </Card>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { openrouter } from "@/lib/openrouter";
+import { openrouter, getResumeModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
@@ -77,7 +77,7 @@ Rules:
 
   const rewriteResponse = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
-      model: "google/gemini-2.5-flash",
+      model: getResumeModel(),
       messages: [
         { role: "system", content: systemPrompt },
         {

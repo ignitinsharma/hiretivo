@@ -1,4 +1,4 @@
-import { openrouter } from "@/lib/openrouter";
+import { openrouter, getResumeModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { buildCoverLetterPrompt } from "@/lib/ai-prompts";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
@@ -35,7 +35,7 @@ export async function generateCoverLetter(
 
   const response = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
-      model: "google/gemini-2.5-flash",
+      model: getResumeModel(),
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },

@@ -1,4 +1,4 @@
-import { openrouter, getResumeParseModel } from "@/lib/openrouter";
+import { openrouter, getResumeModel } from "@/lib/openrouter";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
 
 export function isResumeSuspiciouslyThin(resume: ResumeDocument): string[] {
@@ -123,7 +123,7 @@ JSON template:
   try {
     console.log("[parseResumeWithVision] Sending PDF to AI, base64 size:", (base64.length / 1024).toFixed(0), "KB");
     const completion = await openrouter.chat.completions.create({
-      model: getResumeParseModel(),
+      model: getResumeModel(),
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },

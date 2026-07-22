@@ -9,8 +9,8 @@ export const ApplyFromLinkSchema = z.object({
 export type ApplyFromLinkInput = z.infer<typeof ApplyFromLinkSchema>;
 
 export const ApplyFromTextSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  company: z.string().trim().min(1).max(200),
+  title: z.string().trim().max(200).optional().default(""),
+  company: z.string().trim().max(200).optional().default(""),
   description: z.string().trim().min(1).max(20000),
   previewOnly: z.boolean().optional().default(false),
 });

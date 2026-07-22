@@ -40,10 +40,10 @@ export async function POST(req: Request) {
 
   if (body.pastedText) {
     const parsed = ApplyFromTextSchema.safeParse({
-      title: body.title ?? "",
-      company: body.company ?? "",
+      title: body.title,
+      company: body.company,
       description: body.pastedText,
-      previewOnly: body.previewOnly ?? false,
+      previewOnly: body.previewOnly,
     });
     if (!parsed.success) {
       return NextResponse.json(

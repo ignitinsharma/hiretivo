@@ -1,4 +1,4 @@
-import { openrouter, getResumeGenerateModel } from "@/lib/openrouter";
+import { openrouter, getResumeModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { checkGenerationQuota, consumeGenerationQuota } from "@/lib/ai/generation-quota";
 import { resumeGenFreeLimiter, resumeGenPaidLimiter } from "@/lib/rate-limit";
@@ -119,7 +119,7 @@ export async function tailorResume(
 
   const aiResult = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
-      model: getResumeGenerateModel(),
+      model: getResumeModel(),
       messages: [
         { role: "system", content: system },
         { role: "user", content: userMessage },
