@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import { Loader2, Plus, Trash2, GripVertical, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Plus, Trash2, GripVertical } from "lucide-react";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 
 export interface ResumeEditorHandle {
@@ -13,7 +11,6 @@ export interface ResumeEditorHandle {
 interface ResumeEditorProps {
   doc: ResumeDocument;
   versionId?: string;
-  onSaved: (version: { id: string; version: number }) => void;
 }
 
 function deepClone<T>(obj: T): T {
@@ -21,9 +18,8 @@ function deepClone<T>(obj: T): T {
 }
 
 export const ResumeEditor = forwardRef<ResumeEditorHandle, ResumeEditorProps>(
-  function ResumeEditor({ doc, versionId, onSaved }, ref) {
+  function ResumeEditor({ doc, versionId }, ref) {
   const [form, setForm] = useState<ResumeDocument>(() => deepClone(doc));
-  const [saving, setSaving] = useState(false);
 
   const prevVersionId = useRef(versionId);
   useEffect(() => {
@@ -40,37 +36,10 @@ export const ResumeEditor = forwardRef<ResumeEditorHandle, ResumeEditorProps>(
     value: ResumeDocument[K],
   ) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/applications/${form.applicationId}/versions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeJson: form }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      const version = await res.json();
-      toast.success("Changes saved");
-      onSaved(version);
-    } catch {
-      toast.error("Failed to save changes");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between sticky top-0 bg-white z-10 pb-2 border-b border-brand-border">
+      <div className="sticky top-0 bg-white z-10 pb-2 border-b border-brand-border">
         <h3 className="text-sm font-bold text-brand-foreground">Edit Resume</h3>
-        <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
-          {saving ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-1.5 h-4 w-4" />
-          )}
-          Save Changes
-        </Button>
       </div>
 
       {/* Personal Info */}

@@ -829,11 +829,6 @@ export function ApplicationPageClient() {
                     ref={editorRef}
                     doc={resumeDoc}
                     versionId={visibleVersion?.id}
-                    onSaved={(version) => {
-                      setActiveTab("resume");
-                      setSelectedVersionId(version.id);
-                      queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
-                    }}
                   />
                 </div>
               )}
