@@ -23,3 +23,10 @@ export interface JobPreview {
   description: string;
   skills: string[];
 }
+
+export const JobPreviewSchema = z.object({
+  title: z.string(),
+  company: z.string(),
+  description: z.string(),
+  skills: z.array(z.string()),
+});

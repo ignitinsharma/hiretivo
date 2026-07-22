@@ -135,12 +135,13 @@ export function AddCustomJobModal() {
     setState("confirming");
 
     try {
-      const body = tab === "url"
-        ? { url: url.trim(), previewOnly: false }
-        : {
-            pastedText: description.trim(),
-            previewOnly: false,
-          };
+      const body = {
+        ...(tab === "url"
+          ? { url: url.trim() }
+          : { pastedText: description.trim() }),
+        previewOnly: false,
+        previewData: preview,
+      };
 
       const res = await fetch("/api/seeker/apply/from-link", {
         method: "POST",

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import {
   ApplyFromLinkSchema,
   ApplyFromTextSchema,
+  JobPreviewSchema,
   type JobPreview,
 } from "@/lib/validations/apply-from-link.schema";
 import { parseJobFromUrl, parseJobFromText } from "@/lib/ai/jd-parser";
@@ -11,6 +12,12 @@ import { extractCandidateSkillsFromJD, reconcileAndInsertSkills } from "@/lib/ai
 import { upsertJobSkillIds } from "@/services/ats-job-fetcher.service";
 import { SkillLevel } from "@/constants/enums";
 import { JobStatus } from "@/constants/enums";
+
+function tryPreviewData(raw: unknown): JobPreview | null {
+  if (!raw) return null;
+  const parsed = JobPreviewSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
 
 async function enrichAndLinkJobSkills(jobId: string, description: string): Promise<void> {
   const candidates = await extractCandidateSkillsFromJD(description);
@@ -52,7 +59,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const jobData = await parseJobFromText(parsed.data.description);
+    let jobData = tryPreviewData(body.previewData) as JobPreview | null;
+    if (!jobData) {
+      jobData = await parseJobFromText(parsed.data.description);
+    }
     if (!jobData) {
       return NextResponse.json(
         { error: "Could not parse job description. Please ensure it includes the job title, company, and responsibilities." },
@@ -123,7 +133,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const jobData = await parseJobFromUrl(url);
+  let jobData = tryPreviewData(body.previewData) as JobPreview | null;
+  if (!jobData) {
+    jobData = await parseJobFromUrl(url);
+  }
   if (!jobData) {
     return NextResponse.json(
       { error: "Could not parse job from this URL. Try pasting the job description instead." },
