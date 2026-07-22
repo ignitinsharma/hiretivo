@@ -1,4 +1,5 @@
 import { openrouter, getAIModel } from "@/lib/openrouter";
+import { withRetry } from "@/lib/ai/with-retry";
 
 export interface ParsedJob {
   title: string;
@@ -100,38 +101,48 @@ Return a JSON object with:
 - "description": the full job description (clean text, no HTML)
 - "skills": an array of skill strings mentioned in the description
 
-Only return valid JSON. No markdown formatting.`;
-
-function extractionPrompt(text: string): string {
-  return `${SYSTEM_PROMPT}\n\nTEXT:\n${text}`;
-}
+Only return valid JSON. No markdown formatting. No text before or after the JSON.`;
 
 /*
  * ── AI call ──────────────────────────────────────────────
  */
 
-async function callExtractionLlm(text: string): Promise<ParsedJob | null> {
-  try {
+async function callExtractionLlm(text: string, context: string): Promise<ParsedJob | null> {
+  const result = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
       model: getAIModel(),
-      messages: [{ role: "user", content: extractionPrompt(text) }],
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `TEXT:\n${text}` },
+      ],
       temperature: 0.1,
-      max_tokens: 2000,
+      max_tokens: 8000,
     });
-    const raw = completion.choices?.[0]?.message?.content ?? "";
-    return parseModelResponse(raw);
-  } catch (err) {
-    console.error("[jd-parser] AI call failed:", err);
+
+    return {
+      content: completion.choices?.[0]?.message?.content ?? "",
+      finishReason: completion.choices?.[0]?.finish_reason ?? null,
+    };
+  });
+
+  if (!result) {
+    console.error("[jd-parser] AI call failed after retries");
     return null;
   }
+
+  if (result.finishReason === "length") {
+    console.warn("[jd-parser] Truncated output — finish_reason=length", {
+      context,
+      textLength: text.length,
+    });
+  }
+
+  return parseModelResponse(result.content, context);
 }
 
 function parseModelResponse(raw: string, context?: string): ParsedJob | null {
   try {
-    const cleaned = raw
-      .trim()
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/i, "");
+    const cleaned = extractJson(raw);
     const parsed = JSON.parse(cleaned);
     if (
       typeof parsed.title === "string" &&
@@ -155,16 +166,35 @@ function parseModelResponse(raw: string, context?: string): ParsedJob | null {
 }
 
 /*
+ * extractJson — strips markdown fences and non-JSON text around the JSON object.
+ * Finds the first '{' and last '}' to survive model verbosity before/after the JSON.
+ */
+function extractJson(raw: string): string {
+  let s = raw.trim();
+
+  s = s.replace(/^```(?:json)?\s*/i, "");
+  s = s.replace(/\s*```$/i, "");
+
+  const firstBrace = s.indexOf("{");
+  const lastBrace = s.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    s = s.slice(firstBrace, lastBrace + 1);
+  }
+
+  return s;
+}
+
+/*
  * ── Public API ───────────────────────────────────────────
  */
 
 export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
   const pageText = await fetchPageText(url);
-  return pageText ? callExtractionLlm(pageText) : null;
+  return pageText ? callExtractionLlm(pageText, "url") : null;
 }
 
 export async function parseJobFromText(
   text: string,
 ): Promise<ParsedJob | null> {
-  return callExtractionLlm(text);
+  return callExtractionLlm(text, "text");
 }
