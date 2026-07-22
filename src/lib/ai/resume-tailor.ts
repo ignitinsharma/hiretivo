@@ -4,6 +4,7 @@ import { checkGenerationQuota, consumeGenerationQuota } from "@/lib/ai/generatio
 import { resumeGenFreeLimiter, resumeGenPaidLimiter } from "@/lib/rate-limit";
 import { buildTailorResumeMessages, TAILOR_RESUME_CONFIG } from "@/lib/ai-prompts";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
+import { computeResumeMatch } from "@/lib/resume-match";
 import { prisma } from "@/lib/prisma";
 import { PlanTier } from "@prisma/client";
 import type { ResumeDocument, ResumeMatchMeta } from "@/lib/validations/resume.schema";
@@ -33,8 +34,6 @@ export interface ResumeVersionResponse {
 
 interface AiTailorResponse {
   resume: ResumeDocument;
-  matchMeta?: ResumeMatchMeta;
-  missingSkills?: string[];
 }
 
 function parseAiResponse(raw: string): AiTailorResponse | null {
@@ -46,20 +45,15 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
     const parsed = JSON.parse(cleaned);
 
     if (!parsed.resume) {
-      // Fallback: AI may return resume fields flat at top level (no "resume" wrapper)
       if (typeof parsed.summary === "string" || Array.isArray(parsed.experience)) {
         console.warn("[resume-tailor] AI returned flat resume — applying fallback");
-        return { resume: parsed as ResumeDocument, matchMeta: undefined, missingSkills: parsed.missingSkills };
+        return { resume: parsed as ResumeDocument };
       }
       console.error("[resume-tailor] AI response missing resume field:", Object.keys(parsed).join(", "));
       return null;
     }
 
-    return {
-      resume: parsed.resume,
-      matchMeta: parsed.matchMeta,
-      missingSkills: parsed.missingSkills,
-    } as AiTailorResponse;
+    return { resume: parsed.resume };
   } catch (err) {
     console.error("[resume-tailor] JSON parse failed:", err, "\nRaw:", raw);
     return null;
@@ -153,6 +147,12 @@ export async function tailorResume(
 
   // 6. Validate against Phase 0 schema
   // Stitch the identity fields back in since the model shouldn't need to re-send them
+  const matchMeta = computeResumeMatch(
+    parsed.resume,
+    (jobSkills ?? []).map((name) => ({ name })),
+    (masterResumeJson.skills?.categories ?? []).flatMap((c) => c.items ?? []),
+  );
+
   const tailored: ResumeDocument = {
     ...parsed.resume,
     profileId: masterResumeJson.profileId,
@@ -160,7 +160,8 @@ export async function tailorResume(
     applicationId,
     sourceType: "ai-generated",
     generatedAt: new Date().toISOString(),
-    missingSkills: parsed.missingSkills,
+    matchMeta,
+    missingSkills: matchMeta.missingKeywords,
   };
 
   const validation = ResumeDocumentSchema.safeParse(tailored);
@@ -201,15 +202,7 @@ export async function tailorResume(
       id: resumeVersion.id,
       version: resumeVersion.version,
       resumeJson: validation.data,
-      matchMeta: parsed.matchMeta ?? {
-        matchScore: 0,
-        addedKeywords: [],
-        missingKeywords: [],
-        requiredSkillsMatched: 0,
-        requiredSkillsTotal: 0,
-        preferredSkillsMatched: 0,
-        preferredSkillsTotal: 0,
-      },
+      matchMeta,
     },
   };
 }

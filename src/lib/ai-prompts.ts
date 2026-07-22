@@ -373,7 +373,8 @@ export interface TailorResumePromptInput {
  * buildTailorResumeMessages
  * Constructs the system + user message pair for AI resume tailoring.
  * The model receives the full master resume JSON and job description,
- * then returns a tailored resume in the same Phase 0 schema shape plus matchMeta.
+ * then returns a tailored resume in the same Phase 0 schema shape.
+ * matchMeta and missingSkills are computed server-side after generation.
  *
  * CRITICAL CONSTRAINT: the model must ONLY rewrite/reorder/rephrase data that
  * exists in the input resume. It must NEVER invent companies, titles, dates,
@@ -392,7 +393,7 @@ INPUT:
 - jdText: the full job description to tailor for
 - jobTitle: the target role title from the job description
 
-OUTPUT FORMAT — CRITICAL: Return a JSON object with "resume" as the primary key and optionally "missingSkills". The top-level object MUST have "resume" and may have "missingSkills". Do NOT place resume fields directly at the top level.
+OUTPUT FORMAT — CRITICAL: Return a JSON object with "resume" as the primary key. The top-level object MUST have "resume". Do NOT place resume fields directly at the top level.
 
 RESUME SHAPE — the value of "resume" must follow this structure (truncated example):
 
@@ -410,11 +411,10 @@ RESUME SHAPE — the value of "resume" must follow this structure (truncated exa
     "projects": [ ... ],
     "certifications": [ ... ],
     "languages": [ ... ]
-  },
-  "missingSkills": ["Skill A", "Skill B"]
+  }
 }
 
-ALL resume fields go INSIDE "resume", never at the top level directly. missingSkills goes at the top level alongside "resume", not inside it.
+ALL resume fields go INSIDE "resume", never at the top level directly.
 
 Modifications allowed inside the resume object:
 - Rewrite bullet points to use stronger action verbs and include JD keywords naturally
@@ -425,9 +425,8 @@ Modifications allowed inside the resume object:
 
 SKILLS SECTION RULE:
 - You may ONLY include a skill in the Skills section if it is explicitly present somewhere in the input resume JSON — in existing skills, experience bullets, project descriptions, or certifications.
-- Do NOT infer skills from the tech stack. If React or Next.js is listed but HTML, CSS, or JS are not mentioned anywhere in the text, those belong in missingSkills — not in the Skills section. Infer zero skills.
-- If a skill from REQUIRED SKILLS is not present anywhere in the input resume, do NOT add it, do NOT imply it, and do NOT reference it in the summary.
-- Instead, list it in a new top-level output field "missingSkills": ["skill1", "skill2"].
+- Do NOT infer skills from the tech stack. Only include skills that appear verbatim in the source resume. Infer zero skills.
+- Do NOT add skills that are not present in the input resume, even if they appear in REQUIRED SKILLS or the job description.
 
 TITLE & SUMMARY ALIGNMENT RULE:
 - Compare jobTitle against the FULL breadth of the candidate's real experience in the input resume JSON — across all employment, projects, and skills — not just their current summary framing or stated job titles.
@@ -459,6 +458,6 @@ Generate the tailored resume as a single JSON object following the structure abo
 }
 
 export const TAILOR_RESUME_CONFIG = {
-  max_tokens: 8192,
+  max_tokens: 4096,
   temperature: 0.3,
 } as const;
