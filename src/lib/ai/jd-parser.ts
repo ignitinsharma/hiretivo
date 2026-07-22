@@ -1,4 +1,4 @@
-import { openrouter, getLiteAIModel } from "@/lib/openrouter";
+import { openrouter, getJDParseModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 
 export interface ParsedJob {
@@ -110,7 +110,7 @@ Only return valid JSON. No markdown formatting. No text before or after the JSON
 async function callExtractionLlm(text: string, context: string): Promise<ParsedJob | null> {
   const result = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
-      model: getLiteAIModel(),
+      model: getJDParseModel(),
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `TEXT:\n${text}` },

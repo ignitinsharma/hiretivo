@@ -50,3 +50,13 @@ export function getResumeModel(): string {
   const model = process.env.RESUME_MODEL?.trim();
   return model || 'deepseek/deepseek-v4-pro';
 }
+
+/*
+ * JD_PARSE_MODEL — model for job description extraction from URLs and pasted text.
+ * Defaults to Gemini 2.5 Flash (fast, reliable extraction).
+ * Override via JD_PARSE_MODEL env var.
+ */
+export function getJDParseModel(): string {
+  const model = process.env.JD_PARSE_MODEL?.trim();
+  return model || 'google/gemini-2.5-flash';
+}
