@@ -1,8 +1,7 @@
 import React from "react";
 import { BriefcaseBusiness, Clock, MapPin } from "lucide-react";
-import { format } from "date-fns";
-
 import { ApplicationStatus, JobStatus } from "@/constants/enums";
+import { formatDate } from "@/lib/format-date";
 import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
 import { cn } from "@/lib/utils";
 import type { SeekerApplicationItem } from "../types/application.types";
@@ -84,7 +83,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       companyDetails={companyDetails}
       metaBadge={
         <span className="shrink-0 text-sm font-medium text-brand-foreground-secondary">
-          Applied {format(new Date(application.createdAt), "MMM d, yyyy")}
+          Applied {formatDate(application.createdAt, "MMM d, yyyy")}
         </span>
       }
       facts={facts}

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Loader2, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
 import { AutomationStatus, PipelineStage } from "@/constants/enums";
+import { formatDate } from "@/lib/format-date";
 import type { SeekerApplicationItem } from "@/modules/seeker/applications/types/application.types";
 
 interface KanbanCardProps {
@@ -27,7 +27,7 @@ export function KanbanCardOverlay({ app }: { app: SeekerApplicationItem }) {
       <CardInner
         companyName={companyName}
         jobTitle={app.jobTitle}
-        createdDate={format(new Date(app.createdAt), "MMM d, yyyy")}
+        createdDate={formatDate(app.createdAt, "MMM d, yyyy")}
         isGenerating={isNotApplied && isGenerating}
         isFailed={isNotApplied && isFailed}
       />
@@ -113,7 +113,7 @@ export function KanbanCard({ app, onRetry, retryingId }: KanbanCardProps) {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <span className="text-[11px] text-brand-foreground-secondary whitespace-nowrap">
-            {format(new Date(app.createdAt), "MMM d, yyyy")}
+            {formatDate(app.createdAt, "MMM d, yyyy")}
           </span>
           <div className="w-5 h-5 flex items-center justify-center text-brand-foreground-secondary pointer-events-none">
             <GripVertical className="w-3.5 h-3.5" />

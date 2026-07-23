@@ -24,4 +24,5 @@ export interface SeekerApplicationItem {
   description?: string | null;
   status: ApplicationStatus;
   appliedAt: string;
+  createdAt?: string | null;
 }
