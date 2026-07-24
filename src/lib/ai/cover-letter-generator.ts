@@ -2,20 +2,23 @@ import { openrouter, getResumeModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { buildCoverLetterPrompt } from "@/lib/ai-prompts";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
-import type { CoverLetterInput } from "@/lib/ai-prompts";
-
-interface CoverLetterResponse {
-  greeting: string;
-  body_paragraphs: string[];
-  closing: string;
-  signoff: string;
-}
+import type { CoverLetterInput, CoverLetterOutput } from "@/lib/ai-prompts";
 
 export type CoverLetterResult =
-  | { status: "success"; content: string; raw: CoverLetterResponse }
+  | { status: "success"; content: string; raw: CoverLetterOutput }
   | { status: "ai_error"; reason: "timeout" | "malformed_response" }
   | { status: "validation_error"; details: string };
 
+/*
+ * generateCoverLetter
+ * Generates a tailored cover letter from a resume JSON, job description, job title, and company name.
+ * JSON parsing runs inside withRetry so malformed responses trigger a fresh AI call.
+ * @param resumeJson - The parsed ResumeDocument (already validated)
+ * @param jdText - Full job description text
+ * @param jobTitle - Job title for personalization
+ * @param company - Company name for personalization
+ * @returns CoverLetterResult — success with content, or typed error
+ */
 export async function generateCoverLetter(
   resumeJson: ResumeDocument,
   jdText: string,
@@ -33,7 +36,7 @@ export async function generateCoverLetter(
 
   const { system, user } = buildCoverLetterPrompt(input);
 
-  const response = await withRetry(async () => {
+  const parsed = await withRetry(async () => {
     const completion = await openrouter.chat.completions.create({
       model: getResumeModel(),
       messages: [
@@ -45,26 +48,21 @@ export async function generateCoverLetter(
     });
     const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;
-    return text;
-  });
 
-  if (!response) {
-    return { status: "ai_error", reason: "timeout" };
-  }
-
-  let parsed: CoverLetterResponse;
-  try {
-    const cleaned = response
+    const cleaned = text
       .trim()
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/\s*```$/i, "");
-    parsed = JSON.parse(cleaned);
-    if (!parsed.greeting || !parsed.body_paragraphs || !parsed.closing || !parsed.signoff) {
-      return { status: "ai_error", reason: "malformed_response" as const };
-    }
-  } catch (err) {
-    console.error("[cover-letter-generator] JSON parse failed:", err, "\nRaw:", response);
-    return { status: "ai_error", reason: "malformed_response" as const };
+
+    const obj = JSON.parse(cleaned) as CoverLetterOutput;
+    if (!obj.greeting || !obj.body_paragraphs || !obj.closing || !obj.signoff) return null;
+
+    return obj;
+  });
+
+  if (!parsed) {
+    console.error("[cover-letter-generator] Failed after retries — AI returned unparseable or incomplete JSON");
+    return { status: "ai_error", reason: "malformed_response" };
   }
 
   const content = [

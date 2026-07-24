@@ -20,7 +20,7 @@ Before building any feature or multi-step task:
 ## Debugging
 
 For any bug investigation, test failure, or unexpected behavior:
-1. Load the relevant skill *before* touching code — **systematic-debugging** (`skill({ name: "systematic-debugging" })`) for general bugs, **investigate** (`skill({ name: "investigate" })`) for gstack root-cause analysis, or **gsd-debug** for multi-cycle debug workflows.
+1. Load the relevant skill *before* touching code — **systematic-debugging** (`skill({ name: "systematic-debugging" })`) for general bugs, or **investigate** (`skill({ name: "investigate" })`) for gstack root-cause analysis.
 2. The **iron law**: no fixes without root cause — patching symptoms without identifying root cause is a second bug, not a fix.
 3. Follow the skill's process exactly (investigate → analyze → hypothesize → implement). Do not skip to implementation.
 

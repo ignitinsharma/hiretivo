@@ -4,6 +4,12 @@ import { AutomationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { generateCoverLetter } from "@/lib/ai/cover-letter-generator";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
+import { stripHtml } from "@/lib/utils";
+
+const errorMessageMap: Record<string, string> = {
+  malformed_response: "The AI returned an unexpected response. Please try generating again.",
+  timeout: "Generation timed out. The AI model took too long to respond. Please try again.",
+};
 
 /*
  * GET /api/applications/:id/cover-letter
@@ -43,7 +49,7 @@ export async function GET(
  * Persists to the CoverLetter model.
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
@@ -92,7 +98,19 @@ export async function POST(
     );
   }
 
-  const jdText = application.job.description?.trim();
+  // Resolve jdText — from request body override or stored job description
+  let jdText = "";
+  try {
+    const body = await request.json();
+    if (body?.jdText && typeof body.jdText === "string") {
+      jdText = stripHtml(body.jdText).trim();
+    }
+  } catch {
+    // No body or unparseable — fall through to DB
+  }
+  if (!jdText && application.job.description) {
+    jdText = stripHtml(application.job.description).trim();
+  }
   if (!jdText) {
     return NextResponse.json(
       { error: "No job description available for cover letter generation." },
@@ -116,8 +134,17 @@ export async function POST(
   );
 
   if (result.status !== "success") {
+    const code = result.status === "validation_error" ? "validation_error" : result.reason;
+    const message = errorMessageMap[code] ?? "Something went wrong. Please try again.";
+
+    console.error("[cover-letter-api] Generation failed:", {
+      code,
+      reason: "reason" in result ? result.reason : result.status,
+      applicationId: id,
+    });
+
     return NextResponse.json(
-      { error: "cover_letter_failed", message: "Failed to generate cover letter. Please try again." },
+      { error: code, message },
       { status: 422 },
     );
   }

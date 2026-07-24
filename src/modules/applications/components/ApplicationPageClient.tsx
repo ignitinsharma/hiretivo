@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ResumePreviewContent } from "@/modules/applications/components/ResumePreviewContent";
 import { ResumeEditor, type ResumeEditorHandle } from "@/modules/applications/components/ResumeEditor";
 import { AiRewritePanel } from "@/modules/applications/components/AiRewritePanel";
+import { CoverLetterPanel } from "@/modules/applications/components/CoverLetterPanel";
 import { QuotaBadge } from "@/modules/applications/components/QuotaBadge";
 import { toast } from "sonner";
 import type {
@@ -906,71 +907,3 @@ function formatRelativeTime(dateStr: string): string {
   return `${days}d ago`;
 }
 
-function CoverLetterPanel({ applicationId }: { applicationId: string }) {
-  const [generating, setGenerating] = useState(false);
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["cover-letter", applicationId],
-    queryFn: async () => {
-      const res = await fetch(`/api/applications/${applicationId}/cover-letter`);
-      return res.json();
-    },
-    staleTime: 30_000,
-  });
-
-  const handleGenerate = async () => {
-    setGenerating(true);
-    try {
-      const res = await fetch(`/api/applications/${applicationId}/cover-letter`, {
-        method: "POST",
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error ?? "Failed to generate cover letter");
-        return;
-      }
-      toast.success("Cover letter generated");
-      refetch();
-    } catch {
-      toast.error("Failed to generate cover letter");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-5 w-5 animate-spin text-brand-foreground-muted" />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {data?.content ? (
-        <div className="prose prose-sm max-w-none">
-          <div className="rounded-xl border border-brand-border bg-white p-6 whitespace-pre-line text-sm text-brand-foreground leading-relaxed">
-            {data.content}
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-sm text-brand-foreground-muted mb-4">
-            No cover letter yet
-          </p>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleGenerate}
-            disabled={generating}
-          >
-            {generating ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : null}
-            Generate Cover Letter
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
