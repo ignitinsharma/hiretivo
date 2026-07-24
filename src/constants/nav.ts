@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Search,
   LineChart,
-  UserCircle,
   Settings,
 } from "lucide-react";
 
@@ -19,6 +18,5 @@ export const SEEKER_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Browse jobs", href: "/dashboard/browse", icon: Search },
   { label: "Tracker", href: "/dashboard/tracker", icon: LineChart },
-  { label: "Profile", href: "/profile", icon: UserCircle },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
