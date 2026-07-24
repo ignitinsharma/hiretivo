@@ -4,33 +4,19 @@ import React from "react";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useQuery } from "@tanstack/react-query";
-import { AccountMenu } from "@/components/shared/AccountMenu";
 import { cn } from "@/lib/utils";
 import { SEEKER_NAV_ITEMS } from "@/constants/nav";
-import { useVerificationStatus } from "@/hooks/use-verification-status";
-import { seekerService } from "@/services/seeker.service";
 import { Menu, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
 
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
-  (item) => item.href !== "/profile" && item.href !== "/settings",
+  (item) => item.href !== "/profile",
 );
 
 export function AppHeader() {
   const pathname = usePathname();
-  const hiretivo = useVerificationStatus();
-  const { status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-
-  const { data: settingsData } = useQuery<{ data: { image?: string | null } }>({
-    queryKey: ["seeker-settings"],
-    queryFn: seekerService.getSettings,
-    staleTime: 5 * 60 * 1000,
-    enabled: status === "authenticated",
-  });
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white">
@@ -70,15 +56,6 @@ export function AppHeader() {
 
         <div className="flex items-center gap-2">
           <QuotaDisplay />
-          <AccountMenu
-            settingsHref="/settings"
-            fallbackName="Job Seeker"
-            fallbackEmail="Seeker account"
-            fallbackSeed="app-header"
-            verified={hiretivo.isVerified}
-            ariaLabel="Open account menu"
-            imageOverride={settingsData?.data?.image ?? null}
-          />
           <button
             className="md:hidden flex items-center justify-center w-8 h-8 rounded-pill text-gray-500 hover:bg-gray-100"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

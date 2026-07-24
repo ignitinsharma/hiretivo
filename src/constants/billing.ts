@@ -6,12 +6,10 @@ import { BillingPeriod, PlanTier, PricingTierId } from "@/constants/enums";
  * USD only. Annual = 2 months free (~17% off monthly price).
  */
 export const DODO_PRODUCT_IDS = {
-  STARTER_MONTHLY_USD: process.env.DODO_STARTER_MONTHLY_PRODUCT_ID ?? "",
-  STARTER_ANNUAL_USD:  process.env.DODO_STARTER_ANNUAL_PRODUCT_ID ?? "",
-  GROWTH_MONTHLY_USD:  process.env.DODO_GROWTH_MONTHLY_PRODUCT_ID ?? "",
-  GROWTH_ANNUAL_USD:   process.env.DODO_GROWTH_ANNUAL_PRODUCT_ID ?? "",
-  SCALE_MONTHLY_USD:   process.env.DODO_SCALE_MONTHLY_PRODUCT_ID ?? "",
-  SCALE_ANNUAL_USD:    process.env.DODO_SCALE_ANNUAL_PRODUCT_ID ?? "",
+  PRO_MONTHLY_USD: process.env.DODO_PRO_MONTHLY_PRODUCT_ID ?? "",
+  PRO_ANNUAL_USD:  process.env.DODO_PRO_ANNUAL_PRODUCT_ID ?? "",
+  UNLIMITED_MONTHLY_USD: process.env.DODO_UNLIMITED_MONTHLY_PRODUCT_ID ?? "",
+  UNLIMITED_ANNUAL_USD:  process.env.DODO_UNLIMITED_ANNUAL_PRODUCT_ID ?? "",
 } as const;
 
 /*
@@ -21,12 +19,10 @@ export const DODO_PRODUCT_IDS = {
  */
 export const DODO_PRODUCT_TO_PLAN: Record<string, PlanTier> = Object.fromEntries(
   [
-    [DODO_PRODUCT_IDS.STARTER_MONTHLY_USD, PlanTier.STARTER],
-    [DODO_PRODUCT_IDS.STARTER_ANNUAL_USD,  PlanTier.STARTER],
-    [DODO_PRODUCT_IDS.GROWTH_MONTHLY_USD,  PlanTier.GROWTH],
-    [DODO_PRODUCT_IDS.GROWTH_ANNUAL_USD,   PlanTier.GROWTH],
-    [DODO_PRODUCT_IDS.SCALE_MONTHLY_USD,   PlanTier.SCALE],
-    [DODO_PRODUCT_IDS.SCALE_ANNUAL_USD,    PlanTier.SCALE],
+    [DODO_PRODUCT_IDS.PRO_MONTHLY_USD, PlanTier.PRO],
+    [DODO_PRODUCT_IDS.PRO_ANNUAL_USD,  PlanTier.PRO],
+    [DODO_PRODUCT_IDS.UNLIMITED_MONTHLY_USD, PlanTier.UNLIMITED],
+    [DODO_PRODUCT_IDS.UNLIMITED_ANNUAL_USD,  PlanTier.UNLIMITED],
   ].filter(([productId]) => Boolean(productId))
 );
 
@@ -47,15 +43,15 @@ export function getDodoProductId(
 /*
  * PLAN_RANK
  * Numeric rank for each PlanTier — used to determine upgrade vs downgrade direction.
- * FREE=0, STARTER=1, GROWTH=2, SCALE=3.
+ * FREE=0, PRO=1, UNLIMITED=2.
  */
 export const PLAN_RANK: Record<PlanTier, number> = {
   [PlanTier.FREE]: 0,
+  [PlanTier.PRO]: 1,
+  [PlanTier.UNLIMITED]: 2,
   [PlanTier.STARTER]: 1,
   [PlanTier.GROWTH]: 2,
   [PlanTier.SCALE]: 3,
-  [PlanTier.PRO]: 1,
-  [PlanTier.UNLIMITED]: 2,
 };
 
 /*
@@ -78,8 +74,7 @@ export function getPlanChangeDirection(
 /*
  * getProductPeriod
  * Reverse-lookup: given a Dodo product ID, returns the BillingPeriod it belongs to.
- * Iterates DODO_PRODUCT_IDS keys — key contains _MONTHLY_ or _ANNUAL_ — and matches
- * against the productId param. Returns null if no match is found.
+ * Returns null if no match is found.
  */
 export function getProductPeriod(productId: string): BillingPeriod | null {
   for (const [key, value] of Object.entries(DODO_PRODUCT_IDS)) {
@@ -94,8 +89,7 @@ export function getProductPeriod(productId: string): BillingPeriod | null {
 /*
  * getPlanTierId
  * Maps a PlanTier enum value to the corresponding PricingTierId.
- * Used with getDodoProductId when only a PlanTier is available.
- * PlanTier.STARTER → PricingTierId.STARTER, etc. FREE → PricingTierId.FREE.
+ * PlanTier.PRO → PricingTierId.PRO, etc. FREE → PricingTierId.FREE.
  */
 export function getPlanTierId(plan: PlanTier): PricingTierId {
   const map: Record<PlanTier, PricingTierId> = {

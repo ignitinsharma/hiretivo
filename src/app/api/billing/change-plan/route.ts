@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   /* ── 2. Role guard — recruiters only ── */
-  if (session.user.role !== UserRole.RECRUITER) {
+  if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json(
       { error: "This endpoint is for recruiters only" },
       { status: 403 },
