@@ -19,21 +19,21 @@ import { billingService, type SubscriptionStatusData } from "@/services/billing.
 export function PlanBillingSection() {
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
 
-  const { data: subData, isLoading, isError } = useQuery<{ data: SubscriptionStatusData }>({
+  const { data: subData, isLoading, isError } = useQuery<SubscriptionStatusData>({
     queryKey: ["billing-subscription-status"],
     queryFn: billingService.getSubscriptionStatus,
     staleTime: 60_000,
   });
 
-  const currentPlan = subData?.data?.plan;
+  const currentPlan = subData?.plan;
 
   const handleUpgrade = async (tier: PlanTierConfig) => {
-    if (tier.id === PricingTierId.FREE || currentPlan === tier.id) return;
+    if (tier.id === PricingTierId.FREE || String(currentPlan) === String(tier.id)) return;
     setLoadingPlanId(tier.id);
     try {
-      const result = await billingService.createCheckoutSession({ planId: tier.id });
-      if (result?.url) {
-        window.location.href = result.url;
+      const url = await billingService.createCheckoutSession({ planId: tier.id } as Parameters<typeof billingService.createCheckoutSession>[0]);
+      if (url) {
+        window.location.href = url;
       }
     } catch {
       toast.error("Could not start checkout. Try again.");
@@ -45,9 +45,9 @@ export function PlanBillingSection() {
   const handleManage = async () => {
     setLoadingPlanId("manage");
     try {
-      const result = await billingService.createPortalSession();
-      if (result?.url) {
-        window.location.href = result.url;
+      const url = await billingService.createPortalSession();
+      if (url) {
+        window.location.href = url;
       }
     } catch {
       toast.error("Could not open billing portal. Try again.");
@@ -56,8 +56,8 @@ export function PlanBillingSection() {
     }
   };
 
-  const isCurrentPlan = (id: string): boolean => currentPlan === id;
-  const hasPaidPlan = currentPlan && currentPlan !== PricingTierId.FREE;
+  const isCurrentPlan = (id: string): boolean => String(currentPlan) === id;
+  const hasPaidPlan = currentPlan && String(currentPlan) !== PricingTierId.FREE;
 
   return (
     <section className="rounded-xl border border-brand-border bg-white">
