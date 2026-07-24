@@ -162,6 +162,7 @@ export async function tailorResume(
     generatedAt: new Date().toISOString(),
     matchMeta,
     missingSkills: matchMeta.missingKeywords,
+    personalInfo: masterResumeJson.personalInfo,
   };
 
   const validation = ResumeDocumentSchema.safeParse(tailored);

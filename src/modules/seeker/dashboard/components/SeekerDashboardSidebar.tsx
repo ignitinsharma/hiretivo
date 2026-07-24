@@ -2,7 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ProfileStrengthCard } from './ProfileStrengthCard';
 import { QuickStatsCard } from './QuickStatsCard';
 import { JobAlertsPromo } from './JobAlertsPromo';
 import { VerificationStatusCard } from './VerificationStatusCard';
@@ -82,7 +81,6 @@ export function SeekerDashboardSidebar() {
         status={data.verification.status}
         verificationNotes={data.verification.verificationNotes}
       /> */}
-      <ProfileStrengthCard profileStrength={data.profileStrength} />
       <QuickStatsCard quickStats={data.quickStats} />
       <JobAlertsPromo
         digestEnabled={data.digest.enabled}

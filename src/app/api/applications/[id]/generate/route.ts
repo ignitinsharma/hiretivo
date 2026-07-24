@@ -68,6 +68,12 @@ export async function POST(
     );
   }
 
+  // Enrich master resume personalInfo with SeekerProfile social URLs
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { linkedinUrl: true, githubUrl: true, websiteUrl: true },
+  });
+
   // Resolve jdText — from body or job description
   let jdText: string;
   let forceGenerate = false;
@@ -131,11 +137,20 @@ export async function POST(
   });
 
   // Call the core tailoring function
-  const resolvedBaseResume = (baseResumeJson ?? masterResume.resumeJson) as unknown as import("@/lib/validations/resume.schema").ResumeDocument;
+  const baseResume = (baseResumeJson ?? masterResume.resumeJson) as unknown as import("@/lib/validations/resume.schema").ResumeDocument;
+  const enrichedResume = {
+    ...baseResume,
+    personalInfo: {
+      ...baseResume.personalInfo,
+      linkedin: baseResume.personalInfo.linkedin || seekerProfile?.linkedinUrl || null,
+      github: baseResume.personalInfo.github || seekerProfile?.githubUrl || null,
+      websiteUrl: baseResume.personalInfo.websiteUrl || seekerProfile?.websiteUrl || null,
+    },
+  };
   const result = await tailorResume({
     userId: session.user.id,
     applicationId: id,
-    masterResumeJson: resolvedBaseResume,
+    masterResumeJson: enrichedResume,
     jdText,
     jobSkills,
     jobTitle: application.job.title,

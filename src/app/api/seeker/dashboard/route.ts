@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createRateLimiter } from '@/lib/rate-limit';
 import {
-  getProfileStrengthSummary,
   getSkillGapSummary,
   getQuickStatsSummary,
 } from '@/lib/seeker-dashboard';
@@ -52,8 +51,7 @@ export async function GET() {
     : [];
 
   // Parallel aggregation
-  const [profileStrength, quickStats, skillGap] = await Promise.all([
-    Promise.resolve(getProfileStrengthSummary(seekerProfile)),
+  const [quickStats, skillGap] = await Promise.all([
     getQuickStatsSummary(userId),
     seekerProfile
       ? getSkillGapSummary(seekerProfile.id, appliedJobIds)
@@ -62,7 +60,6 @@ export async function GET() {
 
   const data: SeekerDashboardData = {
     greetingName: session.user.name ?? null,
-    profileStrength,
     quickStats,
     skillGap,
     digest: {

@@ -1,95 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { ApplicationStatus, InterviewStatus, JobStatus } from '@/constants/enums';
 import type {
-  ProfileStrengthSummary,
   QuickStatsSummary,
   SkillGapItem,
   SkillGapSummary,
 } from '@/modules/seeker/dashboard/types/dashboard.types';
-
-/** The ten fields that determine profile completeness per D-01/D-02. */
-const CORE_PROFILE_FIELDS = [
-  'headline',
-  'bio',
-  'location',
-  'yearsExperience',
-  'workPreference',
-  'primaryRole',
-  'salaryMin',
-  'salaryMax',
-  'availability',
-  'resumeKey',
-] as const;
-
-type CoreField = (typeof CORE_PROFILE_FIELDS)[number];
-
-const FIELD_LABELS: Record<CoreField, string> = {
-  headline: 'headline',
-  bio: 'professional bio',
-  location: 'location',
-  yearsExperience: 'years of experience',
-  workPreference: 'work preference',
-  primaryRole: 'primary role',
-  salaryMin: 'minimum salary',
-  salaryMax: 'maximum salary',
-  availability: 'availability',
-  resumeKey: 'resume',
-};
-
-const FIELD_HREFS: Record<CoreField, string> = {
-  headline: '/seeker/settings',
-  bio: '/seeker/settings',
-  location: '/seeker/settings',
-  yearsExperience: '/seeker/settings',
-  workPreference: '/seeker/settings',
-  primaryRole: '/seeker/settings',
-  salaryMin: '/seeker/settings',
-  salaryMax: '/seeker/settings',
-  availability: '/seeker/settings',
-  resumeKey: '/seeker/settings',
-};
-
-type PartialSeekerProfile = Partial<Record<CoreField, unknown>>;
-
-export function getProfileStrengthSummary(
-  profile: PartialSeekerProfile | null,
-): ProfileStrengthSummary {
-  if (!profile) {
-    return {
-      percentage: 0,
-      completedCount: 0,
-      totalFields: CORE_PROFILE_FIELDS.length,
-      nextMissingField: null,
-      ctaLabel: 'Complete your profile',
-      ctaHref: '/seeker/settings',
-    };
-  }
-
-  const missing: CoreField[] = CORE_PROFILE_FIELDS.filter(
-    (f) => profile[f] === null || profile[f] === undefined,
-  );
-  const completedCount = CORE_PROFILE_FIELDS.length - missing.length;
-  const percentage = Math.round(
-    (completedCount / CORE_PROFILE_FIELDS.length) * 100,
-  );
-  const nextMissingField = missing[0] ?? null;
-
-  const ctaLabel = nextMissingField
-    ? `Add your ${FIELD_LABELS[nextMissingField]}`
-    : 'Profile complete';
-  const ctaHref = nextMissingField
-    ? FIELD_HREFS[nextMissingField]
-    : '/seeker/settings';
-
-  return {
-    percentage,
-    completedCount,
-    totalFields: CORE_PROFILE_FIELDS.length,
-    nextMissingField,
-    ctaLabel,
-    ctaHref,
-  };
-}
 
 /**
  * Pure synchronous helper — returns exact display names for skills the seeker

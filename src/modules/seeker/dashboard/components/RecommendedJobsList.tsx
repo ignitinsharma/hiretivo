@@ -264,32 +264,6 @@ export function RecommendedJobsList() {
     );
   }
 
-  if (allJobs.length === 0 && (dashboardSummary?.profileStrength.percentage ?? 0) < 50) {
-    return (
-      <div className="flex-1">
-        <div className="mb-6 flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-brand-primary" />
-          <h2 className="text-xl font-bold text-brand-foreground">Recommended Jobs</h2>
-        </div>
-        <Card className="p-10 text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5">
-            <UserCog className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">Complete your profile</h3>
-          <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-            Add your skills and experience so we can recommend jobs tailored to you.
-          </p>
-          <Link href="/settings">
-            <Button variant="primary" className="mt-6">
-              <UserCog className="h-4 w-4" />
-              Update Profile
-            </Button>
-          </Link>
-        </Card>
-      </div>
-    );
-  }
-
   if (allJobs.length === 0) {
     return (
       <div className="flex-1">
