@@ -11,78 +11,28 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   SeekerSettingsSchema,
   type SeekerSettingsInput,
 } from "@/lib/validations/seeker.schema";
 import { seekerService } from "@/services/seeker.service";
 import type { SeekerSettingsData } from "@/services/seeker.service";
 
-const YEARS_OPTIONS = [
-  { value: '0', label: '< 1 Year' },
-  { value: '1', label: '1 Year' },
-  { value: '2', label: '2 Years' },
-  { value: '3', label: '3 Years' },
-  { value: '4', label: '4 Years' },
-  { value: '5', label: '5 Years' },
-  { value: '6', label: '6 Years' },
-  { value: '7', label: '7 Years' },
-  { value: '8', label: '8 Years' },
-  { value: '9', label: '9 Years' },
-  { value: '10', label: '10+ Years' },
-] as const;
-
-const SITUATION_OPTIONS = [
-  { value: 'ACTIVELY_LOOKING', label: 'Actively looking' },
-  { value: 'OPEN_TO_OFFERS', label: 'Open to offers' },
-  { value: 'EXPLORING_OPTIONS', label: 'Exploring options' },
-  { value: 'STUDENT_FRESH_GRAD', label: 'Student / Fresh grad' },
-] as const;
-
-const AVAILABILITY_OPTIONS = [
-  { value: 'IMMEDIATELY', label: 'Immediately' },
-  { value: 'TWO_WEEKS', label: '2 weeks notice' },
-  { value: 'ONE_MONTH_PLUS', label: '1 month+' },
-] as const;
-
-function getSituationLabel(value: string | undefined | null): string {
-  if (!value) return 'Not set';
-  return SITUATION_OPTIONS.find((o) => o.value === value)?.label ?? value;
-}
-
-function getAvailabilityLabel(value: string | undefined | null): string {
-  if (!value) return 'Not set';
-  return AVAILABILITY_OPTIONS.find((o) => o.value === value)?.label ?? value;
-}
-
 function getProfileFormValues(
   profile: SeekerSettingsData | undefined,
 ): SeekerSettingsInput {
   return {
     name: profile?.name ?? "",
+    phone: profile?.phone ?? "",
     headline: profile?.headline ?? "",
     bio: profile?.bio ?? "",
     city: profile?.city ?? "",
     state: profile?.state ?? "",
-    situation: profile?.situation ?? "",
-    primaryRole: profile?.primaryRole ?? "",
-    salaryMin: profile?.salaryMin ?? null,
-    salaryMax: profile?.salaryMax ?? null,
-    currency: profile?.currency ?? "",
-    availability: profile?.availability ?? "",
-    yearsExperience: profile?.yearsExperience ?? null,
   };
 }
 
 /*
  * PersonalInfoSection
- * Editable account profile form with a read-only verified email row.
+ * Editable account settings form with a read-only verified email row.
  */
 export function PersonalInfoSection() {
   const queryClient = useQueryClient();
@@ -116,15 +66,6 @@ export function PersonalInfoSection() {
 
   const isFormDisabled = !isEditing || saveMutation.isPending;
 
-  /* Derive Select display values: view mode reads from fetched profile to avoid Radix UI's
-   * value-change reconciliation bug (value="" → value="X" after mount doesn't always update
-   * the displayed label). Edit mode reads from form state so in-progress edits are reflected. */
-  const situationValue = isEditing ? (form.watch('situation') ?? '') : (profile?.situation ?? '');
-  const availabilityValue = isEditing ? (form.watch('availability') ?? '') : (profile?.availability ?? '');
-  const yearsValue = isEditing
-    ? (form.watch('yearsExperience')?.toString() ?? '')
-    : (profile?.yearsExperience?.toString() ?? '');
-
   const handleCancel = (): void => {
     form.reset(getProfileFormValues(profile));
     setIsEditing(false);
@@ -136,12 +77,12 @@ export function PersonalInfoSection() {
   };
 
   return (
-    <section id="account" className="bg-white border border-brand-border rounded-xl overflow-hidden">
+    <section className="bg-white border border-brand-border rounded-xl overflow-hidden">
       <div className="flex items-start justify-between gap-4 p-6 border-b border-brand-border">
         <div>
           <h3 className="text-lg font-bold text-brand-foreground">Personal Information</h3>
           <p className="text-sm text-brand-foreground-muted">
-            Update your profile information that recruiters will see.
+            Update your profile details and contact information.
           </p>
         </div>
         {isEditing ? (
@@ -216,56 +157,16 @@ export function PersonalInfoSection() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-sm font-semibold text-brand-foreground">Phone</label>
+              {isLoading ? <Skeleton className="h-10 w-full" /> : (
+                <Input {...form.register("phone")} placeholder="+91 98765 43210" disabled={isFormDisabled} />
+              )}
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-semibold text-brand-foreground">Professional Headline</label>
               {isLoading ? <Skeleton className="h-10 w-full" /> : (
                 <Input {...form.register("headline")} placeholder="e.g. Senior Frontend Developer" disabled={isFormDisabled} />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Primary Role</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("primaryRole")} placeholder="e.g. Frontend Developer" disabled={isFormDisabled} />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Job Search Status</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Select
-                  value={situationValue}
-                  onValueChange={(val) => form.setValue('situation', val, { shouldValidate: true })}
-                  disabled={isFormDisabled}
-                >
-                  <SelectTrigger className="rounded-lg" aria-label="Job search status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SITUATION_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Availability</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Select
-                  value={availabilityValue}
-                  onValueChange={(val) => form.setValue('availability', val, { shouldValidate: true })}
-                  disabled={isFormDisabled}
-                >
-                  <SelectTrigger className="rounded-lg" aria-label="Availability">
-                    <SelectValue placeholder="Select availability" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AVAILABILITY_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               )}
             </div>
 
@@ -304,47 +205,6 @@ export function PersonalInfoSection() {
                     <p className="text-xs text-red-500">Both city and state are required.</p>
                   )}
                 </>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Years of Experience</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Select
-                  value={yearsValue}
-                  onValueChange={(val) => form.setValue('yearsExperience', val === '' ? null : Number(val))}
-                  disabled={isFormDisabled}
-                >
-                  <SelectTrigger className="rounded-lg" aria-label="Years of experience">
-                    <SelectValue placeholder="Select years" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {YEARS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Preferred Currency</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input {...form.register("currency")} placeholder="e.g. USD, INR" disabled={isFormDisabled} />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Minimum Salary</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input type="number" {...form.register("salaryMin")} placeholder="e.g. 80000" disabled={isFormDisabled} />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-brand-foreground">Maximum Salary</label>
-              {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                <Input type="number" {...form.register("salaryMax")} placeholder="e.g. 120000" disabled={isFormDisabled} />
               )}
             </div>
 
