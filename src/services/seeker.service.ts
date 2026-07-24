@@ -2,33 +2,12 @@ import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
 import type { JobListItem } from '@/modules/jobs/types/job.types';
 import type {
-  ProfileStrengthSummary,
   SeekerDashboardData,
   SeekerInterview,
 } from '@/modules/seeker/dashboard/types/dashboard.types';
 
 interface DataResponse<T> {
   data: T;
-}
-
-export interface WorkExperienceItem {
-  id: string;
-  company: string;
-  title: string;
-  startDate: string;
-  endDate: string | null;
-  isCurrent: boolean;
-  description: string | null;
-  positionType: string | null;
-  skills: string[];
-}
-
-export interface EducationItem {
-  id: string;
-  institution: string;
-  graduationDate: string | null;
-  degree: string | null;
-  major: string | null;
 }
 
 export interface SeekerFeedResponse {
@@ -42,29 +21,18 @@ export interface SeekerFeedResponse {
 export interface SeekerSettingsData {
   name: string;
   email: string;
-  image: string | null;
+  phone: string;
   headline: string;
   bio: string;
-  location: string | null;    // raw stored value — kept for recruiter display
-  city: string | null;        // derived by GET endpoint via parseLegacyLocation
-  state: string | null;       // derived by GET endpoint via parseLegacyLocation
-  situation: string;
-  primaryRole: string;
-  workPreference: string | null;
-  salaryMin: number | null;
-  salaryMax: number | null;
-  currency: string;
-  availability: string;
+  location: string | null;
+  city: string | null;
+  state: string | null;
   resumeKey: string | null;
   skills: Array<{ id: string; name: string; slug: string }>;
   websiteUrl: string | null;
   linkedinUrl: string | null;
   githubUrl: string | null;
   twitterUrl: string | null;
-  yearsExperience: number | null;
-  profileStrength: ProfileStrengthSummary;
-  workExperiences: WorkExperienceItem[];
-  educations: EducationItem[];
 }
 
 export const seekerService = {
