@@ -471,6 +471,7 @@ model ResumeVersion {
   version       Int      @default(1)
   resumeJson    Json
   sourceType    String   @default("ai-generated") // ai-generated | regenerate | manual-edit
+  styleConfig   Json?
   createdAt     DateTime @default(now())
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 

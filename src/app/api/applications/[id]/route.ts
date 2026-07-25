@@ -57,6 +57,7 @@ export async function GET(
           version: true,
           sourceType: true,
           resumeJson: true,
+          styleConfig: true,
           createdAt: true,
         },
       },
@@ -127,6 +128,7 @@ export async function GET(
           version: activeVersion.version,
           sourceType: activeVersion.sourceType,
           resumeJson: activeVersion.resumeJson,
+          styleConfig: activeVersion.styleConfig ?? null,
           createdAt: activeVersion.createdAt.toISOString(),
         }
       : null,
