@@ -77,6 +77,7 @@ interface ApplicationVersion {
   version: number;
   sourceType: string;
   resumeJson: unknown;
+  styleConfig?: unknown;
   createdAt: string;
 }
 
@@ -134,6 +135,7 @@ export function ApplicationPageClient() {
   const [styleConfig, setStyleConfig] = useState<ResumeStyleConfig>(resolveStyle(undefined));
   const [overflow, setOverflow] = useState(false);
   const [styleSeeded, setStyleSeeded] = useState(false);
+  const [panelView, setPanelView] = useState<"content" | "style">("content");
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -340,6 +342,32 @@ export function ApplicationPageClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Panel */}
         <div className="space-y-6">
+          {/* Content / Style toggle */}
+          <div className="flex items-center gap-1 rounded-lg border border-brand-border bg-white p-0.5 w-fit">
+            <button
+              onClick={() => setPanelView("content")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                panelView === "content"
+                  ? "bg-brand-primary/10 text-brand-primary"
+                  : "text-brand-foreground-muted hover:text-brand-foreground"
+              }`}
+            >
+              Content
+            </button>
+            <button
+              onClick={() => setPanelView("style")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                panelView === "style"
+                  ? "bg-brand-primary/10 text-brand-primary"
+                  : "text-brand-foreground-muted hover:text-brand-foreground"
+              }`}
+            >
+              Style
+            </button>
+          </div>
+
+          {panelView === "content" ? (
+            <>
           {/* Match Score */}
           <Card>
             <h3 className="text-sm font-bold text-brand-foreground mb-3">
@@ -604,6 +632,18 @@ export function ApplicationPageClient() {
               )}
             </div>
           </Card>
+            </>
+          ) : (
+            <StyleEditorPanel
+              config={styleConfig}
+              onChange={(next) => {
+                setStyleConfig(next);
+                setStyleSeeded(true);
+              }}
+              resumeDoc={resumeDoc ?? undefined}
+              onOverflowChange={setOverflow}
+            />
+          )}
         </div>
 
         {/* Right Panel — Resume + Tabs */}
@@ -864,16 +904,6 @@ export function ApplicationPageClient() {
               )}
             </div>
           </Card>
-
-          <StyleEditorPanel
-            config={styleConfig}
-            onChange={(next) => {
-              setStyleConfig(next);
-              setStyleSeeded(true);
-            }}
-            resumeDoc={resumeDoc ?? undefined}
-            onOverflowChange={setOverflow}
-          />
         </div>
       </div>
     </div>
