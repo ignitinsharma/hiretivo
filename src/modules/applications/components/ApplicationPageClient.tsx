@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -145,6 +145,15 @@ export function ApplicationPageClient() {
       return d?.automationStatus === "GENERATING" ? 2000 : false;
     },
   });
+
+  /* Seed styleConfig from active version on page load so persisted styles
+   * survive a full-page refresh. Runs once when data first resolves. */
+  useEffect(() => {
+    if (!styleSeeded && data?.activeVersion?.styleConfig) {
+      setStyleConfig(resolveStyle(data.activeVersion.styleConfig));
+      setStyleSeeded(true);
+    }
+  }, [data?.activeVersion?.styleConfig, styleSeeded]);
 
   const visibleVersion = data?.versions.find(
     (v) => v.id === (selectedVersionId ?? data.activeVersion?.id),
