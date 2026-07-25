@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResumePdfPreview } from "@/modules/applications/components/ResumePdfPreview";
+import { StyleEditorPanel } from "@/modules/applications/components/style/StyleEditorPanel";
 import { ResumeEditor, type ResumeEditorHandle } from "@/modules/applications/components/ResumeEditor";
 import { AiRewritePanel } from "@/modules/applications/components/AiRewritePanel";
 import { CoverLetterPanel } from "@/modules/applications/components/CoverLetterPanel";
@@ -131,6 +132,8 @@ export function ApplicationPageClient() {
   const [pendingSkill, setPendingSkill] = useState<string | null>(null);
   const [savingSkill, setSavingSkill] = useState<string | null>(null);
   const [styleConfig, setStyleConfig] = useState<ResumeStyleConfig>(resolveStyle(undefined));
+  const [overflow, setOverflow] = useState(false);
+  const [styleSeeded, setStyleSeeded] = useState(false);
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -752,6 +755,13 @@ export function ApplicationPageClient() {
                         </div>
                       </div>
                     )}
+                    {overflow && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 mb-3">
+                        <p className="text-xs text-amber-800">
+                          Content exceeds one page at smallest settings — multi-page download will be used.
+                        </p>
+                      </div>
+                    )}
                     <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
                       <ResumePdfPreview doc={displayDoc ?? resumeDoc} config={styleConfig} opts={{ highlightSkills: meta?.addedKeywords ?? [], contentDiff: data.contentDiff ?? undefined }} />
                     </div>
@@ -845,6 +855,16 @@ export function ApplicationPageClient() {
               )}
             </div>
           </Card>
+
+          <StyleEditorPanel
+            config={styleConfig}
+            onChange={(next) => {
+              setStyleConfig(next);
+              setStyleSeeded(true);
+            }}
+            resumeDoc={resumeDoc ?? undefined}
+            onOverflowChange={setOverflow}
+          />
         </div>
       </div>
     </div>

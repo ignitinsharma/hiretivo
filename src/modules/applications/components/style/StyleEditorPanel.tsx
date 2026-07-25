@@ -6,11 +6,15 @@ import { FontSection } from "./FontSection";
 import { SpacingSection } from "./SpacingSection";
 import { ContentStyleSection } from "./ContentStyleSection";
 import { LayoutSection } from "./LayoutSection";
+import { AutoFitSection } from "./AutoFitSection";
 import type { ResumeStyleConfig } from "@/lib/validations/resume-style.schema";
+import type { ResumeDocument } from "@/lib/validations/resume.schema";
 
 interface StyleEditorPanelProps {
   config: ResumeStyleConfig;
   onChange: (config: ResumeStyleConfig) => void;
+  resumeDoc?: ResumeDocument;
+  onOverflowChange: (overflow: boolean) => void;
 }
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -21,7 +25,12 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
-export function StyleEditorPanel({ config, onChange }: StyleEditorPanelProps) {
+export function StyleEditorPanel({
+  config,
+  onChange,
+  resumeDoc,
+  onOverflowChange,
+}: StyleEditorPanelProps) {
   return (
     <div className="space-y-4">
       <Card>
@@ -46,6 +55,15 @@ export function StyleEditorPanel({ config, onChange }: StyleEditorPanelProps) {
 
       <Card>
         <LayoutSection config={config} onChange={onChange} />
+      </Card>
+
+      <Card>
+        <AutoFitSection
+          config={config}
+          onChange={onChange}
+          doc={resumeDoc}
+          onOverflowChange={onOverflowChange}
+        />
       </Card>
     </div>
   );
