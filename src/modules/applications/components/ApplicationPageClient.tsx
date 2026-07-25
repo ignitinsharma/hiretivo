@@ -753,7 +753,7 @@ export function ApplicationPageClient() {
                       </div>
                     )}
                     <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-                      <ResumePdfPreview doc={displayDoc ?? resumeDoc} />
+                      <ResumePdfPreview doc={displayDoc ?? resumeDoc} config={styleConfig} opts={{ highlightSkills: meta?.addedKeywords ?? [], contentDiff: data.contentDiff ?? undefined }} />
                     </div>
                   </div>
                 ) : data.automationStatus === "GENERATING" ? (
