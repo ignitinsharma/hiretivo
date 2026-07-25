@@ -13,7 +13,7 @@ const previewPdfRateLimiter = createRateLimiter("resume-preview-pdf", 20, "1 m")
  * Returns trim info so the UI can show "Trimmed N bullets" notice.
  *
  * @body { resumeJson: ResumeDocument }
- * @returns application/pdf binary + X-Trimmed-Bullets header
+ * @returns application/pdf binary
  */
 export async function POST(req: NextRequest) {
   const session = await auth();
