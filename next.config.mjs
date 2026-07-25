@@ -22,7 +22,7 @@ const CSP_DIRECTIVES = [
   // fonts.gstatic.com serves the actual font files referenced by the Google Fonts stylesheet
   "font-src 'self' data: https://fonts.gstatic.com",
   // Cal.com popup iframe
-  "frame-src 'self' https://cal.com https://app.cal.com",
+  "frame-src 'self' blob: https://cal.com https://app.cal.com",
   "connect-src 'self' https://*.sentry.io https://*.upstash.io https://*.vercel-insights.com https://*.vercel.live https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://cal.com https://app.cal.com",
   // blob: required for Sentry Replay worker (createObjectURL blob)
   "worker-src 'self' blob:",

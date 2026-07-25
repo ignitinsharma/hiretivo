@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { FlaskConical, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ResumePdfPreview } from "@/modules/applications/components/ResumePdfPreview";
 import { toast } from "sonner";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
+
+const ResumePdfPreview = dynamic(
+  () =>
+    import(
+      "@/modules/applications/components/ResumePdfPreview"
+    ).then((m) => m.ResumePdfPreview),
+  { ssr: false },
+);
 
 const CHIPS = [
   { label: "Stronger action verbs", instruction: "Use stronger action verbs throughout the experience bullets" },

@@ -1,9 +1,10 @@
-import { pdf } from "@react-pdf/renderer";
-import { PDFDocument } from "pdf-lib";
-import { ResumeDocumentTree } from "./layout-tree";
 import { BOUNDS } from "@/lib/validations/resume-style.schema";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 import type { ResumeStyleConfig } from "@/lib/validations/resume-style.schema";
+
+/* NB — @react-pdf/renderer, pdf-lib, and layout-tree are dynamically
+ * imported inside renderPageCount to keep them out of SSR module graphs
+ * (they need browser APIs / depend on react-pdf JSX). */
 
 const LEVER_ORDER = [
   "sectionSpacing",
@@ -31,6 +32,9 @@ async function renderPageCount(
   config: ResumeStyleConfig,
 ): Promise<number | null> {
   try {
+    const { pdf } = await import("@react-pdf/renderer");
+    const { PDFDocument } = await import("pdf-lib");
+    const { ResumeDocumentTree } = await import("./layout-tree");
     const blob = await pdf(
       ResumeDocumentTree({ doc, config, opts: {} }),
     ).toBlob();

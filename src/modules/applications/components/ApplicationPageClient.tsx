@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -18,11 +19,18 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ResumePdfPreview } from "@/modules/applications/components/ResumePdfPreview";
 import { StyleEditorPanel } from "@/modules/applications/components/style/StyleEditorPanel";
 import { ResumeEditor, type ResumeEditorHandle } from "@/modules/applications/components/ResumeEditor";
 import { AiRewritePanel } from "@/modules/applications/components/AiRewritePanel";
 import { CoverLetterPanel } from "@/modules/applications/components/CoverLetterPanel";
+
+const ResumePdfPreview = dynamic(
+  () =>
+    import(
+      "@/modules/applications/components/ResumePdfPreview"
+    ).then((m) => m.ResumePdfPreview),
+  { ssr: false },
+);
 import { QuotaBadge } from "@/modules/applications/components/QuotaBadge";
 import { toast } from "sonner";
 import type {
