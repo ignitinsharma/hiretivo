@@ -28,6 +28,8 @@ import type {
   ResumeDocument,
   ResumeMatchMeta,
 } from "@/lib/validations/resume.schema";
+import type { ResumeStyleConfig } from "@/lib/validations/resume-style.schema";
+import { resolveStyle } from "@/lib/validations/resume-style.schema";
 
 const TOOL_GROUPS: Record<string, string[]> = {
   Analytics: ["GA4", "Segment", "Amplitude", "Mixpanel", "Heap", "PostHog", "Plausible", "Google Analytics"],
@@ -128,6 +130,7 @@ export function ApplicationPageClient() {
   const [linkBannerDismissed, setLinkBannerDismissed] = useState(false);
   const [pendingSkill, setPendingSkill] = useState<string | null>(null);
   const [savingSkill, setSavingSkill] = useState<string | null>(null);
+  const [styleConfig, setStyleConfig] = useState<ResumeStyleConfig>(resolveStyle(undefined));
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -214,7 +217,7 @@ export function ApplicationPageClient() {
       const res = await fetch(`/api/applications/${applicationId}/versions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeJson: next }),
+        body: JSON.stringify({ resumeJson: next, styleConfig }),
       });
       if (!res.ok) throw new Error("Save failed");
       toast.success(`"${skill}" added to resume`);
