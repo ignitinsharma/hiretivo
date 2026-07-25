@@ -18,7 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ResumePreviewContent } from "@/modules/applications/components/ResumePreviewContent";
+import { ResumePdfPreview } from "@/modules/applications/components/ResumePdfPreview";
 import { ResumeEditor, type ResumeEditorHandle } from "@/modules/applications/components/ResumeEditor";
 import { AiRewritePanel } from "@/modules/applications/components/AiRewritePanel";
 import { CoverLetterPanel } from "@/modules/applications/components/CoverLetterPanel";
@@ -753,7 +753,7 @@ export function ApplicationPageClient() {
                       </div>
                     )}
                     <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-                      <ResumePreviewContent doc={displayDoc ?? resumeDoc} newlyAddedSkills={meta?.addedKeywords ?? []} contentDiff={data.contentDiff ?? undefined} />
+                      <ResumePdfPreview doc={displayDoc ?? resumeDoc} />
                     </div>
                   </div>
                 ) : data.automationStatus === "GENERATING" ? (

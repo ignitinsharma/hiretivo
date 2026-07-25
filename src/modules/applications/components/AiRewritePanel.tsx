@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FlaskConical, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ResumePreviewContent } from "@/modules/applications/components/ResumePreviewContent";
+import { ResumePdfPreview } from "@/modules/applications/components/ResumePdfPreview";
 import { toast } from "sonner";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 
@@ -131,13 +131,13 @@ export function AiRewritePanel({ applicationId, resumeJson, onAccepted }: AiRewr
             <div className="space-y-2">
               <p className="font-medium text-brand-foreground-muted">Before</p>
               <div className="rounded-lg border border-brand-border bg-white overflow-hidden max-h-[400px] overflow-y-auto">
-                <ResumePreviewContent doc={result.previousResumeJson} />
+                <ResumePdfPreview doc={result.previousResumeJson} />
               </div>
             </div>
             <div className="space-y-2">
               <p className="font-medium text-green-600">After</p>
               <div className="rounded-lg border border-green-200 bg-white overflow-hidden max-h-[400px] overflow-y-auto">
-                <ResumePreviewContent doc={result.resumeJson} />
+                <ResumePdfPreview doc={result.resumeJson} />
               </div>
             </div>
           </div>
