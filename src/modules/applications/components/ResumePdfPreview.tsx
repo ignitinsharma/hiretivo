@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { BlobProvider } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ResumeDocumentTree } from "@/lib/resume/style/layout-tree";
 import { ResumeErrorBoundary } from "./ResumeErrorBoundary";
+import { ResumeSkeleton } from "./ResumeSkeleton";
+import { useDebouncedDoc } from "./use-debounced-doc";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 import type { ResumeStyleConfig } from "@/lib/validations/resume-style.schema";
 import { TEMPLATE_DEFAULTS } from "@/lib/validations/resume-style.schema";
@@ -16,108 +19,7 @@ interface ResumePdfPreviewProps {
   opts?: ResumeTreeOpts;
 }
 
-export function ResumePdfPreview({
-  doc,
-  config,
-  opts,
-}: ResumePdfPreviewProps) {
-  const styleConfig = config ?? TEMPLATE_DEFAULTS.compact;
-  const prevBlobUrl = useRef<string | null>(null);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  // Cleanup blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      if (prevBlobUrl.current) {
-        URL.revokeObjectURL(prevBlobUrl.current);
-        prevBlobUrl.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function render() {
-      try {
-        const [{ pdf }, { ResumeDocumentTree }] = await Promise.all([
-          import("@react-pdf/renderer"),
-          import("@/lib/resume/style/layout-tree"),
-        ]);
-
-        if (cancelled) return;
-
-        const blob = await pdf(
-          ResumeDocumentTree({ doc, config: styleConfig, opts }),
-        ).toBlob();
-
-        if (cancelled) return;
-
-        const url = URL.createObjectURL(blob);
-        if (prevBlobUrl.current) URL.revokeObjectURL(prevBlobUrl.current);
-        prevBlobUrl.current = url;
-        setBlobUrl(url);
-      } catch (err) {
-        if (!cancelled) {
-          console.error("[ResumePdfPreview] Render failed:", err);
-          setError(String(err));
-        }
-      }
-    }
-
-    render();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [doc, styleConfig]);
-
-  // Loading state — still rendering
-  if (!blobUrl && !error) {
-    return (
-      <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-        <div className="space-y-5 p-8 min-h-[900px]">
-          <Skeleton className="h-6 w-2/3" />
-          <Skeleton className="h-3 w-3/4" />
-          <div className="pt-1 space-y-2">
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <ResumeErrorBoundary>
-        <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-          <div className="flex flex-col items-center justify-center py-16 px-4 gap-3">
-            <p className="text-sm text-brand-foreground-muted">
-              Preview unavailable
-            </p>
-          </div>
-        </div>
-      </ResumeErrorBoundary>
-    );
-  }
-
-  return (
-    <ResumeErrorBoundary>
-      <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
-        <iframe
-          src={blobUrl!}
-          className="w-full min-h-[900px] border-0"
-          title="Resume preview"
-        />
-      </div>
-    </ResumeErrorBoundary>
-  );
-}
-
-/** Fallback card shown when PDF preview fails to render.
- *  Renders a bordered card with an alert message and a Retry button that
- *  remounts the error boundary via a key increment. */
+/* ResumePreviewError — fallback card shown when PDF preview fails to render. */
 export function ResumePreviewError({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="rounded-xl border border-brand-border bg-white overflow-hidden">
@@ -131,5 +33,48 @@ export function ResumePreviewError({ onRetry }: { onRetry: () => void }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/* ResumePdfPreview — renders live PDF preview in iframe via react-pdf BlobProvider.
+ * Debounces re-renders on style config changes. WYSIWYG with downloaded PDF. */
+export function ResumePdfPreview({
+  doc,
+  config,
+  opts,
+}: ResumePdfPreviewProps) {
+  const styleConfig = config ?? TEMPLATE_DEFAULTS.compact;
+  const { debouncedDoc, pending } = useDebouncedDoc(
+    { doc, config: styleConfig, opts },
+    250,
+  );
+  const [errorKey, setErrorKey] = useState(0);
+
+  return (
+    <ResumeErrorBoundary
+      key={errorKey}
+      fallback={<ResumePreviewError onRetry={() => setErrorKey((k) => k + 1)} />}
+    >
+      <div className="relative">
+        {pending && (
+          <div className="absolute right-2 top-2 z-10 text-xs text-brand-foreground-muted bg-white/80 px-1.5 py-0.5 rounded">
+            Updating…
+          </div>
+        )}
+        <BlobProvider document={<ResumeDocumentTree {...debouncedDoc} />}>
+          {({ url, loading }) =>
+            loading || !url ? (
+              <ResumeSkeleton />
+            ) : (
+              <iframe
+                src={url}
+                className="w-full min-h-[900px] border-0"
+                title="Resume preview"
+              />
+            )
+          }
+        </BlobProvider>
+      </div>
+    </ResumeErrorBoundary>
   );
 }
