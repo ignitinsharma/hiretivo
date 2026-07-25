@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -70,6 +70,7 @@ export async function POST(
     styleConfig = activeSource?.styleConfig ?? undefined;
   }
 
+  // Count existing versions to set the next version number
   const versionCount = await prisma.resumeVersion.count({
     where: { applicationId: id },
   });
@@ -84,6 +85,7 @@ export async function POST(
     },
   });
 
+  // Set as active version
   await prisma.application.update({
     where: { id },
     data: { activeVersionId: version.id },
