@@ -83,16 +83,16 @@ export function PlanBillingSection() {
               <div
                 key={tier.id}
                 className={cn(
-                  "relative flex flex-col rounded-xl border p-5",
+                  "relative flex flex-col rounded-2xl p-5",
                   tier.highlighted
-                    ? "border-brand-primary bg-brand-primary text-white"
+                    ? "border-2 border-black bg-brand-primary text-white shadow-[4px_4px_0px_0px_#000]"
                     : isCurrentPlan(tier.id)
-                      ? "border-brand-primary bg-brand-primary/5"
-                      : "border-brand-border bg-white",
+                      ? "border border-brand-primary bg-brand-primary/5"
+                      : "border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000]",
                 )}
               >
                 {tier.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-brand-primary bg-white px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border-2 border-black bg-white px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground shadow-[2px_2px_0px_0px_#000]">
                     Most Popular
                   </div>
                 )}
@@ -104,7 +104,7 @@ export function PlanBillingSection() {
                   {tier.name}
                 </h4>
 
-                <div className="mt-3 mb-4">
+                <div className="mt-3 mb-4 text-center">
                   {tier.monthlyPrice === null ? (
                     <span className={cn("text-3xl font-bold", tier.highlighted ? "text-white" : "text-brand-foreground")}>
                       Free
@@ -114,19 +114,19 @@ export function PlanBillingSection() {
                       <span className={cn("text-3xl font-bold", tier.highlighted ? "text-white" : "text-brand-foreground")}>
                         ${tier.monthlyPrice}
                       </span>
-                      <span className={cn("text-sm", tier.highlighted ? "text-white/80" : "text-brand-foreground-muted")}>
+                      <span className={cn("text-sm", tier.highlighted ? "text-white/90" : "text-brand-foreground-muted")}>
                         /mo
                       </span>
                     </>
                   )}
                   {tier.annualSavings && tier.annualSavings > 0 && (
-                    <p className={cn("text-xs mt-1", tier.highlighted ? "text-white/80" : "text-brand-foreground-muted")}>
+                    <p className={cn("text-xs mt-1", tier.highlighted ? "text-white/90" : "text-brand-foreground-muted")}>
                       ${tier.annualTotal}/yr — save ${tier.annualSavings}
                     </p>
                   )}
                 </div>
 
-                <ul className="space-y-2 mb-6 flex-1">
+                <ul className="space-y-2 mb-6 flex-1 border-t border-black pt-4">
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm">
                       <CircleCheck className={cn(

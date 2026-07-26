@@ -28,12 +28,12 @@ const FEATURE_ROWS: FeatureRow[] = [
   { feature: "Monthly generations", free: "2", pro: "20", unlimited: "Unlimited" },
   { feature: "AI resume tailoring", free: true, pro: true, unlimited: true },
   { feature: "Cover letter generation", free: true, pro: true, unlimited: true },
-  { feature: "Editable resume preview", free: null, pro: true, unlimited: true },
+  { feature: "Editable resume preview", free: true, pro: true, unlimited: true },
   { feature: "PDF download", free: true, pro: true, unlimited: true },
-  { feature: "PDF with edits", free: null, pro: true, unlimited: true },
+  { feature: "PDF with edits", free: true, pro: true, unlimited: true },
   { feature: "Application tracking", free: "Basic", pro: "Full", unlimited: "Full" },
-  { feature: "Priority AI processing", free: null, pro: true, unlimited: true },
-  { feature: "Early access", free: null, pro: null, unlimited: true },
+  { feature: "Priority AI processing", free: true, pro: true, unlimited: true },
+  { feature: "Early access", free: null, pro: true, unlimited: true },
 ];
 
 const FAQ_ITEMS = [
@@ -72,40 +72,40 @@ function PricingCard({ tier }: { tier: PlanTierConfig }) {
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border p-6 text-left h-full",
+        "flex flex-col rounded-2xl border-2 border-black p-6 text-left h-full shadow-[4px_4px_0px_0px_#000]",
         isHighlighted
-          ? "border-brand-primary bg-brand-primary text-white"
-          : "border-brand-border bg-white",
+          ? "bg-brand-primary text-white"
+          : "bg-white",
       )}
     >
       {isHighlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-brand-primary bg-white px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border-2 border-black bg-white px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground shadow-[2px_2px_0px_0px_#000]">
           Most Popular
         </div>
       )}
 
-      <div className={cn("mb-6", isHighlighted && "relative")}>
-        <h3 className={cn("mb-2 text-[10px] font-bold uppercase tracking-wider", isHighlighted ? "text-white/80" : "text-brand-foreground-muted")}>
+      <div className={cn("mb-6 text-center", isHighlighted && "relative")}>
+        <h3 className={cn("mb-2 text-[10px] font-bold uppercase tracking-wider", isHighlighted ? "text-white/90" : "text-brand-foreground-muted")}>
           {tier.name}
         </h3>
 
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline justify-center gap-1">
           <span className={cn("text-4xl font-bold", isHighlighted ? "text-white" : "text-brand-foreground")}>
             {displayedPrice === null ? "" : `$${displayedPrice}`}
           </span>
           {tier.id !== "free" && (
-            <span className={cn("text-sm", isHighlighted ? "text-white/70" : "text-brand-foreground-muted")}>/mo</span>
+            <span className={cn("text-sm", isHighlighted ? "text-white/90" : "text-brand-foreground-muted")}>/mo</span>
           )}
         </div>
 
         {tier.annualTotal !== null && (
-          <p className={cn("mt-1 text-xs", isHighlighted ? "text-white/60" : "text-brand-foreground-secondary")}>
+          <p className={cn("mt-1 text-xs", isHighlighted ? "text-white/80" : "text-brand-foreground-muted")}>
             ${tier.annualTotal}/yr — save ${tier.annualSavings}
           </p>
         )}
       </div>
 
-      <ul className="mb-8 grow space-y-3">
+      <ul className="mb-8 grow space-y-3 border-t border-black pt-4">
         {tier.features.map((feature) => (
           <li key={feature} className="flex items-start gap-2">
             <CircleCheck

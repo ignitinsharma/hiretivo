@@ -21,7 +21,11 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
       data-purpose="main-navigation"
     >
       <div className="mx-auto flex h-12 items-center justify-between max-w-7xl">
-        <Link href={session ? "/dashboard" : "/"} className="flex items-center" data-purpose="logo">
+        <Link
+          href={session ? "/dashboard" : "/"}
+          className="flex items-center"
+          data-purpose="logo"
+        >
           <Logo size="md" />
         </Link>
 
@@ -47,7 +51,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
                 Sign In
               </Link>
               <Button asChild variant="primary" size="sm">
-                <Link href="/seeker/register">Get Verified</Link>
+                <Link href="/seeker/register">Get Hired faster</Link>
               </Button>
             </div>
           </>
