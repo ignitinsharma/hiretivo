@@ -14,6 +14,38 @@ export const HOMEPAGE_STATS = [
 ] as const;
 
 /**
+ * Copy for the AI Resume Engine showcase section
+ */
+export const RESUME_ENGINE_SECTION = {
+  eyebrow: 'AI RESUME ENGINE',
+  heading: 'One resume per job. Ready in seconds.',
+  body: 'Paste a job description and Hiretivo rewrites your resume for that exact role — stronger verbs, quantified metrics, the keywords the ATS is scanning for. Tweak anything, pick a template, download the PDF.',
+  bullets: [
+    'Tailored to the job description — not a generic template',
+    'AI Rewrite — action verbs, quantified metrics, tone match',
+    'ATS-safe export — templates, fonts, one-click PDF',
+  ],
+  linkText: 'Try the resume engine',
+  linkHref: '/seeker/register',
+} as const;
+
+/**
+ * Copy for the Job Dashboard showcase section
+ */
+export const JOB_DASHBOARD_SECTION = {
+  eyebrow: 'YOUR JOB SEARCH HQ',
+  heading: 'Every job and application. One dashboard.',
+  body: 'Browse roles matched to your skills, add any job with a link, and move each application from applied to offer. No spreadsheets. No lost threads.',
+  bullets: [
+    'Skill-matched recommendations for your profile',
+    'Add any job listing by pasting a URL',
+    'Kanban tracker — applied, interview, offer, archived',
+  ],
+  linkText: 'Browse open jobs',
+  linkHref: '/dashboard/browse',
+} as const;
+
+/**
  * Steps for the How It Works section
  */
 export const SEEKER_STEPS = [
@@ -57,6 +89,22 @@ export const SEEKER_FEATURES = [
       'A kanban board for your entire job search. From saved to applied to interviewed to offer.',
   },
 ] as const;
+
+/**
+ * Copy for the Kanban Application Tracker showcase section
+ */
+export const KANBAN_TRACKER_SECTION = {
+  eyebrow: 'APPLICATION TRACKER',
+  heading: 'Every stage, from applied to offer. At a glance.',
+  body: 'Drag applications between stages, see interviews and offers the moment they land, and never wonder where you stand again.',
+  bullets: [
+    'Visual pipeline — applied, interviewing, offer',
+    'Company logos, locations & status badges on every card',
+    'Weekly progress at a glance',
+  ],
+  linkText: 'Start tracking free',
+  linkHref: '/seeker/register',
+} as const;
 
 /**
  * Seeker testimonials for social proof

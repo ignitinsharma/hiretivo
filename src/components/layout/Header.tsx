@@ -30,31 +30,17 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
         </Link>
 
         {!session ? (
-          <>
-            <nav
-              className="hidden items-center gap-6 lg:flex"
-              aria-label="Public navigation"
+          <div className="flex items-center gap-4">
+            <Link
+              href="/seeker/login"
+              className="text-sm font-medium text-brand-foreground-muted hover:text-brand-foreground transition-colors"
             >
-              <Link
-                href="/pricing"
-                className="text-sm font-medium text-brand-foreground-muted hover:text-brand-foreground transition-colors"
-              >
-                Pricing
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/seeker/login"
-                className="text-sm font-medium text-brand-foreground-muted hover:text-brand-foreground transition-colors"
-              >
-                Sign In
-              </Link>
-              <Button asChild variant="primary" size="sm">
-                <Link href="/seeker/register">Get Hired faster</Link>
-              </Button>
-            </div>
-          </>
+              Sign In
+            </Link>
+            <Button asChild variant="primary" size="sm">
+              <Link href="/seeker/register">Start Free</Link>
+            </Button>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <Link

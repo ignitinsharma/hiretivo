@@ -11,6 +11,7 @@ interface ApplicationApiItem {
   companyId?: string | null;
   companyName: string;
   companyLogoUrl?: string | null;
+  location?: string | null;
   salaryRange: string;
   jobType: string;
   workType: string | null;

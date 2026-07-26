@@ -5,10 +5,11 @@
  */
 
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, CreditCard, Zap } from "lucide-react";
+import { ArrowRight, ShieldCheck, CreditCard, Zap, Star } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TESTIMONIALS } from "@/config/home-page";
 
 interface TrustItem {
   icon: LucideIcon;
@@ -16,7 +17,7 @@ interface TrustItem {
 }
 
 const TRUST_ITEMS: TrustItem[] = [
-  { icon: ShieldCheck, label: "100% Free" },
+  { icon: ShieldCheck, label: "2 Free / month" },
   { icon: CreditCard, label: "No Credit Card" },
   { icon: Zap, label: "5-min Setup" },
 ];
@@ -60,14 +61,14 @@ export function SeekerCTASection() {
             </p>
 
             <h2 className="mt-6 max-w-xl break-words text-4xl font-bold leading-[1.12] tracking-tight text-brand-foreground sm:text-5xl">
-              Your first resume is free.
+              2 free AI resumes.
               <br />
-              <span className="text-brand-primary">No credit card required.</span>
+              <span className="text-brand-primary">Every month. No credit card.</span>
             </h2>
 
             <p className="mt-8 max-w-md break-words text-base leading-relaxed text-brand-foreground-muted md:text-lg">
-              Stop copy-pasting the same resume. Start landing interviews with
-              AI-tailored resumes.
+              Two tailored, ATS-ready resumes every month — zero commitment.
+              Renews automatically.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -87,12 +88,42 @@ export function SeekerCTASection() {
           </div>
 
           <div className="flex min-w-0 items-center justify-center border-t border-brand-border p-6 sm:p-8 lg:border-l lg:border-t-0 lg:p-12">
-            <div className="flex h-full min-h-[200px] w-full items-center justify-center rounded-xl border border-brand-border bg-brand-surface">
-              <div className="text-center">
-                <ShieldCheck className="mx-auto mb-3 h-12 w-12 text-brand-primary/40" aria-hidden="true" />
-                <p className="text-sm text-brand-foreground-muted">Free forever. No strings attached.</p>
-              </div>
-            </div>
+            {(() => {
+              const testimonial = TESTIMONIALS[0];
+              return (
+                <figure className="w-full max-w-sm rounded-xl border border-brand-border bg-white p-6">
+                  <div
+                    className="flex gap-0.5"
+                    role="img"
+                    aria-label={`${testimonial.stars} out of 5 stars`}
+                  >
+                    {Array.from({ length: testimonial.stars }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-4 w-4 fill-brand-primary text-brand-primary"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <blockquote className="mt-4 break-words text-sm leading-relaxed text-brand-foreground">
+                    &ldquo;{testimonial.quote}&rdquo;
+                  </blockquote>
+                  <figcaption className="mt-5 flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-primary/[0.08] text-xs font-bold text-brand-primary">
+                      {testimonial.initials}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-brand-foreground">
+                        {testimonial.name}
+                      </span>
+                      <span className="block truncate text-xs text-brand-foreground-muted">
+                        {testimonial.title}
+                      </span>
+                    </span>
+                  </figcaption>
+                </figure>
+              );
+            })()}
           </div>
         </div>
       </div>

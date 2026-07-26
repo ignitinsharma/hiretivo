@@ -2,6 +2,9 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
+import { ResumeEngineSection } from "@/components/home/ResumeEngineSection";
+import { JobDashboardSection } from "@/components/home/JobDashboardSection";
+import { KanbanTrackerSection } from "@/components/home/KanbanTrackerSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { SeekerCTASection } from "@/components/home/SeekerCTASection";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
@@ -21,8 +24,8 @@ export const metadata = generatePageMetadata({
 /*
  * Home
  * Public homepage for Hiretivo — seeker-first landing page.
- * 4 sections: Hero (outcome tagline), How It Works (3-step workflow),
- * Features (3 differentiator cards), and CTA (free sign-up).
+ * 6 sections: Hero (centered), How It Works (3-step), Resume Engine showcase,
+ * Job Dashboard showcase, Features (3 cards), CTA (free sign-up).
  * Authenticated users redirect to their dashboard immediately.
  */
 export default async function Home() {
@@ -44,6 +47,9 @@ export default async function Home() {
       <main className="overflow-x-hidden">
         <HeroSection />
         <HowItWorksSection />
+        <JobDashboardSection />
+        <ResumeEngineSection />
+        <KanbanTrackerSection />
         <FeaturesSection />
         <SeekerCTASection />
       </main>

@@ -8,6 +8,7 @@ export interface SeekerApplicationItem {
   companyId?: string | null;
   companyName: string;
   companyLogoUrl?: string;
+  location?: string | null;
   salaryRange?: string;
   jobType?: string;
   workType?: string | null;

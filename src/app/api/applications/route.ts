@@ -200,6 +200,7 @@ export async function GET() {
           isAdminPosted: true,
           companyName: true,
           companyLogoUrl: true,
+          location: true,
           companyIndustry: true,
           companySize: true,
           companyFunding: true,
@@ -256,6 +257,7 @@ export async function GET() {
       companyLogoUrl: job.isAdminPosted
         ? (job.companyLogoUrl ?? null)
         : resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+      location: job.location,
       salaryRange: formatSalaryRange(
         job.salaryMin,
         job.salaryMax,

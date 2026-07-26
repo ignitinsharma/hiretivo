@@ -5,6 +5,7 @@
  * Mobile: stacked with stable, readable flow.
  */
 
+import Image from "next/image";
 import { Search, FileText, LayoutDashboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,16 @@ interface Step {
   description: string;
   positionClassName: string;
 }
+
+/*
+ * Step photos shown in the center frame — one per step (browse, generate, offer).
+ * Free-license Unsplash photos stored locally in /public/images/people.
+ */
+const STEP_PHOTOS = [
+  { src: "/images/people/browse.jpg", alt: "Job seeker browsing roles on a laptop" },
+  { src: "/images/people/resume.jpg", alt: "Job seeker writing a tailored resume" },
+  { src: "/images/people/offer.jpg", alt: "Handshake after a successful job offer" },
+] as const;
 
 const STEPS: Step[] = [
   {
@@ -31,14 +42,14 @@ const STEPS: Step[] = [
     icon: FileText,
     title: SEEKER_STEPS[1].title,
     description: SEEKER_STEPS[1].description,
-    positionClassName: "lg:-right-6 lg:top-0 lg:w-[320px] lg:rotate-3 xl:-right-12",
+    positionClassName: "lg:-right-24 lg:top-0 lg:w-[320px] lg:rotate-3 xl:-right-40",
   },
   {
     number: "03",
     icon: LayoutDashboard,
     title: SEEKER_STEPS[2].title,
     description: SEEKER_STEPS[2].description,
-    positionClassName: "lg:bottom-0 lg:-right-2 lg:w-[310px] lg:-rotate-2 xl:-right-6",
+    positionClassName: "lg:-bottom-6 lg:-right-16 lg:w-[310px] lg:-rotate-2 xl:-right-36",
   },
 ];
 
@@ -140,8 +151,21 @@ export function HowItWorksSection() {
               <div className="border-b border-brand-border bg-white px-5 py-3">
                 <span className="block h-2 w-20 rounded-lg bg-brand-surface" aria-hidden="true" />
               </div>
-              <div className="flex aspect-[1.38] w-full items-center justify-center bg-brand-surface lg:h-[380px]">
-                <LayoutDashboard className="h-16 w-16 text-brand-primary/30" aria-hidden="true" />
+              <div className="grid aspect-[1.38] w-full grid-cols-3 divide-x divide-white/60 lg:h-[380px]">
+                {STEP_PHOTOS.map((photo, index) => (
+                  <div key={photo.src} className="relative overflow-hidden">
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt}
+                      fill
+                      sizes="(max-width: 1024px) 33vw, 210px"
+                      className="object-cover"
+                    />
+                    <span className="absolute left-2 top-2 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-bold text-brand-primary">
+                      {STEPS[index].number}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 

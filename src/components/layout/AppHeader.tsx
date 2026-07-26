@@ -42,8 +42,8 @@ export function AppHeader() {
                 className={cn(
                   "flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-pill transition-all duration-150",
                   isActive
-                    ? "bg-black text-white"
-                    : "text-gray-600 hover:bg-gray-100",
+                    ? "bg-brand-primary/10 text-brand-primary"
+                    : "text-brand-foreground-muted hover:bg-brand-surface hover:text-brand-foreground",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -82,8 +82,8 @@ export function AppHeader() {
                 className={cn(
                   "flex items-center gap-3 text-sm font-medium px-4 py-2 rounded-pill transition-colors",
                   isActive
-                    ? "bg-black text-white"
-                    : "text-gray-600 hover:bg-gray-100",
+                    ? "bg-brand-primary/10 text-brand-primary"
+                    : "text-brand-foreground-muted hover:bg-brand-surface hover:text-brand-foreground",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
