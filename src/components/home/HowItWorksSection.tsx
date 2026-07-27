@@ -6,7 +6,8 @@
  */
 
 import Image from "next/image";
-import { Search, FileText, LayoutDashboard } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Search, FileText, LayoutDashboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SEEKER_STEPS } from "@/config/home-page";
@@ -143,6 +144,13 @@ export function HowItWorksSection() {
           <h2 className="break-words text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
             From browse to offer in 3 steps
           </h2>
+          <Link
+            href="/how-it-works"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-primary transition-colors hover:text-brand-primary-dark"
+          >
+            See the full walkthrough
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
 
         <div className="relative min-w-0">

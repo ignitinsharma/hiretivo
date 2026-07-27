@@ -30,7 +30,7 @@ export async function Header({ className, variant = "light" }: HeaderProps) {
         </Link>
 
         {!session ? (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/seeker/login"
               className="text-sm font-medium text-brand-foreground-muted hover:text-brand-foreground transition-colors"
