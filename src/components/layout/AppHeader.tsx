@@ -40,9 +40,9 @@ export function AppHeader() {
               return (
                 <span
                   key={item.href}
-                  className={cn(
-                    "flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-pill cursor-default opacity-60",
-                  )}
+                  className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-pill cursor-default opacity-60"
+                  aria-disabled="true"
+                  role="link"
                 >
                   <Icon className="w-3.5 h-3.5" />
                   {item.label}
@@ -97,6 +97,8 @@ export function AppHeader() {
                 <span
                   key={item.href}
                   className="flex items-center gap-3 text-sm font-medium px-4 py-2 rounded-pill cursor-default opacity-60"
+                  aria-disabled="true"
+                  role="link"
                 >
                   <Icon className="w-4 h-4" />
                   {item.label}
