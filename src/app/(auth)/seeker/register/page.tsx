@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { CreditCard, Info, Sparkles, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,68 +32,73 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
 
 const SeekerSignupLeft = (
   <>
     <div className="absolute top-[-10%] right-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-lg w-full">
-      <svg
-        className="w-12 h-12 text-primary mb-8"
-        fill="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-      </svg>
       <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-brand-foreground mb-6">
-        Work should fit your life, not the other way around.
+        2 free AI resumes.{" "}
+        <span className="text-brand-primary">Every month.</span>
       </h1>
+      <p className="text-brand-foreground-muted font-medium text-base leading-relaxed mb-8 max-w-md">
+        Paste any job link. Get a tailored, ATS-ready resume in seconds. Two free every month — no credit card.
+      </p>
 
-      <div className="bg-white p-6 rounded-xl border border-brand-border/50 max-w-md transform rotate-1 hover:rotate-0 transition-transform duration-500">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-surface rounded-full flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-brand-foreground-muted"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-foreground-secondary">
-                Daily Match
-              </p>
-              <p className="text-sm font-semibold text-brand-foreground">
-                Just for you
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] font-medium text-brand-foreground-secondary">2m ago</span>
+      <div className="relative mb-3 max-w-sm">
+        <span className="absolute -top-2.5 left-3 z-10 rounded-pill border border-brand-border bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-foreground-muted">
+          Before
+        </span>
+        <div className="overflow-hidden rounded-xl border border-brand-border bg-white">
+          <Image
+            src="/images/resume-before.png"
+            alt="Generic, unoptimized resume"
+            width={1103}
+            height={1426}
+            className="w-full h-auto opacity-60"
+          />
         </div>
-        <div className="bg-brand-surface p-4 rounded-xl flex items-center gap-4 border border-brand-border-light">
-          <div className="w-12 h-12 rounded-lg bg-brand-surface flex items-center justify-center font-bold text-brand-foreground-muted">
-            S
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-brand-foreground">
-              Senior Product Architect
-            </h4>
-            <p className="text-xs text-brand-foreground-muted">Remote • $140k - $180k</p>
-          </div>
-          <div className="ml-auto">
-            <Button variant="primary" size="sm" className="rounded-lg">
-              Apply
-            </Button>
-          </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-2 my-1">
+        <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+        <span className="text-xs font-semibold text-brand-primary">AI rewrites every bullet</span>
+        <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+      </div>
+
+      <div className="relative mt-3 max-w-sm">
+        <span className="absolute -top-2.5 right-3 z-10 inline-flex items-center gap-1 rounded-pill bg-brand-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+          <Sparkles className="h-3 w-3" aria-hidden="true" />
+          AI Rewrote This
+        </span>
+        <div className="overflow-hidden rounded-xl border border-brand-primary/30 bg-white">
+          <Image
+            src="/images/resume-after.png"
+            alt="AI-optimized resume"
+            width={820}
+            height={1125}
+            className="w-full h-auto"
+          />
         </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-brand-foreground-muted">
+        <span>2 free/month</span>
+        <span className="text-brand-border">·</span>
+        <span>10k+ generated</span>
+        <span className="text-brand-border">·</span>
+        <span>98% ATS pass</span>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-foreground-muted">
+          <CreditCard className="h-3.5 w-3.5 text-brand-primary" />
+          No Credit Card
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-foreground-muted">
+          <Zap className="h-3.5 w-3.5 text-brand-primary" />
+          5-min Setup
+        </span>
       </div>
     </div>
   </>

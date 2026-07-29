@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,51 +42,57 @@ const SeekerLoginLeft = (
     <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-lg w-full">
       <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-brand-foreground mb-6">
-        <span className="text-brand-primary">Find remote work</span> <br />
-        <span className="text-brand-foreground italic">that fits your life</span>
+        Your resume. Rewritten{" "}
+        <span className="text-brand-primary">by AI.</span>{" "}
+        <span className="italic">For every job.</span>
       </h1>
-      <p className="text-brand-foreground-muted font-medium text-base lg:text-lg leading-relaxed mb-8 max-w-md">
-        Access thousands of remote opportunities from companies that value
-        work-life balance.
+      <p className="text-brand-foreground-muted font-medium text-base leading-relaxed mb-8 max-w-md">
+        Paste any job link. Get a tailored, ATS-ready resume in seconds.
       </p>
 
-      <div className="bg-white p-6 rounded-xl border border-brand-border/50 max-w-md transform rotate-2 hover:rotate-0 transition-transform duration-500">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-surface rounded-full flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-brand-foreground"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-foreground-secondary">
-                Application Update
-              </p>
-              <p className="text-sm font-semibold text-brand-foreground">
-                Interview Scheduled
-              </p>
-            </div>
-          </div>
-          <span className="text-[10px] font-medium text-brand-foreground-secondary">Now</span>
+      <div className="relative mb-3 max-w-sm">
+        <span className="absolute -top-2.5 left-3 z-10 rounded-pill border border-brand-border bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-foreground-muted">
+          Before
+        </span>
+        <div className="overflow-hidden rounded-xl border border-brand-border bg-white">
+          <Image
+            src="/images/resume-before.png"
+            alt="Generic, unoptimized resume"
+            width={1103}
+            height={1426}
+            className="w-full h-auto opacity-60"
+          />
         </div>
-        <div className="bg-brand-surface p-4 rounded-xl border border-brand-border-light">
-          <h4 className="font-bold text-sm text-brand-foreground mb-1">
-            Frontend Developer at Acme Inc
-          </h4>
-          <p className="text-xs text-brand-foreground-muted">
-            Tomorrow at 10:00 AM PST • Zoom
-          </p>
+      </div>
+
+      <div className="flex items-center justify-center gap-2 my-1">
+        <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+        <span className="text-xs font-semibold text-brand-primary">AI rewrites every bullet</span>
+        <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+      </div>
+
+      <div className="relative mt-3 max-w-sm">
+        <span className="absolute -top-2.5 right-3 z-10 inline-flex items-center gap-1 rounded-pill bg-brand-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+          <Sparkles className="h-3 w-3" aria-hidden="true" />
+          AI Rewrote This
+        </span>
+        <div className="overflow-hidden rounded-xl border border-brand-primary/30 bg-white">
+          <Image
+            src="/images/resume-after.png"
+            alt="AI-optimized resume"
+            width={820}
+            height={1125}
+            className="w-full h-auto"
+          />
         </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-brand-foreground-muted">
+        <span>10k+ resumes</span>
+        <span className="text-brand-border">·</span>
+        <span>98% ATS pass rate</span>
+        <span className="text-brand-border">·</span>
+        <span>30 seconds</span>
       </div>
     </div>
   </>
