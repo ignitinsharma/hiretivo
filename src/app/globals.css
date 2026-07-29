@@ -111,6 +111,57 @@
   }
 }
 
+/* AI Pipeline Demo — sequential stage animation */
+@keyframes pipeline-stage {
+  0%, 5% { opacity: 0; transform: translateY(4px); }
+  10%, 28% { opacity: 1; transform: translateY(0); }
+  30%, 100% { opacity: 0.4; }
+}
+@keyframes pipeline-spinner {
+  0%, 28% { opacity: 1; }
+  30%, 100% { opacity: 0; }
+}
+@keyframes pipeline-check {
+  0%, 28% { opacity: 0; }
+  30%, 100% { opacity: 1; }
+}
+@keyframes pipeline-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes pipeline-arrow {
+  0%, 10% { opacity: 0; }
+  12%, 100% { opacity: 0.4; }
+}
+
+/* Step stagger: 9s cycle, 3s offset each */
+.pipeline-stage.s1 { animation: pipeline-stage 9s infinite; }
+.pipeline-stage.s2 { animation: pipeline-stage 9s infinite; animation-delay: -3s; }
+.pipeline-stage.s3 { animation: pipeline-stage 9s infinite; animation-delay: -6s; }
+
+.pipeline-spinner.s1-spin { animation: pipeline-spinner 9s infinite; }
+.pipeline-spinner.s2-spin { animation: pipeline-spinner 9s infinite; animation-delay: -3s; }
+.pipeline-spinner.s3-spin { animation: pipeline-spinner 9s infinite; animation-delay: -6s; }
+
+.pipeline-check.s1-check { animation: pipeline-check 9s infinite; }
+.pipeline-check.s2-check { animation: pipeline-check 9s infinite; animation-delay: -3s; }
+.pipeline-check.s3-check { animation: pipeline-check 9s infinite; animation-delay: -6s; }
+
+.pipeline-arrow.a1 { animation: pipeline-arrow 9s infinite; }
+.pipeline-arrow.a2 { animation: pipeline-arrow 9s infinite; animation-delay: -3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pipeline-stage {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .pipeline-spinner { display: none; }
+  .pipeline-check { opacity: 1 !important; }
+  .pipeline-arrow { opacity: 0.4 !important; animation: none !important; }
+  .pipeline-loading-icon { display: none; }
+}
+
 :root {
   --sidebar: hsl(0 0% 100%);
   --sidebar-foreground: hsl(0 0% 27%);

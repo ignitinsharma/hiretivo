@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowRight, FileText, ScrollText, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrowserFrame } from "@/components/home/BrowserFrame";
+import { AIPipelineDemo } from "@/components/home/AIPipelineDemo";
 import { HOMEPAGE_STATS } from "@/config/home-page";
 
 export function HeroSection() {
@@ -16,15 +17,13 @@ export function HeroSection() {
           </span>
         </div>
 
-        <h1 className="mb-5 break-words font-bold text-5xl leading-[1.06] tracking-[-0.03em] text-brand-foreground md:text-6xl">
+        <h1 className="mb-4 break-words font-bold text-5xl leading-[1.06] tracking-[-0.03em] text-brand-foreground md:text-6xl">
           Stop copy-pasting.
           <br />
           <span className="text-brand-primary">Start landing.</span>
         </h1>
 
-        <p className="mx-auto mb-5 max-w-xl break-words text-base leading-relaxed text-brand-foreground-muted md:text-lg">
-          Paste any job link. Get a tailored, ATS-ready resume in seconds.
-        </p>
+        <AIPipelineDemo />
 
         <div className="mb-8 flex flex-wrap justify-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-2 text-xs font-semibold text-brand-foreground-muted">
