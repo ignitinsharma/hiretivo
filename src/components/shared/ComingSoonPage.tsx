@@ -101,13 +101,13 @@ export function ComingSoonPage() {
 
       <main className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
         <section className="flex flex-col items-center text-center mb-24">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-50 text-black text-xs font-semibold tracking-widest uppercase mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-brand-surface text-brand-foreground text-xs font-semibold tracking-widest uppercase mb-8">
             <Rocket className="w-4 h-4" />
             Launching Soon
           </div>
 
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-foreground mb-4 leading-none">
-            Coming <span className="text-black italic">Soon</span>
+            Coming <span className="text-brand-foreground italic">Soon</span>
           </h1>
 
           <p className="text-2xl md:text-4xl text-muted-foreground font-medium tracking-tight mb-12">
@@ -199,7 +199,7 @@ export function ComingSoonPage() {
               href={SOCIAL_LINKS.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center text-muted-foreground hover:text-black hover:bg-gray-100 transition-all"
+              className="h-11 w-11 rounded-lg bg-brand-surface flex items-center justify-center text-muted-foreground hover:text-brand-foreground hover:bg-brand-border transition-all"
             >
               <Linkedin className="w-5 h-5" />
             </Link>
@@ -207,7 +207,7 @@ export function ComingSoonPage() {
               href={SOCIAL_LINKS.twitter}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center text-muted-foreground hover:text-black hover:bg-gray-100 transition-all"
+              className="h-11 w-11 rounded-lg bg-brand-surface flex items-center justify-center text-muted-foreground hover:text-brand-foreground hover:bg-brand-border transition-all"
             >
               <Twitter className="w-5 h-5" />
             </Link>
@@ -215,7 +215,7 @@ export function ComingSoonPage() {
               href={SOCIAL_LINKS.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center text-muted-foreground hover:text-black hover:bg-gray-100 transition-all"
+              className="h-11 w-11 rounded-lg bg-brand-surface flex items-center justify-center text-muted-foreground hover:text-brand-foreground hover:bg-brand-border transition-all"
             >
               <Instagram className="w-5 h-5" />
             </Link>

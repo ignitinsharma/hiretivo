@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { apiClient } from '@/lib/axios';
+import { ApplicationStatus } from '@/constants/enums';
 import type { CreateApplicationInput } from '@/lib/validations/application';
 import type { SeekerApplicationItem } from '@/modules/seeker/applications/types/application.types';
 
@@ -10,6 +11,7 @@ interface ApplicationApiItem {
   companyId?: string | null;
   companyName: string;
   companyLogoUrl?: string | null;
+  location?: string | null;
   salaryRange: string;
   jobType: string;
   workType: string | null;
@@ -20,11 +22,17 @@ interface ApplicationApiItem {
   skills: string[];
   status: SeekerApplicationItem['status'];
   appliedAt: string;
+  pipelineStage?: string;
 }
 
 export const applicationService = {
-  applyToJob: async (payload: CreateApplicationInput): Promise<void> => {
-    await apiClient.post('/applications', payload);
+  applyToJob: async (payload: CreateApplicationInput): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/applications', payload);
+    return data;
+  },
+
+  generateResume: async (applicationId: string): Promise<void> => {
+    await apiClient.post(`/applications/${applicationId}/generate`);
   },
 
   getMyApplications: async (): Promise<SeekerApplicationItem[]> => {
@@ -40,7 +48,27 @@ export const applicationService = {
       companySize: application.companySize,
       companyFundingType: application.companyFundingType,
       skills: application.skills,
+      pipelineStage: application.pipelineStage as SeekerApplicationItem['pipelineStage'],
       appliedAt: format(new Date(application.appliedAt), 'MMM d, yyyy'),
     }));
+  },
+
+  updateApplicationStatus: async (applicationId: string, status: ApplicationStatus): Promise<void> => {
+    await apiClient.patch(`/applications/${applicationId}/status`, { status });
+  },
+
+  markApplied: async (applicationId: string): Promise<void> => {
+    await apiClient.patch(`/applications/${applicationId}`, { action: "mark_applied" });
+  },
+
+  updatePipelineStage: async (applicationId: string, stage: string): Promise<void> => {
+    await apiClient.patch(`/applications/${applicationId}`, {
+      action: "update_pipeline_stage",
+      pipelineStage: stage,
+    });
+  },
+
+  revertToNotApplied: async (applicationId: string): Promise<void> => {
+    await apiClient.patch(`/applications/${applicationId}`, { action: "revert_to_not_applied" });
   },
 };

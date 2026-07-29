@@ -4,6 +4,7 @@ import { APPLICATION_STATUS_VALUES } from "@/constants/enums";
 export const createApplicationSchema = z.object({
   jobId: z.cuid(),
   coverLetter: z.string().trim().max(10_000).optional(),
+  jdText: z.string().optional(),
 });
 
 export const updateApplicationStageSchema = z.object({

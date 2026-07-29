@@ -114,19 +114,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid query params' }, { status: 400 });
   }
 
-  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored } = parsed.data;
+  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored, q } = parsed.data;
 
   const appliedRows = await prisma.application.findMany({
     where: { seekerId: session.user.id },
     select: { jobId: true },
   });
-  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
+  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId).filter((id): id is string => id !== null));
 
   const dismissedRows = await prisma.dismissedJob.findMany({
     where: { userId: session.user.id },
     select: { jobId: true },
   });
-  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
+  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId).filter((id): id is string => id !== null));
 
   const feedFilterWhere: Prisma.JobWhereInput = {
     status: JobStatus.OPEN,
@@ -145,12 +145,20 @@ export async function GET(req: NextRequest) {
     });
     const allMatchedIds = matchedJobIds.map((m) => m.jobId);
 
+    const recentWhere: Prisma.JobWhereInput = {
+      ...feedFilterWhere,
+      id: { notIn: [...allMatchedIds, ...appliedJobIds, ...dismissedJobIds] },
+      isAdminPosted: true,
+    };
+    if (q) {
+      const qLower = q.toLowerCase();
+      recentWhere.OR = [
+        { title: { contains: qLower, mode: 'insensitive' } },
+        { companyName: { contains: qLower, mode: 'insensitive' } },
+      ];
+    }
     const recentJobs = await prisma.job.findMany({
-      where: {
-        ...feedFilterWhere,
-        id: { notIn: [...allMatchedIds, ...appliedJobIds, ...dismissedJobIds] },
-        isAdminPosted: true,
-      },
+      where: recentWhere,
       orderBy: { publishedAt: 'desc' },
       skip: recentOffset,
       take: limit + 1,
@@ -205,10 +213,12 @@ export async function GET(req: NextRequest) {
     where: { id: { in: jobIds }, status: JobStatus.OPEN },
     select: {
       id: true,
+      title: true,
       jobType: true,
       workType: true,
       locationClass: true,
       visaSponsored: true,
+      companyName: true,
       recruiter: {
         select: {
           recruiterProfile: {
@@ -230,6 +240,13 @@ export async function GET(req: NextRequest) {
     if (workType && job.workType !== workType) return false;
     if (locationClass && job.locationClass !== locationClass) return false;
     if (visaSponsored && !job.visaSponsored) return false;
+    if (q) {
+      const qLower = q.toLowerCase();
+      const companyName = job.companyName ?? job.recruiter?.recruiterProfile?.companyName ?? '';
+      const matchesTitle = job.title?.toLowerCase().includes(qLower);
+      const matchesCompany = companyName.toLowerCase().includes(qLower);
+      if (!matchesTitle && !matchesCompany) return false;
+    }
     return true;
   });
 

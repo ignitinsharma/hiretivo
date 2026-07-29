@@ -1,7 +1,7 @@
 import React from "react";
 import { BriefcaseBusiness, Clock, MapPin } from "lucide-react";
-
 import { ApplicationStatus, JobStatus } from "@/constants/enums";
+import { formatDate } from "@/lib/format-date";
 import { SeekerJobBaseCard } from "@/components/shared/SeekerJobBaseCard";
 import { cn } from "@/lib/utils";
 import type { SeekerApplicationItem } from "../types/application.types";
@@ -83,7 +83,7 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       companyDetails={companyDetails}
       metaBadge={
         <span className="shrink-0 text-sm font-medium text-brand-foreground-secondary">
-          Applied {application.appliedAt}
+          Applied {formatDate(application.createdAt, "MMM d, yyyy")}
         </span>
       }
       facts={facts}
@@ -91,11 +91,13 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
       description={application.description ?? null}
       salaryRange={application.salaryRange}
       footerRight={
-        application.jobStatus === JobStatus.DELETED ? (
-          <JobClosedBadge />
-        ) : (
-          <StatusBadge status={application.status} />
-        )
+        <div className="flex items-center gap-2">
+          {application.jobStatus === JobStatus.DELETED ? (
+            <JobClosedBadge />
+          ) : (
+            <StatusBadge status={application.status} />
+          )}
+        </div>
       }
     />
   );

@@ -1,110 +1,90 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { User, Shield, Link, Briefcase, GraduationCap } from "lucide-react";
-
+import React from "react";
+import { User, Globe, Wrench, FileText, CreditCard, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { href: "#account", label: "Account", icon: User },
-  { href: "#social", label: "Social Profiles", icon: Link },
-  { href: "#experience", label: "Work Experience", icon: Briefcase },
-  { href: "#education", label: "Education", icon: GraduationCap },
-  { href: "#security", label: "Password & Security", icon: Shield },
-] as const;
+export type SettingsTab = "personal" | "social" | "skills" | "resume" | "billing" | "password";
 
-type SettingsHash = (typeof NAV_ITEMS)[number]["href"];
-
-const DEFAULT_HASH: SettingsHash = "#account";
-const NAV_HASHES = new Set(NAV_ITEMS.map((item) => item.href));
-
-/*
- * isSettingsHash
- * Narrows arbitrary location hashes to supported seeker settings sections.
- */
-function isSettingsHash(value: string): value is SettingsHash {
-  return NAV_HASHES.has(value as SettingsHash);
+interface NavItem {
+  key: SettingsTab;
+  label: string;
+  icon: React.ElementType;
 }
 
-/*
- * getActiveHashFromLocation
- * Reads the current settings hash and falls back to Account for unknown hashes.
- */
-function getActiveHashFromLocation(): SettingsHash {
-  if (typeof window === "undefined") return DEFAULT_HASH;
-  return isSettingsHash(window.location.hash)
-    ? window.location.hash
-    : DEFAULT_HASH;
+const NAV_ITEMS: NavItem[] = [
+  { key: "personal", label: "Personal Info", icon: User },
+  { key: "social", label: "Social Profiles", icon: Globe },
+  { key: "skills", label: "Skills", icon: Wrench },
+  { key: "resume", label: "Resume", icon: FileText },
+  { key: "billing", label: "Plan & Billing", icon: CreditCard },
+  { key: "password", label: "Password", icon: ShieldCheck },
+];
+
+interface SettingsSidebarProps {
+  activeTab: SettingsTab;
+  onTabChange: (tab: SettingsTab) => void;
 }
 
 /*
  * SettingsSidebar
- * Sticky seeker settings section navigation that follows the current hash/section.
+ * Professional SaaS settings navigation with icon + label items.
+ * Active state: brand background, primary text, left accent border.
+ * Inactive state: subtle hover background.
+ * Responsive: vertical sidebar on desktop, horizontal scrollable tabs on mobile.
  */
-export function SettingsSidebar() {
-  const [activeHash, setActiveHash] = useState<SettingsHash>(DEFAULT_HASH);
-
-  useEffect(() => {
-    setActiveHash(getActiveHashFromLocation());
-
-    const handleHashChange = (): void => {
-      setActiveHash(getActiveHashFromLocation());
-    };
-
-    const sections = NAV_ITEMS.map((item) =>
-      document.getElementById(item.href.slice(1)),
-    ).filter((section): section is HTMLElement => Boolean(section));
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-        if (!visibleEntry?.target.id) return;
-        const nextHash = `#${visibleEntry.target.id}`;
-        if (isSettingsHash(nextHash)) {
-          setActiveHash(nextHash);
-        }
-      },
-      {
-        rootMargin: "-20% 0px -65% 0px",
-        threshold: [0, 0.1, 0.25],
-      },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
+export function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps) {
   return (
-    <aside className="w-full shrink-0 md:w-72">
-      <nav className="sticky top-24 flex flex-col gap-3">
-        <p className="px-6 text-xs font-bold uppercase tracking-wider text-brand-foreground-secondary">
-          Settings
-        </p>
+    <>
+      {/* Desktop vertical sidebar */}
+      <aside className="hidden md:block w-56 lg:w-60 shrink-0">
+        <nav className="sticky top-24 flex flex-col gap-1">
+          {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onTabChange(key)}
+                className={cn(
+                  "flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm font-medium rounded-r-lg border-l-2 transition-colors",
+                  isActive
+                    ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                    : "border-transparent text-brand-foreground-muted hover:bg-brand-surface hover:text-brand-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
 
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-          <a
-            key={href}
-            href={href}
-            aria-current={activeHash === href ? "true" : undefined}
-            className={cn(
-              "flex items-center gap-5 rounded-xl border-l-4 border-transparent px-2 py-3 text-brand-foreground-muted transition-colors hover:bg-brand-surface hover:text-brand-foreground",
-              activeHash === href &&
-                "border-brand-primary bg-brand-primary/5 text-brand-primary",
-            )}
-          >
-            <Icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-            <span className="text-base font-medium">{label}</span>
-          </a>
-        ))}
+      {/* Mobile horizontal scrollable tabs */}
+      <nav className="md:hidden -mx-6 px-6 pb-4 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
+          {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onTabChange(key)}
+                className={cn(
+                  "flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                  isActive
+                    ? "bg-brand-primary text-white"
+                    : "text-brand-foreground-muted bg-brand-surface hover:bg-brand-surface/80",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </nav>
-    </aside>
+    </>
   );
 }

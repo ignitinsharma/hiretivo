@@ -4,27 +4,11 @@ import { authConfig } from "@/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-/*
- * Next.js middleware — single source of truth for route protection.
- * (Next.js runs only this file because the app lives under src/.)
- *
- * - /admin/*                : gated on ADMIN_EMAIL. Defense-in-depth; the admin
- *                             layout and every /api/admin handler re-check too.
- * - /seeker/*, /recruiter/* : require a session and the matching role; otherwise
- *                             redirect to the correct login / onboarding / dashboard.
- * - public marketing/auth/api routes pass through (APIs enforce their own auth).
- *
- * ADMIN_EMAIL is read per-request so runtime-injected env (not build-time) is honored.
- */
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
   const userRole = session?.user?.role as string | undefined;
-  const hasKnownRole = userRole === "SEEKER" || userRole === "RECRUITER";
 
-  // --- Admin gate (must run before the public check; /admin is not public) ---
-  // Primary check: isAdmin boolean forwarded from JWT (DB-backed, set at sign-in).
-  // Fallback: ADMIN_EMAIL env var (bootstrap path — keeps operator from being locked out).
   if (pathname.startsWith("/admin")) {
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const userEmail = session?.user?.email?.trim().toLowerCase();
@@ -32,7 +16,7 @@ export default auth((req) => {
       session?.user?.isAdmin === true ||
       Boolean(adminEmail && userEmail && userEmail === adminEmail);
     if (!isAdminUser) {
-      return NextResponse.redirect(new URL("/recruiter/login", req.url));
+      return NextResponse.redirect(new URL("/seeker/login", req.url));
     }
     return NextResponse.next();
   }
@@ -41,28 +25,21 @@ export default auth((req) => {
     pathname === "/" ||
     pathname.startsWith("/about") ||
     pathname.startsWith("/jobs") ||
-    pathname.startsWith("/companies") ||
-    pathname.startsWith("/feed") ||
     pathname.startsWith("/pricing") ||
     pathname.startsWith("/contact") ||
-    pathname.startsWith("/hire-talent") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/privacy") ||
-    pathname.startsWith("/how") ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
-    pathname.startsWith("/favicon");
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/unsubscribe");
 
   if (isPublicRoute) {
     if (session && pathname === "/") {
       const dest = session.user?.onboardingCompleted === false
-        ? userRole === "RECRUITER"
-          ? "/recruiter/onboarding"
-          : "/seeker/onboarding"
-        : userRole === "RECRUITER"
-          ? "/recruiter/dashboard"
-          : "/seeker/dashboard";
+        ? "/seeker/onboarding"
+        : "/dashboard";
       return NextResponse.redirect(new URL(dest, req.url));
     }
     return NextResponse.next();
@@ -70,54 +47,30 @@ export default auth((req) => {
 
   const isLoginOrRegister =
     pathname.startsWith("/seeker/login") ||
-    pathname.startsWith("/seeker/register") ||
-    pathname.startsWith("/recruiter/login") ||
-    pathname.startsWith("/recruiter/register");
+    pathname.startsWith("/seeker/register");
 
-  const isOnboardingRoute =
-    pathname.startsWith("/seeker/onboarding") ||
-    pathname.startsWith("/recruiter/onboarding");
+  const isOnboardingRoute = pathname.startsWith("/seeker/onboarding");
 
   if (!session) {
     if (isLoginOrRegister) return NextResponse.next();
-    if (pathname.startsWith("/seeker/"))
+    if (pathname.startsWith("/dashboard") ||
+        pathname.startsWith("/settings"))
       return NextResponse.redirect(new URL("/seeker/login", req.url));
-    if (pathname.startsWith("/recruiter/"))
-      return NextResponse.redirect(new URL("/recruiter/login", req.url));
     return NextResponse.next();
   }
 
   if (isLoginOrRegister) {
-    if (!hasKnownRole) return NextResponse.next();
     const dest = session.user?.onboardingCompleted === false
-      ? userRole === "RECRUITER"
-        ? "/recruiter/onboarding"
-        : "/seeker/onboarding"
-      : userRole === "RECRUITER"
-        ? "/recruiter/dashboard"
-        : "/seeker/dashboard";
+      ? "/seeker/onboarding"
+      : "/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));
   }
 
   if (isOnboardingRoute) {
     if (session?.user?.onboardingCompleted) {
-      const dest = userRole === "RECRUITER"
-        ? "/recruiter/dashboard"
-        : "/seeker/dashboard";
-      return NextResponse.redirect(new URL(dest, req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
-  }
-
-  if (!hasKnownRole) {
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith("/seeker/") && userRole !== "SEEKER") {
-    return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
-  }
-  if (pathname.startsWith("/recruiter/") && userRole !== "RECRUITER") {
-    return NextResponse.redirect(new URL("/seeker/dashboard", req.url));
   }
 
   return NextResponse.next();

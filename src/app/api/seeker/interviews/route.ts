@@ -58,21 +58,26 @@ export async function GET() {
     orderBy: { startsAt: 'asc' },
   });
 
-  const data = interviews.map((interview) => ({
-    id: interview.id,
-    startsAt: interview.startsAt?.toISOString() ?? null,
-    endsAt: interview.endsAt?.toISOString() ?? null,
-    meetLink: interview.meetLink,
-    notes: interview.notes,
-    status: interview.status,
-    scheduledTimeZone: interview.scheduledTimeZone,
-    viewerTimezone: seekerUser?.timezone ?? INDIA_TIMEZONE,
-    jobTitle: interview.application.job.title,
-    companyName: interview.application.job.isAdminPosted
-      ? (interview.application.job.companyName ?? interview.recruiter.name ?? 'Unknown')
-      : (interview.recruiter.recruiterProfile?.companyName ?? interview.recruiter.name ?? 'Unknown'),
-    interviewerName: interview.recruiter.name ?? 'Recruiter',
-  }));
+  const validInterviews = interviews.filter((i) => i.application.job);
+
+  const data = validInterviews.map((interview) => {
+    const job = interview.application.job!;
+    return ({
+      id: interview.id,
+      startsAt: interview.startsAt?.toISOString() ?? null,
+      endsAt: interview.endsAt?.toISOString() ?? null,
+      meetLink: interview.meetLink,
+      notes: interview.notes,
+      status: interview.status,
+      scheduledTimeZone: interview.scheduledTimeZone,
+      viewerTimezone: seekerUser?.timezone ?? INDIA_TIMEZONE,
+      jobTitle: job.title,
+      companyName: job.isAdminPosted
+        ? (job.companyName ?? interview.recruiter.name ?? 'Unknown')
+        : (interview.recruiter.recruiterProfile?.companyName ?? interview.recruiter.name ?? 'Unknown'),
+      interviewerName: interview.recruiter.name ?? 'Recruiter',
+    });
+  });
 
   return Response.json({ data }, { status: 200 });
 }

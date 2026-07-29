@@ -15,10 +15,11 @@ function requireEnv(name: string): string {
   return value;
 }
 
-function getR2Client(): S3Client {
-  const accountId = requireEnv("R2_ACCOUNT_ID");
-  const accessKeyId = requireEnv("R2_ACCESS_KEY_ID");
-  const secretAccessKey = requireEnv("R2_SECRET_ACCESS_KEY");
+function getR2Client(): S3Client | null {
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  if (!accountId || !accessKeyId || !secretAccessKey) return null;
 
   return new S3Client({
     region: "auto",
@@ -53,9 +54,11 @@ export const R2_KEYS = {
 // Returns a fresh signed URL (1 hour). Never store this URL — always regenerate.
 //
 export async function getSignedFileUrl(key: string): Promise<string> {
-  const bucket = requireEnv("R2_BUCKET_NAME");
+  if (key.startsWith("data:")) return key;
   const client = getR2Client();
+  if (!client) return `/api/logo?key=${encodeURIComponent(key)}`;
 
+  const bucket = requireEnv("R2_BUCKET_NAME");
   const command = new GetObjectCommand({ Bucket: bucket, Key: key });
 
   type SigningClient = Parameters<typeof getSignedUrl>[0];
@@ -68,8 +71,9 @@ export async function getSignedFileUrl(key: string): Promise<string> {
 // Use when a seeker deletes their account or explicitly removes their resume.
 //
 export async function deleteFile(key: string): Promise<void> {
-  const bucket = requireEnv("R2_BUCKET_NAME");
   const client = getR2Client();
+  if (!client) return;
+  const bucket = requireEnv("R2_BUCKET_NAME");
   await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
@@ -113,9 +117,12 @@ export async function uploadFile(
   file: File,
   key: string
 ): Promise<UploadFileResult> {
-  const bucket = requireEnv("R2_BUCKET_NAME");
   const client = getR2Client();
+  if (!client) {
+    return { url: `/api/logo?key=${encodeURIComponent(key)}` };
+  }
 
+  const bucket = requireEnv("R2_BUCKET_NAME");
   const body = Buffer.from(await file.arrayBuffer());
   const contentType = file.type || "application/octet-stream";
 

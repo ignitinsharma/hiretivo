@@ -51,6 +51,17 @@ enum AppStatus {
   REJECTED
 }
 
+enum AutomationStatus {
+  GENERATING
+  READY
+  APPLYING
+  SUBMITTED
+  NEEDS_YOU
+  FAILED
+  COMPLETED
+  SKIPPED
+}
+
 enum WorkType {
   REMOTE
   HYBRID
@@ -91,6 +102,14 @@ enum InterviewStatus {
   NO_SHOW
 }
 
+enum PipelineStage {
+  NOT_APPLIED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -120,6 +139,8 @@ model User {
   jobsPosted Job[] @relation("RecruiterJobs")
 
   applications Application[]
+  masterResume    MasterResume?
+  generationQuotas GenerationQuota[]
 
   interviewsAsRecruiter Interview[] @relation("InterviewRecruiter")
   interviewsAsSeeker    Interview[] @relation("InterviewSeeker")
@@ -191,6 +212,7 @@ model SeekerProfile {
   currency        String?
   availability    String?
   resumeKey       String?
+  phone           String?
 
   websiteUrl      String?
   linkedinUrl     String?
@@ -224,6 +246,7 @@ model Skill {
   name     String @unique
   slug     String @unique
   category String
+  aliases  String[] @default([])
 
   seekerSkills SeekerSkill[]
   jobSkills    JobSkill[]
@@ -383,13 +406,25 @@ model Application {
   status      AppStatus @default(APPLIED)
   matchScore  Int
 
+  automationStatus AutomationStatus? @map("automation_status")
+  failureReason    String?               @map("failure_reason")
+
+  pipelineStage PipelineStage @default(NOT_APPLIED) @map("pipeline_stage")
+
   coverLetter String? @db.Text
-  aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
+  aiSummary   String?
 
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
   seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
 
   interviews Interview[]
+  resumeVersions ResumeVersion[]
+  coverLetters   CoverLetter[]
+
+  generationCount Int    @default(0)
+  activeVersionId String?
+
+  appliedAt DateTime? @map("applied_at")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -398,6 +433,60 @@ model Application {
   @@index([seekerId])
   @@index([status])
   @@index([jobId, status])
+  @@index([activeVersionId])
+  @@index([pipelineStage])
+}
+
+// MasterResume — canonical, document-only storage for the user's uploaded/parsed base resume.
+// This is the ONE source of truth — normalized tables (WorkExperience, Education,
+// SeekerSkill, etc.) are derived read-only caches, written ONLY by a
+// sync-from-MasterResume transaction, never directly by any other code path.
+model MasterResume {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  resumeJson Json     // Phase 0 schema JSON — canonical source of truth
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// GenerationQuota — tracks monthly generation usage per user, enforced server-side
+model GenerationQuota {
+  id        String   @id @default(cuid())
+  userId    String
+  month     String   // "YYYY-MM"
+  count     Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+  @@index([userId])
+}
+
+// ResumeVersion — each generate/regenerate creates a new version row, no silent overwrite
+model ResumeVersion {
+  id            String   @id @default(cuid())
+  applicationId String
+  version       Int      @default(1)
+  resumeJson    Json
+  sourceType    String   @default("ai-generated") // ai-generated | regenerate | manual-edit
+  styleConfig   Json?
+  createdAt     DateTime @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+// CoverLetter — per-application cover letter storage
+model CoverLetter {
+  id            String   @id @default(cuid())
+  applicationId String
+  content       String   // generated cover letter text
+  createdAt     DateTime @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
 }
 
 model Interview {

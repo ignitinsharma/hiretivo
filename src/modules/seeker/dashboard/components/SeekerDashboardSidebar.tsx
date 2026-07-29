@@ -2,7 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ProfileStrengthCard } from './ProfileStrengthCard';
 import { QuickStatsCard } from './QuickStatsCard';
 import { JobAlertsPromo } from './JobAlertsPromo';
 import { VerificationStatusCard } from './VerificationStatusCard';
@@ -14,7 +13,7 @@ function SidebarSkeleton() {
   return (
     <div className="w-full lg:w-80 space-y-6 shrink-0">
       {/* Verification status skeleton */}
-      <div className="rounded-xl border border-brand-border p-5 space-y-3">
+      <div className="rounded-xl border border-brand-border p-6 space-y-3">
         <div className="flex items-center gap-2">
           <Skeleton className="w-5 h-5 rounded" />
           <Skeleton className="h-4 w-36" />
@@ -82,7 +81,6 @@ export function SeekerDashboardSidebar() {
         status={data.verification.status}
         verificationNotes={data.verification.verificationNotes}
       /> */}
-      <ProfileStrengthCard profileStrength={data.profileStrength} />
       <QuickStatsCard quickStats={data.quickStats} />
       <JobAlertsPromo
         digestEnabled={data.digest.enabled}

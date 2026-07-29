@@ -25,9 +25,9 @@ interface RichTextEditorProps {
 }
 
 const TOOLBAR_BUTTON =
-  'p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed';
+  'p-1.5 rounded-md text-brand-foreground-muted hover:text-brand-foreground hover:bg-brand-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed';
 const TOOLBAR_BUTTON_ACTIVE =
-  'p-1.5 rounded-md text-black bg-gray-100 hover:bg-gray-200 transition-colors';
+  'p-1.5 rounded-md text-brand-foreground bg-brand-surface hover:bg-brand-border transition-colors';
 
 export function RichTextEditor({
   value,

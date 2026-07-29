@@ -4,7 +4,6 @@ import { Footer } from '@/components/layout/Footer';
 import { JobDetailHeader } from '@/modules/jobs/components/JobDetailHeader';
 import { JobDetailContent } from '@/modules/jobs/components/JobDetailContent';
 import { JobDetailSidebar } from '@/modules/jobs/components/JobDetailSidebar';
-import { ApplyJobModal } from '@/components/shared/ApplyJobModal';
 import { auth } from '@/auth';
 import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
@@ -233,7 +232,7 @@ export default async function JobDescriptionPage({
     }));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-brand-surface flex flex-col">
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <JobDetailHeader
@@ -254,7 +253,6 @@ export default async function JobDescriptionPage({
         </div>
       </main>
       <Footer />
-      <ApplyJobModal />
     </div>
   );
 }

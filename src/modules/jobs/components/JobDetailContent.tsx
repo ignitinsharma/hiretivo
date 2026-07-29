@@ -178,7 +178,7 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
     sections.find((section) => section.tab === selectedTab) ?? sections[0];
 
   return (
-    <div className="flex-1 bg-white border border-brand-border rounded-2xl overflow-hidden">
+    <div className="flex-1 bg-white border border-brand-border rounded-xl overflow-hidden">
       {sections.length > 1 && (
         <div className="border-b border-brand-border px-6 sm:px-8">
           <nav className="flex gap-8 -mb-px overflow-x-auto">
@@ -190,7 +190,7 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
                 className={`py-5 px-0 h-auto rounded-none text-sm font-bold border-b-2 transition-colors ${
                   selectedTab === tab
                     ? "border-primary text-primary hover:text-primary hover:bg-transparent"
-                    : "border-transparent text-slate-500 hover:text-slate-900 hover:border-brand-border hover:bg-transparent"
+                    : "border-transparent text-brand-foreground-muted hover:text-brand-foreground hover:border-brand-border hover:bg-transparent"
                 }`}
               >
                 {tab}
@@ -203,11 +203,11 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
       <div className="p-6 sm:p-8 space-y-10">
         {activeSection && (
           <section>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">
+            <h3 className="text-xl font-bold text-brand-foreground mb-4">
               {activeSection.title}
             </h3>
             <div
-              className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4"
+              className="prose max-w-none text-brand-foreground leading-relaxed space-y-4"
               dangerouslySetInnerHTML={{
                 __html: sanitizeHtml(activeSection.html),
               }}
@@ -231,7 +231,7 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
 
         <div className="pt-8 border-t border-brand-border">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-primary font-bold overflow-hidden border border-brand-border">
+            <div className="w-12 h-12 bg-brand-surface rounded-xl flex items-center justify-center text-primary font-bold overflow-hidden border border-brand-border">
               {job.companyLogoUrl ? (
                 <Image
                   src={job.companyLogoUrl}
@@ -245,7 +245,7 @@ export function JobDetailContent({ job }: JobDetailContentProps) {
               )}
             </div>
             <div>
-              <p className="font-bold text-slate-900">{job.companyName}</p>
+              <p className="font-bold text-brand-foreground">{job.companyName}</p>
             </div>
             {job.companyId && (
               <Link

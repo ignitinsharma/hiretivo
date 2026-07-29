@@ -29,7 +29,7 @@ import {
 
 function getSafeRedirectPath(value: string | null): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/seeker/dashboard";
+    return "/dashboard";
   }
 
   return value;
@@ -39,21 +39,21 @@ const SeekerLoginLeft = (
   <>
     <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
     <div className="relative z-10 max-w-lg w-full">
-      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-slate-900 mb-6">
+      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-brand-foreground mb-6">
         <span className="text-brand-primary">Find remote work</span> <br />
-        <span className="text-black italic">that fits your life</span>
+        <span className="text-brand-foreground italic">that fits your life</span>
       </h1>
-      <p className="text-slate-600 font-medium text-base lg:text-lg leading-relaxed mb-8 max-w-md">
+      <p className="text-brand-foreground-muted font-medium text-base lg:text-lg leading-relaxed mb-8 max-w-md">
         Access thousands of remote opportunities from companies that value
         work-life balance.
       </p>
 
-      <div className="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-brand-border/50 max-w-md transform rotate-2 hover:rotate-0 transition-transform duration-500">
+      <div className="bg-white p-6 rounded-xl border border-brand-border/50 max-w-md transform rotate-2 hover:rotate-0 transition-transform duration-500">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-black-light rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-brand-surface rounded-full flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-black"
+                className="w-5 h-5 text-brand-foreground"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -67,21 +67,21 @@ const SeekerLoginLeft = (
               </svg>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-foreground-secondary">
                 Application Update
               </p>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-brand-foreground">
                 Interview Scheduled
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-medium text-slate-400">Now</span>
+          <span className="text-[10px] font-medium text-brand-foreground-secondary">Now</span>
         </div>
-        <div className="bg-slate-50 p-4 rounded-xl border border-brand-border-light">
-          <h4 className="font-bold text-sm text-slate-900 mb-1">
+        <div className="bg-brand-surface p-4 rounded-xl border border-brand-border-light">
+          <h4 className="font-bold text-sm text-brand-foreground mb-1">
             Frontend Developer at Acme Inc
           </h4>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-brand-foreground-muted">
             Tomorrow at 10:00 AM PST • Zoom
           </p>
         </div>
@@ -145,10 +145,7 @@ function SeekerLoginContent() {
 
   React.useEffect(() => {
     if (status === "authenticated" && session?.user && !hasOAuthRoleMismatch && !isHandlingOAuthMismatch) {
-      const dest =
-        session.user.role === UserRole.RECRUITER
-          ? "/recruiter/dashboard"
-          : redirectPath;
+      const dest = redirectPath;
       router.replace(dest);
     }
   }, [status, session, router, redirectPath, hasOAuthRoleMismatch, isHandlingOAuthMismatch]);
@@ -266,7 +263,7 @@ function SeekerLoginContent() {
 
         <div className="relative flex items-center">
           <div className="grow border-t border-brand-border"></div>
-          <span className="shrink mx-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap">
+          <span className="shrink mx-4 text-[10px] font-bold text-brand-foreground-secondary uppercase tracking-[0.2em] whitespace-nowrap">
             OR CONTINUE WITH EMAIL
           </span>
           <div className="grow border-t border-brand-border"></div>
@@ -277,7 +274,7 @@ function SeekerLoginContent() {
             <div className="flex items-center justify-between gap-3">
               <Label
                 htmlFor="email"
-                className="text-sm font-bold text-slate-900 block"
+                className="text-sm font-bold text-brand-foreground block"
               >
                 Email
               </Label>
@@ -288,7 +285,7 @@ function SeekerLoginContent() {
               type="email"
               placeholder="you@company.com"
               autoComplete="email"
-              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-brand-foreground-secondary text-brand-foreground"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
@@ -302,7 +299,7 @@ function SeekerLoginContent() {
             <div className="flex items-center justify-between">
               <Label
                 htmlFor="password"
-                className="text-sm font-bold text-slate-900"
+                className="text-sm font-bold text-brand-foreground"
               >
                 Password
               </Label>
@@ -317,7 +314,7 @@ function SeekerLoginContent() {
               id="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-slate-400 text-slate-900"
+              className="w-full bg-white border border-brand-border rounded-lg focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary placeholder:text-brand-foreground-secondary text-brand-foreground"
               error={!!form.formState.errors.password}
               {...form.register("password")}
             />
@@ -341,7 +338,7 @@ function SeekerLoginContent() {
         </form>
 
         <footer className="pt-4 text-center">
-          <p className="text-slate-600 font-medium">
+          <p className="text-brand-foreground-muted font-medium">
             New to Hiretivo?
             <Link
               href="/seeker/register"

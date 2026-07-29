@@ -57,7 +57,7 @@ export function SeekerJobBaseCard({
   className,
 }: SeekerJobBaseCardProps) {
   return (
-    <Card className={cn("group flex h-full flex-col p-5", className)}>
+    <Card className={cn("group flex h-full flex-col p-6", className)}>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div className="flex min-w-0 gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
@@ -133,7 +133,7 @@ export function SeekerJobBaseCard({
               className={cn(
                 "rounded-lg border px-3 py-1 text-sm font-medium",
                 skill.isPrimary
-                  ? "border-green-200 bg-green-50 text-brand-success"
+                  ? "border-brand-success/20 bg-brand-success/10 text-brand-success"
                   : "border-brand-border bg-brand-surface text-brand-foreground-muted",
               )}
             >

@@ -6,7 +6,7 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   prefix: "",
   theme: {
     container: {
@@ -51,23 +51,17 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        /** Hiretivo Design System palette */
         brand: {
-          /* Primary - purple */
           primary: '#7560ff',
           "primary-dark": '#5a47d9',
           "primary-foreground": '#ffffff',
-          /* Text colors */
           foreground: '#0a0a0a',
           "foreground-muted": '#6b7280',
           "foreground-secondary": '#9ca3af',
-          /* Surfaces */
           surface: '#f9fafb',
           "surface-hover": '#f3f4f6',
-          /* Borders */
           border: '#ededed',
           "border-light": '#f3f4f6',
-          /* Semantic */
           success: '#16a34a',
           danger: '#ef4444',
           warning: '#f59e0b',
@@ -87,6 +81,14 @@ const config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        card: "var(--radius-card)",
+        input: "var(--radius-input)",
+        pill: "var(--radius-pill)",
+      },
+      boxShadow: {
+        card: '0 2px 10px rgba(0,0,0,.03)',
+        'card-hover': '0 8px 24px rgba(0,0,0,.06)',
+        nav: '0 1px 0 0 rgba(0,0,0,.08)',
       },
       keyframes: {
         "accordion-down": {

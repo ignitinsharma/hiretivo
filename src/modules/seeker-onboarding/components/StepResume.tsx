@@ -8,16 +8,17 @@ import {
   FileText,
   X,
   CheckCircle,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useSeekerOnboardingStore } from "@/store/use-seeker-onboarding-store";
-import { saveStep3 } from "@/app/actions/onboarding/seeker";
+import { completeSeekerOnboarding } from "@/app/actions/onboarding/seeker";
 
 interface StepResumeProps {
-  onNext: () => void;
   onBack: () => void;
-  onSkip?: () => void | Promise<void>;
+  onComplete: () => void;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -26,17 +27,20 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
+type UploadStatus = "idle" | "uploading" | "uploaded" | "error";
+
+export function StepResume({ onBack, onComplete }: StepResumeProps) {
   const { step3, setResume } = useSeekerOnboardingStore();
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSkipping, setIsSkipping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleFile = useCallback(
     async (file: File) => {
       setError(null);
+      setUploadError(null);
 
       if (!ALLOWED_TYPES.includes(file.type)) {
         setError("Please upload a PDF or DOCX file");
@@ -48,21 +52,46 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
         return;
       }
 
-      setIsUploading(true);
+      setUploadStatus("uploading");
+      const objectUrl = URL.createObjectURL(file);
+
+      setResume({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        key: null,
+        url: objectUrl,
+        file,
+      });
 
       try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/resume/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setUploadError(body.error ?? "Upload failed. Please try again.");
+          setUploadStatus("error");
+          return;
+        }
+
+        const { data } = await res.json();
         setResume({
           name: file.name,
           size: file.size,
           type: file.type,
-          key: null,
-          url: URL.createObjectURL(file),
+          key: data.key,
+          url: objectUrl,
           file,
         });
+        setUploadStatus("uploaded");
       } catch {
-        setError("Failed to process file. Please try again.");
-      } finally {
-        setIsUploading(false);
+        setUploadError("Upload failed. Please try again.");
+        setUploadStatus("error");
       }
     },
     [setResume],
@@ -72,11 +101,8 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-
       const file = e.dataTransfer.files[0];
-      if (file) {
-        handleFile(file);
-      }
+      if (file) handleFile(file);
     },
     [handleFile],
   );
@@ -94,9 +120,7 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
-        handleFile(file);
-      }
+      if (file) handleFile(file);
     },
     [handleFile],
   );
@@ -106,35 +130,26 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
       URL.revokeObjectURL(step3.resume.url);
     }
     setResume(null);
+    setUploadStatus("idle");
+    setUploadError(null);
   }, [setResume, step3.resume]);
 
   const handleContinue = async () => {
     if (isSaving) return;
-    const formData = new FormData();
-    if (step3.resume?.file) {
-      formData.append("resumeFile", step3.resume.file);
-    }
-
     setIsSaving(true);
-    const result = await saveStep3(formData);
-    setIsSaving(false);
-
-    if (!result.success) {
-      setError("Failed to save resume. Please try again.");
-      return;
-    }
-
-    onNext();
-  };
-
-  const handleSkip = async () => {
-    if (!onSkip || isSkipping) return;
-    setIsSkipping(true);
     setError(null);
+
     try {
-      await onSkip();
-    } finally {
-      setIsSkipping(false);
+      const result = await completeSeekerOnboarding();
+      if (!result.success) {
+        setError(result.error);
+        setIsSaving(false);
+        return;
+      }
+      onComplete();
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setIsSaving(false);
     }
   };
 
@@ -143,6 +158,21 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  const renderStatusIcon = () => {
+    switch (uploadStatus) {
+      case "uploading":
+        return <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />;
+      case "uploaded":
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case "error":
+        return <AlertCircle className="w-5 h-5 text-destructive" />;
+      default:
+        return null;
+    }
+  };
+
+  const statusLabel = uploadStatus === "uploading" ? "Uploading..." : uploadStatus === "uploaded" ? "Uploaded" : "";
 
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -158,7 +188,12 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
 
         <div className="space-y-4">
           {step3.resume ? (
-            <div className="flex items-center gap-4 p-4 rounded-lg border-2 border-primary bg-primary/5">
+            <div className={cn(
+              "flex items-center gap-4 p-4 rounded-lg border-2",
+              uploadStatus === "error"
+                ? "border-destructive bg-destructive/5"
+                : "border-primary bg-primary/5",
+            )}>
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 <FileText className="w-6 h-6 text-primary" />
               </div>
@@ -168,17 +203,23 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {formatFileSize(step3.resume.size)}
+                  {statusLabel && <span className="ml-2">{statusLabel}</span>}
                 </p>
+                {uploadStatus === "error" && uploadError && (
+                  <p className="text-xs text-destructive mt-1">{uploadError}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-black" />
-                <button
-                  type="button"
-                  onClick={handleRemove}
-                  className="p-2 rounded-full hover:bg-destructive/10 text-destructive"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                {renderStatusIcon()}
+                {uploadStatus !== "uploading" && (
+                  <button
+                    type="button"
+                    onClick={handleRemove}
+                    className="p-2 rounded-full hover:bg-destructive/10 text-destructive"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -191,7 +232,6 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
                 isDragging
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/50",
-                isUploading && "opacity-50 cursor-wait",
               )}
             >
               <input
@@ -199,7 +239,6 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
                 accept=".pdf,.docx"
                 onChange={handleInputChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                disabled={isUploading}
               />
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <Upload className="w-8 h-8 text-muted-foreground" />
@@ -223,9 +262,9 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
             type="button"
             onClick={handleContinue}
             size="lg"
-            variant={"primary"}
+            variant="primary"
             className="w-full"
-            disabled={isUploading}
+            disabled={uploadStatus === "uploading"}
             loading={isSaving}
             loadingText="Saving..."
           >
@@ -242,18 +281,7 @@ export function StepResume({ onNext, onBack, onSkip }: StepResumeProps) {
               <ArrowLeft className="w-4 h-4" />
               Back
             </Button>
-            {onSkip && !step3.resume && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleSkip}
-                className="w-auto"
-                loading={isSkipping}
-                loadingText="Skipping..."
-              >
-                Skip for now
-              </Button>
-            )}
+            {!step3.resume && <div />}
           </div>
         </div>
       </div>

@@ -121,7 +121,7 @@ async function handleSubscriptionActive(sub: Subscription): Promise<void> {
     prisma.user.update({
       where: { id: userId },
       data: {
-        plan: status === "CANCELED" ? PlanTier.FREE : plan,
+        plan: status === "CANCELED" ? PlanTier.FREE : (plan as "FREE" | "STARTER" | "GROWTH" | "SCALE"),
         billingCustomerId: sub.customer.customer_id,
       },
     }),
@@ -165,7 +165,7 @@ async function handleSubscriptionRenewed(sub: Subscription): Promise<void> {
     }),
     prisma.user.update({
       where: { id: userId },
-      data: { plan: status === "CANCELED" ? PlanTier.FREE : plan },
+      data: { plan: status === "CANCELED" ? PlanTier.FREE : (plan as "FREE" | "STARTER" | "GROWTH" | "SCALE") },
     }),
   ]);
 }

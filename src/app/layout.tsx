@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-page-custom-font */
-import { ApplyJobModal } from "@/components/shared/ApplyJobModal";
 import { EmailVerificationModal } from "@/components/shared/EmailVerificationModal";
 import { GoogleAnalytics } from "@/components/shared/GoogleAnalytics";
 import { Toaster } from "@/components/ui/sonner";
@@ -39,7 +38,6 @@ export default function RootLayout({
         <ReactQueryProvider>
           <AuthSessionProvider>
             {children}
-            <ApplyJobModal />
             <EmailVerificationModal />
             <Toaster />
             {analyticsEnabled && measurementId ? (

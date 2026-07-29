@@ -26,9 +26,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (session.user.role !== UserRole.RECRUITER) {
+  if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json(
-      { error: "This plan is for recruiters only" },
+      { error: "Seeker-only billing access" },
       { status: 403 },
     );
   }

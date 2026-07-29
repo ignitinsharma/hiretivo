@@ -2,8 +2,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { SkillLevel, UserRole } from "@/constants/enums";
 import { invalidateSeekerCache } from "@/lib/match";
-import { resolveLogoUrl } from "@/lib/r2";
-import { getProfileStrengthSummary } from "@/lib/seeker-dashboard";
 import { SeekerSettingsSchema } from "@/lib/validations/seeker.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { createRateLimiter, dataFetchRateLimiter } from "@/lib/rate-limit";
@@ -18,55 +16,10 @@ import {
 
 const settingsRateLimiter = createRateLimiter("seeker-settings", 20, "1 m");
 
-const SITUATION_VALUE_MAP: Record<string, string> = {
-  ACTIVELY_LOOKING: "ACTIVELY_LOOKING",
-  "ACTIVELY LOOKING": "ACTIVELY_LOOKING",
-  "OPEN_TO_OFFERS": "OPEN_TO_OFFERS",
-  "OPEN TO OFFERS": "OPEN_TO_OFFERS",
-  EXPLORING_OPTIONS: "EXPLORING_OPTIONS",
-  "EXPLORING OPTIONS": "EXPLORING_OPTIONS",
-  STUDENT_FRESH_GRAD: "STUDENT_FRESH_GRAD",
-  "STUDENT FRESH GRAD": "STUDENT_FRESH_GRAD",
-  "STUDENT / FRESH GRAD": "STUDENT_FRESH_GRAD",
-  "STUDENT/FRESH GRAD": "STUDENT_FRESH_GRAD",
-};
-
-const AVAILABILITY_VALUE_MAP: Record<string, string> = {
-  IMMEDIATELY: "IMMEDIATELY",
-  TWO_WEEKS: "TWO_WEEKS",
-  "TWO WEEKS": "TWO_WEEKS",
-  "2 WEEKS": "TWO_WEEKS",
-  "2 WEEKS NOTICE": "TWO_WEEKS",
-  ONE_MONTH_PLUS: "ONE_MONTH_PLUS",
-  "ONE MONTH PLUS": "ONE_MONTH_PLUS",
-  "1 MONTH": "ONE_MONTH_PLUS",
-  "1 MONTH+": "ONE_MONTH_PLUS",
-  "1 MONTH PLUS": "ONE_MONTH_PLUS",
-};
-
 interface SkillCandidate {
   id: string;
   name: string;
   slug: string;
-}
-
-/*
- * normalizeProfileSelectValue
- * Converts legacy display labels into canonical enum-like strings.
- * Returns null for blank values and preserves unknown non-blank values.
- */
-function normalizeProfileSelectValue(
-  value: string | null | undefined,
-  valueMap: Record<string, string>,
-): string | null | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return null;
-
-  const trimmedValue = value.trim();
-  if (!trimmedValue) return null;
-
-  const lookupKey = trimmedValue.replace(/[_-]+/g, " ").toUpperCase();
-  return valueMap[trimmedValue.toUpperCase()] ?? valueMap[lookupKey] ?? trimmedValue;
 }
 
 /*
@@ -256,8 +209,7 @@ async function updateSkillNameIfSafe(
 
 /*
  * GET /api/seeker/settings
- * Returns the authenticated seeker's profile, skills, work, and education settings.
- * Responds with settings data or auth/not-found/rate-limit errors.
+ * Returns the authenticated seeker's profile, skills, and account settings.
  */
 export async function GET() {
   const session = await auth();
@@ -278,31 +230,17 @@ export async function GET() {
     select: {
       name: true,
       email: true,
-      image: true,
       seekerProfile: {
         select: {
+          phone: true,
           headline: true,
           bio: true,
           location: true,
-          situation: true,
-          primaryRole: true,
-          workPreference: true,
-          salaryMin: true,
-          salaryMax: true,
-          currency: true,
-          availability: true,
           resumeKey: true,
           websiteUrl: true,
           linkedinUrl: true,
           githubUrl: true,
           twitterUrl: true,
-          yearsExperience: true,
-          workExperiences: {
-            orderBy: { createdAt: 'asc' as const },
-          },
-          educations: {
-            orderBy: { createdAt: 'asc' as const },
-          },
           skills: {
             include: {
               skill: {
@@ -319,38 +257,26 @@ export async function GET() {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const { seekerProfile, image, ...userFields } = user;
-  const { skills, workExperiences, educations, ...profileFields } = seekerProfile;
+  const { seekerProfile, ...userFields } = user;
+  const { skills, ...profileFields } = seekerProfile;
 
   const { city, state: derivedState } = parseLegacyLocation(profileFields.location);
 
   return NextResponse.json({
     data: {
       ...userFields,
-      image: resolveLogoUrl(image),
       ...profileFields,
-      situation: normalizeProfileSelectValue(
-        profileFields.situation,
-        SITUATION_VALUE_MAP,
-      ),
-      availability: normalizeProfileSelectValue(
-        profileFields.availability,
-        AVAILABILITY_VALUE_MAP,
-      ),
       city,
       state: derivedState,
       skills: skills.map((s) => s.skill),
-      workExperiences,
-      educations,
-      profileStrength: getProfileStrengthSummary(profileFields),
     },
   });
 }
 
 /*
  * PATCH /api/seeker/settings
- * Updates the authenticated seeker's account, profile, skills, work, and education settings.
- * Returns the refreshed settings payload or validation/auth/rate-limit errors.
+ * Updates the authenticated seeker's account, profile, and skills settings.
+ * Returns success or validation/auth/rate-limit errors.
  */
 export async function PATCH(req: NextRequest) {
   const session = await auth();
@@ -375,7 +301,7 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const { name, skillIds, skillNames, workExperiences: _we, educations: _edu, ...profileData } = parsed.data;
+  const { name, skillIds, skillNames, ...profileData } = parsed.data;
 
   const seekerProfile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
@@ -404,6 +330,9 @@ export async function PATCH(req: NextRequest) {
 
     const profileUpdateData: Prisma.SeekerProfileUpdateInput = {};
 
+    if (profileData.phone !== undefined) {
+      profileUpdateData.phone = profileData.phone || null;
+    }
     if (profileData.headline !== undefined) {
       profileUpdateData.headline = profileData.headline || null;
     }
@@ -425,30 +354,6 @@ export async function PATCH(req: NextRequest) {
         profileUpdateData.location = null;
       }
     }
-    if (profileData.situation !== undefined) {
-      profileUpdateData.situation = normalizeProfileSelectValue(
-        profileData.situation,
-        SITUATION_VALUE_MAP,
-      );
-    }
-    if (profileData.primaryRole !== undefined) {
-      profileUpdateData.primaryRole = profileData.primaryRole || null;
-    }
-    if (profileData.salaryMin !== undefined) {
-      profileUpdateData.salaryMin = profileData.salaryMin;
-    }
-    if (profileData.salaryMax !== undefined) {
-      profileUpdateData.salaryMax = profileData.salaryMax;
-    }
-    if (profileData.currency !== undefined) {
-      profileUpdateData.currency = profileData.currency || null;
-    }
-    if (profileData.availability !== undefined) {
-      profileUpdateData.availability = normalizeProfileSelectValue(
-        profileData.availability,
-        AVAILABILITY_VALUE_MAP,
-      );
-    }
     if (profileData.websiteUrl !== undefined) {
       profileUpdateData.websiteUrl = profileData.websiteUrl || null;
     }
@@ -460,9 +365,6 @@ export async function PATCH(req: NextRequest) {
     }
     if (profileData.twitterUrl !== undefined) {
       profileUpdateData.twitterUrl = profileData.twitterUrl || null;
-    }
-    if (profileData.yearsExperience !== undefined) {
-      profileUpdateData.yearsExperience = profileData.yearsExperience;
     }
 
     if (Object.keys(profileUpdateData).length > 0) {
@@ -485,48 +387,6 @@ export async function PATCH(req: NextRequest) {
               seekerProfileId: seekerProfile.id,
               skillId,
               level: SkillLevel.INTERMEDIATE,
-            },
-          }),
-        ),
-      );
-    }
-
-    if (parsed.data.workExperiences !== undefined) {
-      transactionOperations.push(
-        prisma.workExperience.deleteMany({
-          where: { seekerProfileId: seekerProfile.id },
-        }),
-        ...parsed.data.workExperiences.map((exp) =>
-          prisma.workExperience.create({
-            data: {
-              seekerProfileId: seekerProfile.id,
-              company: exp.company,
-              title: exp.title,
-              startDate: exp.startDate,
-              endDate: exp.endDate ?? null,
-              isCurrent: exp.isCurrent,
-              description: exp.description ?? null,
-              positionType: exp.positionType ?? null,
-              skills: exp.skills,
-            },
-          }),
-        ),
-      );
-    }
-
-    if (parsed.data.educations !== undefined) {
-      transactionOperations.push(
-        prisma.education.deleteMany({
-          where: { seekerProfileId: seekerProfile.id },
-        }),
-        ...parsed.data.educations.map((edu) =>
-          prisma.education.create({
-            data: {
-              seekerProfileId: seekerProfile.id,
-              institution: edu.institution,
-              graduationDate: edu.graduationDate ?? null,
-              degree: edu.degree ?? null,
-              major: edu.major ?? null,
             },
           }),
         ),

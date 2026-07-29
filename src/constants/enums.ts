@@ -62,6 +62,28 @@ export const APPLICATION_STATUS_VALUES = [
   ApplicationStatus.REJECTED,
 ] as const;
 
+export enum AutomationStatus {
+  GENERATING = "GENERATING",
+  READY = "READY",
+  APPLYING = "APPLYING",
+  SUBMITTED = "SUBMITTED",
+  NEEDS_YOU = "NEEDS_YOU",
+  FAILED = "FAILED",
+  COMPLETED = "COMPLETED",
+  SKIPPED = "SKIPPED",
+}
+
+export const AUTOMATION_STATUS_VALUES = [
+  AutomationStatus.GENERATING,
+  AutomationStatus.READY,
+  AutomationStatus.APPLYING,
+  AutomationStatus.SUBMITTED,
+  AutomationStatus.NEEDS_YOU,
+  AutomationStatus.FAILED,
+  AutomationStatus.COMPLETED,
+  AutomationStatus.SKIPPED,
+] as const;
+
 export enum JobType {
   FULL_TIME = "FULL_TIME",
   PART_TIME = "PART_TIME",
@@ -147,6 +169,8 @@ export enum PlanTier {
   STARTER = "STARTER",
   GROWTH = "GROWTH",
   SCALE = "SCALE",
+  PRO = "PRO",
+  UNLIMITED = "UNLIMITED",
 }
 
 export const PLAN_TIER_VALUES = [
@@ -154,6 +178,8 @@ export const PLAN_TIER_VALUES = [
   PlanTier.STARTER,
   PlanTier.GROWTH,
   PlanTier.SCALE,
+  PlanTier.PRO,
+  PlanTier.UNLIMITED,
 ] as const;
 
 export enum InterviewStatus {
@@ -161,6 +187,14 @@ export enum InterviewStatus {
   COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
   NO_SHOW = "NO_SHOW",
+}
+
+export enum PipelineStage {
+  NOT_APPLIED = "NOT_APPLIED",
+  APPLIED = "APPLIED",
+  INTERVIEWING = "INTERVIEWING",
+  OFFER = "OFFER",
+  REJECTED = "REJECTED",
 }
 
 export const INTERVIEW_STATUS_VALUES = [
@@ -210,6 +244,8 @@ export enum PricingTierId {
   STARTER = "starter",
   GROWTH = "growth",
   SCALE = "scale",
+  PRO = "pro",
+  UNLIMITED = "unlimited",
 }
 
 export enum AiMessageRole {

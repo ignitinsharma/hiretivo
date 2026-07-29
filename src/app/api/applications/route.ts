@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
 
   const { jobId, coverLetter } = parsed.data;
   const resumeGateMessage =
-    "Upload your resume in Settings before applying. Go to /seeker/settings to continue.";
+    "Upload your resume in Settings before applying. Go to /settings to continue.";
 
   const job = await prisma.job.findFirst({
     where: { id: jobId, status: JobStatus.OPEN },
@@ -182,6 +182,9 @@ export async function GET() {
       id: true,
       jobId: true,
       status: true,
+      automationStatus: true,
+      failureReason: true,
+      pipelineStage: true,
       createdAt: true,
       job: {
         select: {
@@ -197,6 +200,7 @@ export async function GET() {
           isAdminPosted: true,
           companyName: true,
           companyLogoUrl: true,
+          location: true,
           companyIndustry: true,
           companySize: true,
           companyFunding: true,
@@ -234,47 +238,56 @@ export async function GET() {
   });
   const seekerSkillIds = seekerProfile?.skills.map((s) => s.skillId) ?? [];
 
+  const validApplications = applications.filter((a) => a.job);
+
   return NextResponse.json(
-    applications.map((application) => ({
+    validApplications.map((application) => {
+      const job = application.job!;
+      return ({
       id: application.id,
       jobId: application.jobId,
-      jobTitle: application.job.title,
-      jobStatus: application.job.status,
-      companyId: application.job.isAdminPosted
+      jobTitle: job.title,
+      jobStatus: job.status,
+      companyId: job.isAdminPosted
         ? null
-        : (application.job.recruiter.recruiterProfile?.id ?? null),
-      companyName: application.job.isAdminPosted
-        ? (application.job.companyName ?? "Unknown Company")
-        : (application.job.recruiter.recruiterProfile?.companyName ?? "Unknown Company"),
-      companyLogoUrl: application.job.isAdminPosted
-        ? (application.job.companyLogoUrl ?? null)
-        : resolveLogoUrl(application.job.recruiter.recruiterProfile?.logo),
+        : (job.recruiter.recruiterProfile?.id ?? null),
+      companyName: job.isAdminPosted
+        ? (job.companyName ?? "Unknown Company")
+        : (job.recruiter.recruiterProfile?.companyName ?? job.companyName ?? "Unknown Company"),
+      companyLogoUrl: job.isAdminPosted
+        ? (job.companyLogoUrl ?? null)
+        : resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+      location: job.location,
       salaryRange: formatSalaryRange(
-        application.job.salaryMin,
-        application.job.salaryMax,
-        application.job.currency,
+        job.salaryMin,
+        job.salaryMax,
+        job.currency,
       ),
-      jobType: application.job.jobType,
-      workType: application.job.workType,
-      experienceLevel: application.job.experienceLevel,
-      companyIndustry: application.job.isAdminPosted
-        ? (application.job.companyIndustry ?? null)
-        : (application.job.recruiter.recruiterProfile?.industry ?? null),
-      companySize: application.job.isAdminPosted
-        ? (application.job.companySize ?? null)
-        : (application.job.recruiter.recruiterProfile?.companySize ?? null),
-      companyFundingType: application.job.isAdminPosted
-        ? (application.job.companyFunding ?? null)
-        : (application.job.recruiter.recruiterProfile?.fundingType ?? null),
-      skills: application.job.skills.map((jobSkill) => jobSkill.skill.name),
-      matchedSkillNames: application.job.skills
+      jobType: job.jobType,
+      workType: job.workType,
+      experienceLevel: job.experienceLevel,
+      companyIndustry: job.isAdminPosted
+        ? (job.companyIndustry ?? null)
+        : (job.recruiter.recruiterProfile?.industry ?? null),
+      companySize: job.isAdminPosted
+        ? (job.companySize ?? null)
+        : (job.recruiter.recruiterProfile?.companySize ?? null),
+      companyFundingType: job.isAdminPosted
+        ? (job.companyFunding ?? null)
+        : (job.recruiter.recruiterProfile?.fundingType ?? null),
+      automationStatus: application.automationStatus,
+      failureReason: application.failureReason,
+      pipelineStage: application.pipelineStage,
+      skills: job.skills.map((jobSkill) => jobSkill.skill.name),
+      matchedSkillNames: job.skills
         .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))
         .map((jobSkill) => jobSkill.skill.name),
-      missingSkills: getMissingSkillNames(seekerSkillIds, application.job.skills),
-      description: application.job.description ? stripHtml(application.job.description) : null,
-      applicantCount: application.job._count.applications,
+      missingSkills: getMissingSkillNames(seekerSkillIds, job.skills),
+      description: job.description ? stripHtml(job.description) : null,
+      applicantCount: job._count.applications,
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
-    })),
+    });
+  }),
   );
 }
