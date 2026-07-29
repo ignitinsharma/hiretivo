@@ -1,11 +1,5 @@
 import { Check, ChevronRight, Loader } from "lucide-react";
 
-/*
- * AIPipelineDemo
- * CSS-only sequential animation showing 3 stages of AI resume processing:
- * Parsing → Extracting → Tailoring. Each stage transitions from spinner
- * to checkmark on a 9s cascade with -3s offset per stage.
- */
 export function AIPipelineDemo() {
   return (
     <div
