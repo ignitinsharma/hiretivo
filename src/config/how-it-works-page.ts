@@ -11,20 +11,29 @@ export const HIW_HERO = {
 } as const;
 
 export const HIW_JOURNEY = [
-  'Add',
-  'Analyze',
-  'Resume',
+  'Add Job',
+  'Review & Tailor',
+  'Generate',
   'Style',
-  'Apply',
+  'Mark Applied',
   'Track',
 ] as const;
 
+export interface HiwDualImage {
+  src: string;
+  alt: string;
+  label: string;
+  width: number;
+  height: number;
+}
+
 export interface HiwVisual {
-  kind: 'browser' | 'plain' | 'before-after';
+  kind: 'browser' | 'plain' | 'before-after' | 'dual';
   src?: string;
   alt?: string;
   width?: number;
   height?: number;
+  images?: readonly HiwDualImage[];
 }
 
 export interface HiwStep {
@@ -39,44 +48,62 @@ export const HIW_STEPS: readonly HiwStep[] = [
   {
     number: '01',
     heading: 'Add any job in seconds',
-    body: 'Browse the curated feed or paste any job URL. Hiretivo parses the listing — title, company, skills, salary — and adds it to your pipeline.',
+    body: 'Paste a job URL or drop in the full description. Hiretivo parses the listing — title, company, skills, salary — and gets it ready for tailoring.',
     bullets: [
-      'Curated feed, refreshed daily',
-      'Paste any link — we parse the rest',
+      'Paste any job URL — we fetch the details',
+      'Or paste the description — same result',
     ],
     visual: {
-      kind: 'browser',
-      src: '/images/dashboard.png',
-      alt: 'Hiretivo dashboard with recommended jobs',
-      width: 1694,
-      height: 929,
+      kind: 'dual',
+      images: [
+        {
+          src: '/images/fetchmodel.png',
+          alt: 'Add Custom Job modal with Paste URL tab selected',
+          label: 'Paste any URL',
+          width: 1124,
+          height: 694,
+        },
+        {
+          src: '/images/fetchmodel1.png',
+          alt: 'Add Custom Job modal with Paste Description tab selected',
+          label: 'Paste the description',
+          width: 1068,
+          height: 968,
+        },
+      ],
     },
   },
   {
     number: '02',
-    heading: 'AI reads the job description',
-    body: 'Every listing is broken down into skills, keywords, and requirements — matched against your profile before you write a single word.',
+    heading: 'Review the extracted details',
+    body: 'Hiretivo pulls the role, company, and every skill out of the job description — you confirm it looks right before the AI writes a single word.',
     bullets: [
-      'Skill extraction from every job description',
-      'Know your match before you apply',
+      'Skills and keywords extracted automatically',
+      'Confirm or edit before generating',
     ],
     visual: {
       kind: 'plain',
-      src: '/images/step-skills.png',
-      alt: 'Job card showing extracted skills like React, Node.js, PostgreSQL, AWS',
-      width: 320,
-      height: 180,
+      src: '/images/fetchpreview.png',
+      alt: 'Job preview showing extracted skills like TypeScript, React, and GraphQL with the full description',
+      width: 1086,
+      height: 1118,
     },
   },
   {
     number: '03',
-    heading: 'Your resume, rewritten for the role',
-    body: 'AI Rewrite strengthens verbs, adds quantified metrics, and mirrors the language of the job description. Every section stays editable — you approve every word.',
+    heading: 'Generate a tailored resume',
+    body: 'AI Rewrite strengthens verbs, adds quantified metrics, and mirrors the language of the job description — with the full job context visible beside your resume while it writes.',
     bullets: [
-      'Real before/after in one click',
-      'You approve every word',
+      'Job description always in view',
+      'Real-time generation, no waiting rooms',
     ],
-    visual: { kind: 'before-after' },
+    visual: {
+      kind: 'plain',
+      src: '/images/genrating_resume.png',
+      alt: 'Resume generating with the job description panel on the left and a live preview on the right',
+      width: 2304,
+      height: 1396,
+    },
   },
   {
     number: '04',
@@ -96,18 +123,18 @@ export const HIW_STEPS: readonly HiwStep[] = [
   },
   {
     number: '05',
-    heading: 'Apply, and it’s logged',
-    body: 'Apply on the company’s site, then mark it applied — the card moves itself through your pipeline. No spreadsheets, no forgotten follow-ups.',
+    heading: 'Mark it applied — it’s logged',
+    body: 'Apply on the company’s site, then tap "I have applied" — the card moves itself through your pipeline. No spreadsheets, no forgotten follow-ups.',
     bullets: [
       'One click to log an application',
       'Every application accounted for',
     ],
     visual: {
       kind: 'plain',
-      src: '/images/step-apply.png',
-      alt: 'Job card with Pass and Apply buttons, salary, and job type',
-      width: 320,
-      height: 140,
+      src: '/images/i_have_applied.png',
+      alt: 'Job card with the I have applied button and a rejection feedback option',
+      width: 812,
+      height: 272,
     },
   },
   {

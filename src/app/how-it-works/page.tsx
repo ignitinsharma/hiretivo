@@ -35,6 +35,29 @@ export const metadata = generatePageMetadata({
  * Renders the framed screenshot / crop / before-after collage for one step.
  */
 function StepVisual({ visual }: { visual: HiwVisual }) {
+  if (visual.kind === "dual") {
+    return (
+      <div className="mx-auto grid w-full max-w-2xl grid-cols-1 items-start gap-6 sm:grid-cols-2">
+        {visual.images!.map((img) => (
+          <figure key={img.src} className="min-w-0">
+            <span className="mb-3 inline-flex items-center gap-1.5 rounded-pill border border-brand-border bg-white px-3 py-1 text-xs font-semibold text-brand-foreground-muted">
+              {img.label}
+            </span>
+            <div className="overflow-hidden rounded-xl border border-brand-border bg-white">
+              <Image
+                src={img.src}
+                alt={img.alt}
+                width={img.width}
+                height={img.height}
+                className="h-auto w-full"
+              />
+            </div>
+          </figure>
+        ))}
+      </div>
+    );
+  }
+
   if (visual.kind === "before-after") {
     return (
       <div className="relative mx-auto w-full max-w-md">
