@@ -147,8 +147,11 @@ function StepSection({ step, index }: { step: HiwStep; index: number }) {
           </div>
 
           <div className="min-w-0 lg:col-span-2">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[1.5px] text-brand-primary">
+            <p className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[1.5px] text-brand-primary">
               Step {step.number}
+              {(index === 1 || index === 2) && (
+                <Sparkles className="h-3 w-3 animate-pulse" aria-hidden="true" />
+              )}
             </p>
             <h2 className="break-words text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-4xl">
               {step.heading}
