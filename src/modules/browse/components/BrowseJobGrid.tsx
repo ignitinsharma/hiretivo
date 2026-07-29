@@ -12,6 +12,7 @@ import { JobDrawer } from "@/components/shared/JobDrawer";
 import { useFeed, type FeedFilters } from "@/hooks/use-feed";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUIStore } from "@/store/use-ui-store";
+import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { applicationService } from "@/services/application.service";
 
 export function BrowseJobGrid() {
@@ -19,8 +20,9 @@ export function BrowseJobGrid() {
   const [search, setSearch] = useState("");
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
-  const { openAddCustomJobModal } = useUIStore();
+  const { openAddCustomJobModal, openPaidFeatureModal } = useUIStore();
   const queryClient = useQueryClient();
+  const { data: quota } = useGenerationQuota();
 
   const activeFilters = useMemo(() => {
     const f: FeedFilters = { ...filters };
@@ -47,7 +49,7 @@ export function BrowseJobGrid() {
 
     try {
       const app = await applicationService.applyToJob({ jobId });
-      applicationService.generateResume(app.id).catch(() => {});
+      applicationService.generateResume(app.id).catch((e) => console.error("Generate failed:", e));
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
       await queryClient.invalidateQueries({ queryKey: ["jobs"] });
       window.location.href = "/dashboard/tracker";
@@ -93,7 +95,17 @@ export function BrowseJobGrid() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <button
-            onClick={openAddCustomJobModal}
+            onClick={() => {
+              if (quota && !quota.allowed) {
+                openPaidFeatureModal({
+                  feature: "resume_generation",
+                  title: "No generations left",
+                  description: `You&apos;ve used all ${quota.limit} generations this month. Upgrade to generate more tailored resumes.`,
+                });
+                return;
+              }
+              openAddCustomJobModal();
+            }}
             className="rounded-xl border border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center gap-2 min-h-[320px] hover:border-brand-primary hover:bg-brand-primary/5 transition-colors group"
           >
             <div className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center group-hover:border-brand-primary transition-colors">

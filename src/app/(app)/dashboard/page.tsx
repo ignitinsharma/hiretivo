@@ -10,13 +10,15 @@ import { FreePlanBanner } from "@/modules/dashboard/components/FreePlanBanner";
 import { ResumeParseBanner } from "@/modules/dashboard/components/ResumeParseBanner";
 import { ApplicationsTable } from "@/modules/dashboard/components/ApplicationsTable";
 import { useUIStore } from "@/store/use-ui-store";
+import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { applicationService } from "@/services/application.service";
 
 export default function DashboardPage() {
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
-  const { openAddCustomJobModal } = useUIStore();
+  const { openAddCustomJobModal, openPaidFeatureModal } = useUIStore();
   const queryClient = useQueryClient();
+  const { data: quota } = useGenerationQuota();
 
   const handleApply = useCallback(
     async (jobId: string) => {
@@ -25,7 +27,7 @@ export default function DashboardPage() {
 
       try {
         const app = await applicationService.applyToJob({ jobId });
-        applicationService.generateResume(app.id).catch(() => {});
+        applicationService.generateResume(app.id).catch((e) => console.error("Generate failed:", e));
         await queryClient.invalidateQueries({ queryKey: ["applications"] });
         await queryClient.invalidateQueries({ queryKey: ["jobs"] });
         window.location.href = "/dashboard/tracker";
@@ -57,7 +59,17 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <button
-            onClick={openAddCustomJobModal}
+            onClick={() => {
+              if (quota && !quota.allowed) {
+                openPaidFeatureModal({
+                  feature: "resume_generation",
+                  title: "No generations left",
+                  description: `You&apos;ve used all ${quota.limit} generations this month. Upgrade to generate more tailored resumes.`,
+                });
+                return;
+              }
+              openAddCustomJobModal();
+            }}
             className="rounded-xl border border-dashed border-brand-border bg-brand-surface/50 flex flex-col items-center justify-center gap-4 min-h-80 hover:border-brand-primary hover:bg-brand-primary/[0.03] transition-colors group"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary group-hover:bg-brand-primary/15 transition-colors">

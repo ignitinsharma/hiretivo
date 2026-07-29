@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, Lock, Sparkles, Users, Calendar, Brain, Clock } from 'lucide-react';
+import { ArrowUpRight, Lock, Sparkles, Users, Calendar, Brain, Clock, FileText, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,16 @@ import {
 } from '@/components/ui/dialog';
 import { useUIStore } from '@/store/use-ui-store';
 
-const PRO_FEATURES = [
+const FEATURE_SETS: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string }[]> = {
+  resume_generation: [
+    { icon: Sparkles, label: '20 Resume Generations/mo' },
+    { icon: FileText, label: 'AI Cover Letters' },
+    { icon: RefreshCw, label: 'Unlimited Regenerations' },
+    { icon: Clock, label: 'Priority Generation' },
+  ],
+};
+
+const DEFAULT_FEATURES = [
   { icon: Brain, label: 'AI Candidate Summaries' },
   { icon: Calendar, label: 'Schedule Interviews' },
   { icon: Users, label: 'Talent Pool Access' },
@@ -24,7 +33,9 @@ const PRO_FEATURES = [
 export function PaidFeatureModal() {
   const router = useRouter();
   const { paidFeatureModal, closePaidFeatureModal } = useUIStore();
-  const { isOpen, title, description } = paidFeatureModal;
+  const { isOpen, title, description, feature } = paidFeatureModal;
+
+  const features = feature ? (FEATURE_SETS[feature] ?? DEFAULT_FEATURES) : DEFAULT_FEATURES;
 
   const onUpgrade = () => {
     closePaidFeatureModal();
@@ -52,12 +63,12 @@ export function PaidFeatureModal() {
         </DialogHeader>
 
         <div className="my-4 space-y-3">
-          {PRO_FEATURES.map((feature) => (
-            <div key={feature.label} className="flex items-center gap-3">
+          {features.map((item) => (
+            <div key={item.label} className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-surface">
-                <feature.icon className="h-4 w-4 text-brand-primary" />
+                <item.icon className="h-4 w-4 text-brand-primary" />
               </div>
-              <span className="text-sm font-medium text-foreground">{feature.label}</span>
+              <span className="text-sm font-medium text-foreground">{item.label}</span>
             </div>
           ))}
         </div>

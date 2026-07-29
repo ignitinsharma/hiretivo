@@ -32,6 +32,8 @@ const ResumePdfPreview = dynamic(
   { ssr: false },
 );
 import { QuotaBadge } from "@/modules/applications/components/QuotaBadge";
+import { useGenerationQuota } from "@/hooks/use-generation-quota";
+import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
 import type {
   ResumeDocument,
@@ -144,6 +146,8 @@ export function ApplicationPageClient() {
   const [overflow, setOverflow] = useState(false);
   const [styleSeeded, setStyleSeeded] = useState(false);
   const [panelView, setPanelView] = useState<"content" | "style">("content");
+  const { data: quota } = useGenerationQuota();
+  const { openPaidFeatureModal } = useUIStore();
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   const { data, isLoading, error } = useQuery({
@@ -195,6 +199,15 @@ export function ApplicationPageClient() {
   };
 
   const handleRegenerate = async () => {
+    if (quota && !quota.allowed) {
+      openPaidFeatureModal({
+        feature: "resume_generation",
+        title: "No generations left",
+        description: `You&apos;ve used all ${quota.limit} generations this month. Upgrade to generate more tailored resumes.`,
+      });
+      return;
+    }
+
     setPrevMatchMeta(data?.matchMeta ?? null);
     setRegenerating(true);
     try {
@@ -211,7 +224,15 @@ export function ApplicationPageClient() {
       );
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error ?? "Regeneration failed");
+        if (json.error === "quota_exceeded") {
+          openPaidFeatureModal({
+            feature: "resume_generation",
+            title: "No generations left",
+            description: `You&apos;ve used all ${json.limit ?? quota?.limit} generations this month. Upgrade to generate more tailored resumes.`,
+          });
+        } else {
+          toast.error(json.error ?? "Regeneration failed");
+        }
         setPrevMatchMeta(null);
         return;
       }
@@ -602,7 +623,7 @@ export function ApplicationPageClient() {
                 ) : (
                   <Send className="mr-1.5 h-4 w-4" />
                 )}
-                I've applied
+                I&apos;ve applied
               </Button>
             )}
           </Card>

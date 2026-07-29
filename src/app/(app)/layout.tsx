@@ -4,6 +4,7 @@ import { AuthRedirectToast } from "@/components/auth/AuthRedirectToast";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { AddCustomJobModal } from "@/components/shared/AddCustomJobModal";
+import { PaidFeatureModal } from "@/components/shared/PaidFeatureModal";
 import { UserRole } from "@/constants/enums";
 import { fetchSeekerSettingsForPrefetch } from "@/lib/server/seeker-data.server";
 import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
@@ -42,6 +43,7 @@ export default async function AppLayout({
             {children}
           </main>
           <AddCustomJobModal />
+          <PaidFeatureModal />
         </div>
       </AuthGuard>
     </HydrationBoundary>

@@ -35,6 +35,7 @@ export async function POST(
     where: { id, seekerId: session.user.id },
     select: {
       id: true,
+      automationStatus: true,
       job: {
         select: {
           title: true,
@@ -130,6 +131,9 @@ export async function POST(
     );
   }
 
+  // Save previous status so we can revert on error
+  const prevStatus = application.automationStatus ?? AutomationStatus.READY;
+
   // Set status to GENERATING
   await prisma.application.update({
     where: { id },
@@ -171,12 +175,20 @@ export async function POST(
       });
 
     case "quota_exceeded":
+      await prisma.application.update({
+        where: { id },
+        data: { automationStatus: prevStatus },
+      });
       return NextResponse.json(
         { error: "quota_exceeded", used: result.used, limit: result.limit, resetsAt: result.resetsAt },
         { status: 402 },
       );
 
     case "rate_limited":
+      await prisma.application.update({
+        where: { id },
+        data: { automationStatus: prevStatus },
+      });
       return NextResponse.json(
         { error: "rate_limited", retryAfterSeconds: result.retryAfterSeconds },
         { status: 429 },

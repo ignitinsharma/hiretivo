@@ -158,7 +158,7 @@ export function AddCustomJobModal() {
       }
 
       handleClose();
-      fetch(`/api/applications/${data.applicationId}/generate`, { method: "POST" }).catch(() => {});
+      fetch(`/api/applications/${data.applicationId}/generate`, { method: "POST" }).catch((e) => console.error("Generate failed:", e));
       router.push(`/applications/${data.applicationId}`);
     } catch {
       setError("Network error. Please try again.");
