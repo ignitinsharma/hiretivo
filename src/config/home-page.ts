@@ -42,7 +42,7 @@ export const JOB_DASHBOARD_SECTION = {
     'Kanban tracker — applied, interview, offer, archived',
   ],
   linkText: 'Browse open jobs',
-  linkHref: '/dashboard/browse',
+  linkHref: '/dashboard',
 } as const;
 
 /**
