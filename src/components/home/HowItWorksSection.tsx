@@ -7,7 +7,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Search, FileText, LayoutDashboard } from "lucide-react";
+import { ArrowRight, Search, FileText, LayoutDashboard, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SEEKER_STEPS } from "@/config/home-page";
@@ -90,11 +90,17 @@ function StepNote({ step, index }: { step: Step; index: number }) {
   return (
     <article
       className={cn(
-        "group relative min-w-0 overflow-hidden rounded-xl border p-5 transition-all duration-500 ease-out [perspective:1000px] [transform-style:preserve-3d] hover:-translate-y-1 hover:border-brand-primary/40 hover:[transform:rotateX(4deg)_rotateY(-5deg)_translateY(-4px)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none lg:absolute lg:z-20 lg:p-6",
+         "group relative min-w-0 overflow-hidden rounded-xl border p-5 transition-all duration-500 ease-out [perspective:1000px] [transform-style:preserve-3d] hover:-translate-y-1 hover:[transform:rotateX(4deg)_rotateY(-5deg)_translateY(-4px)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:transform-none lg:absolute lg:z-20 lg:p-6",
         toneClasses[tone],
         positionClassName,
+        index === 1 ? "shimmer-border" : "hover:border-brand-primary/40",
       )}
     >
+      {index === 1 && (
+        <span className="absolute right-3 top-3 z-30" aria-label="AI-powered step">
+          <Sparkles className="h-4 w-4 text-brand-primary animate-pulse" aria-hidden="true" />
+        </span>
+      )}
       <div className="mb-7 flex items-center justify-between gap-4 transition-transform duration-500 [transform:translateZ(24px)] group-hover:[transform:translate3d(0,-2px,34px)] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
         <span
           className={cn(
