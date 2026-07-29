@@ -148,7 +148,13 @@ export async function tailorResume(
   // 6. Validate against Phase 0 schema
   // Stitch the identity fields back in since the model shouldn't need to re-send them
   const matchMeta = computeResumeMatch(
-    parsed.resume,
+    {
+      summary: parsed.resume.summary ?? "",
+      experience: parsed.resume.experience.map((exp) => ({
+        bullets: exp.bullets.map((b) => b.text),
+      })),
+      skills: parsed.resume.skills ?? { categories: [] },
+    },
     (jobSkills ?? []).map((name) => ({ name })),
     (masterResumeJson.skills?.categories ?? []).flatMap((c) => c.items ?? []),
   );
