@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RESUME_ENGINE_SECTION } from "@/config/home-page";
+import { MatchRing } from "@/components/shared/MatchRing";
 
 export function ResumeEngineSection() {
   const { eyebrow, heading, body, bullets, linkText, linkHref } =
@@ -65,11 +66,21 @@ export function ResumeEngineSection() {
                 </div>
               </div>
 
+              {/* AI Match Score — floating between before/after */}
+              <div className="hidden lg:block absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rotate-0">
+                <div className="rounded-xl border border-brand-border bg-white px-3 py-2 text-center">
+                  <MatchRing score={92} size={56} className="mx-auto" />
+                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-brand-foreground-muted">
+                    AI Match
+                  </p>
+                </div>
+              </div>
+
               {/* After — AI-optimized resume, front */}
               <div className="relative z-20 ml-auto w-[62%] rotate-1">
                 <span className="absolute -top-3 right-3 z-20 inline-flex items-center gap-1 rounded-pill bg-brand-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                   <Sparkles className="h-3 w-3" aria-hidden="true" />
-                  After · Hiretivo-optimized
+                  AI Rewrote This
                 </span>
                 <div className="overflow-hidden rounded-xl border border-brand-primary/30 bg-white">
                   <Image
@@ -81,7 +92,13 @@ export function ResumeEngineSection() {
                   />
                 </div>
               </div>
+
             </div>
+
+            {/* AI transformation caption */}
+            <p className="mx-auto mt-5 max-w-md text-center text-sm text-brand-foreground-muted animate-in fade-in slide-in-from-bottom-4">
+              AI strengthens every bullet — stronger verbs, quantified metrics, keywords the ATS scans for.
+            </p>
           </div>
         </div>
       </div>
