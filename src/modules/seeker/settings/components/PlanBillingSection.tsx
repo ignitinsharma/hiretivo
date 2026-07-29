@@ -119,7 +119,7 @@ export function PlanBillingSection() {
                       </span>
                     </>
                   )}
-                  {tier.annualSavings && tier.annualSavings > 0 && (
+                  {tier.annualSavings !== null && tier.annualSavings > 0 && (
                     <p className={cn("text-xs mt-1", tier.highlighted ? "text-white/90" : "text-brand-foreground-muted")}>
                       ${tier.annualTotal}/yr — save ${tier.annualSavings}
                     </p>

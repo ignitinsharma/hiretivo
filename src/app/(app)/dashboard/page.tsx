@@ -58,14 +58,19 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <button
             onClick={openAddCustomJobModal}
-            className="rounded-xl border border-dashed hover:border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center gap-2 min-h-80 border-brand-primary hover:bg-brand-primary/5 transition-colors group"
+            className="rounded-xl border border-dashed border-brand-border bg-brand-surface/50 flex flex-col items-center justify-center gap-4 min-h-80 hover:border-brand-primary hover:bg-brand-primary/[0.03] transition-colors group"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center group-hover:border-brand-primary transition-colors">
-              <Plus className="w-5 h-5 text-gray-400 group-hover:text-brand-primary transition-colors" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary group-hover:bg-brand-primary/15 transition-colors">
+              <Plus className="w-5 h-5" />
             </div>
-            <span className="text-sm font-medium text-gray-400 group-hover:text-brand-primary transition-colors">
-              Add your own job
-            </span>
+            <div className="text-center max-w-[180px]">
+              <span className="block text-sm font-semibold text-brand-foreground group-hover:text-brand-primary transition-colors">
+                Add your own job
+              </span>
+              <span className="block text-xs text-brand-foreground-muted mt-1">
+                Paste a URL or description
+              </span>
+            </div>
           </button>
 
           <div className="rounded-xl border border-brand-border bg-brand-surface flex flex-col items-center justify-center gap-3 min-h-80 col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-3">

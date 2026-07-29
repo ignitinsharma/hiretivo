@@ -26,12 +26,12 @@ const STATUS_LABELS: Record<string, string> = {
 
 function getDynamicStatus(app: SeekerApplicationItem): { label: string; className: string } {
   if (app.automationStatus === AutomationStatus.SUBMITTED) {
-    return { label: "Applied", className: "text-green-600 bg-green-50" };
+    return { label: "Applied", className: "text-brand-success bg-brand-success/10" };
   }
   if (app.automationStatus === AutomationStatus.READY) {
     return { label: "Resume Generated", className: "text-amber-600 bg-amber-50" };
   }
-  return { label: "Not Ready", className: "text-gray-600 bg-gray-100" };
+  return { label: "Not Ready", className: "text-brand-foreground-secondary bg-brand-foreground-secondary/10" };
 }
 
 function getAppliedColumn(app: SeekerApplicationItem): string {
@@ -64,9 +64,9 @@ export function ApplicationsTable() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`text-sm font-medium px-3 py-1.5 rounded-pill transition-colors whitespace-nowrap ${
-                activeTab === tab
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  activeTab === tab
+                    ? "bg-brand-primary text-white"
+                    : "text-brand-foreground-muted hover:text-brand-foreground hover:bg-brand-surface"
               }`}
             >
               {tab === "All" ? "All" : STATUS_LABELS[tab] ?? tab}
@@ -79,12 +79,12 @@ export function ApplicationsTable() {
               Open tracker
             </Link>
           </Button>
-          <div className="flex items-center gap-1.5 bg-gray-100 rounded-pill px-2.5 py-1.5">
-            <Search className="w-3.5 h-3.5 text-gray-400" />
+          <div className="flex items-center gap-1.5 border border-brand-border bg-white rounded-pill px-2.5 py-1.5">
+            <Search className="w-3.5 h-3.5 text-brand-foreground-secondary" />
             <input
               type="text"
               placeholder="Search company..."
-              className="bg-transparent border-none outline-none text-xs text-gray-600 placeholder:text-gray-400 w-28"
+              className="bg-transparent border-none outline-none text-xs text-brand-foreground placeholder:text-brand-foreground-muted w-28"
             />
           </div>
         </div>
@@ -94,20 +94,20 @@ export function ApplicationsTable() {
         <table className="w-full">
           <thead>
             <tr className="border-t border-brand-border">
-              <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Company</th>
-              <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Status</th>
-              <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Applied</th>
+              <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Company</th>
+              <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Status</th>
+              <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Applied</th>
               <th className="w-12 px-5 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-400">Loading...</td>
+                <td colSpan={4} className="px-5 py-8 text-center text-sm text-brand-foreground-muted">Loading...</td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-400">
+                <td colSpan={4} className="px-5 py-8 text-center text-sm text-brand-foreground-muted">
                   No applications yet. Start applying to jobs to see them here.
                 </td>
               </tr>
@@ -117,17 +117,28 @@ export function ApplicationsTable() {
                 return (
                   <tr
                     key={app.id}
-                    className="border-t border-brand-border hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    className="border-t border-brand-border hover:bg-brand-surface transition-colors cursor-pointer"
                     onClick={() => router.push(`/applications/${app.id}`)}
                   >
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-pill bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
-                          {app.companyName[0]}
+                        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
+                          <span className="text-xs font-bold text-brand-foreground-muted">
+                            {app.companyName[0]}
+                          </span>
+                          {app.companyLogoUrl && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={app.companyLogoUrl}
+                              alt={`${app.companyName} logo`}
+                              className="absolute inset-0 h-full w-full bg-white object-contain"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{app.companyName}</p>
-                          <p className="text-xs text-gray-500">{app.jobTitle}</p>
+                          <p className="text-sm font-semibold text-brand-foreground">{app.companyName}</p>
+                          <p className="text-xs text-brand-foreground-muted">{app.jobTitle}</p>
                         </div>
                       </div>
                     </td>
@@ -136,13 +147,13 @@ export function ApplicationsTable() {
                         {dynamicStatus.label}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-gray-500">
+                    <td className="px-5 py-3.5 text-sm text-brand-foreground-muted">
                       {getAppliedColumn(app)}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1">
                         <button
-                          className="w-7 h-7 rounded-pill flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          className="w-7 h-7 rounded-pill flex items-center justify-center text-brand-foreground-secondary hover:text-brand-primary hover:bg-brand-surface"
                           aria-label="View details"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -152,7 +163,7 @@ export function ApplicationsTable() {
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          className="w-7 h-7 rounded-pill flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          className="w-7 h-7 rounded-pill flex items-center justify-center text-brand-foreground-secondary hover:text-brand-primary hover:bg-brand-surface"
                           aria-label="More options"
                           onClick={(e) => e.stopPropagation()}
                         >
