@@ -62,7 +62,7 @@ const SeekerSignupLeft = (
     subtitle="Paste any job link. Get a tailored, ATS-ready resume in seconds. Browse, apply, and track it all in one place."
     blurbs={SEEKER_SIGNUP_BLURBS}
     footer={
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-foreground-muted">
           <CreditCard className="h-3.5 w-3.5 text-brand-primary" />
           No Credit Card

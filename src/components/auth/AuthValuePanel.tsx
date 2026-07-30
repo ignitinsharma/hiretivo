@@ -33,9 +33,9 @@ export function AuthValuePanel({
         </p>
 
         <ul className="space-y-3 max-w-md">
-          {blurbs.map(({ icon: Icon, title, description }) => (
+          {blurbs.map(({ icon: Icon, title, description }, i) => (
             <li
-              key={title}
+              key={i}
               className="flex items-start gap-3 rounded-xl border border-brand-border bg-white p-4"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-primary/15 bg-brand-primary/[0.06] text-brand-primary">
