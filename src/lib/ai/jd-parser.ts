@@ -188,7 +188,24 @@ function extractJson(raw: string): string {
  * ── Public API ───────────────────────────────────────────
  */
 
+const JS_APP_DOMAINS = [
+  "workday", "myworkdayjobs",
+  "taleo",
+  "successfactors", "sapsf",
+  "icims",
+];
+
+function isUnsupportedAtsDomain(url: string): boolean {
+  return JS_APP_DOMAINS.some((d) => url.includes(d));
+}
+
+export { isUnsupportedAtsDomain };
+
 export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
+  if (isUnsupportedAtsDomain(url)) {
+    console.warn(`[jd-parser] Unsupported JS-heavy ATS domain — ${url}`);
+    return null;
+  }
   const pageText = await fetchPageText(url);
   return pageText ? callExtractionLlm(pageText, "url") : null;
 }

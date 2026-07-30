@@ -35,6 +35,12 @@ interface JobPreview {
   skills: string[];
 }
 
+const SUPPORTED_ATS = [
+  { name: "Ashby", logo: "/ats-logos/ashby.png" },
+  { name: "Greenhouse", logo: "/ats-logos/greenhouse.svg" },
+  { name: "Lever", logo: "/ats-logos/lever.png" },
+];
+
 export function AddCustomJobModal() {
   const router = useRouter();
   const { isAddCustomJobModalOpen, closeAddCustomJobModal } = useUIStore();
@@ -42,6 +48,7 @@ export function AddCustomJobModal() {
   const [tab, setTab] = useState<Tab>("url");
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [unsupportedAts, setUnsupportedAts] = useState(false);
   const [preview, setPreview] = useState<JobPreview | null>(null);
 
   const [url, setUrl] = useState("");
@@ -53,6 +60,7 @@ export function AddCustomJobModal() {
     setTab("url");
     setState("idle");
     setError(null);
+    setUnsupportedAts(false);
     setPreview(null);
     setUrl("");
     setTitle("");
@@ -81,6 +89,7 @@ export function AddCustomJobModal() {
 
       if (!res.ok) {
         if (res.status === 422) {
+          setUnsupportedAts(data.unsupportedAts ?? false);
           setError(data.error ?? "Could not parse this URL.");
         } else if (res.status === 409) {
           setError(data.error ?? "You have already applied to this job.");
@@ -218,7 +227,7 @@ export function AddCustomJobModal() {
               <p className="text-sm text-brand-foreground leading-relaxed line-clamp-4">
                 {preview.description}
               </p>
-            </div>
+                </div>
 
             {error && (
               <p className="flex items-start gap-2 text-sm text-brand-danger">
@@ -301,6 +310,28 @@ export function AddCustomJobModal() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <p className="text-xs text-brand-foreground-muted">We support these ATS as of now:</p>
+                  <div className="flex items-center gap-4">
+                    {SUPPORTED_ATS.map((ats) => (
+                      <div key={ats.name} className="flex items-center gap-1.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-brand-border bg-brand-surface">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={ats.logo}
+                            alt={ats.name}
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-brand-foreground">{ats.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-brand-foreground-muted">
+                    For other platforms, paste the description instead.
+                  </p>
+                </div>
+
                 {error && (
                   <div className="rounded-lg border border-brand-danger/20 bg-brand-danger/5 p-3">
                     <p className="flex items-start gap-2 text-sm text-brand-danger">
@@ -312,9 +343,9 @@ export function AddCustomJobModal() {
 
                 {error && (
                   <Button
-                    variant="ghost"
+                    variant={unsupportedAts ? "secondary" : "ghost"}
                     size="sm"
-                    className="text-brand-foreground-muted"
+                    className={unsupportedAts ? "" : "text-brand-foreground-muted"}
                     onClick={handleSwitchToText}
                   >
                     Switch to paste description instead

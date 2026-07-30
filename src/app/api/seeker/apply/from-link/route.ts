@@ -7,7 +7,7 @@ import {
   JobPreviewSchema,
   type JobPreview,
 } from "@/lib/validations/apply-from-link.schema";
-import { parseJobFromUrl, parseJobFromText } from "@/lib/ai/jd-parser";
+import { parseJobFromUrl, parseJobFromText, isUnsupportedAtsDomain } from "@/lib/ai/jd-parser";
 import { extractCandidateSkillsFromJD, reconcileAndInsertSkills } from "@/lib/ai/skill-catalog-extractor";
 import { upsertJobSkillIds } from "@/services/ats-job-fetcher.service";
 import { SkillLevel } from "@/constants/enums";
@@ -138,8 +138,14 @@ export async function POST(req: Request) {
     jobData = await parseJobFromUrl(url);
   }
   if (!jobData) {
+    const unsupportedAts = isUnsupportedAtsDomain(url);
     return NextResponse.json(
-      { error: "Could not parse job from this URL. Try pasting the job description instead." },
+      {
+        error: unsupportedAts
+          ? "This job board isn't supported for auto-fetch. Switch to 'Paste Description' and copy the job details instead."
+          : "Could not parse job from this URL. Try pasting the job description instead.",
+        unsupportedAts,
+      },
       { status: 422 },
     );
   }
