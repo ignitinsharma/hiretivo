@@ -16,8 +16,8 @@ function getAppUrl(req: NextRequest): string {
 
 /*
  * POST /api/billing/checkout
- * Creates a Dodo Payments subscription checkout session for STARTER/GROWTH/SCALE plans.
- * Requires RECRUITER role and a verified email address.
+ * Creates a Dodo Payments subscription checkout session for PRO/UNLIMITED plans.
+ * Requires SEEKER role and a verified email address.
  * Returns a payment_link URL to redirect the user to.
  */
 export async function POST(req: NextRequest) {

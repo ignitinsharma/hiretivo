@@ -1,6 +1,6 @@
 const ALLOWED_CHECKOUT_RETURN_PREFIXES = [
-  "/recruiter/talent",
-  "/recruiter/dashboard",
+  "/dashboard",
+  "/settings",
 ] as const;
 
 function hasAllowedPathBoundary(path: string, prefix: string): boolean {

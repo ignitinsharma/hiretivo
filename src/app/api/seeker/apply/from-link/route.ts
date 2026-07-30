@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
     const job = await prisma.job.create({
       data: {
-        recruiterId: session.user.id,
+
         title: jobData.title,
         description: jobData.description,
         jobType: "FULL_TIME",
@@ -157,7 +157,6 @@ export async function POST(req: Request) {
 
   const job = await prisma.job.create({
     data: {
-      recruiterId: session.user.id,
       title: jobData.title,
       description: jobData.description,
       jobType: "FULL_TIME",

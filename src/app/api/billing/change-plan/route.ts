@@ -17,12 +17,12 @@ const changePlanRateLimiter = createRateLimiter("billing-change-plan", 5, "1 m")
 
 /*
  * POST /api/billing/change-plan
- * Executes an in-app subscription plan switch for RECRUITER users.
+ * Executes an in-app subscription plan switch for SEEKER users.
  *
  * Upgrades apply immediately with prorated billing (charged today via Dodo).
  * Downgrades are scheduled for the next billing date — no immediate charge.
  *
- * Body: { planId: "starter" | "growth" | "scale" }
+ * Body: { planId: "pro" | "unlimited" }
  *
  * Response (upgrade):
  *   200  { data: { direction: "upgrade" } }
@@ -35,7 +35,7 @@ const changePlanRateLimiter = createRateLimiter("billing-change-plan", 5, "1 m")
  *
  * Error responses:
  *   401  Unauthorized
- *   403  Forbidden (non-RECRUITER role or unverified email)
+ *   403  Forbidden (non-SEEKER role or unverified email)
  *   429  Too many requests
  *   400  Body invalid / not on an active plan / already on this plan / product unavailable
  *   502  Dodo API call failed
@@ -47,10 +47,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  /* ── 2. Role guard — recruiters only ── */
+  /* ── 2. Role guard — seekers only ── */
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json(
-      { error: "This endpoint is for recruiters only" },
+      { error: "Forbidden" },
       { status: 403 },
     );
   }
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
     await prisma.subscription.update({
       where: { userId: session.user.id },
       data: {
-        scheduledPlan: targetPlan as "FREE" | "STARTER" | "GROWTH" | "SCALE",
+        scheduledPlan: targetPlan as PlanTier,
         scheduledChangeAt: subscription.currentPeriodEnd,
       },
     });

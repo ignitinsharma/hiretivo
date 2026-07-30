@@ -115,8 +115,7 @@ function SeekerRegisterContent() {
     React.useState(false);
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
-  const hasOAuthRoleMismatch =
-    authError === "wrong_role_oauth" && accountRole === UserRole.RECRUITER;
+  const hasOAuthRoleMismatch = false;
   const hasOAuthAccountNotLinked =
     authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
@@ -237,24 +236,9 @@ function SeekerRegisterContent() {
       title="Create your account"
       description="Start your journey to a better remote career today."
       leftContent={SeekerSignupLeft}
-      role="seeker"
       backHref="/"
     >
       <div className="space-y-6">
-        {roleMismatch && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-medium text-amber-800">
-              This account is registered as a Recruiter.{" "}
-              <Link
-                href="/recruiter/login"
-                className="font-bold text-black underline underline-offset-4"
-              >
-                Please use the Recruiter login
-              </Link>
-            </p>
-          </div>
-        )}
-
         {hasOAuthAccountNotLinked && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">

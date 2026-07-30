@@ -187,7 +187,7 @@ async function main() {
   // Phase 1: close jobs from dropped companies
   console.log('\nPhase 1: purging dropped companies...');
   const droppedJobs = await prisma.job.findMany({
-    where: { isAdminPosted: true, status: JobStatus.OPEN, companyName: { notIn: [...ACTIVE_COMPANIES] } },
+    where: { status: JobStatus.OPEN, companyName: { notIn: [...ACTIVE_COMPANIES] } },
     select: { id: true },
   });
   const droppedIds = droppedJobs.map((j) => j.id);
@@ -208,7 +208,7 @@ async function main() {
   // Phase 2: close jobs failing quality bar
   console.log('\nPhase 2: checking quality bar...');
   const openJobs = await prisma.job.findMany({
-    where: { isAdminPosted: true, status: JobStatus.OPEN },
+    where: { status: JobStatus.OPEN },
     select: { id: true, title: true, description: true, category: true, locationClass: true, jobType: true, visaSponsored: true },
   });
   console.log(`  ${openJobs.length} open jobs to check`);
@@ -237,7 +237,7 @@ async function main() {
   // Phase 3: write JobSkill for surviving jobs with 0 skills
   console.log('\nPhase 3: backfilling skills...');
   const jobsWithoutSkills = await prisma.job.findMany({
-    where: { isAdminPosted: true, status: JobStatus.OPEN, skills: { none: {} } },
+    where: { status: JobStatus.OPEN, skills: { none: {} } },
     select: { id: true, description: true },
   });
   console.log(`  ${jobsWithoutSkills.length} jobs need skills`);

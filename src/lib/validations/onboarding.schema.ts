@@ -1,7 +1,7 @@
-/** Zod schemas for seeker and recruiter onboarding step validation */
+/** Zod schemas for seeker onboarding step validation */
 
 import { z } from "zod";
-import { WorkType, SkillLevel, JobType } from "@/constants/enums";
+import { WorkType, SkillLevel } from "@/constants/enums";
 
 export const step1Schema = z.object({
   name: z.string().trim().min(1, "Full name is required").max(200, "Name must be under 200 characters"),
@@ -53,24 +53,4 @@ export const step4Schema = z.object({
   workPreference: z.nativeEnum(WorkType).nullable(),
 });
 
-export const recruiterProfileSchema = z.object({
-  companyName: z.string().trim().min(1, "Company name is required").max(200, "Company name must be under 200 characters"),
-  website: z.string().url("Invalid website URL").nullable().or(z.literal('')).nullable(),
-  companySize: z.string().max(50).nullable(),
-  bio: z.string().max(2000, "Bio must be under 2000 characters").nullable(),
-  industry: z.string().max(100).nullable(),
-  fundingType: z.string().max(100).nullable(),
-  isFullyRemote: z.boolean().optional(),
-  logo: z.string().nullable(),
-});
 
-export const createJobFromOnboardingSchema = z.object({
-  title: z.string().trim().min(1, "Job title is required").max(200, "Job title must be under 200 characters"),
-  description: z.string().trim().min(50, "Job description must be at least 50 characters").max(10000, "Job description must be under 10,000 characters"),
-  jobType: z.nativeEnum(JobType),
-  experienceLevel: z.string().max(100).nullable(),
-  category: z.string().max(100).nullable(),
-  salaryMin: z.number().min(0).nullable(),
-  salaryMax: z.number().min(0).nullable(),
-  requiredSkills: z.array(z.string()).max(50, "Maximum 50 skills allowed"),
-});
