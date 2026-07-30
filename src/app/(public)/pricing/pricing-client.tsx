@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleCheck } from "lucide-react";
+import { useState } from "react";
+import { CircleCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   Accordion,
@@ -9,8 +10,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
+import { BillingPeriod, PricingTierId } from "@/constants/enums";
+import { toast } from "sonner";
 
 const TD_BASE = "py-6 px-4 text-sm";
 const CELL_LABEL = cn(TD_BASE, "font-semibold text-brand-foreground");
@@ -65,9 +69,25 @@ function FeatureCell({ value, isHighlighted = false }: { value: string | boolean
   return <td className={isHighlighted ? CELL_HIGHLIGHTED : CELL_BODY}>{value}</td>;
 }
 
-function PricingCard({ tier }: { tier: PlanTierConfig }) {
+function PricingCard({
+  tier,
+  period,
+  checkingOutId,
+  onCheckout,
+}: {
+  tier: PlanTierConfig;
+  period: BillingPeriod;
+  checkingOutId: PricingTierId | null;
+  onCheckout: (planId: PricingTierId) => void;
+}) {
   const isHighlighted = tier.highlighted;
-  const displayedPrice = tier.monthlyPrice === null ? null : tier.monthlyPrice;
+  const isPaid = tier.id !== PricingTierId.FREE;
+  const isCheckingOut = checkingOutId === tier.id;
+
+  const displayPrice =
+    isPaid && period === BillingPeriod.ANNUAL && tier.monthlyPrice !== null
+      ? Math.round((tier.annualTotal ?? 0) / 12)
+      : tier.monthlyPrice;
 
   return (
     <div
@@ -91,16 +111,18 @@ function PricingCard({ tier }: { tier: PlanTierConfig }) {
 
         <div className="flex items-baseline justify-center gap-1">
           <span className={cn("text-4xl font-bold", isHighlighted ? "text-white" : "text-brand-foreground")}>
-            {displayedPrice === null ? "" : `$${displayedPrice}`}
+            {displayPrice === null ? "" : `$${displayPrice}`}
           </span>
-          {tier.id !== "free" && (
+          {isPaid && (
             <span className={cn("text-sm", isHighlighted ? "text-white/90" : "text-brand-foreground-muted")}>/mo</span>
           )}
         </div>
 
-        {tier.annualTotal !== null && (
+        {isPaid && tier.annualTotal !== null && (
           <p className={cn("mt-1 text-xs", isHighlighted ? "text-white/80" : "text-brand-foreground-muted")}>
-            ${tier.annualTotal}/yr — save ${tier.annualSavings}
+            {period === BillingPeriod.ANNUAL
+              ? `$${tier.annualTotal}/yr — save $${tier.annualSavings}`
+              : `$${tier.annualTotal}/yr — save $${tier.annualSavings}`}
           </p>
         )}
       </div>
@@ -119,11 +141,28 @@ function PricingCard({ tier }: { tier: PlanTierConfig }) {
         ))}
       </ul>
 
-      <Button asChild variant={isHighlighted ? "primary" : "secondary"} size="lg" className="mt-auto w-full">
-        <Link href={tier.id === "free" ? "/seeker/register" : "/seeker/register"}>
-          {tier.cta}
-        </Link>
-      </Button>
+      {isPaid ? (
+        <Button
+          variant={isHighlighted ? "secondary" : "primary"}
+          size="lg"
+          className="mt-auto w-full"
+          onClick={() => onCheckout(tier.id as PricingTierId)}
+          disabled={isCheckingOut}
+        >
+          {isCheckingOut ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Checking out...
+            </>
+          ) : (
+            tier.cta
+          )}
+        </Button>
+      ) : (
+        <Button asChild variant="secondary" size="lg" className="mt-auto w-full">
+          <Link href="/seeker/register">{tier.cta}</Link>
+        </Button>
+      )}
     </div>
   );
 }
@@ -193,6 +232,30 @@ function PricingFaqSection() {
 }
 
 export function PricingClient() {
+  const [period, setPeriod] = useState<BillingPeriod>(BillingPeriod.MONTHLY);
+  const [checkingOutId, setCheckingOutId] = useState<PricingTierId | null>(null);
+
+  const handleCheckout = async (planId: PricingTierId) => {
+    setCheckingOutId(planId);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId, period }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Checkout failed");
+        return;
+      }
+      window.location.href = data.data.url;
+    } catch {
+      toast.error("Failed to start checkout");
+    } finally {
+      setCheckingOutId(null);
+    }
+  };
+
   return (
     <>
       <section className="px-6 pb-12 pt-24 text-center">
@@ -207,10 +270,29 @@ export function PricingClient() {
       </section>
 
       <section className="px-6 pb-24">
-        <div className="relative mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
-          {PLAN_TIERS.map((tier) => (
-            <PricingCard key={tier.id} tier={tier} />
-          ))}
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-8 flex justify-center">
+            <ToggleGroup
+              type="single"
+              value={period}
+              onValueChange={(v) => v && setPeriod(v as BillingPeriod)}
+            >
+              <ToggleGroupItem value={BillingPeriod.MONTHLY}>Monthly</ToggleGroupItem>
+              <ToggleGroupItem value={BillingPeriod.ANNUAL}>Annual</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          <div className="relative grid grid-cols-1 gap-6 md:grid-cols-3">
+            {PLAN_TIERS.map((tier) => (
+              <PricingCard
+                key={tier.id}
+                tier={tier}
+                period={period}
+                checkingOutId={checkingOutId}
+                onCheckout={handleCheckout}
+              />
+            ))}
+          </div>
         </div>
       </section>
 

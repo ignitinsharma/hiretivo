@@ -67,6 +67,9 @@ export async function POST(req: NextRequest) {
     data: { resumeKey: key },
   });
 
+  // ponytail: force re-parse on next dashboard load for the new resume
+  await prisma.masterResume.delete({ where: { userId: session.user.id } }).catch(() => {});
+
   return NextResponse.json({
     data: { key },
   });

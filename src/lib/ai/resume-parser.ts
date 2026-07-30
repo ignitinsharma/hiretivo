@@ -1,5 +1,11 @@
-import { openrouter, getResumeModel } from "@/lib/openrouter";
+import { openrouter, getResumeParseModel, getLiteAIModel } from "@/lib/openrouter";
+import { withRetry } from "@/lib/ai/with-retry";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
+
+export type ParseResult =
+  | { status: "ok"; data: ResumeDocument }
+  | { status: "truncated" }
+  | { status: "error"; reason: "ai_unreachable" | "empty_response" | "malformed" };
 
 export function isResumeSuspiciouslyThin(resume: ResumeDocument): string[] {
   const warnings: string[] = [];
@@ -20,13 +26,10 @@ export function isResumeSuspiciouslyThin(resume: ResumeDocument): string[] {
 
 export const USER_ID_PLACEHOLDER = "__profile_placeholder__";
 
-export async function parseResumeWithVision(
-  pdfBuffer: Buffer,
-): Promise<ResumeDocument | null> {
-  const base64 = pdfBuffer.toString("base64");
-  const dataUrl = `data:application/pdf;base64,${base64}`;
+const REASONING_CAP = 512;
+const MAX_OUTPUT_TOKENS = 65535;
 
-  const systemPrompt = `You are a resume parser. You extract structured JSON from PDF resumes. Follow the JSON template below exactly — fill in the values, keep the structure.
+const SYSTEM_PROMPT = `You are a resume parser. You extract structured JSON from PDF resumes. Follow the JSON template below exactly — fill in the values, keep the structure.
 
 Rules:
 - Extract ALL text verbatim — do not summarize or rewrite bullet points
@@ -37,7 +40,6 @@ Rules:
 - Group skills into categories (e.g. "Languages", "Frameworks & Libraries", "Tools", "Cloud & DevOps")
 - For empty sections, use [] — never omit array fields
 - For missing optional single-value fields, use null — never omit them
-- matchMeta: matchScore null, empty arrays for keywords, 0 for counts
 
 Return ONLY the JSON object — no markdown, no code fences, no explanation.
 
@@ -106,64 +108,38 @@ JSON template:
       "name": "Language Name",
       "proficiency": "Native" or null
     }
-  ],
-  "matchMeta": {
-    "matchScore": null,
-    "addedKeywords": [],
-    "missingKeywords": [],
-    "requiredSkillsMatched": 0,
-    "requiredSkillsTotal": 0,
-    "preferredSkillsMatched": 0,
-    "preferredSkillsTotal": 0
-  }
+  ]
 }`;
 
-  const userPrompt = `Parse this PDF resume into the JSON template shown above. Extract every section you can find, preserving original wording.`;
-
-  try {
-    console.log("[parseResumeWithVision] Sending PDF to AI, base64 size:", (base64.length / 1024).toFixed(0), "KB");
-    const completion = await openrouter.chat.completions.create({
-      model: getResumeModel(),
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text" as const, text: userPrompt },
-            {
-              type: "file" as const,
-              file: {
-                filename: "resume.pdf",
-                file_data: dataUrl,
-              },
-            },
-          ],
-        },
-      ],
-      temperature: 0.1,
-      max_tokens: 8192,
-    });
-
-    const raw = completion.choices?.[0]?.message?.content ?? "";
-    if (!raw) {
-      console.error("[parseResumeWithVision] Empty response from AI");
-      return null;
-    }
-    return parseAndValidate(raw);
-  } catch (err) {
-    console.error("[parseResumeWithVision] AI call failed:", err);
-    return null;
-  }
+function condenseInstructions(): string {
+  return `\n\nPRIORITIZATION (very long resume — condense to fit within output limits):
+- Keep all roles from the last 10 years in full detail (every bullet, exact wording)
+- For experience older than 10 years: keep company, title, dates only — drop ALL bullets
+- Maximum 5 bullet points per experience entry
+- Maximum 3 projects — pick the most relevant/recent ones
+- Maximum 5 certifications — most recent/relevant only
+- Do NOT omit any required fields — use [] for empty arrays, null for missing singles`;
 }
 
-function parseAndValidate(raw: string): ResumeDocument | null {
+const USER_PROMPT = `Parse this PDF resume into the JSON template shown above. Extract every section you can find, preserving original wording.`;
+
+function braceSlice(raw: string): string {
+  let s = raw.trim();
+  s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+  const first = s.indexOf("{");
+  const last = s.lastIndexOf("}");
+  if (first !== -1 && last > first) s = s.slice(first, last + 1);
+  return s;
+}
+
+function parseAndValidate(raw: string): ParseResult {
   try {
-    const cleaned = raw
-      .trim()
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/i, "");
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(braceSlice(raw));
+
+    // ponytail: matchMeta/missingSkills are computed server-side (resume-tailor.ts:150, resume-match.ts)
+    // The parser never needs to produce them — they contradict the schema (matchScore: number vs null)
+    delete parsed.matchMeta;
+    delete parsed.missingSkills;
 
     const doc = {
       ...parsed,
@@ -177,11 +153,118 @@ function parseAndValidate(raw: string): ResumeDocument | null {
     const result = ResumeDocumentSchema.safeParse(doc);
     if (!result.success) {
       console.error("[parseAndValidate] Schema validation failed:", result.error.format());
-      return null;
+      return { status: "error", reason: "malformed" };
     }
-    return result.data as ResumeDocument;
+    return { status: "ok", data: result.data as ResumeDocument };
   } catch (err) {
     console.error("[parseAndValidate] JSON parsing failed:", err, "\nRaw AI response:", raw);
-    return null;
+    return { status: "error", reason: "malformed" };
   }
+}
+
+async function callModel(
+  pdfBuffer: Buffer,
+  model: string,
+  condense: boolean,
+): Promise<ParseResult> {
+  const base64 = pdfBuffer.toString("base64");
+  const dataUrl = `data:application/pdf;base64,${base64}`;
+
+  const systemPrompt = condense ? SYSTEM_PROMPT + condenseInstructions() : SYSTEM_PROMPT;
+
+  console.log(
+    `[callModel] model=${model} condense=${condense} base64=${(base64.length / 1024).toFixed(0)}KB`,
+  );
+
+  const aiResult = await withRetry(async () => {
+    const completion = await openrouter.chat.completions.create({
+      model,
+      response_format: { type: "json_object" },
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: 0.1,
+      reasoning: { max_tokens: REASONING_CAP },
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "text" as const, text: USER_PROMPT },
+            {
+              type: "file" as const,
+              file: { filename: "resume.pdf", file_data: dataUrl },
+            },
+          ],
+        },
+      ],
+    } as Parameters<typeof openrouter.chat.completions.create>[0]);
+
+    const msg = (completion as { choices: Array<{ message?: { content?: string | null }; finish_reason?: string | null }> }).choices?.[0];
+    return {
+      content: msg?.message?.content ?? "",
+      finishReason: msg?.finish_reason ?? null,
+    };
+  });
+
+  if (!aiResult) {
+    console.error(`[callModel] AI unreachable after retries (${model})`);
+    return { status: "error", reason: "ai_unreachable" };
+  }
+
+  const { content, finishReason } = aiResult;
+
+  if (finishReason === "length") {
+    console.warn(`[callModel] Truncated output — finish_reason=length (${model})`);
+    return { status: "truncated" };
+  }
+
+  if (!content) {
+    console.error(`[callModel] Empty response from AI (${model})`);
+    return { status: "error", reason: "empty_response" };
+  }
+
+  return parseAndValidate(content);
+}
+
+/*
+ * parseResumeWithVision
+ * Cascade: lite → flash → condense on truncation.
+ * Tier 1 (cheap): flash-lite with full prompt — handles ~85% of resumes at lowest cost.
+ * Tier 2 (strong): flash full prompt — rescues shape errors from lite.
+ * Tier 3 (condense): flash with condensing instructions — reserves for the rare length overflow.
+ */
+export async function parseResumeWithVision(
+  pdfBuffer: Buffer,
+): Promise<ParseResult> {
+  const liteModel = getLiteAIModel();
+  const flashModel = getResumeParseModel();
+
+  // Tier 1 — cheap model, full prompt
+  console.log(`[parseResumeWithVision] Tier 1: ${liteModel}`);
+  const r1 = await callModel(pdfBuffer, liteModel, false);
+  if (r1.status === "ok") {
+    console.log(`[parseResumeWithVision] Tier 1 succeeded`);
+    return r1;
+  }
+
+  if (r1.status === "truncated") {
+    // ponytail: length is model-independent — skip flash-full, go straight to condense
+    console.log(`[parseResumeWithVision] Tier 1 truncated → Tier 3 condense (${flashModel})`);
+    return callModel(pdfBuffer, flashModel, true);
+  }
+
+  // Tier 2 — strong model, full prompt (lite errored on shape/data)
+  console.log(`[parseResumeWithVision] Tier 1 error:${r1.reason} → Tier 2 (${flashModel})`);
+  const r2 = await callModel(pdfBuffer, flashModel, false);
+  if (r2.status === "ok") {
+    console.log(`[parseResumeWithVision] Tier 2 succeeded`);
+    return r2;
+  }
+
+  if (r2.status === "truncated") {
+    console.log(`[parseResumeWithVision] Tier 2 truncated → Tier 3 condense (${flashModel})`);
+    return callModel(pdfBuffer, flashModel, true);
+  }
+
+  console.log(`[parseResumeWithVision] All tiers exhausted — ${r2.status}:${r2.reason}`);
+  return r2;
 }

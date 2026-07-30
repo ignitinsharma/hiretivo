@@ -56,15 +56,32 @@ export async function POST(_req: NextRequest) {
     );
   }
 
-  const parsed = await parseResumeWithVision(pdfBuffer);
+  const result = await parseResumeWithVision(pdfBuffer);
 
-  if (!parsed) {
-    console.error("[parse] parseResumeWithVision returned null — see [parseResumeWithVision] logs above");
+  if (result.status === "error") {
+    console.error(
+      `[parse] parseResumeWithVision error — reason=${result.reason}`,
+      "see [parseResumeWithVision] logs above",
+    );
     return NextResponse.json(
       { error: "Could not parse resume. Please try a different file." },
       { status: 422 },
     );
   }
+
+  if (result.status === "truncated") {
+    console.error("[parse] parseResumeWithVision truncated — resume too long after all tiers");
+    return NextResponse.json(
+      {
+        error: "resume_too_long",
+        message:
+          "Your resume is very long — we couldn't parse it in full. Try a more concise version.",
+      },
+      { status: 422 },
+    );
+  }
+
+  const parsed = result.data;
 
   console.log("[parse] Resume parsed and validated successfully");
 

@@ -42,13 +42,23 @@ export function getLiteAIModel(): string {
 }
 
 /*
- * RESUME_MODEL — model for all resume tasks (parsing, tailoring, cover letters, rewrites).
- * Defaults to DeepSeek V4 Pro.
+ * RESUME_MODEL — model for resume generation tasks (tailoring, cover letters, rewrites).
+ * Defaults to DeepSeek V4 Pro (reasoning model, best for text generation).
  * Override via RESUME_MODEL env var.
  */
 export function getResumeModel(): string {
   const model = process.env.RESUME_MODEL?.trim();
   return model || 'deepseek/deepseek-v4-pro';
+}
+
+/*
+ * RESUME_PARSE_MODEL — model for PDF resume parsing (extracting structured JSON).
+ * Defaults to Gemini 2.5 Flash (native file input, no reasoning overhead).
+ * Override via RESUME_PARSE_MODEL env var.
+ */
+export function getResumeParseModel(): string {
+  const model = process.env.RESUME_PARSE_MODEL?.trim();
+  return model || 'google/gemini-2.5-flash';
 }
 
 /*
