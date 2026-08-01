@@ -39,6 +39,8 @@ const SUPPORTED_ATS = [
   { name: "Ashby", logo: "/ats-logos/ashby.png" },
   { name: "Greenhouse", logo: "/ats-logos/greenhouse.svg" },
   { name: "Lever", logo: "/ats-logos/lever.png" },
+  { name: "Paylocity", logo: "/ats-logos/paylocity.svg" },
+  { name: "Pinpoint HQ", logo: "/ats-logos/pinpoint-hq.svg" },
 ];
 
 export function AddCustomJobModal() {
@@ -311,7 +313,7 @@ export function AddCustomJobModal() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs text-brand-foreground-muted">We support these ATS as of now:</p>
+                  <p className="text-xs text-brand-foreground-muted">We support major ATS:</p>
                   <div className="flex items-center gap-4">
                     {SUPPORTED_ATS.map((ats) => (
                       <div key={ats.name} className="flex items-center gap-1.5">
