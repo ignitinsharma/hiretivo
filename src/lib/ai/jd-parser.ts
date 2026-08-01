@@ -99,7 +99,7 @@ Return a JSON object with:
 - "title": the job title
 - "company": the company name
 - "description": the full job description (clean text, no HTML)
-- "skills": an array of skill strings mentioned in the description
+- "skills": an array of EVERY skill, technology, tool, and keyword mentioned in the description — be exhaustive, never omit a skill just because it appears once
 
 Only return valid JSON. No markdown formatting. No text before or after the JSON.`;
 
@@ -116,7 +116,7 @@ async function callExtractionLlm(text: string, context: string): Promise<ParsedJ
         { role: "user", content: `TEXT:\n${text}` },
       ],
       temperature: 0.1,
-      max_tokens: 16000,
+      max_tokens: 4000,
     });
 
     return {
