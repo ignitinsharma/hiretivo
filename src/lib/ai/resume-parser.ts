@@ -26,8 +26,8 @@ export function isResumeSuspiciouslyThin(resume: ResumeDocument): string[] {
 
 export const USER_ID_PLACEHOLDER = "__profile_placeholder__";
 
-const REASONING_CAP = 512;
-const MAX_OUTPUT_TOKENS = 65535;
+const REASONING_CAP = 128;
+const MAX_OUTPUT_TOKENS = 8192;
 
 const SYSTEM_PROMPT = `You are a resume parser. You extract structured JSON from PDF resumes. Follow the JSON template below exactly — fill in the values, keep the structure.
 
@@ -203,7 +203,7 @@ async function callModel(
       content: msg?.message?.content ?? "",
       finishReason: msg?.finish_reason ?? null,
     };
-  });
+  }, { timeoutMs: 90_000 });
 
   if (!aiResult) {
     console.error(`[callModel] AI unreachable after retries (${model})`);
