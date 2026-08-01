@@ -50,6 +50,7 @@ export function AddCustomJobModal() {
   const [tab, setTab] = useState<Tab>("url");
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [showFullJd, setShowFullJd] = useState(false);
   const [unsupportedAts, setUnsupportedAts] = useState(false);
   const [preview, setPreview] = useState<JobPreview | null>(null);
 
@@ -64,6 +65,7 @@ export function AddCustomJobModal() {
     setError(null);
     setUnsupportedAts(false);
     setPreview(null);
+    setShowFullJd(false);
     setUrl("");
     setTitle("");
     setCompany("");
@@ -186,7 +188,7 @@ export function AddCustomJobModal() {
 
   return (
     <Dialog open={isAddCustomJobModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-brand-foreground">
             Add Custom Job
@@ -197,7 +199,12 @@ export function AddCustomJobModal() {
         </DialogHeader>
 
         {(state === "preview" || state === "confirming") && preview ? (
-          <div className="space-y-5 max-h-[70vh] overflow-y-auto">
+          <div
+            className={cn(
+              "space-y-5 overflow-y-auto",
+              showFullJd ? "max-h-[85vh]" : "max-h-[70vh]",
+            )}
+          >
             <div className="rounded-xl border border-brand-border bg-brand-surface p-5 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10">
@@ -226,9 +233,23 @@ export function AddCustomJobModal() {
                 </div>
               )}
 
-              <p className="text-sm text-brand-foreground leading-relaxed line-clamp-4">
+              <p
+                className={cn(
+                  "text-sm text-brand-foreground leading-relaxed whitespace-pre-line",
+                  !showFullJd && "line-clamp-4",
+                )}
+              >
                 {preview.description}
               </p>
+              {preview.description.length > 280 && (
+                <button
+                  type="button"
+                  onClick={() => setShowFullJd((v) => !v)}
+                  className="text-xs font-semibold text-brand-primary hover:text-brand-primary/80"
+                >
+                  {showFullJd ? "Show Less" : "See More JD"}
+                </button>
+              )}
                 </div>
 
             {error && (
