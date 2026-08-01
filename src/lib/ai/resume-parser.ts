@@ -30,7 +30,7 @@ export const USER_ID_PLACEHOLDER = "__profile_placeholder__";
 const REASONING_CAP = 128;
 const MAX_OUTPUT_TOKENS = 8192;
 
-const SYSTEM_PROMPT = `You are a resume parser. You extract structured JSON from PDF resumes. Follow the JSON template below exactly — fill in the values, keep the structure.
+export const SYSTEM_PROMPT = `You are a resume parser. You extract structured JSON from PDF resumes. Follow the JSON template below exactly — fill in the values, keep the structure.
 
 Rules:
 - Extract ALL text verbatim — do not summarize or rewrite bullet points
@@ -39,6 +39,8 @@ Rules:
 - Assign priority 1 to every bullet
 - Generate a unique id (cuid-like string) for each array entry
 - Group skills into categories (e.g. "Languages", "Frameworks & Libraries", "Tools", "Cloud & DevOps")
+- Extract EVERY skill, tool, framework, library, technology, platform, and product mentioned anywhere in the document — including inside experience bullets, project descriptions, certifications, and the summary. Be exhaustive: when in doubt, include it. Never omit a keyword because it seems minor or appears once.
+- Keep each extracted skill name exactly as written in the document (e.g. "React", "AWS Lambda", "CI/CD", "Node.js")
 - For empty sections, use [] — never omit array fields
 - For missing optional single-value fields, use null — never omit them
 
