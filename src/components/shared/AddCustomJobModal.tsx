@@ -41,9 +41,15 @@ const SUPPORTED_ATS = [
   { name: "Lever", logo: "/ats-logos/lever.png" },
   { name: "Paylocity", logo: "/ats-logos/paylocity.svg" },
   { name: "Pinpoint HQ", logo: "/ats-logos/pinpoint-hq.svg" },
-  { name: "Recruitee" },
-  { name: "SmartRecruiters" },
-  { name: "Breezy HR" },
+  { name: "Recruitee", logo: "/ats-logos/recruitee.png" },
+  { name: "SmartRecruiters", logo: "/ats-logos/smartrecruiters.png" },
+  { name: "Breezy HR", logo: "/ats-logos/breezy-hr.png" },
+  { name: "Rippling", logo: "/ats-logos/rippling.png" },
+  { name: "Zoho Recruit", logo: "/ats-logos/zoho.svg" },
+  { name: "Keka", logo: "/ats-logos/keka.svg" },
+  { name: "Freshteam", logo: "/ats-logos/freshteam.png" },
+  { name: "greytHR", logo: "/ats-logos/greythr.svg" },
+  { name: "Zimyo", logo: "/ats-logos/zimyo.png" },
 ] as const;
 
 export function AddCustomJobModal() {
