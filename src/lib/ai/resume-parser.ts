@@ -1,5 +1,6 @@
 import { openrouter, getResumeParseModel, getLiteAIModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
+import { extractPdfText } from "@/lib/ai/pdf-text-extract";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
 
 export type ParseResult =
@@ -162,7 +163,41 @@ function parseAndValidate(raw: string): ParseResult {
   }
 }
 
-async function callModel(
+async function callModelText(
+  text: string,
+  model: string,
+  condense: boolean,
+): Promise<ParseResult> {
+  const systemPrompt = condense ? SYSTEM_PROMPT + condenseInstructions() : SYSTEM_PROMPT;
+
+  console.log(
+    `[callModelText] model=${model} condense=${condense} text=${(text.length / 1024).toFixed(1)}KB`,
+  );
+
+  const aiResult = await withRetry(async () => {
+    const completion = await openrouter.chat.completions.create({
+      model,
+      response_format: { type: "json_object" },
+      max_tokens: MAX_OUTPUT_TOKENS,
+      temperature: 0.1,
+      reasoning: { max_tokens: REASONING_CAP },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `${USER_PROMPT}\n\nRESUME TEXT:\n${text}` },
+      ],
+    } as Parameters<typeof openrouter.chat.completions.create>[0]);
+
+    const msg = (completion as { choices: Array<{ message?: { content?: string | null }; finish_reason?: string | null }> }).choices?.[0];
+    return {
+      content: msg?.message?.content ?? "",
+      finishReason: msg?.finish_reason ?? null,
+    };
+  }, { timeoutMs: 90_000 });
+
+  return handleAiResult(aiResult, model);
+}
+
+async function callModelFile(
   pdfBuffer: Buffer,
   model: string,
   condense: boolean,
@@ -173,7 +208,7 @@ async function callModel(
   const systemPrompt = condense ? SYSTEM_PROMPT + condenseInstructions() : SYSTEM_PROMPT;
 
   console.log(
-    `[callModel] model=${model} condense=${condense} base64=${(base64.length / 1024).toFixed(0)}KB`,
+    `[callModelFile] model=${model} condense=${condense} base64=${(base64.length / 1024).toFixed(0)}KB`,
   );
 
   const aiResult = await withRetry(async () => {
@@ -205,20 +240,27 @@ async function callModel(
     };
   }, { timeoutMs: 90_000 });
 
+  return handleAiResult(aiResult, model);
+}
+
+function handleAiResult(
+  aiResult: { content: string; finishReason: string | null } | null,
+  model: string,
+): ParseResult {
   if (!aiResult) {
-    console.error(`[callModel] AI unreachable after retries (${model})`);
+    console.error(`[resume-parser] AI unreachable after retries (${model})`);
     return { status: "error", reason: "ai_unreachable" };
   }
 
   const { content, finishReason } = aiResult;
 
   if (finishReason === "length") {
-    console.warn(`[callModel] Truncated output — finish_reason=length (${model})`);
+    console.warn(`[resume-parser] Truncated output — finish_reason=length (${model})`);
     return { status: "truncated" };
   }
 
   if (!content) {
-    console.error(`[callModel] Empty response from AI (${model})`);
+    console.error(`[resume-parser] Empty response from AI (${model})`);
     return { status: "error", reason: "empty_response" };
   }
 
@@ -227,10 +269,12 @@ async function callModel(
 
 /*
  * parseResumeWithVision
- * Cascade: lite → flash → condense on truncation.
- * Tier 1 (cheap): flash-lite with full prompt — handles ~85% of resumes at lowest cost.
- * Tier 2 (strong): flash full prompt — rescues shape errors from lite.
- * Tier 3 (condense): flash with condensing instructions — reserves for the rare length overflow.
+ * Cascade: text-first (cheap) → file vision (strong) → condense on truncation.
+ * Tier 1: extract PDF text locally and send plain text to the lite model —
+ *         skips OpenRouter's slow server-side PDF pipeline (was ~50s, now ~5-15s).
+ * Tier 2: file-based vision parse with the parse model — rescues scanned
+ *         PDFs, two-column layouts, and thin Tier 1 results.
+ * Tier 3: condense instructions on truncation (length is model-independent).
  */
 export async function parseResumeWithVision(
   pdfBuffer: Buffer,
@@ -238,31 +282,37 @@ export async function parseResumeWithVision(
   const liteModel = getLiteAIModel();
   const flashModel = getResumeParseModel();
 
-  // Tier 1 — cheap model, full prompt
-  console.log(`[parseResumeWithVision] Tier 1: ${liteModel}`);
-  const r1 = await callModel(pdfBuffer, liteModel, false);
-  if (r1.status === "ok") {
-    console.log(`[parseResumeWithVision] Tier 1 succeeded`);
-    return r1;
+  const text = await extractPdfText(pdfBuffer);
+  const hasText = text.length >= 150;
+
+  if (hasText) {
+    // Tier 1 — cheap, fast text parse
+    console.log(`[parseResumeWithVision] Tier 1 text: ${liteModel}`);
+    const r1 = await callModelText(text, liteModel, false);
+    if (r1.status === "ok") {
+      const totalSkills = r1.data.skills.categories.reduce((sum, c) => sum + c.items.length, 0);
+      if (totalSkills >= 3) {
+        const warnings = isResumeSuspiciouslyThin(r1.data);
+        if (warnings.length > 0) console.warn("[parseResumeWithVision] Tier 1 ok but thin:", warnings);
+        return r1;
+      }
+      console.log("[parseResumeWithVision] Tier 1 thin skills → Tier 2 file");
+    } else if (r1.status === "truncated") {
+      console.log(`[parseResumeWithVision] Tier 1 truncated → Tier 3 condense (${flashModel})`);
+      return callModelFile(pdfBuffer, flashModel, true);
+    } else {
+      console.log(`[parseResumeWithVision] Tier 1 error:${r1.reason} → Tier 2 (${flashModel})`);
+    }
+  } else {
+    console.log("[parseResumeWithVision] No extractable text — scanned PDF, skipping to Tier 2");
   }
 
-  if (r1.status === "truncated") {
-    // ponytail: length is model-independent — skip flash-full, go straight to condense
-    console.log(`[parseResumeWithVision] Tier 1 truncated → Tier 3 condense (${flashModel})`);
-    return callModel(pdfBuffer, flashModel, true);
-  }
-
-  // Tier 2 — strong model, full prompt (lite errored on shape/data)
-  console.log(`[parseResumeWithVision] Tier 1 error:${r1.reason} → Tier 2 (${flashModel})`);
-  const r2 = await callModel(pdfBuffer, flashModel, false);
-  if (r2.status === "ok") {
-    console.log(`[parseResumeWithVision] Tier 2 succeeded`);
-    return r2;
-  }
-
+  // Tier 2 — file-based vision parse
+  const r2 = await callModelFile(pdfBuffer, flashModel, false);
+  if (r2.status === "ok") return r2;
   if (r2.status === "truncated") {
     console.log(`[parseResumeWithVision] Tier 2 truncated → Tier 3 condense (${flashModel})`);
-    return callModel(pdfBuffer, flashModel, true);
+    return callModelFile(pdfBuffer, flashModel, true);
   }
 
   console.log(`[parseResumeWithVision] All tiers exhausted — ${r2.status}:${r2.reason}`);
