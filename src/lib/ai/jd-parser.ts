@@ -8,7 +8,7 @@ export interface ParsedJob {
   skills: string[];
 }
 
-const MAX_PAGE_CHARS = 8000;
+const MAX_PAGE_CHARS = 20000;
 const FETCH_TIMEOUT_MS = 15_000;
 const STRIP_TAGS = ["script", "style", "nav", "footer", "header"];
 
@@ -116,7 +116,7 @@ async function callExtractionLlm(text: string, context: string): Promise<ParsedJ
         { role: "user", content: `TEXT:\n${text}` },
       ],
       temperature: 0.1,
-      max_tokens: 8000,
+      max_tokens: 16000,
     });
 
     return {
