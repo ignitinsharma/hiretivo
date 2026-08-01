@@ -41,7 +41,8 @@ const SUPPORTED_ATS = [
   { name: "Lever", logo: "/ats-logos/lever.png" },
   { name: "Paylocity", logo: "/ats-logos/paylocity.svg" },
   { name: "Pinpoint HQ", logo: "/ats-logos/pinpoint-hq.svg" },
-];
+  { name: "Recruitee" },
+] as const;
 
 export function AddCustomJobModal() {
   const router = useRouter();
@@ -337,17 +338,19 @@ export function AddCustomJobModal() {
 
                 <div className="space-y-2">
                   <p className="text-xs text-brand-foreground-muted">We support major ATS:</p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
                     {SUPPORTED_ATS.map((ats) => (
                       <div key={ats.name} className="flex items-center gap-1.5">
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-brand-border bg-brand-surface">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={ats.logo}
-                            alt={ats.name}
-                            className="h-full w-full object-contain"
-                          />
-                        </div>
+                        {"logo" in ats && (
+                          <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-brand-border bg-brand-surface">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={ats.logo}
+                              alt={ats.name}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                        )}
                         <span className="text-xs font-medium text-brand-foreground">{ats.name}</span>
                       </div>
                     ))}
