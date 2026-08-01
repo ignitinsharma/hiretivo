@@ -184,6 +184,7 @@ export function AddCustomJobModal() {
     setState("idle");
     setError(null);
     setPreview(null);
+    setShowFullJd(false);
   }, []);
 
   return (
@@ -244,6 +245,7 @@ export function AddCustomJobModal() {
               {preview.description.length > 280 && (
                 <button
                   type="button"
+                  aria-expanded={showFullJd}
                   onClick={() => setShowFullJd((v) => !v)}
                   className="text-xs font-semibold text-brand-primary hover:text-brand-primary/80"
                 >
