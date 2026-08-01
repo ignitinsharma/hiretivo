@@ -2,6 +2,7 @@ import { openrouter, getResumeParseModel, getLiteAIModel } from "@/lib/openroute
 import { withRetry } from "@/lib/ai/with-retry";
 import { extractPdfText } from "@/lib/ai/pdf-text-extract";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
+import { mergeExtractedSkills } from "@/lib/ai/skill-merge";
 
 export type ParseResult =
   | { status: "ok"; data: ResumeDocument }
@@ -158,7 +159,7 @@ function parseAndValidate(raw: string): ParseResult {
       console.error("[parseAndValidate] Schema validation failed:", result.error.format());
       return { status: "error", reason: "malformed" };
     }
-    return { status: "ok", data: result.data as ResumeDocument };
+    return { status: "ok", data: mergeExtractedSkills(result.data as ResumeDocument) };
   } catch (err) {
     console.error("[parseAndValidate] JSON parsing failed:", err, "\nRaw AI response:", raw);
     return { status: "error", reason: "malformed" };
