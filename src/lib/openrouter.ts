@@ -44,7 +44,7 @@ export function getLiteAIModel(): string {
 /*
  * RESUME_MODEL — model for resume generation tasks (tailoring, cover letters, rewrites).
  * Defaults to DeepSeek V4 Pro (reasoning model, best for text generation).
- * Override via RESUME_MODEL env var.
+ * Override via RESUME_MODEL env var. This is the only knob for tailoring.
  */
 export function getResumeModel(): string {
   const model = process.env.RESUME_MODEL?.trim();

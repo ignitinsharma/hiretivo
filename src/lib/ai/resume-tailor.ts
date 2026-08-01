@@ -126,7 +126,7 @@ export async function tailorResume(
       content: completion.choices?.[0]?.message?.content ?? "",
       finishReason: completion.choices?.[0]?.finish_reason ?? null,
     };
-  });
+  }, { timeoutMs: 90_000 });
 
   if (!aiResult) {
     return { status: "ai_error", reason: "timeout" };
