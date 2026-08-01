@@ -5,6 +5,7 @@ import { resumeGenFreeLimiter, resumeGenPaidLimiter } from "@/lib/rate-limit";
 import { buildTailorResumeMessages, TAILOR_RESUME_CONFIG } from "@/lib/ai-prompts";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
 import { computeResumeMatch } from "@/lib/resume-match";
+import { mergeJdSkills } from "@/lib/ai/skill-merge";
 import { prisma } from "@/lib/prisma";
 import { PlanTier } from "@prisma/client";
 import type { ResumeDocument, ResumeMatchMeta } from "@/lib/validations/resume.schema";
@@ -111,22 +112,25 @@ export async function tailorResume(
     jobTitle,
   });
 
-  const aiResult = await withRetry(async () => {
-    const completion = await openrouter.chat.completions.create({
-      model: getResumeModel(),
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userMessage },
-      ],
-      temperature: TAILOR_RESUME_CONFIG.temperature,
-      max_tokens: TAILOR_RESUME_CONFIG.max_tokens,
-    });
+  const callTailor = (maxTokens: number) =>
+    withRetry(async () => {
+      const completion = await openrouter.chat.completions.create({
+        model: getResumeModel(),
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userMessage },
+        ],
+        temperature: TAILOR_RESUME_CONFIG.temperature,
+        max_tokens: maxTokens,
+      });
 
-    return {
-      content: completion.choices?.[0]?.message?.content ?? "",
-      finishReason: completion.choices?.[0]?.finish_reason ?? null,
-    };
-  }, { timeoutMs: 90_000 });
+      return {
+        content: completion.choices?.[0]?.message?.content ?? "",
+        finishReason: completion.choices?.[0]?.finish_reason ?? null,
+      };
+    }, { timeoutMs: 90_000 });
+
+  let aiResult = await callTailor(TAILOR_RESUME_CONFIG.max_tokens);
 
   if (!aiResult) {
     return { status: "ai_error", reason: "timeout" };
@@ -137,6 +141,11 @@ export async function tailorResume(
       userId,
       jdLength: jdText.length,
     });
+    // ponytail: one retry at a doubled budget covers huge resumes; no loop needed
+    const retried = await callTailor(16384);
+    if (retried) {
+      aiResult = retried;
+    }
   }
 
   // 5. Parse AI response
@@ -145,22 +154,26 @@ export async function tailorResume(
     return { status: "ai_error", reason: "malformed_response" };
   }
 
+  // 5b. Deterministically merge JD-parsed skills into the tailored resume so
+  // matchScore reflects every keyword the JD asks for, in every case.
+  const mergedResume = mergeJdSkills(parsed.resume, jobSkills ?? []);
+
   // 6. Validate against Phase 0 schema
   // Stitch the identity fields back in since the model shouldn't need to re-send them
   const matchMeta = computeResumeMatch(
     {
-      summary: parsed.resume.summary ?? "",
-      experience: parsed.resume.experience.map((exp) => ({
+      summary: mergedResume.summary ?? "",
+      experience: mergedResume.experience.map((exp) => ({
         bullets: exp.bullets.map((b) => b.text),
       })),
-      skills: parsed.resume.skills ?? { categories: [] },
+      skills: mergedResume.skills ?? { categories: [] },
     },
     (jobSkills ?? []).map((name) => ({ name })),
     (masterResumeJson.skills?.categories ?? []).flatMap((c) => c.items ?? []),
   );
 
   const tailored: ResumeDocument = {
-    ...parsed.resume,
+    ...mergedResume,
     profileId: masterResumeJson.profileId,
     resumeVersionId: null,
     applicationId,

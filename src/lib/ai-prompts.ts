@@ -325,6 +325,6 @@ Generate the tailored resume as a single JSON object following the structure abo
 }
 
 export const TAILOR_RESUME_CONFIG = {
-  max_tokens: 4096,
+  max_tokens: 8192,
   temperature: 0.3,
 } as const;

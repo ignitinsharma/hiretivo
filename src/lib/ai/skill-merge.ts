@@ -85,3 +85,105 @@ export function mergeExtractedSkills(doc: ResumeDocument): ResumeDocument {
 
   return { ...doc, skills: { categories: merged } };
 }
+
+const MAX_JD_SKILL_ADDITIONS = 20;
+
+function jdTokensOf(s: string): string[] {
+  return s.toLowerCase().split(/[^a-z0-9+#.]+/).filter((t) => t.length >= 2);
+}
+
+function categoryMatchScore(
+  skill: string,
+  cat: { name: string; items: string[] },
+): { score: number; matchLen: number } {
+  const skillTokens = new Set(jdTokensOf(skill));
+  if (skillTokens.size === 0) return { score: 0, matchLen: Infinity };
+  let score = 0;
+  let matchLen = Infinity;
+  for (const source of [cat.name, ...cat.items]) {
+    for (const t of jdTokensOf(source)) {
+      if (skillTokens.has(t)) {
+        score++;
+        matchLen = Math.min(matchLen, source.length);
+      }
+    }
+  }
+  return { score, matchLen };
+}
+
+/*
+ * mergeJdSkills
+ * Deterministic safety net for tailoring: JD-parsed skills (jobSkills) that are
+ * missing from the tailored resume get appended to the best-matching category
+ * (token overlap with category name + items), falling back to the tools-ish
+ * category. Runs server-side so matchScore always reflects the JD's keywords,
+ * regardless of what the model does with the skills section.
+ * // ponytail: token-overlap is a heuristic — a JD skill may land in a
+ * // loosely-related category; skills stay user-editable. Cap exists so a
+ * // 40-skill JD can't bloat the section.
+ * @param doc - parsed/tailored ResumeDocument
+ * @param jdSkills - skill names from the job (may be empty)
+ * @returns a new ResumeDocument with merged skills; input is untouched
+ */
+export function mergeJdSkills(doc: ResumeDocument, jdSkills: string[]): ResumeDocument {
+  const categories = doc.skills?.categories;
+  if (!jdSkills.length || !categories?.length) return doc;
+
+  const toolsCat =
+    categories.find(
+      (c) => c.name.toLowerCase().includes("tool") || c.name.toLowerCase().includes("technolog"),
+    ) ?? null;
+
+  const seen = new Set(
+    categories.flatMap((c) => c.items).map((s) => slugifySkillName(s)),
+  );
+  const additions = new Map<string, string[]>();
+  let added = 0;
+
+  for (const raw of jdSkills) {
+    if (added >= MAX_JD_SKILL_ADDITIONS) break;
+    const name = raw.trim();
+    if (name.length < 2) continue;
+    const slug = slugifySkillName(name);
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+
+    let best: (typeof categories)[number] | null = null;
+    let bestScore = 0;
+    let bestLen = Infinity;
+    for (const cat of categories) {
+      const { score, matchLen } = categoryMatchScore(name, cat);
+      if (score > 0 && (score > bestScore || (score === bestScore && matchLen < bestLen))) {
+        best = cat;
+        bestScore = score;
+        bestLen = matchLen;
+      }
+    }
+    const target = best ?? toolsCat;
+    const list = additions.get(target?.name ?? "") ?? [];
+    list.push(name);
+    additions.set(target?.name ?? "", list);
+    added++;
+  }
+
+  if (added === 0) return doc;
+
+  const mergedCategories = categories.map((cat) => {
+    const extra = additions.get(cat.name);
+    return extra
+      ? { ...cat, items: uniqueCanonicalSkillNames([...cat.items, ...extra]) }
+      : cat;
+  });
+
+  if (!toolsCat) {
+    const extras = additions.get("");
+    if (extras) {
+      mergedCategories.push({
+        name: "Tools & Technologies",
+        items: uniqueCanonicalSkillNames(extras),
+      });
+    }
+  }
+
+  return { ...doc, skills: { categories: mergedCategories } };
+}

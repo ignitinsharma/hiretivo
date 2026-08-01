@@ -19,8 +19,12 @@ function tryPreviewData(raw: unknown): JobPreview | null {
   return parsed.success ? parsed.data : null;
 }
 
-async function enrichAndLinkJobSkills(jobId: string, description: string): Promise<void> {
-  const candidates = await extractCandidateSkillsFromJD(description);
+async function enrichAndLinkJobSkills(jobId: string, description: string, parsedSkills: string[] = []): Promise<void> {
+  // Prefer the JD parser's skill list (LLM-extracted with the full description);
+  // fall back to description extraction only when the parser found nothing.
+  const candidates = parsedSkills.length
+    ? parsedSkills.map((name) => ({ name, category: "tool" as const }))
+    : await extractCandidateSkillsFromJD(description);
   if (candidates.length === 0) return;
   const result = await reconcileAndInsertSkills(candidates);
   if (result.created.length === 0 && result.aliasesAdded.length === 0) return;
@@ -93,7 +97,7 @@ export async function POST(req: Request) {
       },
     });
 
-    await enrichAndLinkJobSkills(job.id, jobData.description);
+    await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills);
 
     const application = await prisma.application.create({
       data: {
@@ -173,7 +177,7 @@ export async function POST(req: Request) {
     },
   });
 
-  await enrichAndLinkJobSkills(job.id, jobData.description);
+  await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills);
 
   const application = await prisma.application.create({
     data: {
