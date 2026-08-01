@@ -10,6 +10,6 @@ describe("jd-parser config", () => {
     assert.match(src, /max_tokens: 4000/);
   });
   it("requires exhaustive skill extraction", () => {
-    assert.match(src, /Include ALL skills, technologies, tools, and keywords mentioned/);
+    assert.match(src, /EVERY skill, technology, tool, and keyword mentioned/);
   });
 });
