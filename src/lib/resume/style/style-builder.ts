@@ -1,5 +1,4 @@
 // Pure function: converts ResumeStyleConfig → react-pdf StyleSheet.create output.
-// Replaces the hardcoded buildStyles() in ats-render.tsx.
 // All sizes/spacing in pt; lineSpacing is a multiplier.
 
 import { StyleSheet } from "@react-pdf/renderer";
@@ -103,7 +102,8 @@ export function buildStyles(config: ResumeStyleConfig) {
       textDecoration: "underline",
     },
     highlight: {
-      backgroundColor: "#dcfce7",
+      color: "#15803d",
+      fontWeight: "bold",
     },
     diffAdded: {
       backgroundColor: "#dcfce7",

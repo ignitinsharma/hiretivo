@@ -181,7 +181,7 @@ export function ApplicationPageClient() {
       const res = await fetch("/api/resume/preview-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeJson: docToDownload }),
+        body: JSON.stringify({ resumeJson: docToDownload, styleConfig }),
       });
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
