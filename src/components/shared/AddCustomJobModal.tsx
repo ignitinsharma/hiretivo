@@ -42,6 +42,8 @@ const SUPPORTED_ATS = [
   { name: "Paylocity", logo: "/ats-logos/paylocity.svg" },
   { name: "Pinpoint HQ", logo: "/ats-logos/pinpoint-hq.svg" },
   { name: "Recruitee" },
+  { name: "SmartRecruiters" },
+  { name: "Breezy HR" },
 ] as const;
 
 export function AddCustomJobModal() {
