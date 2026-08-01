@@ -6,10 +6,10 @@ const SOURCE = "src/lib/ai/jd-parser.ts";
 const src = readFileSync(SOURCE, "utf8");
 
 describe("jd-parser config", () => {
-  it("caps max_tokens at 4000", () => {
-    assert.match(src, /max_tokens: 4000/);
+  it("keeps a generous max_tokens budget for full JD output", () => {
+    assert.match(src, /max_tokens: 16000/);
   });
-  it("requires exhaustive skill extraction", () => {
-    assert.match(src, /EVERY skill, technology, tool, and keyword mentioned/);
+  it("extracts skills mentioned in the description", () => {
+    assert.match(src, /"skills": an array of skill strings mentioned in the description/);
   });
 });
