@@ -49,9 +49,6 @@ export const PLAN_RANK: Record<PlanTier, number> = {
   [PlanTier.FREE]: 0,
   [PlanTier.PRO]: 1,
   [PlanTier.UNLIMITED]: 2,
-  [PlanTier.STARTER]: 1,
-  [PlanTier.GROWTH]: 2,
-  [PlanTier.SCALE]: 3,
 };
 
 /*
@@ -94,9 +91,6 @@ export function getProductPeriod(productId: string): BillingPeriod | null {
 export function getPlanTierId(plan: PlanTier): PricingTierId {
   const map: Record<PlanTier, PricingTierId> = {
     [PlanTier.FREE]: PricingTierId.FREE,
-    [PlanTier.STARTER]: PricingTierId.STARTER,
-    [PlanTier.GROWTH]: PricingTierId.GROWTH,
-    [PlanTier.SCALE]: PricingTierId.SCALE,
     [PlanTier.PRO]: PricingTierId.PRO,
     [PlanTier.UNLIMITED]: PricingTierId.UNLIMITED,
   };

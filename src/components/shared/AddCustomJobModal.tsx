@@ -35,6 +35,23 @@ interface JobPreview {
   skills: string[];
 }
 
+const SUPPORTED_ATS = [
+  { name: "Ashby", logo: "/ats-logos/ashby.png" },
+  { name: "Greenhouse", logo: "/ats-logos/greenhouse.svg" },
+  { name: "Lever", logo: "/ats-logos/lever.png" },
+  { name: "Paylocity", logo: "/ats-logos/paylocity.svg" },
+  { name: "Pinpoint HQ", logo: "/ats-logos/pinpoint-hq.svg" },
+  { name: "Recruitee", logo: "/ats-logos/recruitee.png" },
+  { name: "SmartRecruiters", logo: "/ats-logos/smartrecruiters.png" },
+  { name: "Breezy HR", logo: "/ats-logos/breezy-hr.png" },
+  { name: "Rippling", logo: "/ats-logos/rippling.png" },
+  { name: "Zoho Recruit", logo: "/ats-logos/zoho.svg" },
+  { name: "Keka", logo: "/ats-logos/keka.svg" },
+  { name: "Freshteam", logo: "/ats-logos/freshteam.png" },
+  { name: "greytHR", logo: "/ats-logos/greythr.svg" },
+  { name: "Zimyo", logo: "/ats-logos/zimyo.png" },
+] as const;
+
 export function AddCustomJobModal() {
   const router = useRouter();
   const { isAddCustomJobModalOpen, closeAddCustomJobModal } = useUIStore();
@@ -42,6 +59,8 @@ export function AddCustomJobModal() {
   const [tab, setTab] = useState<Tab>("url");
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [showFullJd, setShowFullJd] = useState(false);
+  const [unsupportedAts, setUnsupportedAts] = useState(false);
   const [preview, setPreview] = useState<JobPreview | null>(null);
 
   const [url, setUrl] = useState("");
@@ -53,7 +72,9 @@ export function AddCustomJobModal() {
     setTab("url");
     setState("idle");
     setError(null);
+    setUnsupportedAts(false);
     setPreview(null);
+    setShowFullJd(false);
     setUrl("");
     setTitle("");
     setCompany("");
@@ -81,6 +102,7 @@ export function AddCustomJobModal() {
 
       if (!res.ok) {
         if (res.status === 422) {
+          setUnsupportedAts(data.unsupportedAts ?? false);
           setError(data.error ?? "Could not parse this URL.");
         } else if (res.status === 409) {
           setError(data.error ?? "You have already applied to this job.");
@@ -171,11 +193,12 @@ export function AddCustomJobModal() {
     setState("idle");
     setError(null);
     setPreview(null);
+    setShowFullJd(false);
   }, []);
 
   return (
     <Dialog open={isAddCustomJobModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-brand-foreground">
             Add Custom Job
@@ -186,7 +209,12 @@ export function AddCustomJobModal() {
         </DialogHeader>
 
         {(state === "preview" || state === "confirming") && preview ? (
-          <div className="space-y-5 max-h-[70vh] overflow-y-auto">
+          <div
+            className={cn(
+              "space-y-5 overflow-y-auto",
+              showFullJd ? "max-h-[85vh]" : "max-h-[70vh]",
+            )}
+          >
             <div className="rounded-xl border border-brand-border bg-brand-surface p-5 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10">
@@ -215,10 +243,25 @@ export function AddCustomJobModal() {
                 </div>
               )}
 
-              <p className="text-sm text-brand-foreground leading-relaxed line-clamp-4">
+              <p
+                className={cn(
+                  "text-sm text-brand-foreground leading-relaxed whitespace-pre-line",
+                  !showFullJd && "line-clamp-4",
+                )}
+              >
                 {preview.description}
               </p>
-            </div>
+              {preview.description.length > 280 && (
+                <button
+                  type="button"
+                  aria-expanded={showFullJd}
+                  onClick={() => setShowFullJd((v) => !v)}
+                  className="text-xs font-semibold text-brand-primary hover:text-brand-primary/80"
+                >
+                  {showFullJd ? "Show Less" : "See More JD"}
+                </button>
+              )}
+                </div>
 
             {error && (
               <p className="flex items-start gap-2 text-sm text-brand-danger">
@@ -301,6 +344,30 @@ export function AddCustomJobModal() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <p className="text-xs text-brand-foreground-muted">We support major ATS:</p>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {SUPPORTED_ATS.map((ats) => (
+                      <div key={ats.name} className="flex items-center gap-1.5">
+                        {"logo" in ats && (
+                          <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-brand-border bg-brand-surface">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={ats.logo}
+                              alt={ats.name}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <span className="text-xs font-medium text-brand-foreground">{ats.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-brand-foreground-muted">
+                    For other platforms, paste the description instead.
+                  </p>
+                </div>
+
                 {error && (
                   <div className="rounded-lg border border-brand-danger/20 bg-brand-danger/5 p-3">
                     <p className="flex items-start gap-2 text-sm text-brand-danger">
@@ -312,9 +379,9 @@ export function AddCustomJobModal() {
 
                 {error && (
                   <Button
-                    variant="ghost"
+                    variant={unsupportedAts ? "secondary" : "ghost"}
                     size="sm"
-                    className="text-brand-foreground-muted"
+                    className={unsupportedAts ? "" : "text-brand-foreground-muted"}
                     onClick={handleSwitchToText}
                   >
                     Switch to paste description instead

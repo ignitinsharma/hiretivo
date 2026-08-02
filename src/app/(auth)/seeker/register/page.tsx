@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CreditCard, Info, Sparkles, Zap } from "lucide-react";
+import { CreditCard, FileText, Info, LayoutDashboard, Search, Zap } from "lucide-react";
 
+import { AuthValuePanel, type AuthValueBlurb } from "@/components/auth/AuthValuePanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,64 +33,36 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const SEEKER_SIGNUP_BLURBS: AuthValueBlurb[] = [
+  {
+    icon: FileText,
+    title: "AI Resume Engine",
+    description: "Paste a job link. Get a tailored, ATS-ready resume in seconds.",
+  },
+  {
+    icon: Search,
+    title: "Job matching",
+    description: "Browse roles matched to your skills, or add any job by URL.",
+  },
+  {
+    icon: LayoutDashboard,
+    title: "Application tracker",
+    description: "Track every application from applied to offer on one kanban board.",
+  },
+];
+
 const SeekerSignupLeft = (
-  <>
-    <div className="absolute top-[-10%] right-[-10%] w-96 h-96 rounded-full bg-black opacity-5 blur-3xl"></div>
-    <div className="relative z-10 max-w-lg w-full">
-      <h1 className="text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-brand-foreground mb-6">
-        2 free AI resumes.{" "}
-        <span className="text-brand-primary">Every month.</span>
-      </h1>
-      <p className="text-brand-foreground-muted font-medium text-base leading-relaxed mb-8 max-w-md">
-        Paste any job link. Get a tailored, ATS-ready resume in seconds. Two free every month — no credit card.
-      </p>
-
-      <div className="relative mb-3 max-w-sm">
-        <span className="absolute -top-2.5 left-3 z-10 rounded-pill border border-brand-border bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-foreground-muted">
-          Before
-        </span>
-        <div className="overflow-hidden rounded-xl border border-brand-border bg-white">
-          <Image
-            src="/images/resume-before.png"
-            alt="Generic, unoptimized resume"
-            width={1103}
-            height={1426}
-            className="w-full h-auto opacity-60"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center gap-2 my-1">
-        <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
-        <span className="text-xs font-semibold text-brand-primary">AI rewrites every bullet</span>
-        <Sparkles className="h-4 w-4 text-brand-primary" aria-hidden="true" />
-      </div>
-
-      <div className="relative mt-3 max-w-sm">
-        <span className="absolute -top-2.5 right-3 z-10 inline-flex items-center gap-1 rounded-pill bg-brand-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-          <Sparkles className="h-3 w-3" aria-hidden="true" />
-          AI Rewrote This
-        </span>
-        <div className="overflow-hidden rounded-xl border border-brand-primary/30 bg-white">
-          <Image
-            src="/images/resume-after.png"
-            alt="AI-optimized resume"
-            width={820}
-            height={1125}
-            className="w-full h-auto"
-          />
-        </div>
-      </div>
-
-      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-brand-foreground-muted">
-        <span>2 free/month</span>
-        <span className="text-brand-border">·</span>
-        <span>10k+ generated</span>
-        <span className="text-brand-border">·</span>
-        <span>98% ATS pass</span>
-      </div>
-
-      <div className="mt-5 flex flex-wrap gap-2">
+  <AuthValuePanel
+    headline={
+      <>
+        Land your next remote role —{" "}
+        <span className="text-brand-primary">faster.</span>
+      </>
+    }
+    subtitle="Paste any job link. Get a tailored, ATS-ready resume in seconds. Browse, apply, and track it all in one place."
+    blurbs={SEEKER_SIGNUP_BLURBS}
+    footer={
+      <div className="flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-white px-3 py-1.5 text-xs font-semibold text-brand-foreground-muted">
           <CreditCard className="h-3.5 w-3.5 text-brand-primary" />
           No Credit Card
@@ -100,8 +72,8 @@ const SeekerSignupLeft = (
           5-min Setup
         </span>
       </div>
-    </div>
-  </>
+    }
+  />
 );
 
 function SeekerRegisterContent() {
@@ -115,8 +87,7 @@ function SeekerRegisterContent() {
     React.useState(false);
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
-  const hasOAuthRoleMismatch =
-    authError === "wrong_role_oauth" && accountRole === UserRole.RECRUITER;
+  const hasOAuthRoleMismatch = false;
   const hasOAuthAccountNotLinked =
     authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
@@ -237,24 +208,9 @@ function SeekerRegisterContent() {
       title="Create your account"
       description="Start your journey to a better remote career today."
       leftContent={SeekerSignupLeft}
-      role="seeker"
       backHref="/"
     >
       <div className="space-y-6">
-        {roleMismatch && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-medium text-amber-800">
-              This account is registered as a Recruiter.{" "}
-              <Link
-                href="/recruiter/login"
-                className="font-bold text-black underline underline-offset-4"
-              >
-                Please use the Recruiter login
-              </Link>
-            </p>
-          </div>
-        )}
-
         {hasOAuthAccountNotLinked && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-medium text-amber-800">

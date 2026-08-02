@@ -290,7 +290,6 @@ async function fetchAndUpsertSource(
   if (newJobCandidates.length > 0) {
     const closed = await prisma.job.findMany({
       where: {
-        isAdminPosted: true,
         status: JobStatus.CLOSED,
         companyName: { in: [...new Set(newJobCandidates.map((j) => j.companyName))] },
       },
@@ -391,8 +390,7 @@ async function fetchAndUpsertSource(
         // Create new job
         const created = await prisma.job.create({
           data: {
-            recruiterId: SYSTEM_USER_ID,
-            title: job.title,
+          title: job.title,
             description: job.description || 'No description provided',
             jobType: job.jobType as JobType,
             applyType: 'EXTERNAL',
@@ -406,7 +404,6 @@ async function fetchAndUpsertSource(
             companyName: job.companyName,
             companyLogoUrl: job.companyLogoUrl,
             companyWebsite: job.companyWebsite,
-            isAdminPosted: true,
             externalApplyUrl: job.externalApplyUrl,
             publishedAt: job.publishedAt ? new Date(job.publishedAt) : now,
             atsSource: job.atsSource,
@@ -558,7 +555,6 @@ async function autoCloseStaleJobs(
   // Pre-collect IDs before closing so orphan cleanup is reliable
   const staleIds = (await prisma.job.findMany({
     where: {
-      isAdminPosted: true,
       status: JobStatus.OPEN,
       ...sourceFilter,
       lastSeenAt: { lt: subHours(now, 48) },
@@ -571,7 +567,6 @@ async function autoCloseStaleJobs(
 
   const oldIds = (await prisma.job.findMany({
     where: {
-      isAdminPosted: true,
       status: JobStatus.OPEN,
       ...sourceFilter,
       publishedAt: { lt: subDays(now, 60) },
@@ -616,7 +611,6 @@ async function autoCloseStaleJobs(
 export async function closeBlockedCompanyJobs(companyName: string): Promise<number> {
   const { count } = await prisma.job.updateMany({
     where: {
-      isAdminPosted: true,
       status: JobStatus.OPEN,
       companyName: { equals: companyName, mode: 'insensitive' },
     },

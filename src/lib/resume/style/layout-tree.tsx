@@ -91,21 +91,9 @@ function highlightText(
   return <Text>{highlightFragments(text, skills, s)}</Text>;
 }
 
-/** Renders diff segments as styled fragments. */
-function diffFragments(
-  segments: DiffSegment[] | undefined,
-  s: ResumePdfStyles,
-): React.ReactNode {
-  if (!segments?.length) return null;
-  return segments.map((seg, i) =>
-    seg.added ? (
-      <Text key={i} style={s.diffAdded}>
-        {seg.text}
-      </Text>
-    ) : (
-      <React.Fragment key={i}>{seg.text}</React.Fragment>
-    ),
-  );
+/** True when a diff block contains any added segment — the whole block gets highlighted. */
+function hasAdditions(segments: DiffSegment[] | undefined): boolean {
+  return segments?.some((seg) => seg.added) ?? false;
 }
 
 /** Bullet character based on style config. */
@@ -171,13 +159,12 @@ function SummaryBlock({
   opts: ResumeTreeOpts;
 }) {
   if (!doc.summary) return null;
+  const added = hasAdditions(opts.contentDiff?.summary);
   return (
     <>
       <Text style={s.sectionTitle}>Professional Summary</Text>
-      <Text style={s.summaryText}>
-        {opts.contentDiff?.summary
-          ? diffFragments(opts.contentDiff.summary, s)
-          : highlightFragments(doc.summary, opts.highlightSkills ?? [], s)}
+      <Text style={added ? { ...s.summaryText, ...s.diffAdded } : s.summaryText}>
+        {highlightFragments(doc.summary, opts.highlightSkills ?? [], s)}
       </Text>
     </>
   );
@@ -216,10 +203,15 @@ function ExperienceBlock({
           {exp.bullets
             .sort((a, b) => a.priority - b.priority)
             .map((b) => (
-              <Text key={b.id} style={s.bullet}>
-                {bulletGlyph(config)} {opts.contentDiff?.bullets?.[b.id]
-                  ? diffFragments(opts.contentDiff.bullets[b.id], s)
-                  : highlightText(b.text, opts.highlightSkills ?? [], s)}
+              <Text
+                key={b.id}
+                style={
+                  hasAdditions(opts.contentDiff?.bullets?.[b.id])
+                    ? { ...s.bullet, ...s.diffAdded }
+                    : s.bullet
+                }
+              >
+                {bulletGlyph(config)} {highlightText(b.text, opts.highlightSkills ?? [], s)}
               </Text>
             ))}
         </View>

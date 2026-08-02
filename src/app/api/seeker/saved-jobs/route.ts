@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { JobStatus, UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { resolveLogoUrl } from "@/lib/r2";
 import { dataFetchRateLimiter } from "@/lib/rate-limit";
 import { stripHtml } from "@/lib/utils";
 import { resolveJobCompany, resolveCompanyLogoUrl } from "@/lib/jobs/resolve-job-company";
@@ -54,20 +53,6 @@ export async function GET(req: NextRequest) {
   const where = { userId: session.user.id, job: { status: { not: JobStatus.DELETED } } };
 
   const baseInclude = {
-    recruiter: {
-      select: {
-        recruiterProfile: {
-          select: {
-            id: true,
-            companyName: true,
-            logo: true,
-            companySize: true,
-            industry: true,
-            fundingType: true,
-          },
-        },
-      },
-    },
     skills: {
       include: { skill: { select: { name: true } } },
     },
@@ -112,7 +97,6 @@ export async function GET(req: NextRequest) {
         companySize: savedJob.job.companySize,
         companyIndustry: savedJob.job.companyIndustry,
         companyFunding: savedJob.job.companyFunding,
-        recruiter: savedJob.job.recruiter,
       });
       return {
         id: savedJob.id,
@@ -125,10 +109,7 @@ export async function GET(req: NextRequest) {
           title: savedJob.job.title,
           companyId: company.companyId,
           companyName: company.companyName,
-          companyLogoUrl: resolveCompanyLogoUrl(
-            company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
-            savedJob.job.companyWebsite,
-          ),
+          companyLogoUrl: resolveCompanyLogoUrl(company.companyLogoUrl, savedJob.job.companyWebsite),
           location: savedJob.job.workType ?? "Remote",
           salaryRange: formatSalaryRange(
             savedJob.job.salaryMin,

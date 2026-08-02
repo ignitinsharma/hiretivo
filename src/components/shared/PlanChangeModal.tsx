@@ -103,7 +103,7 @@ export function PlanChangeModal({
       toast.success(msg)
       // Invalidate subscription-status so sidebar + billing tab refetch from DB immediately.
       // Also refresh the JWT so plan-gated server checks stay consistent.
-      void queryClient.invalidateQueries({ queryKey: ["subscription-status"] })
+      void queryClient.invalidateQueries({ queryKey: ["billing-subscription-status"] })
       await update()
       onSuccess?.()
       onOpenChange(false)

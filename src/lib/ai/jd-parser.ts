@@ -8,7 +8,7 @@ export interface ParsedJob {
   skills: string[];
 }
 
-const MAX_PAGE_CHARS = 8000;
+const MAX_PAGE_CHARS = 20000;
 const FETCH_TIMEOUT_MS = 15_000;
 const STRIP_TAGS = ["script", "style", "nav", "footer", "header"];
 
@@ -116,7 +116,7 @@ async function callExtractionLlm(text: string, context: string): Promise<ParsedJ
         { role: "user", content: `TEXT:\n${text}` },
       ],
       temperature: 0.1,
-      max_tokens: 8000,
+      max_tokens: 16000,
     });
 
     return {
@@ -188,7 +188,24 @@ function extractJson(raw: string): string {
  * ── Public API ───────────────────────────────────────────
  */
 
+const JS_APP_DOMAINS = [
+  "workday", "myworkdayjobs",
+  "taleo",
+  "successfactors", "sapsf",
+  "icims",
+];
+
+function isUnsupportedAtsDomain(url: string): boolean {
+  return JS_APP_DOMAINS.some((d) => url.includes(d));
+}
+
+export { isUnsupportedAtsDomain };
+
 export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
+  if (isUnsupportedAtsDomain(url)) {
+    console.warn(`[jd-parser] Unsupported JS-heavy ATS domain — ${url}`);
+    return null;
+  }
   const pageText = await fetchPageText(url);
   return pageText ? callExtractionLlm(pageText, "url") : null;
 }

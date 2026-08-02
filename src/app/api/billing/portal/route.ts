@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (session.user.role !== UserRole.SEEKER) {
-    return NextResponse.json({ error: "This plan is for recruiters only" }, { status: 403 });
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const { success } = await portalRateLimiter.limit(session.user.id);
   if (!success) {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   }
   const appUrl = getAppUrl(req);
   const portal = await dodo.customers.customerPortal.create(user.billingCustomerId, {
-    return_url: `${appUrl}/recruiter/settings`,
+    return_url: `${appUrl}/settings`,
   });
   return NextResponse.json({ data: { url: portal.link } }, { status: 200 });
 }

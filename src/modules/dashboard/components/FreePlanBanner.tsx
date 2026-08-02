@@ -19,7 +19,7 @@ export function FreePlanBanner() {
         <div>
           {isLoading || !quota ? (
             <Skeleton className="h-5 w-48" />
-          ) : quota.plan === "SCALE" ? (
+          ) : quota.plan === "UNLIMITED" ? (
             <p className="text-sm font-semibold text-gray-900">
               <span className="text-brand-primary">Unlimited</span> applications
             </p>

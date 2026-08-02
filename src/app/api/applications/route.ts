@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
   const job = await prisma.job.findFirst({
     where: { id: jobId, status: JobStatus.OPEN },
-    select: { id: true, recruiterId: true },
+    select: { id: true },
   });
   if (!job) {
     return NextResponse.json({ error: "Job not found or closed" }, { status: 404 });
@@ -197,7 +197,6 @@ export async function GET() {
           jobType: true,
           workType: true,
           experienceLevel: true,
-          isAdminPosted: true,
           companyName: true,
           companyLogoUrl: true,
           location: true,
@@ -211,20 +210,6 @@ export async function GET() {
             },
           },
           _count: { select: { applications: true } },
-          recruiter: {
-            select: {
-              recruiterProfile: {
-                select: {
-                  id: true,
-                  companyName: true,
-                  logo: true,
-                  companySize: true,
-                  fundingType: true,
-                  industry: true,
-                },
-              },
-            },
-          },
         },
       },
     },
@@ -248,15 +233,8 @@ export async function GET() {
       jobId: application.jobId,
       jobTitle: job.title,
       jobStatus: job.status,
-      companyId: job.isAdminPosted
-        ? null
-        : (job.recruiter.recruiterProfile?.id ?? null),
-      companyName: job.isAdminPosted
-        ? (job.companyName ?? "Unknown Company")
-        : (job.recruiter.recruiterProfile?.companyName ?? job.companyName ?? "Unknown Company"),
-      companyLogoUrl: job.isAdminPosted
-        ? (job.companyLogoUrl ?? null)
-        : resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
+      companyName: job.companyName ?? "Unknown Company",
+      companyLogoUrl: resolveLogoUrl(job.companyLogoUrl),
       location: job.location,
       salaryRange: formatSalaryRange(
         job.salaryMin,
@@ -266,15 +244,9 @@ export async function GET() {
       jobType: job.jobType,
       workType: job.workType,
       experienceLevel: job.experienceLevel,
-      companyIndustry: job.isAdminPosted
-        ? (job.companyIndustry ?? null)
-        : (job.recruiter.recruiterProfile?.industry ?? null),
-      companySize: job.isAdminPosted
-        ? (job.companySize ?? null)
-        : (job.recruiter.recruiterProfile?.companySize ?? null),
-      companyFundingType: job.isAdminPosted
-        ? (job.companyFunding ?? null)
-        : (job.recruiter.recruiterProfile?.fundingType ?? null),
+      companyIndustry: job.companyIndustry ?? null,
+      companySize: job.companySize ?? null,
+      companyFundingType: job.companyFunding ?? null,
       automationStatus: application.automationStatus,
       failureReason: application.failureReason,
       pipelineStage: application.pipelineStage,

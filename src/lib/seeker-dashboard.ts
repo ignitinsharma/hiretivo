@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ApplicationStatus, InterviewStatus, JobStatus } from '@/constants/enums';
+import { ApplicationStatus, JobStatus } from '@/constants/enums';
 import type {
   QuickStatsSummary,
   SkillGapItem,
@@ -68,7 +68,7 @@ export async function getSkillGapSummary(
 export async function getQuickStatsSummary(
   userId: string,
 ): Promise<QuickStatsSummary> {
-  const [applied, activeApplications, interviews] = await Promise.all([
+  const [applied, activeApplications] = await Promise.all([
     prisma.application.count({ where: { seekerId: userId } }),
     prisma.application.count({
       where: {
@@ -83,10 +83,7 @@ export async function getQuickStatsSummary(
         },
       },
     }),
-    prisma.interview.count({
-      where: { seekerId: userId, status: InterviewStatus.SCHEDULED },
-    }),
   ]);
 
-  return { applied, activeApplications, interviews };
+  return { applied, activeApplications, interviews: 0 };
 }

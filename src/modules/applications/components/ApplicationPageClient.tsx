@@ -23,6 +23,7 @@ import { StyleEditorPanel } from "@/modules/applications/components/style/StyleE
 import { ResumeEditor, type ResumeEditorHandle } from "@/modules/applications/components/ResumeEditor";
 import { AiRewritePanel } from "@/modules/applications/components/AiRewritePanel";
 import { CoverLetterPanel } from "@/modules/applications/components/CoverLetterPanel";
+import { ExternalApplyReturnDialog } from "@/modules/applications/components/ExternalApplyReturnDialog";
 
 const ResumePdfPreview = dynamic(
   () =>
@@ -146,6 +147,8 @@ export function ApplicationPageClient() {
   const [overflow, setOverflow] = useState(false);
   const [styleSeeded, setStyleSeeded] = useState(false);
   const [panelView, setPanelView] = useState<"content" | "style">("content");
+  const [askAppliedOpen, setAskAppliedOpen] = useState(false);
+  const externalOpenedRef = useRef(false);
   const { data: quota } = useGenerationQuota();
   const { openPaidFeatureModal } = useUIStore();
   const editorRef = useRef<ResumeEditorHandle>(null);
@@ -159,6 +162,23 @@ export function ApplicationPageClient() {
       return d?.automationStatus === "GENERATING" ? 2000 : false;
     },
   });
+
+  /* When the user opens the external job posting and returns to this tab,
+   * ask once whether they applied. */
+  useEffect(() => {
+    const onReturn = () => {
+      if (!externalOpenedRef.current || !document.hasFocus()) return;
+      if (data?.automationStatus === "SUBMITTED") return;
+      externalOpenedRef.current = false;
+      setAskAppliedOpen(true);
+    };
+    window.addEventListener("focus", onReturn);
+    document.addEventListener("visibilitychange", onReturn);
+    return () => {
+      window.removeEventListener("focus", onReturn);
+      document.removeEventListener("visibilitychange", onReturn);
+    };
+  }, [data?.automationStatus]);
 
   /* Seed styleConfig from active version on page load so persisted styles
    * survive a full-page refresh. Runs once when data first resolves. */
@@ -181,7 +201,7 @@ export function ApplicationPageClient() {
       const res = await fetch("/api/resume/preview-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeJson: docToDownload }),
+        body: JSON.stringify({ resumeJson: docToDownload, styleConfig }),
       });
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
@@ -349,6 +369,19 @@ export function ApplicationPageClient() {
             {data.job.companyName}
           </p>
         </div>
+        {data.job.externalApplyUrl && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              externalOpenedRef.current = true;
+              window.open(data.job.externalApplyUrl!, "_blank", "noopener,noreferrer");
+            }}
+          >
+            <ExternalLink className="mr-1.5 h-4 w-4" />
+            View Original Job
+          </Button>
+        )}
       </div>
 
       {/* Link verification banner */}
@@ -741,18 +774,6 @@ export function ApplicationPageClient() {
                   )}
                   Download PDF
                 </Button>
-                {data.job.applyType === "EXTERNAL" && data.job.externalApplyUrl && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() =>
-                      window.open(data.job.externalApplyUrl!, "_blank", "noopener,noreferrer")
-                    }
-                  >
-                    <ExternalLink className="mr-1.5 h-4 w-4" />
-                    View job posting
-                  </Button>
-                )}
                 <Button
                   variant="secondary"
                   size="sm"
@@ -935,6 +956,15 @@ export function ApplicationPageClient() {
           </Card>
         </div>
       </div>
+
+      <ExternalApplyReturnDialog
+        open={askAppliedOpen}
+        onClose={() => setAskAppliedOpen(false)}
+        onConfirm={async () => {
+          setAskAppliedOpen(false);
+          await handleMarkApplied();
+        }}
+      />
     </div>
   );
 }

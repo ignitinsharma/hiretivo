@@ -1,11 +1,25 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function PricingSuccessContent() {
+export default function PricingSuccessPage() {
+  const { update } = useSession();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Webhook lands async — refresh session + cached plan data so the UI
+    // reflects the new plan without a manual reload.
+    void update().then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["billing-subscription-status"] });
+      void queryClient.invalidateQueries({ queryKey: ["generation-quota"] });
+    });
+  }, [update, queryClient]);
+
   return (
     <main className="min-h-[70vh] bg-white px-6 py-24">
       <section className="mx-auto flex max-w-2xl flex-col items-center text-center">
@@ -32,9 +46,3 @@ function PricingSuccessContent() {
     </main>
   );
 }
-
-const DynamicPricingSuccess = dynamic(() => Promise.resolve(PricingSuccessContent), {
-  ssr: false,
-});
-
-export default DynamicPricingSuccess;

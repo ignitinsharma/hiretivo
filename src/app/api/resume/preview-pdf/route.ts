@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createRateLimiter } from "@/lib/rate-limit";
-import { renderAtsResume } from "@/lib/resume/ats-render";
+import { renderResumePdf } from "@/lib/resume/style/render-pdf";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
+import {
+  ResumeStyleConfigSchema,
+  resolveStyle,
+} from "@/lib/validations/resume-style.schema";
 
 const previewPdfRateLimiter = createRateLimiter("resume-preview-pdf", 20, "1 m");
 
 /*
  * POST /api/resume/preview-pdf
- * Accepts a Phase 0 ResumeDocument, renders it to ATS-safe single-page PDF
- * with fit-to-one-page logic (shrink-then-trim), and returns the PDF.
- * Returns trim info so the UI can show "Trimmed N bullets" notice.
+ * Accepts a ResumeDocument (and optional styleConfig) and renders the PDF
+ * with the same render tree as the on-screen preview — download matches
+ * preview exactly. Highlight opts are never passed, so the PDF has no
+ * green backgrounds.
  *
- * @body { resumeJson: ResumeDocument }
+ * @body { resumeJson: ResumeDocument, styleConfig?: ResumeStyleConfig }
  * @returns application/pdf binary
  */
 export async function POST(req: NextRequest) {
@@ -42,7 +47,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { pdf, trimmedBullets } = await renderAtsResume(parsed.data);
+  const rawConfig = (body as Record<string, unknown>)?.styleConfig;
+  const configParsed = ResumeStyleConfigSchema.safeParse(rawConfig);
+  const styleConfig = configParsed.success
+    ? configParsed.data
+    : resolveStyle(undefined);
+
+  const pdf = await renderResumePdf(parsed.data, styleConfig);
 
   const safeName = parsed.data.personalInfo.name.replace(/[^a-zA-Z0-9 \-_]/g, "").trim() || "resume";
   const filename = `${safeName.replace(/\s+/g, "_")}_Tailored_Resume.pdf`;
@@ -52,7 +63,6 @@ export async function POST(req: NextRequest) {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filename}"`,
-      "X-Trimmed-Bullets": String(trimmedBullets),
     },
   });
 }

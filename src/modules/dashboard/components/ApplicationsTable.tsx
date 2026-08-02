@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, Eye, MoreHorizontal } from "lucide-react";
+import { Search, Eye, MoreHorizontal, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -90,94 +90,109 @@ export function ApplicationsTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-t border-brand-border">
-              <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Company</th>
-              <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Status</th>
-              <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Applied</th>
-              <th className="w-12 px-5 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-sm text-brand-foreground-muted">Loading...</td>
+      {!isLoading && filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-10 h-10 rounded-xl border border-brand-border bg-brand-surface flex items-center justify-center">
+            <Briefcase className="w-5 h-5 text-brand-foreground-secondary" />
+          </div>
+          <div className="text-center">
+            <p className="text-brand-foreground font-semibold text-base">No applications yet</p>
+            <p className="text-brand-foreground-muted text-sm mt-1">
+              {applications.length > 0
+                ? "No applications match this status."
+                : "Start applying to jobs to track your progress here."}
+            </p>
+          </div>
+          {applications.length === 0 && (
+            <Button asChild variant="secondary" size="sm">
+              <Link href="/jobs">Browse jobs</Link>
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-t border-brand-border">
+                <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Company</th>
+                <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Status</th>
+                <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Applied</th>
+                <th className="w-12 px-5 py-3"></th>
               </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-sm text-brand-foreground-muted">
-                  No applications yet. Start applying to jobs to see them here.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((app) => {
-                const dynamicStatus = getDynamicStatus(app);
-                return (
-                  <tr
-                    key={app.id}
-                    className="border-t border-brand-border hover:bg-brand-surface transition-colors cursor-pointer"
-                    onClick={() => router.push(`/applications/${app.id}`)}
-                  >
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
-                          <span className="text-xs font-bold text-brand-foreground-muted">
-                            {app.companyName[0]}
-                          </span>
-                          {app.companyLogoUrl && (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                              src={app.companyLogoUrl}
-                              alt={`${app.companyName} logo`}
-                              className="absolute inset-0 h-full w-full bg-white object-contain"
-                              onError={(e) => { e.currentTarget.style.display = "none"; }}
-                            />
-                          )}
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="px-5 py-8 text-center text-sm text-brand-foreground-muted">Loading...</td>
+                </tr>
+              ) : (
+                filtered.map((app) => {
+                  const dynamicStatus = getDynamicStatus(app);
+                  return (
+                    <tr
+                      key={app.id}
+                      className="border-t border-brand-border hover:bg-brand-surface transition-colors cursor-pointer"
+                      onClick={() => router.push(`/applications/${app.id}`)}
+                    >
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
+                            <span className="text-xs font-bold text-brand-foreground-muted">
+                              {app.companyName[0]}
+                            </span>
+                            {app.companyLogoUrl && (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={app.companyLogoUrl}
+                                alt={`${app.companyName} logo`}
+                                className="absolute inset-0 h-full w-full bg-white object-contain"
+                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-brand-foreground">{app.companyName}</p>
+                            <p className="text-xs text-brand-foreground-muted">{app.jobTitle}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-brand-foreground">{app.companyName}</p>
-                          <p className="text-xs text-brand-foreground-muted">{app.jobTitle}</p>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${dynamicStatus.className}`}>
+                          {dynamicStatus.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-sm text-brand-foreground-muted">
+                        {getAppliedColumn(app)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="w-7 h-7 rounded-pill flex items-center justify-center text-brand-foreground-secondary hover:text-brand-primary hover:bg-brand-surface"
+                            aria-label="View details"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/applications/${app.id}`);
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            className="w-7 h-7 rounded-pill flex items-center justify-center text-brand-foreground-secondary hover:text-brand-primary hover:bg-brand-surface"
+                            aria-label="More options"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${dynamicStatus.className}`}>
-                        {dynamicStatus.label}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-sm text-brand-foreground-muted">
-                      {getAppliedColumn(app)}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-1">
-                        <button
-                          className="w-7 h-7 rounded-pill flex items-center justify-center text-brand-foreground-secondary hover:text-brand-primary hover:bg-brand-surface"
-                          aria-label="View details"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/applications/${app.id}`);
-                          }}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          className="w-7 h-7 rounded-pill flex items-center justify-center text-brand-foreground-secondary hover:text-brand-primary hover:bg-brand-surface"
-                          aria-label="More options"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

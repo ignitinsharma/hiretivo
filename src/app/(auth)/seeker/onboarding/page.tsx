@@ -15,9 +15,6 @@ export default async function SeekerOnboardingPage() {
   if (!session?.user?.id) {
     redirect("/seeker/login");
   }
-  if (session.user.role !== UserRole.SEEKER) {
-    redirect("/recruiter/dashboard");
-  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

@@ -1,4 +1,4 @@
-import type { Role, PlanTier, AppStatus, JobType, WorkType, JobStatus, InterviewStatus } from "@prisma/client";
+import type { Role, PlanTier, AppStatus, JobType, WorkType, JobStatus } from "@prisma/client";
 import type { Session } from "next-auth";
 
 export interface SessionUser {
@@ -77,7 +77,6 @@ export interface JobListItem {
   salaryMax: number | null;
   currency: string | null;
   externalApplyUrl: string | null;
-  recruiterId: string;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -102,39 +101,8 @@ export interface ApplicationListItem {
   coverLetter: string | null;
   job: {
     title: string;
-    recruiter: {
-      recruiterProfile: {
-        companyName: string | null;
-        logo: string | null;
-      } | null;
-    };
-  };
-}
-
-export interface InterviewListItem {
-  id: string;
-  applicationId: string;
-  recruiterId: string;
-  seekerId: string;
-  status: InterviewStatus;
-  startsAt: Date | null;
-  endsAt: Date | null;
-  meetLink: string | null;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  application: {
-    id: string;
-    job: {
-      id: string;
-      title: string;
-      recruiterId: string;
-    };
-    seeker: {
-      id: string;
-      name: string | null;
-      email: string | null;
-    };
+    companyName: string | null;
+    companyLogoUrl: string | null;
   };
 }
 
@@ -152,20 +120,6 @@ export interface SeekerProfile {
   portfolioUrl: string | null;
   linkedinUrl: string | null;
   githubUrl: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface RecruiterProfile {
-  id: string;
-  userId: string;
-  companyName: string | null;
-  companySize: string | null;
-  companyWebsite: string | null;
-  companyDescription: string | null;
-  industry: string | null;
-  logo: string | null;
-  linkedinUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,11 +1,10 @@
 export type AuthMethod = "google" | "email";
-export type AuthSurface = "seeker" | "recruiter";
+export type AuthSurface = "seeker";
 
 export const LAST_USED_AUTH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 90;
 
 export const LAST_USED_AUTH_COOKIE_NAMES: Record<AuthSurface, string> = {
   seeker: "hiretivo_last_auth_seeker",
-  recruiter: "hiretivo_last_auth_recruiter",
 };
 
 export const LAST_USED_AUTH_COOKIE_OPTIONS = {

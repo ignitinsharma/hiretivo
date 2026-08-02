@@ -51,9 +51,7 @@ export async function AuthGuard({
 
   // Stale JWT, DB user gone → terminate the session cleanly (do NOT loop via onboarding).
   if (state === SessionUserState.MISSING) {
-    const roleParam =
-      requiredRole === UserRole.RECRUITER ? "recruiter" : "seeker";
-    redirect(`/auth/session-expired?role=${roleParam}`);
+    redirect(`/auth/session-expired?role=seeker`);
   }
 
   // Real user, onboarding incomplete → onboarding flow.

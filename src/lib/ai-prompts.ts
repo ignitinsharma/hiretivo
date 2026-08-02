@@ -291,9 +291,9 @@ Modifications allowed inside the resume object:
 - Assign priority (1=highest) to each bullet — used for fit-to-one-page trimming
 
 SKILLS SECTION RULE:
-- You may ONLY include a skill in the Skills section if it is explicitly present somewhere in the input resume JSON — in existing skills, experience bullets, project descriptions, or certifications.
-- Do NOT infer skills from the tech stack. Only include skills that appear verbatim in the source resume. Infer zero skills.
-- Do NOT add skills that are not present in the input resume, even if they appear in REQUIRED SKILLS or the job description.
+- The Skills section MUST include EVERY skill present in the input resume JSON that is relevant to this job description — search the existing skills section, experience bullets, projects, and certifications, not just the skills list. If a skill from a bullet is relevant to this JD, it MUST appear in the Skills section.
+- You may ONLY include skills that appear explicitly in the input resume JSON — never infer or invent skills.
+- Do NOT add skills absent from the input resume even if listed in REQUIRED SKILLS or the job description.
 
 TITLE & SUMMARY ALIGNMENT RULE:
 - Compare jobTitle against the FULL breadth of the candidate's real experience in the input resume JSON — across all employment, projects, and skills — not just their current summary framing or stated job titles.
@@ -325,6 +325,6 @@ Generate the tailored resume as a single JSON object following the structure abo
 }
 
 export const TAILOR_RESUME_CONFIG = {
-  max_tokens: 4096,
+  max_tokens: 8192,
   temperature: 0.3,
 } as const;

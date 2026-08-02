@@ -144,7 +144,7 @@ function QuotaDisplay() {
     );
   }
 
-  if (!quota || quota.plan === "SCALE") {
+  if (!quota || quota.plan === "UNLIMITED") {
     return (
       <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-pill border border-brand-border text-xs font-medium text-gray-700">
         <span className="text-brand-primary font-semibold">Unlimited</span>

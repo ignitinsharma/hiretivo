@@ -36,7 +36,8 @@ export function diffBullets(
   for (const bullet of tailoredBullets) {
     const masterText = masterById.get(bullet.id);
     if (masterText === undefined) {
-      result[bullet.id] = [{ text: bullet.text, added: false }];
+      // Brand-new bullet (no counterpart in master) — fully added.
+      result[bullet.id] = [{ text: bullet.text, added: true }];
       continue;
     }
     const changes = diffWords(masterText, bullet.text);

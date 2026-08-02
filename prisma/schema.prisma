@@ -11,7 +11,6 @@ datasource db {
 
 enum Role {
   SEEKER
-  RECRUITER
 }
 
 enum JobType {
@@ -70,9 +69,8 @@ enum WorkType {
 
 enum PlanTier {
   FREE
-  STARTER
-  GROWTH
-  SCALE
+  PRO
+  UNLIMITED
 }
 
 enum VerificationStatus {
@@ -93,13 +91,6 @@ enum SubStatus {
   ACTIVE
   PAST_DUE
   CANCELED
-}
-
-enum InterviewStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-  NO_SHOW
 }
 
 enum PipelineStage {
@@ -133,27 +124,15 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  seekerProfile   SeekerProfile?
-  recruiterProfile RecruiterProfile?
-
-  jobsPosted Job[] @relation("RecruiterJobs")
-
-  applications Application[]
-  masterResume    MasterResume?
+  seekerProfile    SeekerProfile?
+  applications     Application[]
+  masterResume     MasterResume?
   generationQuotas GenerationQuota[]
-
-  interviewsAsRecruiter Interview[] @relation("InterviewRecruiter")
-  interviewsAsSeeker    Interview[] @relation("InterviewSeeker")
-
-  clickEvents ClickEvent[]
-
-  boostedJobs BoostedJob[] @relation("BoostedJobs")
-  savedJobs            SavedJob[]
-  dismissedJobs        DismissedJob[]
-  subscription         Subscription?
-  verificationReviews  VerificationReview[]
-  engineerUnlocksAsRecruiter EngineerUnlock[] @relation("RecruiterUnlocks")
-  engineerUnlocksAsEngineer  EngineerUnlock[] @relation("EngineerUnlocks")
+  clickEvents      ClickEvent[]
+  savedJobs        SavedJob[]
+  dismissedJobs    DismissedJob[]
+  subscription     Subscription?
+  verificationReviews VerificationReview[]
 }
 
 model Account {
@@ -268,32 +247,8 @@ model SeekerSkill {
   @@index([skillId])
 }
 
-model RecruiterProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  companyName String
-  website     String?
-  bio         String? @db.Text
-  companySize String?
-  industry    String?
-  fundingType String?
-  isFullyRemote Boolean  @default(false)
-  logo        String?
-
-  emailNotifications     Boolean @default(true)
-  applicationAlerts      Boolean @default(true)
-  interviewNotifications Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Job {
   id          String @id @default(cuid())
-  recruiterId String
-  recruiter   User   @relation("RecruiterJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
 
   title       String
   description String      @db.Text
@@ -311,20 +266,18 @@ model Job {
 
   externalApplyUrl String?
 
-  // Admin-posted job company overrides — null on regular recruiter jobs.
-  // When non-null, take precedence over the recruiter's profile for display.
+  // Company info — populated from ATS feed or admin post
   companyName     String?
   companyLogoUrl  String?
   companyWebsite  String?
   companySize     String?
   companyIndustry String?
   companyFunding  String?
-  isAdminPosted   Boolean   @default(false)
 
   publishedAt DateTime?
   closedAt    DateTime?
 
-  // ATS job feed fields — null on regular recruiter jobs
+  // ATS job feed fields
   atsSource       String?   // 'ashby' | 'greenhouse' | 'lever'
   atsSourceId     String?   // Raw ID from source API (stable per source)
   descriptionHash String?   @map("description_hash")
@@ -338,17 +291,14 @@ model Job {
   applications  Application[]
   jobMatches    JobMatch[]
   clickEvents   ClickEvent[]
-  boostedJob    BoostedJob?
   savedBy       SavedJob[]
   dismissedBy   DismissedJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([recruiterId])
   @@index([status])
   @@index([createdAt])
-  @@index([isAdminPosted])
   @@index([status, createdAt])
   @@index([atsSource])
   @@index([locationClass])
@@ -417,7 +367,6 @@ model Application {
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
   seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
 
-  interviews Interview[]
   resumeVersions ResumeVersion[]
   coverLetters   CoverLetter[]
 
@@ -489,34 +438,6 @@ model CoverLetter {
   @@index([applicationId])
 }
 
-model Interview {
-  id String @id @default(cuid())
-
-  applicationId String
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-  recruiterId String
-  recruiter   User   @relation("InterviewRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  seekerId String
-  seeker   User   @relation("InterviewSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
-
-  status   InterviewStatus @default(SCHEDULED)
-  startsAt DateTime?
-  endsAt   DateTime?
-  meetLink String?
-  notes             String? @db.Text
-  scheduledTimeZone String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([applicationId])
-  @@index([recruiterId])
-  @@index([seekerId])
-  @@index([startsAt])
-}
-
 model ClickEvent {
   id String @id @default(cuid())
 
@@ -540,23 +461,6 @@ model EarlyAccessEmail {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
-}
-
-model BoostedJob {
-  id          String   @id @default(cuid())
-  jobId       String   @unique
-  recruiterId String
-  paymentId   String?
-  startsAt    DateTime @default(now())
-  expiresAt   DateTime
-
-  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  recruiter User @relation("BoostedJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([recruiterId])
 }
 
 model Subscription {
@@ -655,24 +559,6 @@ model VerificationReview {
 
   @@index([userId])
   @@index([status])
-  @@index([createdAt])
-}
-
-model EngineerUnlock {
-  id          String   @id @default(cuid())
-  recruiterId String
-  engineerId  String
-  // "talent_pool" = counts against quota | "application_auto" = free, never counted
-  source      String   @default("talent_pool")
-  createdAt   DateTime @default(now())
-
-  recruiter User @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
-  engineer  User @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
-
-  @@unique([recruiterId, engineerId])
-  @@index([recruiterId])
-  @@index([engineerId])
-  @@index([source])
   @@index([createdAt])
 }
 

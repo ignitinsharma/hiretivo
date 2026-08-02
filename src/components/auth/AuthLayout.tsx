@@ -7,32 +7,20 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
   description?: string;
-  showRecruiterToggle?: boolean;
-  recruiterMode?: boolean;
-  onToggleMode?: () => void;
-  toggleLinkText?: string;
-  toggleLinkHref?: string;
   leftContent?: React.ReactNode;
-  role?: "seeker" | "recruiter";
   backHref?: string;
 }
 
 /**
- * Provides the shared two-column shell used by seeker and recruiter auth pages.
+ * Provides the shared two-column shell used by auth pages.
  */
 export function AuthLayout({
   children,
   title,
   description,
   leftContent,
-  role,
   backHref,
 }: AuthLayoutProps) {
-  const roleBadge = role === "seeker"
-    ? { label: "Seeker", color: "bg-brand-primary/10 text-brand-primary border-brand-primary/20" }
-    : role === "recruiter"
-    ? { label: "Recruiter", color: "bg-gray-100 text-gray-700 border-brand-border" }
-    : null;
 
   return (
     <main className="min-h-dvh flex flex-col md:flex-row bg-white selection:bg-brand-primary/20 antialiased overflow-x-hidden">
@@ -67,14 +55,6 @@ export function AuthLayout({
                 </Link>
               ) : (
                 <div />
-              )}
-              {roleBadge && (
-                <span className={cn(
-                  "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
-                  roleBadge.color
-                )}>
-                  {roleBadge.label}
-                </span>
               )}
             </div>
 

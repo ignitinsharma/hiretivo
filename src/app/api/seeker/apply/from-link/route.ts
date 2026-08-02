@@ -7,8 +7,15 @@ import {
   JobPreviewSchema,
   type JobPreview,
 } from "@/lib/validations/apply-from-link.schema";
-import { parseJobFromUrl, parseJobFromText } from "@/lib/ai/jd-parser";
-import { extractCandidateSkillsFromJD, reconcileAndInsertSkills } from "@/lib/ai/skill-catalog-extractor";
+import {
+  parseJobFromUrl,
+  parseJobFromText,
+  isUnsupportedAtsDomain,
+} from "@/lib/ai/jd-parser";
+import {
+  extractCandidateSkillsFromJD,
+  reconcileAndInsertSkills,
+} from "@/lib/ai/skill-catalog-extractor";
 import { upsertJobSkillIds } from "@/services/ats-job-fetcher.service";
 import { SkillLevel } from "@/constants/enums";
 import { JobStatus } from "@/constants/enums";
@@ -19,19 +26,38 @@ function tryPreviewData(raw: unknown): JobPreview | null {
   return parsed.success ? parsed.data : null;
 }
 
-async function enrichAndLinkJobSkills(jobId: string, description: string): Promise<void> {
-  const candidates = await extractCandidateSkillsFromJD(description);
+async function enrichAndLinkJobSkills(
+  jobId: string,
+  description: string,
+  parsedSkills: string[] = [],
+): Promise<void> {
+  // Prefer the JD parser's skill list (LLM-extracted with the full description);
+  // fall back to description extraction only when the parser found nothing.
+  const candidates = parsedSkills.length
+    ? parsedSkills.map((name) => ({ name, category: "tool" as const }))
+    : await extractCandidateSkillsFromJD(description);
   if (candidates.length === 0) return;
   const result = await reconcileAndInsertSkills(candidates);
   if (result.created.length === 0 && result.aliasesAdded.length === 0) return;
-  const allSkills = await prisma.skill.findMany({ select: { id: true, name: true, aliases: true } });
+  const allSkills = await prisma.skill.findMany({
+    select: { id: true, name: true, aliases: true },
+  });
   const skillIds = upsertJobSkillIds(
-    [...new Set([...result.created.map((s) => s.name), ...result.aliasesAdded.map((a) => a.skillName)])],
+    [
+      ...new Set([
+        ...result.created.map((s) => s.name),
+        ...result.aliasesAdded.map((a) => a.skillName),
+      ]),
+    ],
     allSkills,
   );
   if (skillIds.length > 0) {
     await prisma.jobSkill.createMany({
-      data: skillIds.map((skillId) => ({ jobId, skillId, level: SkillLevel.INTERMEDIATE })),
+      data: skillIds.map((skillId) => ({
+        jobId,
+        skillId,
+        level: SkillLevel.INTERMEDIATE,
+      })),
       skipDuplicates: true,
     });
   }
@@ -65,7 +91,10 @@ export async function POST(req: Request) {
     }
     if (!jobData) {
       return NextResponse.json(
-        { error: "Could not parse job description. Please ensure it includes the job title, company, and responsibilities." },
+        {
+          error:
+            "Could not parse job description. Please ensure it includes the job title, company, and responsibilities.",
+        },
         { status: 422 },
       );
     }
@@ -83,7 +112,6 @@ export async function POST(req: Request) {
 
     const job = await prisma.job.create({
       data: {
-        recruiterId: session.user.id,
         title: jobData.title,
         description: jobData.description,
         jobType: "FULL_TIME",
@@ -93,7 +121,7 @@ export async function POST(req: Request) {
       },
     });
 
-    await enrichAndLinkJobSkills(job.id, jobData.description);
+    await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills);
 
     const application = await prisma.application.create({
       data: {
@@ -138,8 +166,14 @@ export async function POST(req: Request) {
     jobData = await parseJobFromUrl(url);
   }
   if (!jobData) {
+    const unsupportedAts = isUnsupportedAtsDomain(url);
     return NextResponse.json(
-      { error: "Could not parse job from this URL. Try pasting the job description instead." },
+      {
+        error: unsupportedAts
+          ? "This job board isn't supported for auto-fetch. Switch to 'Paste Description' and copy the job details instead."
+          : "Could not parse job from this URL. Try pasting the job description instead.",
+        unsupportedAts,
+      },
       { status: 422 },
     );
   }
@@ -157,7 +191,6 @@ export async function POST(req: Request) {
 
   const job = await prisma.job.create({
     data: {
-      recruiterId: session.user.id,
       title: jobData.title,
       description: jobData.description,
       jobType: "FULL_TIME",
@@ -168,7 +201,7 @@ export async function POST(req: Request) {
     },
   });
 
-  await enrichAndLinkJobSkills(job.id, jobData.description);
+  await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills);
 
   const application = await prisma.application.create({
     data: {
