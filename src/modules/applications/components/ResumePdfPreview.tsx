@@ -67,7 +67,7 @@ export function ResumePdfPreview({
               <ResumeSkeleton />
             ) : (
               <iframe
-                src={`${url}#toolbar=0`}
+                src={url}
                 className="w-full min-h-[900px] border-0"
                 title="Resume preview"
               />

@@ -130,12 +130,13 @@ export async function POST(req: Request) {
     include: { job: { select: { externalApplyUrl: true } } },
   });
 
-  if (existing?.job?.externalApplyUrl === url) {
-    return NextResponse.json(
-      { error: "You have already applied to this job from this link." },
-      { status: 409 },
-    );
-  }
+  // TEMP DISABLED for testing — restore duplicate-link check:
+  // if (existing?.job?.externalApplyUrl === url) {
+  //   return NextResponse.json(
+  //     { error: "You have already applied to this job from this link." },
+  //     { status: 409 },
+  //   );
+  // }
 
   let jobData = tryPreviewData(body.previewData) as JobPreview | null;
   if (!jobData) {
