@@ -103,11 +103,6 @@ export function ApplicationsTable() {
                 : "Start applying to jobs to track your progress here."}
             </p>
           </div>
-          {applications.length === 0 && (
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/jobs">Browse jobs</Link>
-            </Button>
-          )}
         </div>
       ) : (
         <div className="overflow-x-auto">

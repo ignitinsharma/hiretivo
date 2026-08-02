@@ -10,6 +10,8 @@ import { useGenerationQuota } from "@/hooks/use-generation-quota";
 export function FreePlanBanner() {
   const { data: quota, isLoading } = useGenerationQuota();
 
+  if (quota && quota.plan !== "FREE") return null;
+
   return (
     <div className="flex items-center justify-between bg-white rounded-card border border-brand-border px-5 py-4 shadow-card">
       <div className="flex items-center gap-3">
@@ -19,10 +21,6 @@ export function FreePlanBanner() {
         <div>
           {isLoading || !quota ? (
             <Skeleton className="h-5 w-48" />
-          ) : quota.plan === "UNLIMITED" ? (
-            <p className="text-sm font-semibold text-gray-900">
-              <span className="text-brand-primary">Unlimited</span> applications
-            </p>
           ) : (
             <p className="text-sm font-semibold text-gray-900">
               You have{" "}

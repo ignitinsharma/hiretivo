@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CircleCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   Accordion,
   AccordionContent,
@@ -14,6 +15,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
 import { BillingPeriod, PricingTierId } from "@/constants/enums";
+import { billingService } from "@/services/billing.service";
 import { toast } from "sonner";
 
 const TD_BASE = "py-6 px-4 text-sm";
@@ -74,15 +76,22 @@ function PricingCard({
   period,
   checkingOutId,
   onCheckout,
+  currentPlan,
+  isManaging,
+  onManage,
 }: {
   tier: PlanTierConfig;
   period: BillingPeriod;
   checkingOutId: PricingTierId | null;
   onCheckout: (planId: PricingTierId) => void;
+  currentPlan?: string;
+  isManaging: boolean;
+  onManage: () => void;
 }) {
   const isHighlighted = tier.highlighted;
   const isPaid = tier.id !== PricingTierId.FREE;
   const isCheckingOut = checkingOutId === tier.id;
+  const isCurrentPlan = currentPlan !== undefined && currentPlan.toLowerCase() === tier.id;
 
   const displayPrice =
     isPaid && period === BillingPeriod.ANNUAL && tier.monthlyPrice !== null
@@ -98,9 +107,9 @@ function PricingCard({
           : "bg-white",
       )}
     >
-      {isHighlighted && (
+      {(currentPlan !== undefined && (isCurrentPlan || isHighlighted)) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border-2 border-black bg-white px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground shadow-[2px_2px_0px_0px_#000]">
-          Most Popular
+          {isCurrentPlan ? "Current Plan" : "Most Popular"}
         </div>
       )}
 
@@ -141,9 +150,26 @@ function PricingCard({
         ))}
       </ul>
 
-      {isPaid ? (
+      {isCurrentPlan && isPaid ? (
         <Button
-          variant={isHighlighted ? "secondary" : "primary"}
+          variant="secondary"
+          size="lg"
+          className="mt-auto w-full"
+          onClick={onManage}
+          disabled={isManaging}
+        >
+          {isManaging ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Opening...
+            </>
+          ) : (
+            "Manage Subscription"
+          )}
+        </Button>
+      ) : isPaid ? (
+        <Button
+          variant="secondary"
           size="lg"
           className="mt-auto w-full"
           onClick={() => onCheckout(tier.id as PricingTierId)}
@@ -234,6 +260,14 @@ function PricingFaqSection() {
 export function PricingClient() {
   const [period, setPeriod] = useState<BillingPeriod>(BillingPeriod.MONTHLY);
   const [checkingOutId, setCheckingOutId] = useState<PricingTierId | null>(null);
+  const [managing, setManaging] = useState(false);
+
+  const { data: subData } = useQuery({
+    queryKey: ["billing-subscription-status"],
+    queryFn: billingService.getSubscriptionStatus,
+    retry: false,
+    staleTime: 60_000,
+  });
 
   const handleCheckout = async (planId: PricingTierId) => {
     setCheckingOutId(planId);
@@ -253,6 +287,18 @@ export function PricingClient() {
       toast.error("Failed to start checkout");
     } finally {
       setCheckingOutId(null);
+    }
+  };
+
+  const handleManage = async () => {
+    setManaging(true);
+    try {
+      const url = await billingService.createPortalSession();
+      if (url) window.location.href = url;
+    } catch {
+      toast.error("Could not open billing portal. Try again.");
+    } finally {
+      setManaging(false);
     }
   };
 
@@ -290,6 +336,9 @@ export function PricingClient() {
                 period={period}
                 checkingOutId={checkingOutId}
                 onCheckout={handleCheckout}
+                currentPlan={subData?.plan}
+                isManaging={managing}
+                onManage={handleManage}
               />
             ))}
           </div>

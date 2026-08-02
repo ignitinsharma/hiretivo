@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
 import { PricingTierId } from "@/constants/enums";
 import { billingService, type SubscriptionStatusData } from "@/services/billing.service";
+import { SubscriptionSummary } from "./SubscriptionSummary";
 
 /*
  * PlanBillingSection
@@ -56,8 +57,7 @@ export function PlanBillingSection() {
     }
   };
 
-  const isCurrentPlan = (id: string): boolean => String(currentPlan) === id;
-  const hasPaidPlan = currentPlan && String(currentPlan) !== PricingTierId.FREE;
+  const isCurrentPlan = (id: string): boolean => String(currentPlan).toLowerCase() === id;
 
   return (
     <section className="rounded-xl border border-brand-border bg-white">
@@ -78,6 +78,15 @@ export function PlanBillingSection() {
         </div>
       ) : (
         <>
+          <div className="px-6 pt-6">
+            <SubscriptionSummary
+              sub={subData?.subscription ?? null}
+              plan={subData?.plan}
+              onManage={handleManage}
+              managing={loadingPlanId === "manage"}
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
             {PLAN_TIERS.map((tier) => (
               <div
@@ -91,9 +100,9 @@ export function PlanBillingSection() {
                       : "border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000]",
                 )}
               >
-                {tier.highlighted && (
+                {(isCurrentPlan(tier.id) || tier.highlighted) && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border-2 border-black bg-white px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground shadow-[2px_2px_0px_0px_#000]">
-                    Most Popular
+                    {isCurrentPlan(tier.id) ? "Current Plan" : "Most Popular"}
                   </div>
                 )}
 
@@ -141,16 +150,27 @@ export function PlanBillingSection() {
                 </ul>
 
                 {isCurrentPlan(tier.id) ? (
-                  <Button variant="secondary" className="w-full" disabled>
-                    Current Plan
-                  </Button>
+                  tier.id === PricingTierId.FREE ? (
+                    <Button variant="secondary" className="w-full" disabled>
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={handleManage}
+                      loading={loadingPlanId === "manage"}
+                    >
+                      Manage Subscription
+                    </Button>
+                  )
                 ) : tier.id === PricingTierId.FREE ? (
                   <Button variant="secondary" className="w-full" disabled>
                     {tier.cta}
                   </Button>
                 ) : (
                   <Button
-                    variant={tier.highlighted ? "secondary" : "primary"}
+                    variant="secondary"
                     className="w-full"
                     onClick={() => handleUpgrade(tier)}
                     loading={loadingPlanId === tier.id}
@@ -162,14 +182,6 @@ export function PlanBillingSection() {
               </div>
             ))}
           </div>
-
-          {hasPaidPlan && (
-            <div className="border-t border-brand-border px-6 py-4">
-              <Button variant="secondary" onClick={handleManage} loading={loadingPlanId === "manage"}>
-                Manage Subscription
-              </Button>
-            </div>
-          )}
         </>
       )}
     </section>
