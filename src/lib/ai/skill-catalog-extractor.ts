@@ -1,4 +1,5 @@
 import { openrouter, getLiteAIModel } from "@/lib/openrouter";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { prisma } from "@/lib/prisma";
 
 const DENYLIST = new Set([
@@ -64,7 +65,8 @@ export async function extractCandidateSkillsFromJD(
       ],
       temperature: 0.1,
       max_tokens: 1000,
-    });
+      reasoning: { effort: "low" },
+    } as ChatCompletionCreateParamsNonStreaming);
 
     const raw = completion.choices?.[0]?.message?.content ?? "";
     const parsed = JSON.parse(raw);

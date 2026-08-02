@@ -1,4 +1,5 @@
 import { openrouter, getResumeModel } from "@/lib/openrouter";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { buildCoverLetterPrompt } from "@/lib/ai-prompts";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
@@ -45,7 +46,8 @@ export async function generateCoverLetter(
       ],
       max_tokens: 800,
       temperature: 0.7,
-    });
+      reasoning: { effort: "low" },
+    } as ChatCompletionCreateParamsNonStreaming);
     const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;
 

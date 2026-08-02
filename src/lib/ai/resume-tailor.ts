@@ -1,4 +1,5 @@
 import { openrouter, getResumeModel } from "@/lib/openrouter";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { checkGenerationQuota, consumeGenerationQuota } from "@/lib/ai/generation-quota";
 import { resumeGenFreeLimiter, resumeGenPaidLimiter } from "@/lib/rate-limit";
@@ -114,6 +115,7 @@ export async function tailorResume(
 
   const callTailor = (maxTokens: number) =>
     withRetry(async () => {
+      const startedAt = Date.now();
       const completion = await openrouter.chat.completions.create({
         model: getResumeModel(),
         messages: [
@@ -122,8 +124,17 @@ export async function tailorResume(
         ],
         temperature: TAILOR_RESUME_CONFIG.temperature,
         max_tokens: maxTokens,
+        // DeepSeek defaults reasoning to HIGH — cap it: thinking time dominated latency
+        reasoning: { effort: "low" },
+      } as ChatCompletionCreateParamsNonStreaming);
+      const usage = completion.usage;
+      console.log("[resume-tailor] call", {
+        durationMs: Date.now() - startedAt,
+        inputChars: system.length + userMessage.length,
+        outputChars: completion.choices?.[0]?.message?.content?.length ?? 0,
+        finishReason: completion.choices?.[0]?.finish_reason ?? null,
+        reasoningTokens: usage?.completion_tokens_details?.reasoning_tokens ?? 0,
       });
-
       return {
         content: completion.choices?.[0]?.message?.content ?? "",
         finishReason: completion.choices?.[0]?.finish_reason ?? null,

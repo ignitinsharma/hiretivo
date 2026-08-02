@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { openrouter, getResumeModel } from "@/lib/openrouter";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
@@ -86,7 +87,8 @@ Rules:
         },
       ],
       ...REWRITE_CONFIG,
-    });
+      reasoning: { effort: "low" },
+    } as ChatCompletionCreateParamsNonStreaming);
     return completion.choices?.[0]?.message?.content ?? null;
   });
 
