@@ -7,18 +7,21 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
-import { PricingTierId } from "@/constants/enums";
+import { BillingPeriod, CurrencyCode, PricingTierId } from "@/constants/enums";
 import { billingService, type SubscriptionStatusData } from "@/services/billing.service";
 import { SubscriptionSummary } from "./SubscriptionSummary";
 
 /*
  * PlanBillingSection
- * Shows the Free/Pro/Unlimited pricing tiers with the user's current plan highlighted.
+ * Shows the Free/Pro/Unlimited pricing tiers with the user's current plan highlighted,
+ * a Monthly/Annual billing period toggle, and checkout CTAs that respect the selected period.
  * Upgrade CTAs redirect to the billing checkout flow.
  */
 export function PlanBillingSection() {
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<BillingPeriod>(BillingPeriod.MONTHLY);
 
   const { data: subData, isLoading, isError } = useQuery<SubscriptionStatusData>({
     queryKey: ["billing-subscription-status"],
@@ -32,7 +35,7 @@ export function PlanBillingSection() {
     if (tier.id === PricingTierId.FREE || String(currentPlan) === String(tier.id)) return;
     setLoadingPlanId(tier.id);
     try {
-      const url = await billingService.createCheckoutSession({ planId: tier.id } as Parameters<typeof billingService.createCheckoutSession>[0]);
+      const url = await billingService.createCheckoutSession({ planId: tier.id, period, currency: CurrencyCode.USD });
       if (url) {
         window.location.href = url;
       }
@@ -58,6 +61,11 @@ export function PlanBillingSection() {
   };
 
   const isCurrentPlan = (id: string): boolean => String(currentPlan).toLowerCase() === id;
+
+  const getDisplayPrice = (tier: PlanTierConfig): number | null =>
+    tier.monthlyPrice !== null && period === BillingPeriod.ANNUAL
+      ? Math.round((tier.annualTotal ?? 0) / 12)
+      : tier.monthlyPrice;
 
   return (
     <section className="rounded-xl border border-brand-border bg-white">
@@ -85,6 +93,17 @@ export function PlanBillingSection() {
               onManage={handleManage}
               managing={loadingPlanId === "manage"}
             />
+          </div>
+
+          <div className="flex justify-center px-6 pt-6">
+            <ToggleGroup
+              type="single"
+              value={period}
+              onValueChange={(v) => v && setPeriod(v as BillingPeriod)}
+            >
+              <ToggleGroupItem value={BillingPeriod.MONTHLY}>Monthly</ToggleGroupItem>
+              <ToggleGroupItem value={BillingPeriod.ANNUAL}>Annual</ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
@@ -121,7 +140,7 @@ export function PlanBillingSection() {
                   ) : (
                     <>
                       <span className={cn("text-3xl font-bold", tier.highlighted ? "text-white" : "text-brand-foreground")}>
-                        ${tier.monthlyPrice}
+                        ${getDisplayPrice(tier)}
                       </span>
                       <span className={cn("text-sm", tier.highlighted ? "text-white/90" : "text-brand-foreground-muted")}>
                         /mo
