@@ -4,12 +4,9 @@ import { UserRole } from "@/constants/enums";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
+import { getRequestAppUrl } from "@/lib/config";
 
 const portalRateLimiter = createRateLimiter("billing-portal", 10, "1 m");
-
-function getAppUrl(req: NextRequest): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
-}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -30,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (!user?.billingCustomerId) {
     return NextResponse.json({ error: "No billing account found" }, { status: 400 });
   }
-  const appUrl = getAppUrl(req);
+  const appUrl = getRequestAppUrl(req);
   const portal = await dodo.customers.customerPortal.create(user.billingCustomerId, {
     return_url: `${appUrl}/settings`,
   });

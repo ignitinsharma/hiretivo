@@ -7,12 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
 import { CheckoutRequestSchema } from "@/lib/validations/checkout.schema";
 import { requireVerifiedEmailForTrustedAction } from "@/lib/auth/email-verification";
+import { getRequestAppUrl } from "@/lib/config";
 
 const checkoutRateLimiter = createRateLimiter("billing-checkout", 5, "1 m");
-
-function getAppUrl(req: NextRequest): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
-}
 
 /*
  * POST /api/billing/checkout
@@ -75,7 +72,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const appUrl = getAppUrl(req);
+  const appUrl = getRequestAppUrl(req);
   const returnUrl = new URL("/pricing/success", appUrl);
   if (returnTo) {
     returnUrl.searchParams.set("returnTo", returnTo);
