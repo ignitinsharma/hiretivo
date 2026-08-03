@@ -238,14 +238,14 @@ export default function AboutPage() {
                   Start landing today
                 </p>
                 <h2 className="mt-6 text-4xl font-bold leading-[1.12] tracking-tight text-brand-foreground sm:text-5xl">
-                  2 free AI resumes.
+                  5 free AI resumes.
                   <br />
                   <span className="text-brand-primary">
                     Every month. No credit card.
                   </span>
                 </h2>
                 <p className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-brand-foreground-muted md:text-lg">
-                  Two tailored, ATS-ready resumes every month — zero commitment.
+                  Five tailored, ATS-ready resumes every month — zero commitment.
                   Renews automatically.
                 </p>
 

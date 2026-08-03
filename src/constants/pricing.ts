@@ -19,10 +19,10 @@ export const PLAN_TIERS: PlanTierConfig[] = [
     monthlyPrice: 0,
     annualTotal: 0,
     annualSavings: 0,
-    generations: 2,
+    generations: 5,
     highlighted: false,
     features: [
-      "2 resume generations per month",
+      "5 resume generations per month",
       "AI-powered tailoring per job",
       "Cover letter generation",
       "Basic application tracking",
