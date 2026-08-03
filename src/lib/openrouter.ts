@@ -29,8 +29,8 @@ export const openrouter = provider === 'gemini'
  * Override with env vars for dev/testing.
  */
 const MODEL_DEFAULTS = {
-  primary: 'deepseek/deepseek-v4-pro',
-  lite: 'google/gemini-2.5-flash-lite',
+  primary: 'openai/gpt-5.6-luna',
+  lite: 'google/gemini-2.5-flash',
 } as const;
 
 export function getAIModel(): string {
