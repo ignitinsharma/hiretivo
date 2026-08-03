@@ -76,11 +76,15 @@ export async function completeSeekerOnboarding(): Promise<CompleteSeekerOnboardi
 
   const profile = await prisma.seekerProfile.findUnique({
     where: { userId: session.user.id },
-    select: { situation: true },
+    select: { situation: true, resumeKey: true },
   });
 
   if (!profile?.situation) {
     return { success: false, error: "Complete your current situation first." };
+  }
+
+  if (!profile.resumeKey) {
+    return { success: false, error: "Please upload your resume to continue." };
   }
 
   await prisma.user.update({

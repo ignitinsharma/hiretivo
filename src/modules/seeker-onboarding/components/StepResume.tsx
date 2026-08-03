@@ -264,7 +264,7 @@ export function StepResume({ onBack, onComplete }: StepResumeProps) {
             size="lg"
             variant="primary"
             className="w-full"
-            disabled={uploadStatus === "uploading"}
+            disabled={uploadStatus === "uploading" || !step3.resume?.key}
             loading={isSaving}
             loadingText="Saving..."
           >
