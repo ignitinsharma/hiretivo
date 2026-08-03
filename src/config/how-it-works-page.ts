@@ -177,16 +177,16 @@ export const HIW_WHY = {
     {
       title: 'Free to start',
       description:
-        '2 tailored resumes every month, free. No credit card, no trial countdown.',
+        '5 tailored resumes every month, free. No credit card, no trial countdown.',
     },
   ],
 } as const;
 
 export const HIW_CTA = {
   eyebrow: 'Try it on a real job',
-  heading: '2 free AI resumes. Every month.',
+  heading: '5 free AI resumes. Every month.',
   subheading: 'No credit card.',
-  body: 'Two tailored, ATS-ready resumes every month — zero commitment. Renews automatically.',
+  body: 'Five tailored, ATS-ready resumes every month — zero commitment. Renews automatically.',
   buttonText: 'Start Free',
   buttonHref: '/seeker/register',
 } as const;

@@ -3,7 +3,7 @@ import { PlanTier } from "@prisma/client";
 import { addMonths, format } from "date-fns";
 
 export const PLAN_GENERATION_LIMITS: Record<PlanTier, number> = {
-  [PlanTier.FREE]: 2,
+  [PlanTier.FREE]: 5,
   [PlanTier.PRO]: 20,
   [PlanTier.UNLIMITED]: 9999,
 };
