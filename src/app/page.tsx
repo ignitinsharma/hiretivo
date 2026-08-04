@@ -6,6 +6,7 @@ import { ResumeEngineSection } from "@/components/home/ResumeEngineSection";
 import { JobDashboardSection } from "@/components/home/JobDashboardSection";
 import { KanbanTrackerSection } from "@/components/home/KanbanTrackerSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { AutoApplyTeaser } from "@/components/home/AutoApplyTeaser";
 import { SeekerCTASection } from "@/components/home/SeekerCTASection";
 import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 import { redirect } from "next/navigation";
@@ -51,6 +52,7 @@ export default async function Home() {
         <ResumeEngineSection />
         <KanbanTrackerSection />
         <FeaturesSection />
+        <AutoApplyTeaser />
         <SeekerCTASection />
       </main>
       <Footer />
