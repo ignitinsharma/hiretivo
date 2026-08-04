@@ -25,6 +25,7 @@ export function Footer({ className }: FooterProps) {
             <Link href="/" className="inline-block mb-6">
               <Logo variant="white" size="lg" />
             </Link>
+            <p className="text-white font-bold text-lg mb-2">You approve. We apply.</p>
             <p className="text-gray-500 text-base mb-8">
               AI-powered resumes and one-click tracking. Paste any job link, land faster.
             </p>
