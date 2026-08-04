@@ -129,6 +129,10 @@ const SKILLS = [
   { name: 'ETL Pipelines', slug: 'etl-pipelines', category: 'Data' },
   { name: 'dbt', slug: 'dbt', category: 'Data' },
   { name: 'BigQuery', slug: 'bigquery', category: 'Data' },
+  { name: 'Kafka', slug: 'kafka', category: 'Data' },
+  { name: 'Snowflake', slug: 'snowflake', category: 'Data' },
+  { name: 'Apache Flink', slug: 'apache-flink', category: 'Data' },
+  { name: 'Hadoop', slug: 'hadoop', category: 'Data' },
 
   // DevOps & Infrastructure (14)
   { name: 'CI/CD', slug: 'ci-cd', category: 'DevOps & Infrastructure' },
@@ -188,6 +192,14 @@ async function main() {
     skipDuplicates: true,
   });
   console.log(`Seeded ${result.count} skills (${SKILLS.length} total, duplicates skipped)`);
+
+  // Seed alias for Apache Spark — canonical name won't match bare "Spark" in JD text
+  await prisma.skill.upsert({
+    where: { name: 'Apache Spark' },
+    create: { name: 'Apache Spark', slug: 'apache-spark', category: 'Data', aliases: ['spark'] },
+    update: { aliases: ['spark'] },
+  });
+  console.log('Apache Spark alias seeded: spark');
 
   // Ghost user required by Job.recruiterId FK — all ATS-imported jobs are owned by this row.
   await prisma.user.upsert({

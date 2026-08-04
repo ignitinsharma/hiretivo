@@ -8,7 +8,7 @@ import { getRateLimitIp, registerRateLimiter } from "@/lib/rate-limit";
 
 /*
  * POST /api/auth/register
- * Creates a seeker or recruiter account after validating registration input.
+ * Creates a seeker account after validating registration input.
  * Returns the created user identity or validation/conflict errors.
  */
 export async function POST(req: NextRequest) {
@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // Accept optional companyName (passed by recruiter register form but not in registerSchema)
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

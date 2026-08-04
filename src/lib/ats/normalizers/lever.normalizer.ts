@@ -32,7 +32,7 @@ export async function fetchLeverJobs(
   companyName: string,
   companyWebsite: string,
   companyLogoUrl: string | null,
-  skills: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): Promise<NormalizedJob[]> {
   const url = `https://api.lever.co/v0/postings/${boardToken}?mode=json`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Hiretivo/1.0' } });
@@ -55,7 +55,7 @@ export function normalizeLeverJob(
   companyName: string,
   companyWebsite: string,
   companyLogoUrl: string | null,
-  skills: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): NormalizedJob {
   const description = job.descriptionPlain || stripHtml(job.description || '');
   const locationStr = job.categories?.location || 'Remote';

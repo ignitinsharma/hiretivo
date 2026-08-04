@@ -39,7 +39,7 @@ async function main() {
   let closedUsOnly = 0;
   for (const company of US_ONLY_COMPANIES) {
     const jobs = await prisma.job.findMany({
-      where: { isAdminPosted: true, status: 'OPEN', companyName: company },
+      where: { status: 'OPEN', companyName: company },
       select: { id: true },
     });
     closedUsOnly += await closeJobs(jobs.map((j) => j.id), `${company} (US-only)`);
@@ -50,7 +50,6 @@ async function main() {
   const companies = await prisma.job.groupBy({
     by: ['companyName'],
     where: {
-      isAdminPosted: true,
       status: 'OPEN',
       companyName: { notIn: US_ONLY_COMPANIES },
     },
@@ -64,7 +63,7 @@ async function main() {
   for (const company of companies) {
     // Keep 5 newest, close the rest
     const allJobs = await prisma.job.findMany({
-      where: { isAdminPosted: true, status: 'OPEN', companyName: company.companyName },
+      where: { status: 'OPEN', companyName: company.companyName },
       select: { id: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -74,7 +73,7 @@ async function main() {
 
   // Summary
   const remaining = await prisma.job.count({
-    where: { isAdminPosted: true, status: 'OPEN' },
+    where: { status: 'OPEN' },
   });
 
   console.log('\n✅ Cleanup complete');

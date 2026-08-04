@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { trackEvent } from '@/lib/analytics';
 
-const RESUME_REQUIRED_ERROR = 'Upload your resume in Settings before applying. Go to /seeker/settings to continue.';
+const RESUME_REQUIRED_ERROR = 'Upload your resume in Settings before applying. Go to /settings to continue.';
 
 interface ExternalApplyConfirmationDialogProps {
   jobId: string;
@@ -57,7 +57,7 @@ export function ExternalApplyConfirmationDialog({
     toast.error(msg, {
       action:
         !hiretivo.status || hiretivo.status === 'NOT_SUBMITTED'
-          ? { label: 'Start Verification', onClick: () => { window.location.href = '/seeker/settings'; } }
+          ? { label: 'Start Verification', onClick: () => { window.location.href = '/settings'; } }
           : undefined,
     });
     return false;
@@ -91,7 +91,7 @@ export function ExternalApplyConfirmationDialog({
           action: {
             label: 'Upload Resume',
             onClick: () => {
-              window.location.href = '/seeker/settings';
+              window.location.href = '/settings';
             },
           },
         });

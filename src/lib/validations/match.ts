@@ -10,4 +10,5 @@ export const feedFilterSchema = z.object({
   recentOffset: z.coerce.number().min(0).optional(),
   locationClass: z.enum(LOCATION_CLASS_VALUES).optional(),
   visaSponsored: z.coerce.boolean().optional(),
+  q: z.string().optional(),
 });

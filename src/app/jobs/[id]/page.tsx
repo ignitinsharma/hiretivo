@@ -4,11 +4,9 @@ import { Footer } from '@/components/layout/Footer';
 import { JobDetailHeader } from '@/modules/jobs/components/JobDetailHeader';
 import { JobDetailContent } from '@/modules/jobs/components/JobDetailContent';
 import { JobDetailSidebar } from '@/modules/jobs/components/JobDetailSidebar';
-import { ApplyJobModal } from '@/components/shared/ApplyJobModal';
 import { auth } from '@/auth';
 import { JobStatus, UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
-import { resolveLogoUrl } from '@/lib/r2';
 import { resolveCompanyLogoUrl } from '@/lib/jobs/resolve-job-company';
 import { notFound, redirect } from 'next/navigation';
 
@@ -48,13 +46,6 @@ export default async function JobDescriptionPage({
   const job = await prisma.job.findUnique({
     where: { id: params.id, status: JobStatus.OPEN },
     include: {
-      recruiter: {
-        select: {
-          recruiterProfile: {
-            select: { id: true, companyName: true, logo: true },
-          },
-        },
-      },
       skills: {
         include: { skill: { select: { id: true, name: true, slug: true } } },
       },
@@ -123,13 +114,9 @@ export default async function JobDescriptionPage({
     experienceLevel: job.experienceLevel,
     applyType: job.applyType,
     externalApplyUrl: job.externalApplyUrl,
-    companyName: job.isAdminPosted
-      ? (job.companyName ?? 'Unknown')
-      : (job.recruiter.recruiterProfile?.companyName ?? 'Unknown'),
-    companyLogoUrl: job.isAdminPosted
-      ? resolveCompanyLogoUrl(job.companyLogoUrl, job.companyWebsite)
-      : resolveLogoUrl(job.recruiter.recruiterProfile?.logo),
-    companyId: job.isAdminPosted ? null : (job.recruiter.recruiterProfile?.id ?? null),
+    companyName: job.companyName ?? 'Unknown',
+    companyId: job.companyName ?? 'Unknown',
+    companyLogoUrl: resolveCompanyLogoUrl(job.companyLogoUrl, job.companyWebsite),
     skills: job.skills.map((s) => ({
       id: s.skill.id,
       name: s.skill.name,
@@ -157,17 +144,9 @@ export default async function JobDescriptionPage({
     orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
     take: 12,
     include: {
-      recruiter: {
-        select: {
-          recruiterProfile: {
-            select: { companyName: true, logo: true },
-          },
-        },
-      },
       skills: {
         select: { skillId: true },
       },
-      // companyWebsite used for Google favicon fallback on admin-posted jobs
       jobMatches: seekerProfileId
         ? {
             where: { seekerProfileId },
@@ -194,12 +173,8 @@ export default async function JobDescriptionPage({
       return {
         id: recommendedJob.id,
         title: recommendedJob.title,
-        companyName: recommendedJob.isAdminPosted
-          ? (recommendedJob.companyName ?? 'Unknown')
-          : (recommendedJob.recruiter.recruiterProfile?.companyName ?? 'Unknown'),
-        companyLogoUrl: recommendedJob.isAdminPosted
-          ? resolveCompanyLogoUrl(recommendedJob.companyLogoUrl, recommendedJob.companyWebsite)
-          : resolveLogoUrl(recommendedJob.recruiter.recruiterProfile?.logo),
+        companyName: recommendedJob.companyName ?? 'Unknown',
+        companyLogoUrl: resolveCompanyLogoUrl(recommendedJob.companyLogoUrl, recommendedJob.companyWebsite),
         salaryRange: formatSalaryRange(
           recommendedJob.salaryMin,
           recommendedJob.salaryMax,
@@ -233,7 +208,7 @@ export default async function JobDescriptionPage({
     }));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-brand-surface flex flex-col">
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <JobDetailHeader
@@ -254,7 +229,6 @@ export default async function JobDescriptionPage({
         </div>
       </main>
       <Footer />
-      <ApplyJobModal />
     </div>
   );
 }

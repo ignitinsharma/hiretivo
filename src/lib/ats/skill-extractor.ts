@@ -36,26 +36,30 @@ export const SKILL_ALIASES: Record<string, string[]> = {
   Docker: ['docker', 'containerization', 'container'],
 };
 
+function matchSkillName(name: string, lowerText: string, text: string): boolean {
+  const aliasGroup = SKILL_ALIASES[name];
+  if (aliasGroup) {
+    for (const alias of aliasGroup) {
+      if (lowerText.includes(alias)) return true;
+    }
+  }
+  if (name.length < 4) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(text);
+  }
+  return lowerText.includes(name.toLowerCase());
+}
+
 export function extractSkillsFromText(
   text: string,
-  skillNames: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): string[] {
   const lowerText = text.toLowerCase();
 
-  return skillNames
+  return skills
     .filter((skill) => {
-      const aliases = SKILL_ALIASES[skill.name];
-      if (aliases) {
-        for (const alias of aliases) {
-          if (lowerText.includes(alias)) return true;
-        }
-      }
-
-      if (skill.name.length < 4) {
-        const escaped = skill.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return new RegExp(`\\b${escaped}\\b`, 'i').test(text);
-      }
-      return lowerText.includes(skill.name.toLowerCase());
+      const namesToCheck = [skill.name, ...skill.aliases];
+      return namesToCheck.some((name) => matchSkillName(name, lowerText, text));
     })
     .map((s) => s.name);
 }

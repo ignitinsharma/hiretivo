@@ -14,7 +14,6 @@ import type { Subscription } from "dodopayments/resources/subscriptions";
 import type { Payment } from "dodopayments/resources/payments";
 import { PlanTier } from "@/constants/enums";
 import { DODO_PRODUCT_TO_PLAN } from "@/constants/billing";
-import { BOOST_DURATION_MS } from "@/constants/boost";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
@@ -121,7 +120,7 @@ async function handleSubscriptionActive(sub: Subscription): Promise<void> {
     prisma.user.update({
       where: { id: userId },
       data: {
-        plan: status === "CANCELED" ? PlanTier.FREE : plan,
+        plan: status === "CANCELED" ? PlanTier.FREE : (plan as PlanTier),
         billingCustomerId: sub.customer.customer_id,
       },
     }),
@@ -165,7 +164,7 @@ async function handleSubscriptionRenewed(sub: Subscription): Promise<void> {
     }),
     prisma.user.update({
       where: { id: userId },
-      data: { plan: status === "CANCELED" ? PlanTier.FREE : plan },
+      data: { plan: status === "CANCELED" ? PlanTier.FREE : (plan as PlanTier) },
     }),
   ]);
 }
@@ -216,45 +215,6 @@ async function handlePaymentFailed(payment: Payment): Promise<void> {
   await prisma.subscription.updateMany({
     where: { dodoSubscriptionId: payment.subscription_id },
     data: { status: "PAST_DUE" },
-  });
-}
-
-// INT-03: Activate a BoostedJob record on successful one-time boost payment.
-// Upsert is idempotent — replaying the same event resets expiresAt to same value (T-13-14).
-async function handleBoostPaymentSucceeded(
-  data: PaymentSucceededWebhookEvent['data'],
-): Promise<void> {
-  const meta = data.metadata as Record<string, string> | undefined;
-  if (!meta?.userId || !meta?.jobId || meta?.type !== 'boost') return;
-
-  const { userId, jobId } = meta;
-
-  // Idempotency: if this job's boost already came from this exact payment,
-  // a duplicate webhook delivery must not reset/extend the boost window.
-  const existingBoost = await prisma.boostedJob.findUnique({
-    where: { jobId },
-    select: { paymentId: true },
-  });
-  if (existingBoost?.paymentId === data.payment_id) return;
-
-  const startsAt = new Date();
-  const expiresAt = new Date(startsAt.getTime() + BOOST_DURATION_MS);
-
-  await prisma.boostedJob.upsert({
-    where: { jobId },
-    create: {
-      jobId,
-      recruiterId: userId,
-      paymentId: data.payment_id,
-      startsAt,
-      expiresAt,
-    },
-    update: {
-      recruiterId: userId,
-      paymentId: data.payment_id,
-      startsAt,
-      expiresAt,
-    },
   });
 }
 
@@ -336,9 +296,6 @@ export async function POST(req: NextRequest) {
         await handlePaymentFailed((event as PaymentFailedWebhookEvent).data);
         break;
       case "payment.succeeded":
-        await handleBoostPaymentSucceeded(
-          (event as PaymentSucceededWebhookEvent).data,
-        );
         break;
       default:
         console.info(`Unhandled DodoPayments webhook event: ${event.type}`);

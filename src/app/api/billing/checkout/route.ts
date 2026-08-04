@@ -7,17 +7,14 @@ import { prisma } from "@/lib/prisma";
 import { dodo } from "@/lib/dodo";
 import { CheckoutRequestSchema } from "@/lib/validations/checkout.schema";
 import { requireVerifiedEmailForTrustedAction } from "@/lib/auth/email-verification";
+import { getRequestAppUrl } from "@/lib/config";
 
 const checkoutRateLimiter = createRateLimiter("billing-checkout", 5, "1 m");
 
-function getAppUrl(req: NextRequest): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
-}
-
 /*
  * POST /api/billing/checkout
- * Creates a Dodo Payments subscription checkout session for STARTER/GROWTH/SCALE plans.
- * Requires RECRUITER role and a verified email address.
+ * Creates a Dodo Payments subscription checkout session for PRO/UNLIMITED plans.
+ * Requires SEEKER role and a verified email address.
  * Returns a payment_link URL to redirect the user to.
  */
 export async function POST(req: NextRequest) {
@@ -26,9 +23,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (session.user.role !== UserRole.RECRUITER) {
+  if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json(
-      { error: "This plan is for recruiters only" },
+      { error: "Seeker-only billing access" },
       { status: 403 },
     );
   }
@@ -75,7 +72,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const appUrl = getAppUrl(req);
+  const appUrl = getRequestAppUrl(req);
   const returnUrl = new URL("/pricing/success", appUrl);
   if (returnTo) {
     returnUrl.searchParams.set("returnTo", returnTo);

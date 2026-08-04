@@ -24,7 +24,7 @@ export function EnvironmentBadge() {
     Development: 'bg-blue-500/90',
     Preview: 'bg-gray-500/90',
     Local: 'bg-gray-500/90',
-    Production: 'bg-black',
+    Production: 'bg-brand-foreground',
   }
 
   const bgColor = colors[envName as keyof typeof colors] ?? colors.Local

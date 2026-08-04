@@ -75,7 +75,7 @@ export function FakeJobCard({ job, className }: FakeJobCardProps) {
   return (
     <article
       className={cn(
-        "group flex h-full min-h-[270px] flex-col rounded-xl border border-brand-border bg-white p-5 transition-colors hover:border-brand-primary",
+        "group flex h-full min-h-[270px] flex-col rounded-xl border border-brand-border bg-white p-6 transition-colors hover:border-brand-primary",
         className,
       )}
       data-purpose="job-card"

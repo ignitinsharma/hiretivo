@@ -7,22 +7,10 @@ interface SessionExpiredPageProps {
   };
 }
 
-/*
- * SessionExpiredPage
- * Public landing for an invalidated session (DB user gone behind a live JWT).
- * Shows a brief signing-out state, then SessionExpiredCleaner clears the stale
- * cookie and redirects to the role-appropriate login. Lives under the public
- * /auth/* prefix so middleware passes it through — never re-entering a guarded
- * route, which is what breaks the JWT-vs-DB redirect loop.
- * @param searchParams.role - "recruiter" routes to recruiter login; else seeker
- */
 export default function SessionExpiredPage({
   searchParams,
 }: SessionExpiredPageProps) {
-  const loginPath =
-    searchParams?.role === "recruiter"
-      ? "/recruiter/login"
-      : "/seeker/login";
+  const loginPath = "/seeker/login";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

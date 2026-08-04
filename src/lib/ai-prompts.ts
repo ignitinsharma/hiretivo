@@ -4,25 +4,6 @@
  * Routes import from here — never inline prompts in route handlers.
  */
 
-// ---------------------------------------------------------------------------
-// Candidate Summary (INT-01)
-// ---------------------------------------------------------------------------
-
-export interface CandidateSummaryInput {
-  skills: string[];
-  jobSkills: string[];
-  matchScore: number;
-  /** Deterministic verdict label derived from fitLevel by the route — never AI-decided. */
-  verdictLabel: string;
-  headline: string | null;
-  primaryRole: string | null;
-  yearsExperience: number | null;
-  bio: string | null;
-  recentWork: Array<{ title: string; company: string }>;
-  education: { degree: string | null; institution: string | null } | null;
-  jobTitle: string;
-}
-
 /**
  * Structured candidate-insight payload the model returns and the drawer renders.
  * Section strings may carry inline <mark> (matched skills) / <em> (gaps) tags —
@@ -73,120 +54,6 @@ export function parseCandidateSummary(raw: string): AiSummaryData | null {
     return null;
   }
 }
-
-/*
- * buildCandidateSummaryMessages
- * Constructs the system + user message pair for the candidate AI summary feature.
- * @param input - Candidate skills, job skills, match score, verdict, headline, and role
- * @returns { system, user } message objects for the Anthropic messages API
- */
-export function buildCandidateSummaryMessages(input: CandidateSummaryInput) {
-  const {
-    skills,
-    jobSkills,
-    matchScore,
-    verdictLabel,
-    headline,
-    primaryRole,
-    yearsExperience,
-    bio,
-    recentWork,
-    education,
-    jobTitle,
-  } = input;
-
-  const skillList = skills.length > 0 ? skills.join(", ") : "No skills listed";
-  const jobSkillList =
-    jobSkills.length > 0 ? jobSkills.join(", ") : "Not specified";
-  const headlineText = headline ?? "Not provided";
-  const roleText = primaryRole ?? "Professional";
-  const expText =
-    yearsExperience != null
-      ? `${yearsExperience} ${yearsExperience === 1 ? "year" : "years"}`
-      : "Experience not specified";
-  const bioText = (bio ?? "").slice(0, 1000);
-  const workText =
-    recentWork.length > 0
-      ? recentWork.map((w) => `${w.title} at ${w.company}`).join("; ")
-      : "No work history available";
-  const eduText =
-    education?.degree && education?.institution
-      ? `${education.degree} from ${education.institution}`
-      : "Education not specified";
-
-  return {
-    system: `You are an expert recruitment analyst creating decision-ready candidate insights for hiring managers screening for a specific role.
-
-Your output must help a recruiter decide in 5 seconds whether to screen this candidate, understand the skill fit, and walk into the interview prepared.
-
-OUTPUT FORMAT — return ONLY a valid JSON object (no markdown, no code fences, no prose outside the JSON) with EXACTLY these keys:
-
-{
-  "summary": "2 concise sentences on who this candidate is — background, current/most-recent role, level. Plain text, no tags.",
-  "skillMatch": "Which required skills they match and what extra they bring. Wrap each skill that appears in the job requirements in <mark>…</mark>. Mention additional non-required skills as plain text.",
-  "whyFit": "One-line rationale for the verdict, grounded in THIS job. Wrap missing / weak / must-verify skills in <em>…</em>.",
-  "areasToExplore": "What's unproven or absent for this role — gaps to probe in interview. Plain text.",
-  "screeningQuestions": ["exactly 3 questions, each targeting a skill gap or an unverified must-have requirement"]
-}
-
-WORKED EXAMPLE (structure + tag usage only — NEVER copy this content; always use the real candidate + job data):
-{
-  "summary": "Senior frontend engineer with 6 years building consumer web apps, most recently scaling a design system at Acme. Strong product sensibility, no backend track record.",
-  "skillMatch": "Matches <mark>React</mark>, <mark>TypeScript</mark>, and <mark>GraphQL</mark> from the requirements. Also brings Next.js, Storybook, and accessibility expertise.",
-  "whyFit": "Worth screening — strong frontend match, but no <em>PostgreSQL</em> or <em>backend</em> experience listed for a full-stack role.",
-  "areasToExplore": "No evidence of backend or relational-database work; team-lead scope is unclear.",
-  "screeningQuestions": [
-    "Walk me through a backend service you've owned end-to-end — what database did you use?",
-    "The role requires PostgreSQL; how have you worked with relational data so far?",
-    "Describe the largest team you've technically led and your scope of ownership."
-  ]
-}
-
-RULES:
-- whyFit: BEGIN with the verdict label provided in the input VERBATIM (e.g. "Worth screening — …"). Do NOT invent or change the label. The rationale after the em dash is yours, grounded in real skills.
-- skillMatch: ALWAYS wrap job-relevant required skills in <mark> tags.
-- whyFit & areasToExplore: ALWAYS wrap skill gaps / things to assess in <em> tags.
-- Be SPECIFIC and EVIDENCE-BASED: name real skills, companies, and roles from the data. NEVER invent seniority, achievements, or experience not present in the input.
-- Be SUBSTANTIVE but tight. Fill every field — never leave one empty.
-- screeningQuestions: exactly 3, each tied to a concrete gap or unverified requirement. No generic "tell me about yourself" questions.
-- Never use filler phrases like "This candidate..." or "Based on their profile..."
-- Mention years of experience naturally; if <2 years note early-career, if >7 years highlight seniority/leadership potential.
-- ONLY allowed HTML inside string values: <mark> and <em>. No other tags. The values are otherwise plain text.
-- Output the JSON object and NOTHING else.`,
-
-    user: `=== CANDIDATE DATA ===
-Headline: ${headlineText}
-Primary Role: ${roleText}
-Years of Experience: ${expText}
-Bio: ${bioText}
-
-=== CANDIDATE SKILLS ===
-${skillList}
-
-=== JOB REQUIREMENTS ===
-Job Title: ${jobTitle}
-Required Skills: ${jobSkillList}
-
-=== CAREER HISTORY ===
-${workText}
-
-=== EDUCATION ===
-${eduText}
-
-=== MATCH SCORE ===
-${matchScore}%
-
-=== VERDICT LABEL (use verbatim as the verdict <strong> text) ===
-${verdictLabel}
-
-Generate the candidate insights as a single JSON object following the specified structure.`,
-  };
-}
-
-export const CANDIDATE_SUMMARY_CONFIG = {
-  max_tokens: 800,
-  temperature: 0.3,
-} as const;
 
 // ---------------------------------------------------------------------------
 // JD Generator (CONTEXT.md — JD Generator feature)
@@ -308,7 +175,156 @@ Example output: {"core":["TypeScript","React","Node.js","PostgreSQL"],"secondary
   };
 }
 
+export interface MatchAnalysis {
+  matched_requirements: string[];
+  missing_requirements: string[];
+  match_score: number;
+}
+
+export interface CoverLetterOutput {
+  greeting: string;
+  body_paragraphs: string[];
+  closing: string;
+  signoff: string;
+}
+
+export interface CoverLetterInput {
+  jobTitle: string;
+  company: string;
+  jdText: string;
+  resumeName: string;
+  resumeSummary: string;
+  resumeSkills: string[];
+}
+
+export function buildCoverLetterPrompt(input: CoverLetterInput): { system: string; user: string } {
+  return {
+    system: `You are a professional cover letter writer. Write a compelling, concise cover letter tailored to the job description and candidate profile.
+
+Rules:
+- Return ONLY a valid JSON object with exactly these keys: {"greeting": "...", "body_paragraphs": ["..."], "closing": "...", "signoff": "..."}
+- greeting: A professional salutation (e.g. "Dear Hiring Team,")
+- body_paragraphs: 2-3 concise paragraphs connecting the candidate's experience to the job requirements
+- closing: A brief closing statement
+- signoff: The candidate's name and any contact info
+- No markdown, no code fences, no explanation — only valid JSON
+- Keep each paragraph under 4 sentences
+- Be specific to the job and company — avoid generic templates`,
+    user: `Job Title: ${input.jobTitle}
+Company: ${input.company}
+Job Description: ${input.jdText}
+
+Candidate Name: ${input.resumeName}
+Candidate Summary: ${input.resumeSummary}
+Candidate Skills: ${input.resumeSkills.join(", ")}`,
+  };
+}
+
 export const SKILL_SUGGEST_CONFIG = {
   max_tokens: 350,
   temperature: 0.1,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Resume Tailoring (Phase 1 — core generation engine)
+// ---------------------------------------------------------------------------
+
+export interface TailorResumePromptInput {
+  resumeJson: string;  // serialized ResumeDocument
+  jdText: string;
+  jobSkills?: string[];
+  jobTitle?: string;
+}
+
+/*
+ * buildTailorResumeMessages
+ * Constructs the system + user message pair for AI resume tailoring.
+ * The model receives the full master resume JSON and job description,
+ * then returns a tailored resume in the same Phase 0 schema shape.
+ * matchMeta and missingSkills are computed server-side after generation.
+ *
+ * CRITICAL CONSTRAINT: the model must ONLY rewrite/reorder/rephrase data that
+ * exists in the input resume. It must NEVER invent companies, titles, dates,
+ * metrics, or other experience not present in the input.
+ */
+export function buildTailorResumeMessages(input: TailorResumePromptInput) {
+  const skillsSection = input.jobSkills?.length
+    ? input.jobSkills.join(", ")
+    : "None extracted — infer relevant skills from the JD text below";
+
+  return {
+    system: `You are an expert resume optimiser. Your job is to tailor a candidate's resume to a specific job description — rewriting bullet points, reordering experience, and adjusting the summary to maximise keyword match — while NEVER fabricating experience that isn't in the source resume.
+
+INPUT:
+- resumeJson: the candidate's master resume (canonical JSON)
+- jdText: the full job description to tailor for
+- jobTitle: the target role title from the job description
+
+OUTPUT FORMAT — CRITICAL: Return a JSON object with "resume" as the primary key. The top-level object MUST have "resume". Do NOT place resume fields directly at the top level.
+
+RESUME SHAPE — the value of "resume" must follow this structure (truncated example):
+
+{
+  "resume": {
+    "personalInfo": {
+      "name": "...",
+      "email": "...",
+      ...
+    },
+    "summary": "...",
+    "experience": [ ... ],
+    "education": [ ... ],
+    "skills": { "categories": [...] },
+    "projects": [ ... ],
+    "certifications": [ ... ],
+    "languages": [ ... ]
+  }
+}
+
+ALL resume fields go INSIDE "resume", never at the top level directly.
+
+Modifications allowed inside the resume object:
+- Rewrite bullet points to use stronger action verbs and include JD keywords naturally
+- Reorder experience entries so the most relevant roles appear first
+- Rewrite the summary to match the JD's tone and emphasis
+- Adjust skill category order to put relevant skills first
+- Assign priority (1=highest) to each bullet — used for fit-to-one-page trimming
+
+SKILLS SECTION RULE:
+- The Skills section MUST include EVERY skill present in the input resume JSON that is relevant to this job description — search the existing skills section, experience bullets, projects, and certifications, not just the skills list. If a skill from a bullet is relevant to this JD, it MUST appear in the Skills section.
+- You may ONLY include skills that appear explicitly in the input resume JSON — never infer or invent skills.
+- Do NOT add skills absent from the input resume even if listed in REQUIRED SKILLS or the job description.
+
+TITLE & SUMMARY ALIGNMENT RULE:
+- Compare jobTitle against the FULL breadth of the candidate's real experience in the input resume JSON — across all employment, projects, and skills — not just their current summary framing or stated job titles.
+- If the candidate's real experience supports a broader or adjacent framing that better matches jobTitle (e.g. resume is titled "Frontend Developer" but experience includes backend work like Node.js APIs, Prisma, PostgreSQL, and jobTitle is "Full Stack Engineer"), rewrite the summary and reorder/re-emphasize existing bullets to reflect that broader framing.
+- You are REORDERING AND REFRAMING existing truthful content. Never add new skills, technologies, accomplishments, or job titles not present in the source resume.
+- If the candidate's real experience does NOT support the JD's target role framing (e.g. jobTitle is "Senior DevOps Engineer" but the resume has zero infrastructure, CI/CD, or cloud-ops experience anywhere), do NOT force the framing — keep the honest framing and let the natural match score reflect the gap.
+
+HARD RULES:
+- NEVER invent companies, titles, dates, numeric metrics, or any experience not present in the input resume
+- Do NOT remove or change dates, company names, or job titles
+- You may rephrase bullet text and write stronger descriptions, but the factual content (what the person did) must remain faithful to the source
+- Bullet priority: 1 = most important/relevant to this JD, higher numbers = less relevant
+- The resume object must include all the same top-level keys as the input (personalInfo, summary, experience, education, skills, projects, certifications, languages)
+- Return valid JSON only — no markdown, no code fences, no explanation`,
+    user: `=== MASTER RESUME (JSON) ===
+${input.resumeJson}
+
+=== TARGET ROLE ===
+${input.jobTitle ?? "Not specified"}
+
+=== REQUIRED SKILLS (from job description) ===
+${skillsSection}
+
+=== JOB DESCRIPTION ===
+${input.jdText}
+
+Generate the tailored resume as a single JSON object following the structure above.`,
+  };
+}
+
+export const TAILOR_RESUME_CONFIG = {
+  max_tokens: 8192,
+  temperature: 0.3,
 } as const;

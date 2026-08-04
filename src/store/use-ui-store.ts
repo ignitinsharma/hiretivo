@@ -5,18 +5,19 @@ interface UIState {
   openLoginModal: () => void;
   closeLoginModal: () => void;
 
+  isAddCustomJobModalOpen: boolean;
+  openAddCustomJobModal: () => void;
+  closeAddCustomJobModal: () => void;
+
   isApplyModalOpen: boolean;
   applyJobId: string | null;
   selectedJobId: string | null;
   selectedJobTitle: string;
   selectedCompanyName: string;
-  selectedApplyType: string | null;
   selectedExternalApplyUrl: string | null;
   showExternalConfirm: boolean;
-  openApplyModal: (jobId: string, title?: string, companyName?: string, applyType?: string, externalApplyUrl?: string | null) => void;
+  openApplyModal: (jobId: string, title?: string, companyName?: string, externalApplyUrl?: string | null) => void;
   closeApplyModal: () => void;
-  openExternalConfirm: () => void;
-  closeExternalConfirm: () => void;
 
   isPostJobModalOpen: boolean;
   editJobId: string | null;
@@ -58,45 +59,32 @@ export const useUIStore = create<UIState>((set) => ({
   openLoginModal: () => set({ isLoginModalOpen: true }),
   closeLoginModal: () => set({ isLoginModalOpen: false }),
 
+  isAddCustomJobModalOpen: false,
+  openAddCustomJobModal: () => set({ isAddCustomJobModalOpen: true }),
+  closeAddCustomJobModal: () => set({ isAddCustomJobModalOpen: false }),
+
   isApplyModalOpen: false,
   applyJobId: null,
   selectedJobId: null,
   selectedJobTitle: '',
   selectedCompanyName: '',
-  selectedApplyType: null,
   selectedExternalApplyUrl: null,
   showExternalConfirm: false,
-  openApplyModal: (jobId, title, companyName, applyType, externalApplyUrl) => {
-    const isExternal = applyType === 'EXTERNAL' && externalApplyUrl;
-
-    if (isExternal) {
-      // Open the company site immediately so the user lands there without an
-      // extra click. The modal then asks whether they completed the application.
-      if (typeof window !== 'undefined') {
-        window.open(externalApplyUrl, '_blank', 'noopener,noreferrer');
-      }
-      set({
-        isApplyModalOpen: true,
-        applyJobId: jobId,
-        selectedJobId: jobId,
-        selectedJobTitle: title ?? '',
-        selectedCompanyName: companyName ?? '',
-        selectedApplyType: applyType ?? null,
-        selectedExternalApplyUrl: externalApplyUrl ?? null,
-        showExternalConfirm: true,
-      });
-    } else {
-      set({
-        isApplyModalOpen: true,
-        applyJobId: jobId,
-        selectedJobId: jobId,
-        selectedJobTitle: title ?? '',
-        selectedCompanyName: companyName ?? '',
-        selectedApplyType: applyType ?? null,
-        selectedExternalApplyUrl: externalApplyUrl ?? null,
-        showExternalConfirm: false,
-      });
+  openApplyModal: (jobId, title, companyName, externalApplyUrl) => {
+    // Open the company site immediately so the user lands there without an
+    // extra click. The modal then asks whether they completed the application.
+    if (externalApplyUrl && typeof window !== 'undefined') {
+      window.open(externalApplyUrl, '_blank', 'noopener,noreferrer');
     }
+    set({
+      isApplyModalOpen: true,
+      applyJobId: jobId,
+      selectedJobId: jobId,
+      selectedJobTitle: title ?? '',
+      selectedCompanyName: companyName ?? '',
+      selectedExternalApplyUrl: externalApplyUrl ?? null,
+      showExternalConfirm: true,
+    });
   },
   closeApplyModal: () => set({
     isApplyModalOpen: false,
@@ -104,12 +92,9 @@ export const useUIStore = create<UIState>((set) => ({
     selectedJobId: null,
     selectedJobTitle: '',
     selectedCompanyName: '',
-    selectedApplyType: null,
     selectedExternalApplyUrl: null,
     showExternalConfirm: false,
   }),
-  openExternalConfirm: () => set({ showExternalConfirm: true }),
-  closeExternalConfirm: () => set({ showExternalConfirm: false }),
 
   isPostJobModalOpen: false,
   editJobId: null,

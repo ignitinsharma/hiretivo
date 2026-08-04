@@ -2,23 +2,18 @@
 
 export enum UserRole {
   SEEKER = "SEEKER",
-  RECRUITER = "RECRUITER",
 }
 
-export const USER_ROLE_VALUES = [UserRole.SEEKER, UserRole.RECRUITER] as const;
+export const USER_ROLE_VALUES = [UserRole.SEEKER] as const;
 
 export enum OAuthIntentSource {
   SEEKER_LOGIN = "seeker-login",
   SEEKER_REGISTER = "seeker-register",
-  RECRUITER_LOGIN = "recruiter-login",
-  RECRUITER_REGISTER = "recruiter-register",
 }
 
 export const OAUTH_INTENT_SOURCE_VALUES = [
   OAuthIntentSource.SEEKER_LOGIN,
   OAuthIntentSource.SEEKER_REGISTER,
-  OAuthIntentSource.RECRUITER_LOGIN,
-  OAuthIntentSource.RECRUITER_REGISTER,
 ] as const;
 
 export enum AuthErrorCode {
@@ -62,6 +57,28 @@ export const APPLICATION_STATUS_VALUES = [
   ApplicationStatus.REJECTED,
 ] as const;
 
+export enum AutomationStatus {
+  GENERATING = "GENERATING",
+  READY = "READY",
+  APPLYING = "APPLYING",
+  SUBMITTED = "SUBMITTED",
+  NEEDS_YOU = "NEEDS_YOU",
+  FAILED = "FAILED",
+  COMPLETED = "COMPLETED",
+  SKIPPED = "SKIPPED",
+}
+
+export const AUTOMATION_STATUS_VALUES = [
+  AutomationStatus.GENERATING,
+  AutomationStatus.READY,
+  AutomationStatus.APPLYING,
+  AutomationStatus.SUBMITTED,
+  AutomationStatus.NEEDS_YOU,
+  AutomationStatus.FAILED,
+  AutomationStatus.COMPLETED,
+  AutomationStatus.SKIPPED,
+] as const;
+
 export enum JobType {
   FULL_TIME = "FULL_TIME",
   PART_TIME = "PART_TIME",
@@ -76,13 +93,6 @@ export enum OnboardingJobType {
   FREELANCE = "FREELANCE",
   BOTH = "BOTH",
 }
-
-export const RECRUITER_ONBOARDING_JOB_TYPE_VALUES = [
-  OnboardingJobType.FULL_TIME,
-  OnboardingJobType.CONTRACT,
-  OnboardingJobType.PART_TIME,
-  OnboardingJobType.FREELANCE,
-] as const;
 
 export const SEEKER_ONBOARDING_JOB_TYPE_VALUES = [
   OnboardingJobType.FULL_TIME,
@@ -144,31 +154,23 @@ export const LOCATION_CLASS_VALUES = [
 
 export enum PlanTier {
   FREE = "FREE",
-  STARTER = "STARTER",
-  GROWTH = "GROWTH",
-  SCALE = "SCALE",
+  PRO = "PRO",
+  UNLIMITED = "UNLIMITED",
 }
 
 export const PLAN_TIER_VALUES = [
   PlanTier.FREE,
-  PlanTier.STARTER,
-  PlanTier.GROWTH,
-  PlanTier.SCALE,
+  PlanTier.PRO,
+  PlanTier.UNLIMITED,
 ] as const;
 
-export enum InterviewStatus {
-  SCHEDULED = "SCHEDULED",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
-  NO_SHOW = "NO_SHOW",
+export enum PipelineStage {
+  NOT_APPLIED = "NOT_APPLIED",
+  APPLIED = "APPLIED",
+  INTERVIEWING = "INTERVIEWING",
+  OFFER = "OFFER",
+  REJECTED = "REJECTED",
 }
-
-export const INTERVIEW_STATUS_VALUES = [
-  InterviewStatus.SCHEDULED,
-  InterviewStatus.COMPLETED,
-  InterviewStatus.CANCELLED,
-  InterviewStatus.NO_SHOW,
-] as const;
 
 export enum MatchThreshold {
   STRONG = 80,
@@ -207,9 +209,8 @@ export const BILLING_PERIOD_VALUES = [BillingPeriod.MONTHLY, BillingPeriod.ANNUA
 
 export enum PricingTierId {
   FREE = "free",
-  STARTER = "starter",
-  GROWTH = "growth",
-  SCALE = "scale",
+  PRO = "pro",
+  UNLIMITED = "unlimited",
 }
 
 export enum AiMessageRole {

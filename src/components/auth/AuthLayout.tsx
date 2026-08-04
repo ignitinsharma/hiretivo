@@ -7,32 +7,20 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
   description?: string;
-  showRecruiterToggle?: boolean;
-  recruiterMode?: boolean;
-  onToggleMode?: () => void;
-  toggleLinkText?: string;
-  toggleLinkHref?: string;
   leftContent?: React.ReactNode;
-  role?: "seeker" | "recruiter";
   backHref?: string;
 }
 
 /**
- * Provides the shared two-column shell used by seeker and recruiter auth pages.
+ * Provides the shared two-column shell used by auth pages.
  */
 export function AuthLayout({
   children,
   title,
   description,
   leftContent,
-  role,
   backHref,
 }: AuthLayoutProps) {
-  const roleBadge = role === "seeker"
-    ? { label: "Seeker", color: "bg-brand-primary/10 text-brand-primary border-brand-primary/20" }
-    : role === "recruiter"
-    ? { label: "Recruiter", color: "bg-gray-100 text-gray-700 border-brand-border" }
-    : null;
 
   return (
     <main className="min-h-dvh flex flex-col md:flex-row bg-white selection:bg-brand-primary/20 antialiased overflow-x-hidden">
@@ -60,7 +48,7 @@ export function AuthLayout({
               {backHref ? (
                 <Link
                   href={backHref}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-foreground-muted hover:text-brand-foreground transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
@@ -68,21 +56,13 @@ export function AuthLayout({
               ) : (
                 <div />
               )}
-              {roleBadge && (
-                <span className={cn(
-                  "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
-                  roleBadge.color
-                )}>
-                  {roleBadge.label}
-                </span>
-              )}
             </div>
 
-            <h2 className="font-bold text-3xl text-slate-900 tracking-tight mb-2">
+            <h2 className="font-bold text-3xl text-brand-foreground tracking-tight mb-2">
               {title}
             </h2>
             {description && (
-              <p className="text-slate-500 font-medium">{description}</p>
+              <p className="text-brand-foreground-muted font-medium">{description}</p>
             )}
           </header>
 
@@ -91,19 +71,19 @@ export function AuthLayout({
           <div className="mt-8 flex flex-wrap justify-center gap-6">
             <Link
               href="/privacy"
-              className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
+              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
+              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
             >
               Terms of Service
             </Link>
             <Link
               href="/help"
-              className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
+              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
             >
               Help Center
             </Link>

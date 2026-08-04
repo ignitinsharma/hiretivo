@@ -11,7 +11,6 @@ datasource db {
 
 enum Role {
   SEEKER
-  RECRUITER
 }
 
 enum JobType {
@@ -51,6 +50,17 @@ enum AppStatus {
   REJECTED
 }
 
+enum AutomationStatus {
+  GENERATING
+  READY
+  APPLYING
+  SUBMITTED
+  NEEDS_YOU
+  FAILED
+  COMPLETED
+  SKIPPED
+}
+
 enum WorkType {
   REMOTE
   HYBRID
@@ -59,9 +69,8 @@ enum WorkType {
 
 enum PlanTier {
   FREE
-  STARTER
-  GROWTH
-  SCALE
+  PRO
+  UNLIMITED
 }
 
 enum VerificationStatus {
@@ -84,11 +93,12 @@ enum SubStatus {
   CANCELED
 }
 
-enum InterviewStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-  NO_SHOW
+enum PipelineStage {
+  NOT_APPLIED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
 }
 
 model User {
@@ -114,25 +124,15 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  seekerProfile   SeekerProfile?
-  recruiterProfile RecruiterProfile?
-
-  jobsPosted Job[] @relation("RecruiterJobs")
-
-  applications Application[]
-
-  interviewsAsRecruiter Interview[] @relation("InterviewRecruiter")
-  interviewsAsSeeker    Interview[] @relation("InterviewSeeker")
-
-  clickEvents ClickEvent[]
-
-  boostedJobs BoostedJob[] @relation("BoostedJobs")
-  savedJobs            SavedJob[]
-  dismissedJobs        DismissedJob[]
-  subscription         Subscription?
-  verificationReviews  VerificationReview[]
-  engineerUnlocksAsRecruiter EngineerUnlock[] @relation("RecruiterUnlocks")
-  engineerUnlocksAsEngineer  EngineerUnlock[] @relation("EngineerUnlocks")
+  seekerProfile    SeekerProfile?
+  applications     Application[]
+  masterResume     MasterResume?
+  generationQuotas GenerationQuota[]
+  clickEvents      ClickEvent[]
+  savedJobs        SavedJob[]
+  dismissedJobs    DismissedJob[]
+  subscription     Subscription?
+  verificationReviews VerificationReview[]
 }
 
 model Account {
@@ -191,6 +191,7 @@ model SeekerProfile {
   currency        String?
   availability    String?
   resumeKey       String?
+  phone           String?
 
   websiteUrl      String?
   linkedinUrl     String?
@@ -224,6 +225,7 @@ model Skill {
   name     String @unique
   slug     String @unique
   category String
+  aliases  String[] @default([])
 
   seekerSkills SeekerSkill[]
   jobSkills    JobSkill[]
@@ -245,32 +247,8 @@ model SeekerSkill {
   @@index([skillId])
 }
 
-model RecruiterProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  companyName String
-  website     String?
-  bio         String? @db.Text
-  companySize String?
-  industry    String?
-  fundingType String?
-  isFullyRemote Boolean  @default(false)
-  logo        String?
-
-  emailNotifications     Boolean @default(true)
-  applicationAlerts      Boolean @default(true)
-  interviewNotifications Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Job {
   id          String @id @default(cuid())
-  recruiterId String
-  recruiter   User   @relation("RecruiterJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
 
   title       String
   description String      @db.Text
@@ -288,20 +266,18 @@ model Job {
 
   externalApplyUrl String?
 
-  // Admin-posted job company overrides — null on regular recruiter jobs.
-  // When non-null, take precedence over the recruiter's profile for display.
+  // Company info — populated from ATS feed or admin post
   companyName     String?
   companyLogoUrl  String?
   companyWebsite  String?
   companySize     String?
   companyIndustry String?
   companyFunding  String?
-  isAdminPosted   Boolean   @default(false)
 
   publishedAt DateTime?
   closedAt    DateTime?
 
-  // ATS job feed fields — null on regular recruiter jobs
+  // ATS job feed fields
   atsSource       String?   // 'ashby' | 'greenhouse' | 'lever'
   atsSourceId     String?   // Raw ID from source API (stable per source)
   descriptionHash String?   @map("description_hash")
@@ -315,17 +291,14 @@ model Job {
   applications  Application[]
   jobMatches    JobMatch[]
   clickEvents   ClickEvent[]
-  boostedJob    BoostedJob?
   savedBy       SavedJob[]
   dismissedBy   DismissedJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([recruiterId])
   @@index([status])
   @@index([createdAt])
-  @@index([isAdminPosted])
   @@index([status, createdAt])
   @@index([atsSource])
   @@index([locationClass])
@@ -383,13 +356,24 @@ model Application {
   status      AppStatus @default(APPLIED)
   matchScore  Int
 
+  automationStatus AutomationStatus? @map("automation_status")
+  failureReason    String?               @map("failure_reason")
+
+  pipelineStage PipelineStage @default(NOT_APPLIED) @map("pipeline_stage")
+
   coverLetter String? @db.Text
-  aiSummary   String? // INT-01: lazy-cached AI candidate summary; null = not yet generated
+  aiSummary   String?
 
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
   seeker User @relation(fields: [seekerId], references: [id], onDelete: Cascade)
 
-  interviews Interview[]
+  resumeVersions ResumeVersion[]
+  coverLetters   CoverLetter[]
+
+  generationCount Int    @default(0)
+  activeVersionId String?
+
+  appliedAt DateTime? @map("applied_at")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -398,34 +382,60 @@ model Application {
   @@index([seekerId])
   @@index([status])
   @@index([jobId, status])
+  @@index([activeVersionId])
+  @@index([pipelineStage])
 }
 
-model Interview {
-  id String @id @default(cuid())
+// MasterResume — canonical, document-only storage for the user's uploaded/parsed base resume.
+// This is the ONE source of truth — normalized tables (WorkExperience, Education,
+// SeekerSkill, etc.) are derived read-only caches, written ONLY by a
+// sync-from-MasterResume transaction, never directly by any other code path.
+model MasterResume {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  resumeJson Json     // Phase 0 schema JSON — canonical source of truth
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+// GenerationQuota — tracks monthly generation usage per user, enforced server-side
+model GenerationQuota {
+  id        String   @id @default(cuid())
+  userId    String
+  month     String   // "YYYY-MM"
+  count     Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+  @@index([userId])
+}
+
+// ResumeVersion — each generate/regenerate creates a new version row, no silent overwrite
+model ResumeVersion {
+  id            String   @id @default(cuid())
   applicationId String
+  version       Int      @default(1)
+  resumeJson    Json
+  sourceType    String   @default("ai-generated") // ai-generated | regenerate | manual-edit
+  styleConfig   Json?
+  createdAt     DateTime @default(now())
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
-  recruiterId String
-  recruiter   User   @relation("InterviewRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
+  @@index([applicationId])
+}
 
-  seekerId String
-  seeker   User   @relation("InterviewSeeker", fields: [seekerId], references: [id], onDelete: Cascade)
-
-  status   InterviewStatus @default(SCHEDULED)
-  startsAt DateTime?
-  endsAt   DateTime?
-  meetLink String?
-  notes             String? @db.Text
-  scheduledTimeZone String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// CoverLetter — per-application cover letter storage
+model CoverLetter {
+  id            String   @id @default(cuid())
+  applicationId String
+  content       String   // generated cover letter text
+  createdAt     DateTime @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
-  @@index([recruiterId])
-  @@index([seekerId])
-  @@index([startsAt])
 }
 
 model ClickEvent {
@@ -451,23 +461,6 @@ model EarlyAccessEmail {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
-}
-
-model BoostedJob {
-  id          String   @id @default(cuid())
-  jobId       String   @unique
-  recruiterId String
-  paymentId   String?
-  startsAt    DateTime @default(now())
-  expiresAt   DateTime
-
-  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  recruiter User @relation("BoostedJobs", fields: [recruiterId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([recruiterId])
 }
 
 model Subscription {
@@ -566,24 +559,6 @@ model VerificationReview {
 
   @@index([userId])
   @@index([status])
-  @@index([createdAt])
-}
-
-model EngineerUnlock {
-  id          String   @id @default(cuid())
-  recruiterId String
-  engineerId  String
-  // "talent_pool" = counts against quota | "application_auto" = free, never counted
-  source      String   @default("talent_pool")
-  createdAt   DateTime @default(now())
-
-  recruiter User @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
-  engineer  User @relation("EngineerUnlocks", fields: [engineerId], references: [id], onDelete: Cascade)
-
-  @@unique([recruiterId, engineerId])
-  @@index([recruiterId])
-  @@index([engineerId])
-  @@index([source])
   @@index([createdAt])
 }
 

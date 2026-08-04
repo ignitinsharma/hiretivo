@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
-import { BookCallButton } from "@/components/shared/BookCallButton";
 import { Twitter, Linkedin, Instagram } from "lucide-react";
 
 interface FooterProps {
@@ -26,10 +25,9 @@ export function Footer({ className }: FooterProps) {
             <Link href="/" className="inline-block mb-6">
               <Logo variant="white" size="lg" />
             </Link>
+            <p className="text-white font-bold text-lg mb-2">You approve. We apply.</p>
             <p className="text-gray-500 text-base mb-8">
-              Hiretivo helps startups hire verified Indian engineers with clear
-              skills, salary expectations, and availability before the first
-              call.
+              AI-powered resumes and one-click tracking. Paste any job link, land faster.
             </p>
             <div className="flex gap-3">
               {SOCIAL_LINKS.map(({ href, icon: Icon, label }) => (
@@ -52,11 +50,9 @@ export function Footer({ className }: FooterProps) {
               <h5 className="text-white font-semibold mb-4 text-sm">Company</h5>
               <ul className="space-y-3 text-sm">
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/about">About</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how">How It Works</Link></li>
+                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how-it-works">How It Works</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/pricing">Pricing</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/recruiter/register">Post a Job</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
-                <li><BookCallButton variant="footer" /></li>
               </ul>
             </div>
             <div>
@@ -76,7 +72,7 @@ export function Footer({ className }: FooterProps) {
         </div>
 
         <div className="pt-8 border-t border-white/10 text-center">
-          <p className="text-gray-600 text-sm">© 2026 Hiretivo. All rights reserved.</p>
+          <p className="text-gray-600 text-sm">&copy; {new Date().getFullYear()} Hiretivo. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -71,7 +71,7 @@ export function VerificationStatusCard({
           className="w-full rounded-lg text-xs font-semibold"
           asChild
         >
-          <Link href="/seeker/onboarding">Update &amp; Resubmit →</Link>
+          <Link href="/seeker/onboarding">Update & Resubmit →</Link>
         </Button>
       </div>
     );

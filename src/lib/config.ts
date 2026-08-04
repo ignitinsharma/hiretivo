@@ -3,11 +3,29 @@
  * Handles dynamic URLs and environment detection across Production, Staging, and Develop
  */
 
+import type { NextRequest } from "next/server";
+
+/**
+ * Production hostnames. Outside production these are never a valid app URL —
+ * a NEXT_PUBLIC_APP_URL resolving to one is a misconfiguration (e.g. the var
+ * scoped to "All Environments" in Vercel) and must be ignored.
+ */
+const PROD_HOSTS = new Set(["hiretivo.com", "www.hiretivo.com"]);
+
+function isProdHost(url: string): boolean {
+  try {
+    return PROD_HOSTS.has(new URL(url).hostname);
+  } catch {
+    // Unparseable URL — treat as unsafe outside production
+    return true;
+  }
+}
+
 /**
  * Get the application URL based on the current environment
  * - Production (main branch): hiretivo.com
- * - Staging branch: Vercel auto-generated URL or custom domain
- * - Develop branch: Vercel auto-generated URL or custom domain
+ * - Staging/Develop/Previews: Vercel auto-generated URL or a non-prod
+ *   NEXT_PUBLIC_APP_URL override (e.g. a staging custom domain)
  * - Local: localhost:3000
  */
 export function getAppUrl(): string {
@@ -16,36 +34,16 @@ export function getAppUrl(): string {
     return process.env.NEXT_PUBLIC_APP_URL ?? "https://hiretivo.com";
   }
 
-  // Check if we're on a specific branch (staging or develop)
-  const branch = process.env.VERCEL_GIT_COMMIT_REF;
-
-  // Staging branch
-  if (branch === "staging") {
-    return (
-      process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000")
-    );
+  // Outside production, never emit a production link — ignore a
+  // NEXT_PUBLIC_APP_URL that points at the prod domain.
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (configuredUrl && !isProdHost(configuredUrl)) {
+    return configuredUrl;
   }
 
-  // Develop branch
-  if (branch === "develop") {
-    return (
-      process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000")
-    );
-  }
-
-  // All other previews and local development
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000")
-  );
+  return process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 }
 
 /**
@@ -101,6 +99,36 @@ export const IS_SERVER = typeof window === "undefined";
 export const SITE_NAME = "Hiretivo";
 export const SITE_DESCRIPTION =
   "Hire verified Indian engineers for your startup. Pre-vetted talent with real skills, salary transparency, and availability.";
+
+/**
+ * Origin allowlist for request-scoped URLs: our domains, Vercel previews, localhost.
+ */
+function isAllowedRequestOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return (
+      PROD_HOSTS.has(hostname) ||
+      hostname.endsWith(".hiretivo.com") ||
+      hostname.endsWith(".vercel.app") ||
+      hostname === "localhost" ||
+      hostname === "127.0.0.1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * App URL for request-scoped redirects (payment return URLs, portal returns).
+ * Uses the request's own origin when it's one of ours, so the user always
+ * returns to the environment they started on — regardless of env var config.
+ * Falls back to getAppUrl() for unrecognized (potentially spoofed) Host headers.
+ */
+export function getRequestAppUrl(req: NextRequest): string {
+  return isAllowedRequestOrigin(req.nextUrl.origin)
+    ? req.nextUrl.origin
+    : getAppUrl();
+}
 
 /**
  * Get OAuth redirect URL for a provider

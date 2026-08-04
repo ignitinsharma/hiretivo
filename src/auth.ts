@@ -8,15 +8,14 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
 
 function isRole(value: unknown): value is Role {
-  return value === Role.SEEKER || value === Role.RECRUITER;
+  return value === Role.SEEKER;
 }
 
 function isPlanTier(value: unknown): value is PlanTier {
   return (
     value === PlanTier.FREE ||
-    value === PlanTier.STARTER ||
-    value === PlanTier.GROWTH ||
-    value === PlanTier.SCALE
+    value === PlanTier.PRO ||
+    value === PlanTier.UNLIMITED
   );
 }
 
@@ -157,7 +156,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             }
             // Always derive plan from DB — never trust a client-supplied plan value.
             // A client-provided u.plan is only used to short-circuit IF it matches DB,
-            // preventing privilege escalation (e.g. caller claiming SCALE when DB says STARTER).
+            // preventing privilege escalation (e.g. caller claiming UNLIMITED when DB says FREE).
             // The webhook (subscription.active) is the authoritative writer of user.plan in DB.
             token.plan = dbUser.plan;
           }

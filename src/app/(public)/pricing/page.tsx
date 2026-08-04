@@ -5,7 +5,7 @@ import { generatePageMetadata } from "@/lib/metadata";
 
 export const metadata = generatePageMetadata({
   title: "Pricing",
-  description: "Pricing that scales with your hiring needs.",
+  description: "Start free. Upgrade when your search heats up. AI resume tailoring for every job.",
   path: "/pricing",
 });
 

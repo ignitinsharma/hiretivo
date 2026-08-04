@@ -3,58 +3,38 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { completeSeekerOnboarding } from '@/app/actions/onboarding/seeker';
 import { OnboardingShell } from '@/components/layout/OnboardingShell';
 import { cn } from '@/lib/utils';
 import { computeOnboardingStrength } from '@/lib/onboarding/profile-strength';
 import { useSeekerOnboardingStore } from '@/store/use-seeker-onboarding-store';
 import { OnboardingSideRail } from './OnboardingSideRail';
 import { StepWelcome } from './StepWelcome';
-import { StepSkills } from './StepSkills';
-import { StepProofOfWork } from './StepProofOfWork';
-import { StepExperience } from './StepExperience';
-import { StepCompensation } from './StepCompensation';
-import { StepReviewSubmit } from './StepReviewSubmit';
+import { StepResume } from './StepResume';
 import type {
   SeekerOnboardingStep,
   Step1Data,
-  Step2Data,
-  Step3Data,
-  Step4Data,
-  ProofOfWorkData,
-  ExperienceData,
-  CompensationData,
 } from '@/modules/seeker-onboarding/types/seeker-onboarding.types';
 
-/*
- * SeekerOnboardingContainer
- * Root client component for the 6-step verified-engineer onboarding flow.
- * Manages step transitions, progress bar, side rail strength computation,
- * and the final completeSeekerOnboarding server action.
- */
+const STEP_LABELS = ['About You', 'Upload Resume'];
 
-const STEP_LABELS = [
-  'About You',
-  'Skills',
-  'Proof of Work',
-  'Experience',
-  'Compensation',
-  'Review & Submit',
-];
-
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 2;
 
 interface SeekerOnboardingContainerProps {
   initialStep: SeekerOnboardingStep;
   initialData: {
     userName: string;
+    userEmail?: string;
     step1: Partial<Step1Data>;
-    step2: Partial<Step2Data>;
-    step3: Partial<Step3Data>;
-    step4: Partial<Step4Data>;
-    proofOfWork?: Partial<ProofOfWorkData>;
-    experience?: Partial<ExperienceData>;
-    compensation?: Partial<CompensationData>;
+    step3: {
+      resume: {
+        name: string;
+        size: number;
+        type: string;
+        key: string | null;
+        url: string | null;
+        file: null;
+      } | null;
+    };
   };
 }
 
@@ -67,13 +47,9 @@ export function SeekerOnboardingContainer({
     currentStep,
     nextStep,
     previousStep,
-    setCurrentStep,
     initializeOnboarding,
     step1,
-    step2,
-    proofOfWork,
-    experience,
-    compensation,
+    step3,
   } = useSeekerOnboardingStore();
 
   useEffect(() => {
@@ -84,34 +60,13 @@ export function SeekerOnboardingContainer({
     window.localStorage.removeItem('hiretivo-seeker-onboarding');
   }, [initialData, initialStep, initializeOnboarding]);
 
-  /*
-   * handleComplete
-   * Triggers the completeSeekerOnboarding server action.
-   * On success: redirects to the returned URL.
-   * On failure: snaps back to the missing step.
-   */
-  const handleComplete = async () => {
-    const result = await completeSeekerOnboarding();
-
-    if (!result.success) {
-      setCurrentStep(result.missingStep);
-      return;
-    }
-
-    router.push(result.redirectTo);
+  const handleComplete = () => {
+    router.push('/dashboard');
     router.refresh();
   };
 
-  /* Compute live profile strength for the side rail */
-  const strength = computeOnboardingStrength({
-    step1,
-    step2,
-    proofOfWork,
-    experience,
-    compensation,
-  });
+  const strength = computeOnboardingStrength({ step1, step3 });
 
-  /* Clamp step to valid SeekerOnboardingStep range (1–6) for the side rail */
   const sideRailStep = Math.min(
     Math.max(currentStep, 1),
     TOTAL_STEPS,
@@ -125,17 +80,7 @@ export function SeekerOnboardingContainer({
       case 1:
         return <StepWelcome onNext={nextStep} />;
       case 2:
-        return <StepSkills onNext={nextStep} onBack={previousStep} />;
-      case 3:
-        return <StepProofOfWork onNext={nextStep} onBack={previousStep} />;
-      case 4:
-        return <StepExperience onNext={nextStep} onBack={previousStep} />;
-      case 5:
-        return <StepCompensation onNext={nextStep} onBack={previousStep} />;
-      case 6:
-        return (
-          <StepReviewSubmit onBack={previousStep} onComplete={handleComplete} />
-        );
+        return <StepResume onBack={previousStep} onComplete={handleComplete} />;
       default:
         return null;
     }

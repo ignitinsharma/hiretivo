@@ -37,7 +37,7 @@ const previewChangeRateLimiter = createRateLimiter(
  *
  * Error responses:
  *   401  Unauthorized
- *   403  Forbidden (non-RECRUITER role)
+ *   403  Forbidden (non-SEEKER role)
  *   429  Too many requests
  *   400  Invalid planId / already on this plan / subscription not active
  *   502  Dodo API unavailable
@@ -49,10 +49,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  /* ── 2. Role guard — recruiters only ── */
-  if (session.user.role !== UserRole.RECRUITER) {
+  /* ── 2. Role guard ── */
+  if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json(
-      { error: "This endpoint is for recruiters only" },
+      { error: "Forbidden" },
       { status: 403 },
     );
   }

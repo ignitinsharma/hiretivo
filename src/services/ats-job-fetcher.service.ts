@@ -8,6 +8,7 @@ import { computeDescriptionHash, meetsQualityBar } from '@/lib/ats/filters';
 import { subHours, subDays } from 'date-fns';
 import { SkillLevel, JobStatus, AtsSource } from '@/constants/enums';
 import { WorkType, JobType } from '@prisma/client';
+import { extractCandidateSkillsFromJD, reconcileAndInsertSkills } from '@/lib/ai/skill-catalog-extractor';
 
 const SYSTEM_USER_ID = 'system-ats-user';
 const COMPANY_CHUNK_SIZE = 10;
@@ -20,13 +21,50 @@ const COMPANY_CHUNK_SIZE = 10;
  * @param allSkills  - full skill catalogue fetched once per cron run
  * @returns array of skill IDs ready for JobSkill.createMany
  */
-function upsertJobSkillIds(
+export function upsertJobSkillIds(
   skillNames: string[],
-  allSkills: Array<{ id: string; name: string }>,
+  allSkills: Array<{ id: string; name: string; aliases: string[] }>,
 ): string[] {
   if (skillNames.length === 0) return [];
   const skillMap = new Map(allSkills.map((s) => [s.name, s.id]));
   return skillNames.map((name) => skillMap.get(name)).filter((id): id is string => id !== undefined);
+}
+
+/*
+ * enrichJobSkills
+ * Threshold-gated LLM enrichment: if deterministic skill extraction found fewer
+ * than 3 skills for a job, runs LLM extraction to find missing catalog terms,
+ * creates/aliases them in the DB, and pushes the new skill names into
+ * job.skillMatches so they get linked as JobSkill rows.
+ */
+async function enrichJobSkills(
+  job: NormalizedJob,
+  allSkills: Array<{ id: string; name: string; aliases: string[] }>,
+): Promise<void> {
+  if (job.skillMatches.length >= 3) return;
+
+  const candidates = await extractCandidateSkillsFromJD(job.description);
+  if (candidates.length === 0) return;
+
+  const result = await reconcileAndInsertSkills(candidates);
+
+  for (const created of result.created) {
+    allSkills.push({ id: created.id, name: created.name, aliases: [] });
+    job.skillMatches.push(created.name);
+  }
+
+  for (const added of result.aliasesAdded) {
+    const skill = allSkills.find((s) => s.name === added.skillName);
+    if (skill && !skill.aliases.includes(added.alias)) {
+      skill.aliases.push(added.alias);
+    }
+  }
+
+  if (result.created.length > 0 || result.aliasesAdded.length > 0) {
+    console.log(
+      `[ats-fetch] Catalog enrichment for ${job.companyName}/${job.title}: ${result.created.length} new, ${result.aliasesAdded.length} aliases, ${result.rejected.length} rejected`,
+    );
+  }
 }
 
 /*
@@ -78,7 +116,7 @@ export async function fetchAndUpsertAllJobs(): Promise<{
   total: { created: number; updated: number; closed: number };
   errors: number;
 }> {
-  const allSkills = await prisma.skill.findMany({ select: { id: true, name: true } });
+  const allSkills = await prisma.skill.findMany({ select: { id: true, name: true, aliases: true } });
   const blocklist = await prisma.atsBlocklist.findMany({ select: { companyName: true } });
   const blockedNames = new Set(blocklist.map((b) => b.companyName.toLowerCase()));
 
@@ -134,7 +172,7 @@ export async function fetchAndAutoClose(source: AtsSource): Promise<{
   closed: number;
   errors: number;
 }> {
-  const allSkills = await prisma.skill.findMany({ select: { id: true, name: true } });
+  const allSkills = await prisma.skill.findMany({ select: { id: true, name: true, aliases: true } });
   const blocklist = await prisma.atsBlocklist.findMany({ select: { companyName: true } });
   const blockedNames = new Set(blocklist.map((b) => b.companyName.toLowerCase()));
 
@@ -169,7 +207,7 @@ export async function fetchAndAutoClose(source: AtsSource): Promise<{
 async function fetchAndUpsertSource(
   source: AtsSource,
   blockedNames: Set<string>,
-  allSkills: Array<{ id: string; name: string }>,
+  allSkills: Array<{ id: string; name: string; aliases: string[] }>,
 ): Promise<{ fetched: number; created: number; updated: number; errors: number; newJobIds: string[]; companyErrors: Map<string, number> }> {
   const companies = COMPANY_REGISTRY.filter((c) => c.ats === source);
   const allJobs: NormalizedJob[] = [];
@@ -252,7 +290,6 @@ async function fetchAndUpsertSource(
   if (newJobCandidates.length > 0) {
     const closed = await prisma.job.findMany({
       where: {
-        isAdminPosted: true,
         status: JobStatus.CLOSED,
         companyName: { in: [...new Set(newJobCandidates.map((j) => j.companyName))] },
       },
@@ -340,6 +377,7 @@ async function fetchAndUpsertSource(
         });
         // Re-write skills so JobMatch can be computed after reopen
         await prisma.jobSkill.deleteMany({ where: { jobId: existingClosed.id } });
+        await enrichJobSkills(job, allSkills);
         const reopenSkillIds = upsertJobSkillIds(job.skillMatches, allSkills);
         if (reopenSkillIds.length > 0) {
           await prisma.jobSkill.createMany({
@@ -352,8 +390,7 @@ async function fetchAndUpsertSource(
         // Create new job
         const created = await prisma.job.create({
           data: {
-            recruiterId: SYSTEM_USER_ID,
-            title: job.title,
+          title: job.title,
             description: job.description || 'No description provided',
             jobType: job.jobType as JobType,
             applyType: 'EXTERNAL',
@@ -367,7 +404,6 @@ async function fetchAndUpsertSource(
             companyName: job.companyName,
             companyLogoUrl: job.companyLogoUrl,
             companyWebsite: job.companyWebsite,
-            isAdminPosted: true,
             externalApplyUrl: job.externalApplyUrl,
             publishedAt: job.publishedAt ? new Date(job.publishedAt) : now,
             atsSource: job.atsSource,
@@ -381,6 +417,7 @@ async function fetchAndUpsertSource(
           },
         });
         // Write skills immediately so JobMatch can be computed right after
+        await enrichJobSkills(job, allSkills);
         const newSkillIds = upsertJobSkillIds(job.skillMatches, allSkills);
         if (newSkillIds.length > 0) {
           await prisma.jobSkill.createMany({
@@ -396,6 +433,7 @@ async function fetchAndUpsertSource(
       if (existing && existing.descriptionHash !== descriptionHash) {
         // Content changed — re-extract skills and update
         await prisma.jobSkill.deleteMany({ where: { jobId: existing.id } });
+        await enrichJobSkills(job, allSkills);
         const updatedSkillIds = upsertJobSkillIds(job.skillMatches, allSkills);
         if (updatedSkillIds.length > 0) {
           await prisma.jobSkill.createMany({
@@ -517,7 +555,6 @@ async function autoCloseStaleJobs(
   // Pre-collect IDs before closing so orphan cleanup is reliable
   const staleIds = (await prisma.job.findMany({
     where: {
-      isAdminPosted: true,
       status: JobStatus.OPEN,
       ...sourceFilter,
       lastSeenAt: { lt: subHours(now, 48) },
@@ -530,7 +567,6 @@ async function autoCloseStaleJobs(
 
   const oldIds = (await prisma.job.findMany({
     where: {
-      isAdminPosted: true,
       status: JobStatus.OPEN,
       ...sourceFilter,
       publishedAt: { lt: subDays(now, 60) },
@@ -575,7 +611,6 @@ async function autoCloseStaleJobs(
 export async function closeBlockedCompanyJobs(companyName: string): Promise<number> {
   const { count } = await prisma.job.updateMany({
     where: {
-      isAdminPosted: true,
       status: JobStatus.OPEN,
       companyName: { equals: companyName, mode: 'insensitive' },
     },

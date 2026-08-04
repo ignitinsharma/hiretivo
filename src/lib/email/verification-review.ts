@@ -36,7 +36,7 @@ export async function sendVerificationReviewEmail({
     ? "Congratulations — your Hiretivo verification was approved!"
     : "Your Hiretivo verification was not approved";
 
-  const approvedUrl = `${getAppUrl()}/seeker/profile`;
+  const approvedUrl = `${getAppUrl()}/profile`;
   const rejectedUrl = `${getAppUrl()}/seeker/onboarding`;
 
   const P = 'style="color:#0a0a0a;font-size:16px;line-height:1.6;margin:0 0 20px;"';

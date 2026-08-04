@@ -25,7 +25,7 @@ export async function fetchGreenhouseJobs(
   companyName: string,
   companyWebsite: string,
   companyLogoUrl: string | null,
-  skills: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): Promise<NormalizedJob[]> {
   const url = `https://boards-api.greenhouse.io/v1/boards/${boardToken}/jobs?content=true`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Hiretivo/1.0' } });
@@ -46,7 +46,7 @@ export function normalizeGreenhouseJob(
   companyName: string,
   companyWebsite: string,
   companyLogoUrl: string | null,
-  skills: Array<{ id: string; name: string }>,
+  skills: Array<{ id: string; name: string; aliases: string[] }>,
 ): NormalizedJob {
   const locationStr = job.location?.name || 'Remote';
   const description = stripHtml(job.content || '');

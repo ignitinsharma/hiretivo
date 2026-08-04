@@ -82,7 +82,7 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     return NextResponse.json(
       {
         error:
-          'Upload your resume in Settings before applying. Go to /seeker/settings to continue.',
+          'Upload your resume in Settings before applying. Go to /settings to continue.',
       },
       { status: 400 },
     );

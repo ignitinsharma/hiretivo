@@ -65,7 +65,7 @@ export function SavedJobsList() {
     return (
       <div className="flex flex-col gap-3">
         {SKELETON_ITEMS.map((item) => (
-          <Card key={item} className="p-5">
+          <Card key={item} className="p-6">
             <div className="mb-4 flex items-start justify-between">
               <Skeleton className="h-12 w-12 rounded-lg" />
               <Skeleton className="h-8 w-8 rounded-lg" />
@@ -106,7 +106,7 @@ export function SavedJobsList() {
           to revisit.
         </p>
         <Button asChild className="mt-6" variant="primary">
-          <a href="/seeker/dashboard">Browse recommendations</a>
+          <a href="/dashboard">Browse recommendations</a>
         </Button>
       </Card>
     );
@@ -150,7 +150,6 @@ export function SavedJobsList() {
                       savedJob.job.id,
                       savedJob.job.title,
                       savedJob.job.companyName,
-                      savedJob.job.applyType,
                       savedJob.job.externalApplyUrl,
                     );
                   }

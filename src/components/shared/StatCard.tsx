@@ -20,11 +20,11 @@ export function StatCard({
   variant = 'default',
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl p-5 border border-brand-border-light">
+    <div className="bg-white rounded-xl p-6 border border-brand-border-light">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-sm font-medium text-brand-foreground-muted">{label}</p>
+          <p className="text-2xl font-bold text-brand-foreground mt-1">{value}</p>
           {trend && (
             <p
               className={cn(
@@ -41,8 +41,8 @@ export function StatCard({
           className={cn(
             'w-10 h-10 rounded-lg flex items-center justify-center',
             variant === 'purple'
-              ? 'bg-black/10 text-black'
-              : 'bg-gray-100 text-gray-600'
+              ? 'bg-brand-primary/10 text-brand-primary'
+              : 'bg-brand-surface text-brand-foreground-muted'
           )}
         >
           <Icon className="w-5 h-5" />

@@ -5,7 +5,6 @@ import { auth } from '@/auth';
 import { CurrencyCode, JobStatus, UserRole, MatchThreshold, LocationClass } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
-import { resolveLogoUrl } from '@/lib/r2';
 import { computeAllMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
@@ -114,19 +113,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid query params' }, { status: 400 });
   }
 
-  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored } = parsed.data;
+  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored, q } = parsed.data;
 
   const appliedRows = await prisma.application.findMany({
     where: { seekerId: session.user.id },
     select: { jobId: true },
   });
-  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId));
+  const appliedJobIds = new Set(appliedRows.map((r) => r.jobId).filter((id): id is string => id !== null));
 
   const dismissedRows = await prisma.dismissedJob.findMany({
     where: { userId: session.user.id },
     select: { jobId: true },
   });
-  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId));
+  const dismissedJobIds = new Set(dismissedRows.map((r) => r.jobId).filter((id): id is string => id !== null));
 
   const feedFilterWhere: Prisma.JobWhereInput = {
     status: JobStatus.OPEN,
@@ -145,23 +144,23 @@ export async function GET(req: NextRequest) {
     });
     const allMatchedIds = matchedJobIds.map((m) => m.jobId);
 
+    const recentWhere: Prisma.JobWhereInput = {
+      ...feedFilterWhere,
+      id: { notIn: [...allMatchedIds, ...appliedJobIds, ...dismissedJobIds] },
+    };
+    if (q) {
+      const qLower = q.toLowerCase();
+      recentWhere.OR = [
+        { title: { contains: qLower, mode: 'insensitive' } },
+        { companyName: { contains: qLower, mode: 'insensitive' } },
+      ];
+    }
     const recentJobs = await prisma.job.findMany({
-      where: {
-        ...feedFilterWhere,
-        id: { notIn: [...allMatchedIds, ...appliedJobIds, ...dismissedJobIds] },
-        isAdminPosted: true,
-      },
+      where: recentWhere,
       orderBy: { publishedAt: 'desc' },
       skip: recentOffset,
       take: limit + 1,
       include: {
-        recruiter: {
-          select: {
-            recruiterProfile: {
-              select: { id: true, companyName: true, logo: true, companySize: true, fundingType: true, industry: true },
-            },
-          },
-        },
         skills: {
           select: { skillId: true, skill: { select: { name: true } } },
         },
@@ -205,17 +204,12 @@ export async function GET(req: NextRequest) {
     where: { id: { in: jobIds }, status: JobStatus.OPEN },
     select: {
       id: true,
+      title: true,
       jobType: true,
       workType: true,
       locationClass: true,
       visaSponsored: true,
-      recruiter: {
-        select: {
-          recruiterProfile: {
-            select: { id: true, companyName: true, logo: true },
-          },
-        },
-      },
+      companyName: true,
     },
   });
 
@@ -230,22 +224,18 @@ export async function GET(req: NextRequest) {
     if (workType && job.workType !== workType) return false;
     if (locationClass && job.locationClass !== locationClass) return false;
     if (visaSponsored && !job.visaSponsored) return false;
+    if (q) {
+      const qLower = q.toLowerCase();
+      const companyName = job.companyName ?? '';
+      const matchesTitle = job.title?.toLowerCase().includes(qLower);
+      const matchesCompany = companyName.toLowerCase().includes(qLower);
+      if (!matchesTitle && !matchesCompany) return false;
+    }
     return true;
   });
 
   if (filteredMatches.length > 0) {
-    const now = new Date();
-    const filteredJobIds = filteredMatches.map((m) => m.jobId);
-    const activeBoosted = await prisma.boostedJob.findMany({
-      where: { jobId: { in: filteredJobIds }, expiresAt: { gt: now } },
-      select: { jobId: true },
-    });
-    if (activeBoosted.length > 0) {
-      const boostedJobIdSet = new Set(activeBoosted.map((b) => b.jobId));
-      const boostedMatches = filteredMatches.filter((m) => boostedJobIdSet.has(m.jobId));
-      const regularMatches = filteredMatches.filter((m) => !boostedJobIdSet.has(m.jobId));
-      filteredMatches = [...boostedMatches, ...regularMatches];
-    }
+    // no boost sorting — all jobs equal
   }
 
   if (cursor) {
@@ -273,13 +263,6 @@ export async function GET(req: NextRequest) {
   const enrichedJobs = await prisma.job.findMany({
     where: { id: { in: paginatedJobIds }, status: JobStatus.OPEN },
     include: {
-      recruiter: {
-        select: {
-          recruiterProfile: {
-            select: { id: true, companyName: true, logo: true, companySize: true, fundingType: true, industry: true },
-          },
-        },
-      },
       skills: {
         select: { skillId: true, skill: { select: { name: true } } },
       },
@@ -305,7 +288,6 @@ export async function GET(req: NextRequest) {
   const unmatchedCount = await prisma.job.count({
     where: {
       status: JobStatus.OPEN,
-      isAdminPosted: true,
       id: { notIn: [...matchedJobIds, ...appliedJobIds, ...dismissedJobIds] },
     },
   });
@@ -341,7 +323,6 @@ function buildJobResponse(
     companySize: job.companySize,
     companyIndustry: job.companyIndustry,
     companyFunding: job.companyFunding,
-    recruiter: job.recruiter,
   });
 
   const locationBadge = (LOCATION_BADGE[job.locationClass as LocationClass] || job.workType) ?? 'Remote';
@@ -351,10 +332,7 @@ function buildJobResponse(
     title: job.title,
     companyId: company.companyId,
     companyName: company.companyName,
-    companyLogoUrl: resolveCompanyLogoUrl(
-      company.companyLogoUrl ?? resolveLogoUrl(company.rawRecruiterLogo),
-      job.companyWebsite,
-    ),
+    companyLogoUrl: resolveCompanyLogoUrl(company.companyLogoUrl, job.companyWebsite),
     location: locationBadge,
     salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
     matchScore: score,
