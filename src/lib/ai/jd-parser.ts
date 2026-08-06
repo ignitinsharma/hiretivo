@@ -123,7 +123,7 @@ async function callExtractionLlm(text: string, context: string): Promise<ParsedJ
       content: completion.choices?.[0]?.message?.content ?? "",
       finishReason: completion.choices?.[0]?.finish_reason ?? null,
     };
-  });
+  }, { timeoutMs: 20_000 });
 
   if (!result) {
     console.error("[jd-parser] AI call failed after retries");

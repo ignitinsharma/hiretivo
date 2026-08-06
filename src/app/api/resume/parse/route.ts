@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl } from "@/lib/r2";
 import { parseResumeWithVision, isResumeSuspiciouslyThin } from "@/lib/ai/resume-parser";
 
+export const maxDuration = 60;
+
 /*
  * POST /api/resume/parse
  * Parses the uploaded resume PDF with Gemini Vision and saves the result as MasterResume.
@@ -13,92 +15,109 @@ import { parseResumeWithVision, isResumeSuspiciouslyThin } from "@/lib/ai/resume
  * Flow: fetch file from R2 → vision parse → validate schema → upsert MasterResume
  */
 export async function POST(_req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.user.role !== UserRole.SEEKER) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const profile = await prisma.seekerProfile.findUnique({
-    where: { userId: session.user.id },
-    select: { resumeKey: true },
-  });
-
-  if (!profile?.resumeKey) {
-    return NextResponse.json(
-      { error: "No resume uploaded yet. Please upload a resume first." },
-      { status: 400 },
-    );
-  }
-
-  const signedUrl = await getSignedFileUrl(profile.resumeKey);
-  if (!signedUrl) {
-    return NextResponse.json(
-      { error: "Could not access uploaded file. Try uploading again." },
-      { status: 502 },
-    );
-  }
-
-  let pdfBuffer: Buffer;
   try {
-    const res = await fetch(signedUrl);
-    if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-    const arrayBuffer = await res.arrayBuffer();
-    pdfBuffer = Buffer.from(arrayBuffer);
-    console.log("[parse] File fetched successfully, size:", pdfBuffer.length, "bytes");
-  } catch (err) {
-    console.error("[parse] File fetch failed:", err);
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.SEEKER) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const profile = await prisma.seekerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { resumeKey: true },
+    });
+
+    if (!profile?.resumeKey) {
+      return NextResponse.json(
+        { error: "No resume uploaded yet. Please upload a resume first." },
+        { status: 400 },
+      );
+    }
+
+    let signedUrl: string;
+    try {
+      signedUrl = await getSignedFileUrl(profile.resumeKey);
+    } catch (err) {
+      console.error("[parse] getSignedFileUrl failed:", err);
+      return NextResponse.json(
+        { error: "Could not access uploaded file. Try uploading again." },
+        { status: 502 },
+      );
+    }
+    if (!signedUrl) {
+      return NextResponse.json(
+        { error: "Could not access uploaded file. Try uploading again." },
+        { status: 502 },
+      );
+    }
+
+    let pdfBuffer: Buffer;
+    try {
+      const res = await fetch(signedUrl);
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+      const arrayBuffer = await res.arrayBuffer();
+      pdfBuffer = Buffer.from(arrayBuffer);
+      console.log("[parse] File fetched successfully, size:", pdfBuffer.length, "bytes");
+    } catch (err) {
+      console.error("[parse] File fetch failed:", err);
+      return NextResponse.json(
+        { error: "Could not read uploaded file. Try uploading again." },
+        { status: 502 },
+      );
+    }
+
+    const result = await parseResumeWithVision(pdfBuffer);
+
+    if (result.status === "error") {
+      console.error(
+        `[parse] parseResumeWithVision error — reason=${result.reason}`,
+        "see [parseResumeWithVision] logs above",
+      );
+      return NextResponse.json(
+        { error: "Could not parse resume. Please try a different file." },
+        { status: 422 },
+      );
+    }
+
+    if (result.status === "truncated") {
+      console.error("[parse] parseResumeWithVision truncated — resume too long after all tiers");
+      return NextResponse.json(
+        {
+          error: "resume_too_long",
+          message:
+            "Your resume is very long — we couldn't parse it in full. Try a more concise version.",
+        },
+        { status: 422 },
+      );
+    }
+
+    const parsed = result.data;
+
+    console.log("[parse] Resume parsed and validated successfully");
+
+    const warnings = isResumeSuspiciouslyThin(parsed);
+    if (warnings.length > 0) {
+      console.warn("[parse] Thin resume detected:", warnings);
+    }
+
+    parsed.profileId = session.user.id;
+
+    await prisma.masterResume.upsert({
+      where: { userId: session.user.id },
+      update: { resumeJson: parsed },
+      create: { userId: session.user.id, resumeJson: parsed },
+    });
+
+    return NextResponse.json({
+      data: { parsed: true, ...(warnings.length > 0 ? { warnings } : {}) },
+    });
+  } catch (error) {
+    console.error("[parse] Unhandled error:", error);
     return NextResponse.json(
-      { error: "Could not read uploaded file. Try uploading again." },
-      { status: 502 },
+      { error: "An unexpected error occurred while parsing your resume. Please try again." },
+      { status: 500 },
     );
   }
-
-  const result = await parseResumeWithVision(pdfBuffer);
-
-  if (result.status === "error") {
-    console.error(
-      `[parse] parseResumeWithVision error — reason=${result.reason}`,
-      "see [parseResumeWithVision] logs above",
-    );
-    return NextResponse.json(
-      { error: "Could not parse resume. Please try a different file." },
-      { status: 422 },
-    );
-  }
-
-  if (result.status === "truncated") {
-    console.error("[parse] parseResumeWithVision truncated — resume too long after all tiers");
-    return NextResponse.json(
-      {
-        error: "resume_too_long",
-        message:
-          "Your resume is very long — we couldn't parse it in full. Try a more concise version.",
-      },
-      { status: 422 },
-    );
-  }
-
-  const parsed = result.data;
-
-  console.log("[parse] Resume parsed and validated successfully");
-
-  const warnings = isResumeSuspiciouslyThin(parsed);
-  if (warnings.length > 0) {
-    console.warn("[parse] Thin resume detected:", warnings);
-  }
-
-  parsed.profileId = session.user.id;
-
-  await prisma.masterResume.upsert({
-    where: { userId: session.user.id },
-    update: { resumeJson: parsed },
-    create: { userId: session.user.id, resumeJson: parsed },
-  });
-
-  return NextResponse.json({
-    data: { parsed: true, ...(warnings.length > 0 ? { warnings } : {}) },
-  });
 }

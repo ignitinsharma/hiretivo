@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { tailorResume } from "@/lib/ai/resume-tailor";
 import { stripHtml } from "@/lib/utils";
 
+export const maxDuration = 60;
+
 const generateRequestSchema = z.object({
   jdText: z.string().optional(),
   forceGenerate: z.boolean().optional(),

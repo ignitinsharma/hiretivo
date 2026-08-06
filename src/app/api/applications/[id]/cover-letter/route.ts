@@ -6,6 +6,8 @@ import { generateCoverLetter } from "@/lib/ai/cover-letter-generator";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
 import { stripHtml } from "@/lib/utils";
 
+export const maxDuration = 60;
+
 const errorMessageMap: Record<string, string> = {
   malformed_response: "The AI returned an unexpected response. Please try generating again.",
   timeout: "Generation timed out. The AI model took too long to respond. Please try again.",

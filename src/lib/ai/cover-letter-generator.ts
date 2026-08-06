@@ -60,7 +60,7 @@ export async function generateCoverLetter(
     if (!obj.greeting || !obj.body_paragraphs || !obj.closing || !obj.signoff) return null;
 
     return obj;
-  });
+  }, { timeoutMs: 25_000 });
 
   if (!parsed) {
     console.error("[cover-letter-generator] Failed after retries — AI returned unparseable or incomplete JSON");

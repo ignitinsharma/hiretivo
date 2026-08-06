@@ -12,7 +12,7 @@ describe("resume parser request config", () => {
   it("caps reasoning tokens at 128", () => {
     assert.match(src, /const REASONING_CAP = 128;/);
   });
-  it("uses a 90s timeout so long parses are not aborted mid-flight", () => {
-    assert.match(src, /timeoutMs: 90_000/);
+  it("uses a 20s timeout so parses finish within the 60s Vercel function window", () => {
+    assert.match(src, /timeoutMs: 20_000/);
   });
 });

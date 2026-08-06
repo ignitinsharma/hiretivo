@@ -195,7 +195,7 @@ async function callModelText(
       content: msg?.message?.content ?? "",
       finishReason: msg?.finish_reason ?? null,
     };
-  }, { timeoutMs: 90_000 });
+  }, { timeoutMs: 20_000, maxRetries: 1 });
 
   return handleAiResult(aiResult, model);
 }
@@ -241,7 +241,7 @@ async function callModelFile(
       content: msg?.message?.content ?? "",
       finishReason: msg?.finish_reason ?? null,
     };
-  }, { timeoutMs: 90_000 });
+  }, { timeoutMs: 20_000, maxRetries: 1 });
 
   return handleAiResult(aiResult, model);
 }
