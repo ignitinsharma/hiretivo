@@ -1,3 +1,4 @@
+import "./pdfjs-dommatrix-polyfill";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 const MAX_TEXT_CHARS = 40_000;
