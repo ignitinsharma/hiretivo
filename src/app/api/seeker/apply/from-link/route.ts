@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
+export const maxDuration = 60;
+
 import {
   ApplyFromLinkSchema,
   ApplyFromTextSchema,
@@ -99,6 +102,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (jobData.description.trim().length < 50) {
+      return NextResponse.json(
+        { error: "This job description is too short to use. Paste the full job description." },
+        { status: 422 },
+      );
+    }
+
     const preview: JobPreview = {
       title: jobData.title,
       company: jobData.company,
@@ -174,6 +184,13 @@ export async function POST(req: Request) {
           : "Could not parse job from this URL. Try pasting the job description instead.",
         unsupportedAts,
       },
+      { status: 422 },
+    );
+  }
+
+  if (jobData.description.trim().length < 50) {
+    return NextResponse.json(
+      { error: "This job description is too short to use. Paste the full job description instead." },
       { status: 422 },
     );
   }

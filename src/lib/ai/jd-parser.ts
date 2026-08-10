@@ -1,5 +1,6 @@
 import { openrouter, getJDParseModel } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
+import { stripHtml } from "@/lib/utils";
 
 export interface ParsedJob {
   title: string;
@@ -10,7 +11,10 @@ export interface ParsedJob {
 
 const MAX_PAGE_CHARS = 20000;
 const FETCH_TIMEOUT_MS = 15_000;
-const STRIP_TAGS = ["script", "style", "nav", "footer", "header"];
+const STRIP_TAGS = ["script", "style", "noscript", "nav", "footer", "header"];
+// SPA shells (Ashby, Workday, …) leave near-empty text after stripping
+// noscript/boilerplate. A real JD is hundreds of chars minimum.
+const MIN_MEANINGFUL_CHARS = 300;
 
 const ENTITY_MAP: Record<string, string> = {
   "&lt;": "<", "&gt;": ">", "&amp;": "&",
@@ -74,7 +78,11 @@ async function fetchPageText(url: string): Promise<string | null> {
     const html = await res.text();
     if (html.length < 100) return logAndNull(`only ${html.length} chars`, url);
 
-    return extractTextFromHtml(html);
+    const text = extractTextFromHtml(html);
+    if (text.length < MIN_MEANINGFUL_CHARS) {
+      return logAndNull(`js-app-shell or too short (extracted ${text.length} chars)`, url);
+    }
+    return text;
   } catch (err) {
     const reason = err instanceof Error && err.name === "AbortError" ? "timeout" : "fetch error";
     return logAndNull(reason, url, err);
@@ -123,7 +131,7 @@ async function callExtractionLlm(text: string, context: string): Promise<ParsedJ
       content: completion.choices?.[0]?.message?.content ?? "",
       finishReason: completion.choices?.[0]?.finish_reason ?? null,
     };
-  });
+  }, { timeoutMs: 20_000 });
 
   if (!result) {
     console.error("[jd-parser] AI call failed after retries");
@@ -185,6 +193,63 @@ function extractJson(raw: string): string {
 }
 
 /*
+ * ── Ashby ────────────────────────────────────────────────
+ * Ashby job pages (jobs.ashbyhq.com) are client-rendered SPAs — a plain fetch
+ * returns only the app shell + <noscript> fallback. Resolve via Ashby's public
+ * posting API instead, which returns structured job data (no JS, no LLM needed).
+ */
+
+const ASHBY_URL_RE =
+  /^https?:\/\/jobs\.ashbyhq\.com\/([^/]+)\/([0-9a-f-]+)(?:[?#].*)?\/?$/i;
+
+function isAshbyUrl(url: string): boolean {
+  return ASHBY_URL_RE.test(url);
+}
+
+function deriveCompanyNameFromBoardToken(boardToken: string): string {
+  const name = boardToken.replace(/^join/i, "");
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : boardToken;
+}
+
+interface AshbyPosting {
+  id: string;
+  title?: string;
+  descriptionHtml?: string;
+  descriptionPlain?: string;
+}
+
+async function parseAshbyJobFromUrl(url: string): Promise<ParsedJob | null> {
+  const match = url.match(ASHBY_URL_RE);
+  if (!match) return null;
+  const [, boardToken, jobId] = match;
+
+  try {
+    const res = await fetch(
+      `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(boardToken)}?includeCompensation=true`,
+      { headers: { "User-Agent": "Hiretivo/1.0" } },
+    );
+    if (!res.ok) return logAndNull(`ashby HTTP ${res.status}`, url);
+    const data: { jobs?: AshbyPosting[]; nodes?: AshbyPosting[] } = await res.json();
+    const job = (data.jobs || data.nodes || []).find((j) => j.id === jobId);
+    if (!job) return logAndNull(`ashby job not listed (${jobId})`, url);
+
+    const description =
+      (job.descriptionPlain || "").trim() || stripHtml(job.descriptionHtml || "");
+    if (description.length < MIN_MEANINGFUL_CHARS) {
+      return logAndNull(`ashby description too short (${description.length} chars)`, url);
+    }
+    return {
+      title: job.title || "",
+      company: deriveCompanyNameFromBoardToken(boardToken),
+      description,
+      skills: [],
+    };
+  } catch (err) {
+    return logAndNull("ashby fetch error", url, err);
+  }
+}
+
+/*
  * ── Public API ───────────────────────────────────────────
  */
 
@@ -205,6 +270,9 @@ export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
   if (isUnsupportedAtsDomain(url)) {
     console.warn(`[jd-parser] Unsupported JS-heavy ATS domain — ${url}`);
     return null;
+  }
+  if (isAshbyUrl(url)) {
+    return parseAshbyJobFromUrl(url);
   }
   const pageText = await fetchPageText(url);
   return pageText ? callExtractionLlm(pageText, "url") : null;
