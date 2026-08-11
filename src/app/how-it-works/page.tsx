@@ -22,6 +22,7 @@ import {
 } from "@/config/how-it-works-page";
 import type { HiwStep, HiwVisual } from "@/config/how-it-works-page";
 import { generatePageMetadata } from "@/lib/metadata";
+import { getFreeGenerationLimit } from "@/constants/pricing";
 
 export const metadata = generatePageMetadata({
   title: "How It Works — Hiretivo",
@@ -314,7 +315,7 @@ export default function HowItWorksPage() {
                       <Sparkles className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span className="truncate text-xs font-semibold text-brand-foreground">
-                      2 Free / month
+                      {getFreeGenerationLimit()} Free / month
                     </span>
                   </div>
                   <div className="flex items-center gap-2 rounded-full bg-brand-surface px-3 py-2">
