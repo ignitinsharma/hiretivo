@@ -334,6 +334,9 @@ export function calculateMatchScore(required: string[], seeker: string[]): numbe
 
 ### ⚠️ Branch Rules — MANDATORY for ALL agents (Claude, Codex, OpenCode, Cursor, Copilot, etc.)
 
+> **HARD RULE — every branch/PR an agent creates MUST be cut from `staging`, never `main`.**
+> Base branch for PRs = `staging`. `main` is production-only; changes reach it exclusively via a `staging` → `main` merge after staging verification.
+
 ```
 NEVER push directly to: main, staging
 ALWAYS:
