@@ -14,6 +14,7 @@ import {
   parseJobFromUrl,
   parseJobFromText,
   isUnsupportedAtsDomain,
+  isAshbyUrl,
 } from "@/lib/ai/jd-parser";
 import {
   extractCandidateSkillsFromJD,
@@ -181,7 +182,9 @@ export async function POST(req: Request) {
       {
         error: unsupportedAts
           ? "This job board isn't supported for auto-fetch. Switch to 'Paste Description' and copy the job details instead."
-          : "Could not parse job from this URL. Try pasting the job description instead.",
+          : isAshbyUrl(url)
+            ? "This posting is no longer active or isn't publicly listed. Use the current job link or paste the description instead."
+            : "Could not parse job from this URL. Try pasting the job description instead.",
         unsupportedAts,
       },
       { status: 422 },

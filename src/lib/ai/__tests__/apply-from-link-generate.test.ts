@@ -20,6 +20,11 @@ describe("from-link route: don't store garbage JDs", () => {
   it("rejects too-short descriptions before saving (URL path)", () => {
     assert.match(fromLinkSrc, /Paste the full job description instead\./);
   });
+
+  it("tells users when an Ashby posting is no longer active", () => {
+    assert.match(fromLinkSrc, /isn't publicly listed/);
+    assert.match(fromLinkSrc, /isAshbyUrl/);
+  });
 });
 
 describe("generate route: actionable errors", () => {

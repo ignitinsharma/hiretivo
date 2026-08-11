@@ -9,6 +9,17 @@ export interface ParsedJob {
   skills: string[];
 }
 
+interface JobPostingJsonLd {
+  title: string;
+  company: string;
+  description: string;
+}
+
+interface FetchedPage {
+  text: string;
+  jsonLd: JobPostingJsonLd | null;
+}
+
 const MAX_PAGE_CHARS = 20000;
 const FETCH_TIMEOUT_MS = 15_000;
 const STRIP_TAGS = ["script", "style", "noscript", "nav", "footer", "header"];
@@ -61,7 +72,7 @@ function extractTextFromHtml(html: string): string {
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-async function fetchPageText(url: string): Promise<string | null> {
+async function fetchPageText(url: string): Promise<FetchedPage | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -79,10 +90,13 @@ async function fetchPageText(url: string): Promise<string | null> {
     if (html.length < 100) return logAndNull(`only ${html.length} chars`, url);
 
     const text = extractTextFromHtml(html);
-    if (text.length < MIN_MEANINGFUL_CHARS) {
+    // SPA shells (Ashby, Workday, …) leave near-empty visible text, but many
+    // still embed the full JD as schema.org JobPosting JSON-LD — use it.
+    const jsonLd = text.length < MIN_MEANINGFUL_CHARS ? extractJobPostingJsonLd(html) : null;
+    if (text.length < MIN_MEANINGFUL_CHARS && !jsonLd) {
       return logAndNull(`js-app-shell or too short (extracted ${text.length} chars)`, url);
     }
-    return text;
+    return { text, jsonLd };
   } catch (err) {
     const reason = err instanceof Error && err.name === "AbortError" ? "timeout" : "fetch error";
     return logAndNull(reason, url, err);
@@ -200,9 +214,9 @@ function extractJson(raw: string): string {
  */
 
 const ASHBY_URL_RE =
-  /^https?:\/\/jobs\.ashbyhq\.com\/([^/]+)\/([0-9a-f-]+)(?:[?#].*)?\/?$/i;
+  /^https?:\/\/jobs\.ashbyhq\.com\/([^/]+)\/([0-9a-f-]+)(?:\/application)?(?:[?#].*)?\/?$/i;
 
-function isAshbyUrl(url: string): boolean {
+export function isAshbyUrl(url: string): boolean {
   return ASHBY_URL_RE.test(url);
 }
 
@@ -250,6 +264,63 @@ async function parseAshbyJobFromUrl(url: string): Promise<ParsedJob | null> {
 }
 
 /*
+ * ── JSON-LD ───────────────────────────────────────────────
+ * JS-rendered boards often SSR the full JD only as schema.org JobPosting
+ * JSON-LD (Ashby does this). Extract it so SPA shells still parse — no LLM.
+ */
+
+function flattenLdNodes(data: unknown): unknown[] {
+  const nodes: unknown[] = [];
+  if (Array.isArray(data)) {
+    for (const item of data) nodes.push(...flattenLdNodes(item));
+  } else if (data && typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    if (obj["@graph"]) nodes.push(...flattenLdNodes(obj["@graph"]));
+    nodes.push(obj);
+  }
+  return nodes;
+}
+
+function cleanJsonLdText(s: string): string {
+  return cleanWhitespace(
+    decodeEntities(s).replace(/<[^>]*>/g, " ").replace(/[\t\r\n]+/g, "\n"),
+  ).slice(0, MAX_PAGE_CHARS);
+}
+
+export function extractJobPostingJsonLd(html: string): JobPostingJsonLd | null {
+  const scriptRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = scriptRe.exec(html)) !== null) {
+    const raw = match[1].trim();
+    if (!raw) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      continue;
+    }
+    for (const node of flattenLdNodes(parsed)) {
+      if (!node || typeof node !== "object") continue;
+      const obj = node as Record<string, unknown>;
+      const type = obj["@type"];
+      const types = Array.isArray(type) ? type : [type];
+      if (!types.includes("JobPosting")) continue;
+      const description = cleanJsonLdText(
+        typeof obj.description === "string" ? obj.description : "",
+      );
+      if (description.length < MIN_MEANINGFUL_CHARS) continue;
+      const hiring = obj.hiringOrganization as Record<string, unknown> | undefined;
+      return {
+        title: typeof obj.title === "string" ? obj.title : "",
+        company: typeof hiring?.name === "string" ? hiring.name : "",
+        description,
+      };
+    }
+  }
+  return null;
+}
+
+/*
  * ── Public API ───────────────────────────────────────────
  */
 
@@ -272,10 +343,22 @@ export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
     return null;
   }
   if (isAshbyUrl(url)) {
-    return parseAshbyJobFromUrl(url);
+    const ashbyJob = await parseAshbyJobFromUrl(url);
+    if (ashbyJob) return ashbyJob;
+    // API miss (closed posting / custom-domain board): fall through to the
+    // generic fetch — live pages still SSR JobPosting JSON-LD.
   }
-  const pageText = await fetchPageText(url);
-  return pageText ? callExtractionLlm(pageText, "url") : null;
+  const page = await fetchPageText(url);
+  if (!page) return null;
+  if (page.jsonLd) {
+    return {
+      title: page.jsonLd.title,
+      company: page.jsonLd.company,
+      description: page.jsonLd.description,
+      skills: [],
+    };
+  }
+  return callExtractionLlm(page.text, "url");
 }
 
 export async function parseJobFromText(
