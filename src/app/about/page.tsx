@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Heart, Sparkles, Zap, Search, FileText, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HOMEPAGE_STATS, SEEKER_STEPS } from "@/config/home-page";
+import { getFreeGenerationLimit } from "@/constants/pricing";
 import { generatePageMetadata } from "@/lib/metadata";
 import Link from "next/link";
 
@@ -264,7 +265,7 @@ export default function AboutPage() {
                       <Sparkles className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span className="truncate text-xs font-semibold text-brand-foreground">
-                      2 Free / month
+                      {getFreeGenerationLimit()} Free / month
                     </span>
                   </div>
                   <div className="flex items-center gap-2 rounded-full bg-brand-surface px-3 py-2">
