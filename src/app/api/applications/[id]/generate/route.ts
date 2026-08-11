@@ -196,14 +196,36 @@ export async function POST(
         { status: 429 },
       );
 
-    case "ai_error":
+    case "ai_error": {
+      // unreadable_jd is deterministic — retrying won't help. Tell the user
+      // to fix the source JD instead of the generic "please try again".
+      if (result.reason === "unreadable_jd") {
+        await prisma.application.update({
+          where: { id },
+          data: { automationStatus: AutomationStatus.FAILED, failureReason: "Job description unreadable — edit and paste manually" },
+        });
+        return NextResponse.json(
+          { error: "unreadable_jd", message: "This job's description is missing or unreadable. Edit the job and paste the description manually." },
+          { status: 422 },
+        );
+      }
+      await prisma.application.update({
+        where: { id },
+        data: { automationStatus: AutomationStatus.FAILED, failureReason: "AI generation failed — please retry" },
+      });
+      return NextResponse.json(
+        { error: "ai_error", message: "We couldn't generate your resume right now. Please try again." },
+        { status: 422 },
+      );
+    }
+
     case "validation_error":
       await prisma.application.update({
         where: { id },
         data: { automationStatus: AutomationStatus.FAILED, failureReason: "AI generation failed — please retry" },
       });
       return NextResponse.json(
-        { error: result.status === "ai_error" ? "ai_error" : "validation_error", message: "We couldn't generate your resume right now. Please try again." },
+        { error: "validation_error", message: "We couldn't generate your resume right now. Please try again." },
         { status: 422 },
       );
   }

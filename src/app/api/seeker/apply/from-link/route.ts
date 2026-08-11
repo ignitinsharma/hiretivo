@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export const maxDuration = 60;
+
 import {
   ApplyFromLinkSchema,
   ApplyFromTextSchema,
@@ -13,6 +14,7 @@ import {
   parseJobFromUrl,
   parseJobFromText,
   isUnsupportedAtsDomain,
+  isAshbyUrl,
 } from "@/lib/ai/jd-parser";
 import {
   extractCandidateSkillsFromJD,
@@ -101,6 +103,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (jobData.description.trim().length < 50) {
+      return NextResponse.json(
+        { error: "This job description is too short to use. Paste the full job description." },
+        { status: 422 },
+      );
+    }
+
     const preview: JobPreview = {
       title: jobData.title,
       company: jobData.company,
@@ -173,9 +182,18 @@ export async function POST(req: Request) {
       {
         error: unsupportedAts
           ? "This job board isn't supported for auto-fetch. Switch to 'Paste Description' and copy the job details instead."
-          : "Could not parse job from this URL. Try pasting the job description instead.",
+          : isAshbyUrl(url)
+            ? "This posting is no longer active or isn't publicly listed. Use the current job link or paste the description instead."
+            : "Could not parse job from this URL. Try pasting the job description instead.",
         unsupportedAts,
       },
+      { status: 422 },
+    );
+  }
+
+  if (jobData.description.trim().length < 50) {
+    return NextResponse.json(
+      { error: "This job description is too short to use. Paste the full job description instead." },
       { status: 422 },
     );
   }
