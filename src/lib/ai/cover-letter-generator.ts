@@ -37,7 +37,7 @@ export async function generateCoverLetter(
 
   const { system, user } = buildCoverLetterPrompt(input);
 
-  const parsed = await withRetry(async () => {
+  const parsed = await withRetry(async (signal) => {
     const completion = await openrouter.chat.completions.create({
       model: getResumeModel(),
       messages: [
@@ -47,7 +47,7 @@ export async function generateCoverLetter(
       max_tokens: 800,
       temperature: 0.7,
       reasoning: { effort: "low" },
-    } as ChatCompletionCreateParamsNonStreaming);
+    } as ChatCompletionCreateParamsNonStreaming, { signal });
     const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;
 
@@ -60,7 +60,7 @@ export async function generateCoverLetter(
     if (!obj.greeting || !obj.body_paragraphs || !obj.closing || !obj.signoff) return null;
 
     return obj;
-  }, { timeoutMs: 25_000 });
+  }, { timeoutMs: 25_000, maxRetries: 1 });
 
   if (!parsed) {
     console.error("[cover-letter-generator] Failed after retries — AI returned unparseable or incomplete JSON");

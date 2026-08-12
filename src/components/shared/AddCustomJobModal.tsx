@@ -179,8 +179,17 @@ export function AddCustomJobModal() {
         return;
       }
 
+      const generateRes = await fetch(`/api/applications/${data.applicationId}/generate`, {
+        method: "POST",
+      });
+      const generateData = await generateRes.json();
+      if (!generateRes.ok) {
+        setError(generateData.message ?? generateData.error ?? "Could not start resume generation.");
+        setState("error");
+        return;
+      }
+
       handleClose();
-      fetch(`/api/applications/${data.applicationId}/generate`, { method: "POST" }).catch((e) => console.error("Generate failed:", e));
       router.push(`/applications/${data.applicationId}`);
     } catch {
       setError("Network error. Please try again.");

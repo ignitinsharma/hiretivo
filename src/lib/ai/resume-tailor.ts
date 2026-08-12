@@ -114,7 +114,7 @@ export async function tailorResume(
   });
 
   const callTailor = (maxTokens: number) =>
-    withRetry(async () => {
+    withRetry(async (signal) => {
       const startedAt = Date.now();
       const completion = await openrouter.chat.completions.create({
         model: getResumeModel(),
@@ -126,7 +126,7 @@ export async function tailorResume(
         max_tokens: maxTokens,
         // DeepSeek defaults reasoning to HIGH — cap it: thinking time dominated latency
         reasoning: { effort: "low" },
-      } as ChatCompletionCreateParamsNonStreaming);
+      } as ChatCompletionCreateParamsNonStreaming, { signal });
       const usage = completion.usage;
       console.log("[resume-tailor] call", {
         durationMs: Date.now() - startedAt,
@@ -139,7 +139,7 @@ export async function tailorResume(
         content: completion.choices?.[0]?.message?.content ?? "",
         finishReason: completion.choices?.[0]?.finish_reason ?? null,
       };
-    }, { timeoutMs: 25_000 });
+            }, { timeoutMs: 20_000, maxRetries: 0 });
 
   let aiResult = await callTailor(TAILOR_RESUME_CONFIG.max_tokens);
 

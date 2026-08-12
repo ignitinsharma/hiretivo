@@ -27,7 +27,7 @@ export default function DashboardPage() {
 
       try {
         const app = await applicationService.applyToJob({ jobId });
-        applicationService.generateResume(app.id).catch((e) => console.error("Generate failed:", e));
+        await applicationService.generateResume(app.id);
         await queryClient.invalidateQueries({ queryKey: ["applications"] });
         await queryClient.invalidateQueries({ queryKey: ["jobs"] });
         window.location.href = "/dashboard/tracker";

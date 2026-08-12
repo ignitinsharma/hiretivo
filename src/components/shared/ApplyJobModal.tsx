@@ -61,7 +61,7 @@ export function ApplyJobModal() {
         jobId: selectedJobId,
         coverLetter: "",
       });
-      applicationService.generateResume(app.id).catch(() => {});
+      await applicationService.generateResume(app.id);
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
       await queryClient.invalidateQueries({ queryKey: ["seeker-dashboard-summary"] });
       await queryClient.invalidateQueries({ queryKey: ["seeker-feed"] });

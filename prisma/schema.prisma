@@ -358,6 +358,8 @@ model Application {
 
   automationStatus AutomationStatus? @map("automation_status")
   failureReason    String?               @map("failure_reason")
+  automationRunId  String?               @map("automation_run_id")
+  generationStartedAt DateTime?          @map("generation_started_at")
 
   pipelineStage PipelineStage @default(NOT_APPLIED) @map("pipeline_stage")
 
@@ -384,6 +386,7 @@ model Application {
   @@index([jobId, status])
   @@index([activeVersionId])
   @@index([pipelineStage])
+  @@index([automationRunId])
 }
 
 // MasterResume — canonical, document-only storage for the user's uploaded/parsed base resume.

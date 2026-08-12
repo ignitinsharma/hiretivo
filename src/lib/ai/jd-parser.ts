@@ -130,8 +130,8 @@ Only return valid JSON. No markdown formatting. No text before or after the JSON
  */
 
 async function callExtractionLlm(text: string, context: string): Promise<ParsedJob | null> {
-  const result = await withRetry(async () => {
-    const completion = await openrouter.chat.completions.create({
+  const result = await withRetry(async (signal) => {
+      const completion = await openrouter.chat.completions.create({
       model: getJDParseModel(),
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
@@ -139,13 +139,13 @@ async function callExtractionLlm(text: string, context: string): Promise<ParsedJ
       ],
       temperature: 0.1,
       max_tokens: 16000,
-    });
+    }, { signal });
 
     return {
       content: completion.choices?.[0]?.message?.content ?? "",
       finishReason: completion.choices?.[0]?.finish_reason ?? null,
     };
-  }, { timeoutMs: 20_000 });
+  }, { timeoutMs: 20_000, maxRetries: 1 });
 
   if (!result) {
     console.error("[jd-parser] AI call failed after retries");
@@ -331,6 +331,70 @@ const JS_APP_DOMAINS = [
   "icims",
 ];
 
+const GREENHOUSE_CUSTOM_BOARDS: Record<string, string> = {
+  "corporate.trustpilot.com": "trustpilot",
+};
+
+export interface GreenhouseJobReference {
+  boardToken: string;
+  jobId: string;
+}
+
+export function getGreenhouseJobReference(url: string): GreenhouseJobReference | null {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const standardHost = host === "boards.greenhouse.io" || host === "job-boards.greenhouse.io";
+    const pathMatch = parsed.pathname.match(/^\/([^/]+)\/jobs\/(\d+)/i);
+
+    if (standardHost && pathMatch) {
+      return { boardToken: pathMatch[1], jobId: pathMatch[2] };
+    }
+
+    const boardToken = GREENHOUSE_CUSTOM_BOARDS[host];
+    const jobId = parsed.searchParams.get("gh_jid")?.match(/^\d+$/)?.[0];
+    if (boardToken && jobId) return { boardToken, jobId };
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+interface GreenhouseJob {
+  title?: string;
+  company_name?: string;
+  content?: string;
+}
+
+async function parseGreenhouseJobFromUrl(url: string): Promise<ParsedJob | null> {
+  const reference = getGreenhouseJobReference(url);
+  if (!reference) return null;
+
+  try {
+    const response = await fetch(
+      `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(reference.boardToken)}/jobs/${reference.jobId}`,
+      { headers: { "User-Agent": "Hiretivo/1.0" } },
+    );
+    if (!response.ok) return logAndNull(`greenhouse HTTP ${response.status}`, url);
+
+    const job = (await response.json()) as GreenhouseJob;
+    const description = stripHtml(job.content ?? "").trim();
+    if (description.length < MIN_MEANINGFUL_CHARS) {
+      return logAndNull(`greenhouse description too short (${description.length} chars)`, url);
+    }
+
+    return {
+      title: job.title ?? "",
+      company: (job.company_name ?? "").trim(),
+      description,
+      skills: [],
+    };
+  } catch (error) {
+    return logAndNull("greenhouse fetch error", url, error);
+  }
+}
+
 function isUnsupportedAtsDomain(url: string): boolean {
   return JS_APP_DOMAINS.some((d) => url.includes(d));
 }
@@ -348,6 +412,8 @@ export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
     // API miss (closed posting / custom-domain board): fall through to the
     // generic fetch — live pages still SSR JobPosting JSON-LD.
   }
+  const greenhouseJob = await parseGreenhouseJobFromUrl(url);
+  if (greenhouseJob) return greenhouseJob;
   const page = await fetchPageText(url);
   if (!page) return null;
   if (page.jsonLd) {

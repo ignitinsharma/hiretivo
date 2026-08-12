@@ -177,18 +177,18 @@ async function callModelText(
     `[callModelText] model=${model} condense=${condense} text=${(text.length / 1024).toFixed(1)}KB`,
   );
 
-  const aiResult = await withRetry(async () => {
+  const aiResult = await withRetry(async (signal) => {
     const completion = await openrouter.chat.completions.create({
       model,
       response_format: { type: "json_object" },
       max_tokens: MAX_OUTPUT_TOKENS,
       temperature: 0.1,
-      reasoning: { max_tokens: REASONING_CAP },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `${USER_PROMPT}\n\nRESUME TEXT:\n${text}` },
-      ],
-    } as Parameters<typeof openrouter.chat.completions.create>[0]);
+       reasoning: { max_tokens: REASONING_CAP },
+       messages: [
+         { role: "system", content: systemPrompt },
+         { role: "user", content: `${USER_PROMPT}\n\nRESUME TEXT:\n${text}` },
+        ],
+     } as Parameters<typeof openrouter.chat.completions.create>[0], { signal });
 
     const msg = (completion as { choices: Array<{ message?: { content?: string | null }; finish_reason?: string | null }> }).choices?.[0];
     return {
@@ -214,7 +214,7 @@ async function callModelFile(
     `[callModelFile] model=${model} condense=${condense} base64=${(base64.length / 1024).toFixed(0)}KB`,
   );
 
-  const aiResult = await withRetry(async () => {
+  const aiResult = await withRetry(async (signal) => {
     const completion = await openrouter.chat.completions.create({
       model,
       response_format: { type: "json_object" },
@@ -232,9 +232,9 @@ async function callModelFile(
               file: { filename: "resume.pdf", file_data: dataUrl },
             },
           ],
-        },
-      ],
-    } as Parameters<typeof openrouter.chat.completions.create>[0]);
+         },
+        ],
+     } as Parameters<typeof openrouter.chat.completions.create>[0], { signal });
 
     const msg = (completion as { choices: Array<{ message?: { content?: string | null }; finish_reason?: string | null }> }).choices?.[0];
     return {

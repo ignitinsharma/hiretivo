@@ -87,7 +87,7 @@ describe("jd-parser: JS-rendered SPA safety net", () => {
   });
 
   it("caps the JD-parse LLM call at 20s (Vercel Hobby safety)", () => {
-    assert.match(src, /\}, \{ timeoutMs: 20_000 \}\);/);
+    assert.match(src, /\}, \{ timeoutMs: 20_000, maxRetries: 1 \}\);/);
   });
 });
 

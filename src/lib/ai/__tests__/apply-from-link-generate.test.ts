@@ -4,9 +4,11 @@ import { describe, it } from "node:test";
 
 const FROM_LINK = "src/app/api/seeker/apply/from-link/route.ts";
 const GENERATE = "src/app/api/applications/[id]/generate/route.ts";
+const WORKER = "src/lib/generation/run-application-generation.ts";
 
 const fromLinkSrc = readFileSync(FROM_LINK, "utf8");
 const generateSrc = readFileSync(GENERATE, "utf8");
+const workerSrc = readFileSync(WORKER, "utf8");
 
 describe("from-link route: don't store garbage JDs", () => {
   it("opts into Vercel's 60s function timeout (staging previously lacked this)", () => {
@@ -28,12 +30,12 @@ describe("from-link route: don't store garbage JDs", () => {
 });
 
 describe("generate route: actionable errors", () => {
-  it("opts into Vercel's 60s function timeout (staging previously lacked this)", () => {
-    assert.match(generateSrc, /export const maxDuration = 60;/);
+  it("returns immediately after queuing generation", () => {
+    assert.match(generateSrc, /status: 202/);
+    assert.match(generateSrc, /publishGenerationJob/);
   });
 
   it("returns a specific error for unreadable_jd instead of generic 'please try again'", () => {
-    assert.match(generateSrc, /error: "unreadable_jd"/);
-    assert.match(generateSrc, /Edit the job and paste the description manually/);
+    assert.match(workerSrc, /Job description unreadable — edit and paste manually/);
   });
 });

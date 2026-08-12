@@ -631,8 +631,15 @@ export function ApplicationPageClient() {
                 Generating resume...
               </Button>
             ) : data.automationStatus === "FAILED" ? (
-              <Button variant="secondary" size="sm" className="w-full" disabled>
-                Resume generation failed
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-full"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+              >
+                {regenerating && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                {regenerating ? "Retrying generation..." : "Retry resume generation"}
               </Button>
             ) : data.automationStatus === "SUBMITTED" ? (
               <Button variant="default" size="sm" className="w-full" disabled>
@@ -1027,4 +1034,3 @@ function formatRelativeTime(dateStr: string): string {
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }
-

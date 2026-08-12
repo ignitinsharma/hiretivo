@@ -6,7 +6,7 @@
  * @returns The result of fn on success, or null when all retries are exhausted
  */
 export async function withRetry<T>(
-  fn: () => Promise<T>,
+  fn: (signal: AbortSignal) => Promise<T>,
   options?: { maxRetries?: number; baseDelayMs?: number; timeoutMs?: number },
 ): Promise<T | null> {
   const maxRetries = options?.maxRetries ?? 2;
@@ -18,7 +18,7 @@ export async function withRetry<T>(
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const result = await fn();
+      const result = await fn(controller.signal);
       clearTimeout(timer);
       return result;
     } catch (err) {

@@ -34,6 +34,8 @@ export async function GET(
       activeVersionId: true,
       automationStatus: true,
       failureReason: true,
+      automationRunId: true,
+      generationStartedAt: true,
       createdAt: true,
       updatedAt: true,
       job: {
@@ -66,6 +68,29 @@ export async function GET(
 
   if (!application) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
+  }
+
+  let automationStatus = application.automationStatus;
+  let failureReason = application.failureReason;
+  if (
+    automationStatus === AutomationStatus.GENERATING &&
+    application.generationStartedAt &&
+    Date.now() - application.generationStartedAt.getTime() > 5 * 60 * 1000
+  ) {
+    await prisma.application.updateMany({
+      where: {
+        id,
+        seekerId: session.user.id,
+        automationRunId: application.automationRunId,
+        automationStatus: AutomationStatus.GENERATING,
+      },
+      data: {
+        automationStatus: AutomationStatus.FAILED,
+        failureReason: "Resume generation timed out — please retry",
+      },
+    });
+    automationStatus = AutomationStatus.FAILED;
+    failureReason = "Resume generation timed out — please retry";
   }
 
   const activeVersion = application.resumeVersions.find(
@@ -109,8 +134,9 @@ export async function GET(
     status: application.status,
     matchScore: application.matchScore,
     generationCount: application.generationCount,
-    automationStatus: application.automationStatus,
-    failureReason: application.failureReason,
+    automationStatus,
+    failureReason,
+    generationStartedAt: application.generationStartedAt?.toISOString() ?? null,
     createdAt: application.createdAt.toISOString(),
     updatedAt: application.updatedAt.toISOString(),
     job: {

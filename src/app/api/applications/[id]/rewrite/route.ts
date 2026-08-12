@@ -78,7 +78,7 @@ Rules:
 - Do not fabricate experience, education, or other credentials not present in the input
 - The "id" fields should remain exactly as provided (do not regenerate them)`;
 
-  const rewriteResponse = await withRetry(async () => {
+  const rewriteResponse = await withRetry(async (signal) => {
     const completion = await openrouter.chat.completions.create({
       model: getResumeModel(),
       messages: [
@@ -90,9 +90,9 @@ Rules:
       ],
       ...REWRITE_CONFIG,
       reasoning: { effort: "low" },
-    } as ChatCompletionCreateParamsNonStreaming);
+    } as ChatCompletionCreateParamsNonStreaming, { signal });
     return completion.choices?.[0]?.message?.content ?? null;
-  }, { timeoutMs: 25_000 });
+  }, { timeoutMs: 25_000, maxRetries: 1 });
 
   if (!rewriteResponse) {
     return NextResponse.json(

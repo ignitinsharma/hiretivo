@@ -9,6 +9,7 @@ import {
   pointerWithin,
 } from "@dnd-kit/core";
 import { Search, LineChart, TrendingUp, Clock, Send, Users, Star, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { applicationService } from "@/services/application.service";
 import { PipelineStage } from "@/constants/enums";
@@ -178,14 +179,16 @@ export function KanbanBoard() {
   const { snapshotScroll, restoreIfNeeded } = useScrollPreservation(boardRef);
 
   const handleRetry = useCallback(
-    (appId: string) => {
+    async (appId: string) => {
       setRetryingId(appId);
-      fetch(`/api/applications/${appId}/generate`, { method: "POST" })
-        .catch(() => {})
-        .finally(() => {
-          setRetryingId(null);
-          queryClient.invalidateQueries({ queryKey: ["applications"] });
-        });
+      try {
+        await applicationService.generateResume(appId);
+        await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      } catch {
+        toast.error("Could not start resume generation");
+      } finally {
+        setRetryingId(null);
+      }
     },
     [queryClient],
   );
