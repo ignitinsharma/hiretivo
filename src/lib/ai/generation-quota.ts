@@ -1,12 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import { PlanTier } from "@prisma/client";
 import { addMonths, format } from "date-fns";
+import { getFreeGenerationLimit } from "@/constants/pricing";
 
-export const PLAN_GENERATION_LIMITS: Record<PlanTier, number> = {
-  [PlanTier.FREE]: 5,
+export const PLAN_GENERATION_LIMITS: Record<Exclude<PlanTier, "FREE">, number> = {
   [PlanTier.PRO]: 20,
   [PlanTier.UNLIMITED]: 9999,
 };
+
+/*
+ * getPlanLimit
+ * FREE resolves through getFreeGenerationLimit() at call time so the launch
+ * promo (10/mo) auto-reverts to 5/mo the moment it ends — no stale module-level
+ * constant on warm serverless instances.
+ */
+export function getPlanLimit(plan: PlanTier): number {
+  if (plan === PlanTier.FREE) return getFreeGenerationLimit();
+  return PLAN_GENERATION_LIMITS[plan] ?? 2;
+}
 
 function getCalendarMonth(): string {
   return format(new Date(), "yyyy-MM");
@@ -48,7 +59,7 @@ async function getUserPlanAndPeriod(userId: string) {
 export async function checkGenerationQuota(userId: string) {
   const { plan, periodKey, resetsAt } = await getUserPlanAndPeriod(userId);
 
-  const limit = PLAN_GENERATION_LIMITS[plan] ?? 2;
+  const limit = getPlanLimit(plan);
 
   const record = await prisma.generationQuota.findUnique({
     where: { userId_month: { userId, month: periodKey } },

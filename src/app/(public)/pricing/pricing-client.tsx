@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import { PLAN_TIERS, type PlanTierConfig } from "@/constants/pricing";
+import { PLAN_TIERS, getFreeGenerationLimit, isFreeGenerationPromoActive, type PlanTierConfig } from "@/constants/pricing";
 import { BillingPeriod, PricingTierId } from "@/constants/enums";
 import { billingService } from "@/services/billing.service";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ interface FeatureRow {
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
-  { feature: "Monthly generations", free: "2", pro: "20", unlimited: "Unlimited" },
+  { feature: "Monthly generations", free: String(getFreeGenerationLimit()), pro: "20", unlimited: "Unlimited" },
   { feature: "AI resume tailoring", free: true, pro: true, unlimited: true },
   { feature: "Cover letter generation", free: true, pro: true, unlimited: true },
   { feature: "Editable resume preview", free: true, pro: true, unlimited: true },
@@ -317,6 +317,13 @@ export function PricingClient() {
 
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-5xl">
+          {isFreeGenerationPromoActive() && (
+            <div className="mb-8 mx-auto flex max-w-2xl items-center justify-center gap-3 rounded-full border border-brand-primary/20 bg-brand-primary/[0.06] px-6 py-3 text-center">
+              <span className="text-sm font-semibold text-brand-primary">
+                Launch offer: free users get {getFreeGenerationLimit()} generations/month for a limited time — then it&apos;s back to 5.
+              </span>
+            </div>
+          )}
           <div className="mb-8 flex justify-center">
             <ToggleGroup
               type="single"

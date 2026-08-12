@@ -12,6 +12,23 @@ export interface PlanTierConfig {
   cta: string;
 }
 
+/*
+ * FREE_GENERATIONS_PROMO_UNTIL
+ * Launch promo: free users get 10 resume generations/month until this date,
+ * then it auto-reverts to the standard 5. Single source of truth — the pricing
+ * page, quota enforcement, and all home-page copy read getFreeGenerationLimit().
+ * Change the date to extend/shorten; nothing else needs editing.
+ */
+export const FREE_GENERATIONS_PROMO_UNTIL = new Date("2026-08-31T23:59:59.999Z");
+
+export function getFreeGenerationLimit(): number {
+  return Date.now() < FREE_GENERATIONS_PROMO_UNTIL.getTime() ? 10 : 5;
+}
+
+export function isFreeGenerationPromoActive(): boolean {
+  return Date.now() < FREE_GENERATIONS_PROMO_UNTIL.getTime();
+}
+
 export const PLAN_TIERS: PlanTierConfig[] = [
   {
     id: PricingTierId.FREE,
@@ -19,10 +36,13 @@ export const PLAN_TIERS: PlanTierConfig[] = [
     monthlyPrice: 0,
     annualTotal: 0,
     annualSavings: 0,
-    generations: 5,
+    generations: getFreeGenerationLimit(),
     highlighted: false,
     features: [
-      "5 resume generations per month",
+      `${getFreeGenerationLimit()} resume generations per month`,
+      ...(isFreeGenerationPromoActive()
+        ? ["Limited-time launch offer — double your free generations"]
+        : []),
       "AI-powered tailoring per job",
       "Cover letter generation",
       "Basic application tracking",

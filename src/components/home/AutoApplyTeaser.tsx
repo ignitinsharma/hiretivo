@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { Rocket, Sparkles, Check, ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getFreeGenerationLimit, isFreeGenerationPromoActive } from "@/constants/pricing";
 
 const READY_STEPS = [
   { label: "Resume tailored to this JD" },
@@ -120,7 +121,8 @@ export function AutoApplyTeaser() {
                   </Link>
                 </Button>
                 <p className="text-xs font-medium text-brand-foreground-muted">
-                  No credit card · 5 AI resumes/mo free
+                  No credit card · {getFreeGenerationLimit()} AI resumes/mo free
+                  {isFreeGenerationPromoActive() ? " · limited time" : ""}
                 </p>
               </div>
             </div>

@@ -10,6 +10,7 @@ import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TESTIMONIALS } from "@/config/home-page";
+import { getFreeGenerationLimit } from "@/constants/pricing";
 
 interface TrustItem {
   icon: LucideIcon;
@@ -17,7 +18,7 @@ interface TrustItem {
 }
 
 const TRUST_ITEMS: TrustItem[] = [
-  { icon: ShieldCheck, label: "2 Free / month" },
+  { icon: ShieldCheck, label: `${getFreeGenerationLimit()} Free / month` },
   { icon: CreditCard, label: "No Credit Card" },
   { icon: Zap, label: "5-min Setup" },
 ];

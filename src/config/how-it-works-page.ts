@@ -3,6 +3,8 @@
  * 6-step journey deep dive + differentiator cards + CTA.
  */
 
+import { getFreeGenerationLimit, isFreeGenerationPromoActive } from "@/constants/pricing";
+
 export const HIW_HERO = {
   eyebrow: 'HOW IT WORKS',
   heading: 'From job link to offer — every step, explained.',
@@ -176,17 +178,16 @@ export const HIW_WHY = {
     },
     {
       title: 'Free to start',
-      description:
-        '5 tailored resumes every month, free. No credit card, no trial countdown.',
+      description: `${getFreeGenerationLimit()} tailored resumes every month, free${isFreeGenerationPromoActive() ? ' (limited-time offer)' : ''}. No credit card, no trial countdown.`,
     },
   ],
 } as const;
 
 export const HIW_CTA = {
   eyebrow: 'Try it on a real job',
-  heading: '5 free AI resumes. Every month.',
+  heading: `${getFreeGenerationLimit()} free AI resumes. Every month.`,
   subheading: 'No credit card.',
-  body: 'Five tailored, ATS-ready resumes every month — zero commitment. Renews automatically.',
+  body: `${getFreeGenerationLimit()} tailored, ATS-ready resumes every month — zero commitment. Renews automatically.`,
   buttonText: 'Start Free',
   buttonHref: '/seeker/register',
 } as const;
