@@ -26,7 +26,8 @@ export function parseGenerationJob(value: unknown): GenerationJobMessage {
 function getClient(): Client {
   const token = process.env.QSTASH_TOKEN;
   if (!token) throw new Error("QSTASH_TOKEN is not configured");
-  return new Client({ token });
+  const baseUrl = process.env.QSTASH_URL;
+  return baseUrl ? new Client({ token, baseUrl }) : new Client({ token });
 }
 
 function getWorkerUrl(): string {
