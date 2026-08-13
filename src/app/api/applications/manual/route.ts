@@ -5,7 +5,6 @@ import {
   JobStatus,
   JobType,
   UserRole,
-  VerificationStatus,
 } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
@@ -36,17 +35,6 @@ export async function POST(req: NextRequest) {
   const { success: userSuccess } = await writeRateLimiter.limit(session.user.id);
   if (!userSuccess) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  }
-
-  const seekerUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { verificationStatus: true },
-  });
-  if (seekerUser?.verificationStatus !== VerificationStatus.VERIFIED) {
-    return NextResponse.json(
-      { error: "Complete verification to track jobs" },
-      { status: 403 },
-    );
   }
 
   let body: unknown;
