@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { FlaskConical, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useUIStore } from "@/store/use-ui-store";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 
 const ResumePdfPreview = dynamic(
@@ -38,6 +39,7 @@ export function AiRewritePanel({ applicationId, resumeJson, onAccepted }: AiRewr
     version: number;
     id: string;
   } | null>(null);
+  const openPaidFeatureModal = useUIStore((s) => s.openPaidFeatureModal);
 
   const handleRewrite = async (inst: string) => {
     setLoading(true);
@@ -50,7 +52,15 @@ export function AiRewritePanel({ applicationId, resumeJson, onAccepted }: AiRewr
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error ?? "Rewrite failed");
+        if (json.error === "quota_exceeded") {
+          openPaidFeatureModal({
+            feature: "resume_generation",
+            title: "No generations left",
+            description: `You've used all ${json.limit ?? "your"} generations this month. Upgrade to keep rewriting your resume.`,
+          });
+          return;
+        }
+        toast.error(json.message ?? json.error ?? "Rewrite failed");
         return;
       }
       setResult(json);

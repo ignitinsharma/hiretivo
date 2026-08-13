@@ -3,7 +3,18 @@ import { PlanTier } from "@prisma/client";
 import { addMonths, format } from "date-fns";
 import { getFreeGenerationLimit } from "@/constants/pricing";
 
+export enum QuotaType {
+  RESUME = "RESUME",
+  COVER_LETTER = "COVER_LETTER",
+}
+
 export const PLAN_GENERATION_LIMITS: Record<Exclude<PlanTier, "FREE">, number> = {
+  [PlanTier.PRO]: 20,
+  [PlanTier.UNLIMITED]: 9999,
+};
+
+export const PLAN_COVER_LETTER_LIMITS: Record<PlanTier, number> = {
+  [PlanTier.FREE]: 10,
   [PlanTier.PRO]: 20,
   [PlanTier.UNLIMITED]: 9999,
 };
@@ -17,6 +28,10 @@ export const PLAN_GENERATION_LIMITS: Record<Exclude<PlanTier, "FREE">, number> =
 export function getPlanLimit(plan: PlanTier): number {
   if (plan === PlanTier.FREE) return getFreeGenerationLimit();
   return PLAN_GENERATION_LIMITS[plan] ?? 2;
+}
+
+function getCoverLetterLimit(plan: PlanTier): number {
+  return PLAN_COVER_LETTER_LIMITS[plan] ?? 10;
 }
 
 function getCalendarMonth(): string {
@@ -56,13 +71,13 @@ async function getUserPlanAndPeriod(userId: string) {
   };
 }
 
-export async function checkGenerationQuota(userId: string) {
+export async function checkGenerationQuota(userId: string, type: QuotaType = QuotaType.RESUME) {
   const { plan, periodKey, resetsAt } = await getUserPlanAndPeriod(userId);
 
-  const limit = getPlanLimit(plan);
+  const limit = type === QuotaType.COVER_LETTER ? getCoverLetterLimit(plan) : getPlanLimit(plan);
 
   const record = await prisma.generationQuota.findUnique({
-    where: { userId_month: { userId, month: periodKey } },
+    where: { userId_month_type: { userId, month: periodKey, type } },
   });
 
   const used = record?.count ?? 0;
@@ -70,12 +85,12 @@ export async function checkGenerationQuota(userId: string) {
   return { allowed: used < limit, used, limit, resetsAt, plan };
 }
 
-export async function consumeGenerationQuota(userId: string) {
+export async function consumeGenerationQuota(userId: string, type: QuotaType = QuotaType.RESUME) {
   const { periodKey } = await getUserPlanAndPeriod(userId);
 
   await prisma.generationQuota.upsert({
-    where: { userId_month: { userId, month: periodKey } },
+    where: { userId_month_type: { userId, month: periodKey, type } },
     update: { count: { increment: 1 } },
-    create: { userId, month: periodKey, count: 1 },
+    create: { userId, month: periodKey, type, count: 1 },
   });
 }
