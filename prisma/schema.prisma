@@ -414,10 +414,11 @@ model GenerationQuota {
   id        String   @id @default(cuid())
   userId    String
   month     String   // "YYYY-MM"
+  type      String   @default("RESUME") // "RESUME" | "COVER_LETTER"
   count     Int      @default(0)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, month])
+  @@unique([userId, month, type])
   @@index([userId])
 }
 

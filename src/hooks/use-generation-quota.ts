@@ -8,6 +8,11 @@ interface GenerationQuota {
   limit: number;
   resetsAt: string;
   plan: string;
+  coverLetter: {
+    allowed: boolean;
+    used: number;
+    limit: number;
+  };
 }
 
 async function fetchQuota(): Promise<GenerationQuota> {

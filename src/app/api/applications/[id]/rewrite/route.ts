@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { openrouter, getResumeModel } from "@/lib/openrouter";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
+import { checkGenerationQuota, consumeGenerationQuota, QuotaType } from "@/lib/ai/generation-quota";
+import { writeRateLimiter } from "@/lib/rate-limit";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
 import type { ResumeDocument } from "@/lib/validations/resume.schema";
 
@@ -25,6 +27,24 @@ export async function POST(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { success: rateOk } = await writeRateLimiter.limit(session.user.id);
+  if (!rateOk) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const quota = await checkGenerationQuota(session.user.id, QuotaType.RESUME);
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        error: "quota_exceeded",
+        message: "Generation limit reached",
+        used: quota.used,
+        limit: quota.limit,
+      },
+      { status: 403 },
+    );
   }
 
   const { id } = await params;
@@ -141,6 +161,9 @@ Rules:
     where: { id },
     data: { activeVersionId: version.id },
   });
+
+  // Consume quota — only on schema-valid success
+  await consumeGenerationQuota(session.user.id, QuotaType.RESUME);
 
   return NextResponse.json({
     id: version.id,
