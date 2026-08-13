@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { AutomationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { generateCoverLetter } from "@/lib/ai/cover-letter-generator";
+import { checkGenerationQuota, consumeGenerationQuota, QuotaType } from "@/lib/ai/generation-quota";
+import { writeRateLimiter } from "@/lib/rate-limit";
 import { ResumeDocumentSchema } from "@/lib/validations/resume.schema";
 import { stripHtml } from "@/lib/utils";
 
@@ -57,6 +59,24 @@ export async function POST(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { success: rateOk } = await writeRateLimiter.limit(session.user.id);
+  if (!rateOk) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const quota = await checkGenerationQuota(session.user.id, QuotaType.COVER_LETTER);
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        error: "quota_exceeded",
+        message: "Cover letter generation limit reached",
+        used: quota.used,
+        limit: quota.limit,
+      },
+      { status: 403 },
+    );
   }
 
   const { id } = await params;
@@ -150,6 +170,9 @@ export async function POST(
       { status: 422 },
     );
   }
+
+  // Consume quota — only on schema-valid success
+  await consumeGenerationQuota(session.user.id, QuotaType.COVER_LETTER);
 
   // Save cover letter
   const existing = await prisma.coverLetter.findFirst({

@@ -180,7 +180,8 @@ export function ApplicationPageClient() {
     },
   });
 
-  /* Refresh the full detail once generation leaves GENERATING. */
+  /* Refresh the full detail once generation leaves GENERATING. Quota is
+   * consumed server-side when the worker finishes, so refresh it too. */
   useEffect(() => {
     if (
       data?.automationStatus === "GENERATING" &&
@@ -188,6 +189,7 @@ export function ApplicationPageClient() {
       status.automationStatus !== "GENERATING"
     ) {
       queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+      queryClient.invalidateQueries({ queryKey: ["generation-quota"] });
     }
   }, [data?.automationStatus, status?.automationStatus, applicationId, queryClient]);
 
