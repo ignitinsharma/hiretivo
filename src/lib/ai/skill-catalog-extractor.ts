@@ -1,5 +1,6 @@
 import { openrouter, getLiteAIModel } from "@/lib/openrouter";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
+import { withRetry } from "@/lib/ai/with-retry";
 import { prisma } from "@/lib/prisma";
 
 const DENYLIST = new Set([
@@ -56,19 +57,25 @@ export async function extractCandidateSkillsFromJD(
   const text = jdText.slice(0, 5000);
 
   try {
-    const completion = await openrouter.chat.completions.create({
-      model: getLiteAIModel(),
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: EXTRACTION_PROMPT.system },
-        { role: "user", content: text },
-      ],
-      temperature: 0.1,
-      max_tokens: 1000,
-      reasoning: { effort: "low" },
-    } as ChatCompletionCreateParamsNonStreaming);
+    const completion = await withRetry(async (signal) => {
+      return await openrouter.chat.completions.create({
+        model: getLiteAIModel(),
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: EXTRACTION_PROMPT.system },
+          { role: "user", content: text },
+        ],
+        temperature: 0.1,
+        max_tokens: 1000,
+        reasoning: { effort: "low" },
+      } as ChatCompletionCreateParamsNonStreaming, { signal });
+    }, { timeoutMs: 15_000, maxRetries: 0 });
 
-    const raw = completion.choices?.[0]?.message?.content ?? "";
+    const raw = completion?.choices?.[0]?.message?.content ?? "";
+    if (!raw || !raw.trim()) {
+      console.warn("[skill-catalog-extractor] LLM returned empty content");
+      return [];
+    }
     const parsed = JSON.parse(raw);
     const skills = parsed.skills ?? [];
 

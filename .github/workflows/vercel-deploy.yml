@@ -46,4 +46,17 @@ jobs:
           DATABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.PROD_DIRECT_URL || secrets.PREVIEW_DIRECT_URL }}
 
       - name: Deploy to Vercel
-        run: vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        id: deploy
+        run: |
+          DEPLOY_OUTPUT=$(vercel deploy --prebuilt ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "$DEPLOY_OUTPUT"
+          echo "deployment_url=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-z0-9-]+\.vercel\.app' | head -1)" >> "$GITHUB_OUTPUT"
+
+      # Re-point the canonical staging/develop URL to this fresh deployment so the
+      # branch URL never serves stale code (main uses --prod above, no alias needed).
+      - name: Point branch alias to new deployment
+        if: github.ref != 'refs/heads/main'
+        run: |
+          BRANCH=${GITHUB_REF_NAME}
+          ALIAS="hiretivo-git-${BRANCH}-ignitinsharmas-projects.vercel.app"
+          vercel alias set "${{ steps.deploy.outputs.deployment_url }}" "$ALIAS" --token=${{ secrets.VERCEL_TOKEN }}

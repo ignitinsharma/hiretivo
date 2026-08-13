@@ -82,14 +82,18 @@ export async function POST(
   });
 
   try {
-    await publishGenerationJob({
-      applicationId: id,
-      userId: session.user.id,
-      runId,
-      jdText,
-      forceGenerate,
-      baseResumeJson: parsed.success ? parsed.data.baseResumeJson : undefined,
-    });
+    const workerUrl = new URL("/api/internal/generation-worker", request.url).toString();
+    await publishGenerationJob(
+      {
+        applicationId: id,
+        userId: session.user.id,
+        runId,
+        jdText,
+        forceGenerate,
+        baseResumeJson: parsed.success ? parsed.data.baseResumeJson : undefined,
+      },
+      workerUrl,
+    );
   } catch (error) {
     console.error("[generate] Failed to enqueue job:", error);
     await prisma.application.updateMany({
