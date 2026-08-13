@@ -16,7 +16,7 @@ describe("resume-tailor truncation handling", () => {
     assert.match(tailorSrc, /callTailor\(16384\)/);
   });
   it("keeps the worker's AI attempt budget below Vercel's 60s limit", () => {
-    assert.match(tailorSrc, /timeoutMs: 20_000, maxRetries: 0/);
+    assert.match(tailorSrc, /timeoutMs: 45_000, maxRetries: 0/);
     assert.match(coverLetterSrc, /timeoutMs: 25_000, maxRetries: 1/);
     assert.match(rewriteSrc, /timeoutMs: 25_000, maxRetries: 1/);
   });

@@ -24,13 +24,13 @@ export const openrouter = provider === 'gemini'
 
 /*
  * AI_MODEL config per task type.
- * DeepSeek V4 Pro = primary model for generation (tailoring, cover letters, JD extraction).
- * Gemini 2.5 Flash-Lite = low-stakes classification (URL confidence, etc.).
+ * GPT 5.6 Luna = primary model for generation (tailoring, cover letters, JD extraction)
+ * and low-stakes tasks (skill extraction, resume text parse). Fast + cheap + clean JSON.
  * Override with env vars for dev/testing.
  */
 const MODEL_DEFAULTS = {
   primary: 'openai/gpt-5.6-luna',
-  lite: 'google/gemini-2.5-flash',
+  lite: 'openai/gpt-5.6-luna',
 } as const;
 
 export function getAIModel(): string {
@@ -43,12 +43,12 @@ export function getLiteAIModel(): string {
 
 /*
  * RESUME_MODEL — model for resume generation tasks (tailoring, cover letters, rewrites).
- * Defaults to DeepSeek V4 Pro (reasoning model, best for text generation).
+ * Defaults to GPT 5.6 Luna (fast, cheap, clean JSON — fits the 60s Vercel ceiling).
  * Override via RESUME_MODEL env var. This is the only knob for tailoring.
  */
 export function getResumeModel(): string {
   const model = process.env.RESUME_MODEL?.trim();
-  return model || 'deepseek/deepseek-v4-pro';
+  return model || 'openai/gpt-5.6-luna';
 }
 
 /*

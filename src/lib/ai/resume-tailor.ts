@@ -139,7 +139,7 @@ export async function tailorResume(
         content: completion.choices?.[0]?.message?.content ?? "",
         finishReason: completion.choices?.[0]?.finish_reason ?? null,
       };
-            }, { timeoutMs: 20_000, maxRetries: 0 });
+            }, { timeoutMs: 45_000, maxRetries: 0 });
 
   let aiResult = await callTailor(TAILOR_RESUME_CONFIG.max_tokens);
 

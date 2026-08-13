@@ -69,7 +69,7 @@ export async function extractCandidateSkillsFromJD(
         max_tokens: 1000,
         reasoning: { effort: "low" },
       } as ChatCompletionCreateParamsNonStreaming, { signal });
-    }, { timeoutMs: 15_000, maxRetries: 0 });
+    }, { timeoutMs: 30_000, maxRetries: 0 });
 
     const raw = completion?.choices?.[0]?.message?.content ?? "";
     if (!raw || !raw.trim()) {
