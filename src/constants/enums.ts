@@ -172,6 +172,14 @@ export enum PipelineStage {
   REJECTED = "REJECTED",
 }
 
+export const PIPELINE_STAGE_VALUES = [
+  PipelineStage.NOT_APPLIED,
+  PipelineStage.APPLIED,
+  PipelineStage.INTERVIEWING,
+  PipelineStage.OFFER,
+  PipelineStage.REJECTED,
+] as const;
+
 export enum MatchThreshold {
   STRONG = 80,
   GOOD = 60,

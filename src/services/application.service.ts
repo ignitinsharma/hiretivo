@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { apiClient } from '@/lib/axios';
 import { ApplicationStatus } from '@/constants/enums';
 import type { CreateApplicationInput } from '@/lib/validations/application';
+import type { CreateManualApplicationInput } from '@/lib/validations/manual-application';
 import type { SeekerApplicationItem } from '@/modules/seeker/applications/types/application.types';
 
 interface ApplicationApiItem {
@@ -28,6 +29,11 @@ interface ApplicationApiItem {
 export const applicationService = {
   applyToJob: async (payload: CreateApplicationInput): Promise<{ id: string }> => {
     const { data } = await apiClient.post<{ id: string }>('/applications', payload);
+    return data;
+  },
+
+  addManualJob: async (payload: CreateManualApplicationInput): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/applications/manual', payload);
     return data;
   },
 

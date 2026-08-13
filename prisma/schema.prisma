@@ -287,6 +287,10 @@ model Job {
   locationClass   String?   // Classified: 'worldwide' | 'us-only' | 'emea' | 'india' | 'onsite'
   visaSponsored   Boolean   @default(false)  // Extracted from description text
 
+  // Manual tracking — jobs added by a seeker in the tracker, never public
+  isManual Boolean  @default(false)
+  ownerId  String?  // Seeker userId who created this manual job
+
   skills        JobSkill[]
   applications  Application[]
   jobMatches    JobMatch[]
@@ -304,6 +308,7 @@ model Job {
   @@index([locationClass])
   @@index([lastSeenAt])
   @@index([companyName, status])
+  @@index([ownerId])
 }
 
 model AtsBlocklist {

@@ -15,6 +15,7 @@ import { applicationService } from "@/services/application.service";
 import { PipelineStage } from "@/constants/enums";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanCard, KanbanCardOverlay } from "./KanbanCard";
+import { ManualJobDialog } from "./ManualJobDialog";
 import { BoardSkeleton } from "./BoardSkeleton";
 import { BoardError } from "./BoardError";
 import { useKanbanDrag } from "../hooks/useKanbanDrag";
@@ -105,22 +106,25 @@ function PageHeader({ stats }: { stats?: BoardStats }) {
       </div>
 
       {stats && (
-        <div className="flex items-center gap-3 self-start rounded-xl border border-brand-border bg-white px-4 py-3 sm:self-auto">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
-            <TrendingUp className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <div>
-            <p className="text-xs text-brand-foreground-muted">
-              Total Applications
-            </p>
-            <p className="text-xl font-bold leading-tight text-brand-foreground">
-              {stats.total}
-            </p>
-            <p className="text-xs font-medium text-brand-success">
-              +{stats.thisWeek} this week
-            </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <ManualJobDialog />
+          <div className="flex items-center gap-3 self-start rounded-xl border border-brand-border bg-white px-4 py-3 sm:self-auto">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
+              <TrendingUp className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-xs text-brand-foreground-muted">
+                Total Applications
+              </p>
+              <p className="text-xl font-bold leading-tight text-brand-foreground">
+                {stats.total}
+              </p>
+              <p className="text-xs font-medium text-brand-success">
+                +{stats.thisWeek} this week
+              </p>
+            </div>
+            <Sparkline data={stats.buckets} />
           </div>
-          <Sparkline data={stats.buckets} />
         </div>
       )}
     </div>
