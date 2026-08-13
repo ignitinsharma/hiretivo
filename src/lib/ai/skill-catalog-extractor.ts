@@ -108,6 +108,11 @@ export async function reconcileAndInsertSkills(
     select: { id: true, name: true, aliases: true, category: true },
   });
 
+  // Batch-accumulated writes: one createMany + few alias updates instead of
+  // one DB round-trip per candidate.
+  const toCreate = new Map<string, { name: string; slug: string; category: string }>();
+  const toAlias: Array<{ skillId: string; alias: string; skillName: string }> = [];
+
   for (const candidate of candidates) {
     const normalized = candidate.name.toLowerCase().trim();
 
@@ -122,16 +127,12 @@ export async function reconcileAndInsertSkills(
     }
 
     const exactMatch = existing.find((s) => s.name.toLowerCase() === normalized);
-    if (exactMatch) {
-      continue;
-    }
+    if (exactMatch) continue;
 
     const aliasMatch = existing.find((s) =>
       s.aliases.some((a) => a.toLowerCase() === normalized),
     );
-    if (aliasMatch) {
-      continue;
-    }
+    if (aliasMatch) continue;
 
     const candidateNorm = normalizeName(candidate.name);
     const closeMatch = existing.find(
@@ -139,25 +140,39 @@ export async function reconcileAndInsertSkills(
     );
     if (closeMatch) {
       const alias = candidate.name;
-      await prisma.skill.update({
-        where: { id: closeMatch.id },
-        data: { aliases: { push: alias } },
-      });
-      result.aliasesAdded.push({ skillName: closeMatch.name, alias });
-      existing.find((s) => s.id === closeMatch.id)?.aliases.push(alias);
+      if (!toAlias.some((a) => a.skillId === closeMatch.id && a.alias === alias)) {
+        toAlias.push({ skillId: closeMatch.id, alias, skillName: closeMatch.name });
+        result.aliasesAdded.push({ skillName: closeMatch.name, alias });
+        closeMatch.aliases.push(alias);
+      }
       continue;
     }
 
-    const created = await prisma.skill.create({
-      data: {
-        name: candidate.name,
-        slug: deriveSlug(candidate.name),
-        category: candidate.category,
-        aliases: [],
-      },
+    if (toCreate.has(candidateNorm)) continue;
+    toCreate.set(candidateNorm, {
+      name: candidate.name,
+      slug: deriveSlug(candidate.name),
+      category: candidate.category,
     });
-    existing.push({ id: created.id, name: created.name, aliases: [], category: created.category });
-    result.created.push({ id: created.id, name: created.name, category: created.category });
+  }
+
+  if (toCreate.size > 0) {
+    const newSkills = [...toCreate.values()];
+    await prisma.skill.createMany({ data: newSkills, skipDuplicates: true });
+    const createdRows = await prisma.skill.findMany({
+      where: { name: { in: newSkills.map((s) => s.name) } },
+      select: { id: true, name: true, category: true },
+    });
+    for (const row of createdRows) {
+      result.created.push({ id: row.id, name: row.name, category: row.category });
+    }
+  }
+
+  for (const a of toAlias) {
+    await prisma.skill.update({
+      where: { id: a.skillId },
+      data: { aliases: { push: a.alias } },
+    });
   }
 
   return result;

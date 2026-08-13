@@ -26,8 +26,14 @@ export function upsertJobSkillIds(
   allSkills: Array<{ id: string; name: string; aliases: string[] }>,
 ): string[] {
   if (skillNames.length === 0) return [];
-  const skillMap = new Map(allSkills.map((s) => [s.name, s.id]));
-  return skillNames.map((name) => skillMap.get(name)).filter((id): id is string => id !== undefined);
+  const nameMap = new Map(allSkills.map((s) => [s.name, s.id]));
+  const aliasMap = new Map<string, string>();
+  for (const s of allSkills) {
+    for (const a of s.aliases) aliasMap.set(a, s.id);
+  }
+  return skillNames
+    .map((name) => nameMap.get(name) ?? aliasMap.get(name))
+    .filter((id): id is string => id !== undefined);
 }
 
 /*

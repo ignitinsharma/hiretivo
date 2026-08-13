@@ -6,6 +6,7 @@ import { diffSummary, diffBullets } from "@/lib/resume-diff";
 import type { ResumeDocument, ResumeMatchMeta } from "@/lib/validations/resume.schema";
 import { AutomationStatus, PipelineStage } from "@/constants/enums";
 import { stripHtml } from "@/lib/utils";
+import { resolveAutomationStatus } from "@/lib/generation/automation-status";
 import { z } from "zod";
 
 /*
@@ -70,28 +71,11 @@ export async function GET(
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  let automationStatus = application.automationStatus;
-  let failureReason = application.failureReason;
-  if (
-    automationStatus === AutomationStatus.GENERATING &&
-    application.generationStartedAt &&
-    Date.now() - application.generationStartedAt.getTime() > 5 * 60 * 1000
-  ) {
-    await prisma.application.updateMany({
-      where: {
-        id,
-        seekerId: session.user.id,
-        automationRunId: application.automationRunId,
-        automationStatus: AutomationStatus.GENERATING,
-      },
-      data: {
-        automationStatus: AutomationStatus.FAILED,
-        failureReason: "Resume generation timed out — please retry",
-      },
-    });
-    automationStatus = AutomationStatus.FAILED;
-    failureReason = "Resume generation timed out — please retry";
-  }
+  const { automationStatus, failureReason } = await resolveAutomationStatus(
+    application,
+    id,
+    session.user.id,
+  );
 
   const activeVersion = application.resumeVersions.find(
     (v) => v.id === application.activeVersionId,

@@ -125,6 +125,18 @@ async function fetchApplication(id: string): Promise<ApplicationDetail> {
   return res.json();
 }
 
+interface ApplicationStatus {
+  automationStatus: string | null;
+  failureReason: string | null;
+  generationCount: number;
+}
+
+async function fetchApplicationStatus(id: string): Promise<ApplicationStatus> {
+  const res = await fetch(`/api/applications/${id}/status`);
+  if (!res.ok) throw new Error("Failed to load application status");
+  return res.json();
+}
+
 export function ApplicationPageClient() {
   const params = useParams();
   const router = useRouter();
@@ -157,11 +169,27 @@ export function ApplicationPageClient() {
     queryKey: ["application", applicationId],
     queryFn: () => fetchApplication(applicationId),
     staleTime: 30_000,
+  });
+
+  const { data: status } = useQuery({
+    queryKey: ["application-status", applicationId],
+    queryFn: () => fetchApplicationStatus(applicationId),
     refetchInterval: (query) => {
-      const d = query.state.data;
-      return d?.automationStatus === "GENERATING" ? 2000 : false;
+      const s = query.state.data?.automationStatus;
+      return s === "GENERATING" ? 2000 : false;
     },
   });
+
+  /* Refresh the full detail once generation leaves GENERATING. */
+  useEffect(() => {
+    if (
+      data?.automationStatus === "GENERATING" &&
+      status?.automationStatus &&
+      status.automationStatus !== "GENERATING"
+    ) {
+      queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+    }
+  }, [data?.automationStatus, status?.automationStatus, applicationId, queryClient]);
 
   /* When the user opens the external job posting and returns to this tab,
    * ask once whether they applied. */

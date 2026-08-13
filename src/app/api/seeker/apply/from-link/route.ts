@@ -41,20 +41,11 @@ async function enrichAndLinkJobSkills(
     ? parsedSkills.map((name) => ({ name, category: "tool" as const }))
     : await extractCandidateSkillsFromJD(description);
   if (candidates.length === 0) return;
-  const result = await reconcileAndInsertSkills(candidates);
-  if (result.created.length === 0 && result.aliasesAdded.length === 0) return;
+  await reconcileAndInsertSkills(candidates);
   const allSkills = await prisma.skill.findMany({
     select: { id: true, name: true, aliases: true },
   });
-  const skillIds = upsertJobSkillIds(
-    [
-      ...new Set([
-        ...result.created.map((s) => s.name),
-        ...result.aliasesAdded.map((a) => a.skillName),
-      ]),
-    ],
-    allSkills,
-  );
+  const skillIds = upsertJobSkillIds(candidates.map((c) => c.name), allSkills);
   if (skillIds.length > 0) {
     await prisma.jobSkill.createMany({
       data: skillIds.map((skillId) => ({
