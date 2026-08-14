@@ -104,6 +104,21 @@ export async function POST(_req: NextRequest) {
 
     parsed.profileId = session.user.id;
 
+    // Merge profile social links into any fields the parser missed (PDF URLs
+    // are often not extractable), so re-uploads never drop LinkedIn/GitHub.
+    const social = await prisma.seekerProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { linkedinUrl: true, githubUrl: true, websiteUrl: true },
+    });
+    if (social) {
+      parsed.personalInfo = {
+        ...parsed.personalInfo,
+        linkedin: parsed.personalInfo.linkedin || social.linkedinUrl || null,
+        github: parsed.personalInfo.github || social.githubUrl || null,
+        websiteUrl: parsed.personalInfo.websiteUrl || social.websiteUrl || null,
+      };
+    }
+
     await prisma.masterResume.upsert({
       where: { userId: session.user.id },
       update: { resumeJson: parsed },

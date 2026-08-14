@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { auth } from "@/auth";
 import { AutomationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { publishGenerationJob } from "@/lib/generation/qstash";
+import { dispatchGenerationJob } from "@/lib/generation/dispatch-generation";
 import { stripHtml } from "@/lib/utils";
 
 const generateRequestSchema = z.object({
@@ -82,8 +82,7 @@ export async function POST(
   });
 
   try {
-    const workerUrl = new URL("/api/internal/generation-worker", request.url).toString();
-    await publishGenerationJob(
+    const dispatched = await dispatchGenerationJob(
       {
         applicationId: id,
         userId: session.user.id,
@@ -92,8 +91,24 @@ export async function POST(
         forceGenerate,
         baseResumeJson: parsed.success ? parsed.data.baseResumeJson : undefined,
       },
-      workerUrl,
+      request.url,
     );
+
+    if (dispatched.queued) {
+      return NextResponse.json({ status: AutomationStatus.GENERATING, runId }, { status: 202 });
+    }
+
+    // Non-production: generation already completed inline — report the real
+    // terminal status instead of a GENERATING 202 the client would poll away.
+    const finished = await prisma.application.findUnique({
+      where: { id },
+      select: { automationStatus: true, failureReason: true },
+    });
+    return NextResponse.json({
+      status: finished?.automationStatus ?? AutomationStatus.GENERATING,
+      failureReason: finished?.failureReason ?? null,
+      runId,
+    });
   } catch (error) {
     console.error("[generate] Failed to enqueue job:", error);
     await prisma.application.updateMany({

@@ -32,7 +32,7 @@ describe("from-link route: don't store garbage JDs", () => {
 describe("generate route: actionable errors", () => {
   it("returns immediately after queuing generation", () => {
     assert.match(generateSrc, /status: 202/);
-    assert.match(generateSrc, /publishGenerationJob/);
+    assert.match(generateSrc, /dispatchGenerationJob/);
   });
 
   it("returns a specific error for unreadable_jd instead of generic 'please try again'", () => {
