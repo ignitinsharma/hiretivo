@@ -14,6 +14,8 @@
 4. RENDER       → DRY with .map(). Handle isLoading / isError / empty / data — every time.
 5. UI           → mobile-first base, then sm:/md:/lg:. No shadows. No dark mode. No rounded-full.
 6. COMMENTS     → every function, route, action, component gets a /* */ doc block.
+7. FIXES        → never a patch. Every bug, feature, or fix is a proper fix: root cause,
+                  architecturally consistent, cannot regress. No temporary fixes.
 ```
 
 ---
