@@ -30,21 +30,19 @@ function getClient(): Client {
   return baseUrl ? new Client({ token, baseUrl }) : new Client({ token });
 }
 
-function getWorkerUrl(workerUrl?: string): string {
-  const url = workerUrl ?? process.env.QSTASH_WORKER_URL;
-  if (!url || !url.startsWith("https://")) {
-    throw new Error("QSTASH_WORKER_URL must be an HTTPS URL");
+function getWorkerUrl(workerUrl: string): string {
+  if (!workerUrl.startsWith("https://")) {
+    throw new Error("Worker URL must be an HTTPS URL");
   }
-  return url;
+  return workerUrl;
 }
 
 /* Publishes one idempotent resume-generation job to QStash.
- * workerUrl defaults to QSTASH_WORKER_URL (needed for local ngrok tunnels);
- * in production the generate route passes its own origin so the job is always
- * delivered to the same deployment that enqueued it. */
+ * workerUrl is the enqueuing deployment's own worker origin, so the job is
+ * always delivered to the deployment that enqueued it. */
 export async function publishGenerationJob(
   message: GenerationJobMessage,
-  workerUrl?: string,
+  workerUrl: string,
 ): Promise<void> {
   await getClient().publishJSON({
     url: getWorkerUrl(workerUrl),
