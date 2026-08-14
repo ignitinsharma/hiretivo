@@ -139,7 +139,7 @@ function HeaderBlock({
             <React.Fragment key={`u-${i}`}>
               {i > 0 && <Text>  |  </Text>}
               <Link src={url!} style={s.link}>
-                {label}: {url}
+                {label}
               </Link>
             </React.Fragment>
           ))}

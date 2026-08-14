@@ -106,25 +106,22 @@ function PageHeader({ stats }: { stats?: BoardStats }) {
       </div>
 
       {stats && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <ManualJobDialog />
-          <div className="flex items-center gap-3 self-start rounded-xl border border-brand-border bg-white px-4 py-3 sm:self-auto">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
-              <TrendingUp className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <div>
-              <p className="text-xs text-brand-foreground-muted">
-                Total Applications
-              </p>
-              <p className="text-xl font-bold leading-tight text-brand-foreground">
-                {stats.total}
-              </p>
-              <p className="text-xs font-medium text-brand-success">
-                +{stats.thisWeek} this week
-              </p>
-            </div>
-            <Sparkline data={stats.buckets} />
+        <div className="flex items-center gap-3 self-start rounded-xl border border-brand-border bg-white px-4 py-3 sm:self-auto">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
+            <TrendingUp className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-xs text-brand-foreground-muted">
+              Total Applications
+            </p>
+            <p className="text-xl font-bold leading-tight text-brand-foreground">
+              {stats.total}
+            </p>
+            <p className="text-xs font-medium text-brand-success">
+              +{stats.thisWeek} this week
+            </p>
           </div>
+          <Sparkline data={stats.buckets} />
         </div>
       )}
     </div>
@@ -278,15 +275,18 @@ export function KanbanBoard() {
     <div className="space-y-5">
       <PageHeader stats={stats} />
 
-      <div className="flex w-full max-w-xl items-center gap-2 rounded-lg border border-brand-border bg-white px-3 py-2">
-        <Search className="h-4 w-4 shrink-0 text-brand-foreground-muted" aria-hidden="true" />
-        <input
-          type="text"
-          placeholder="Search applications..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full border-none bg-transparent text-sm text-brand-foreground outline-none placeholder:text-brand-foreground-secondary"
-        />
+      <div className="flex w-full max-w-2xl items-center gap-2">
+        <div className="flex flex-1 items-center gap-2 rounded-lg border border-brand-border bg-white px-3 py-2">
+          <Search className="h-4 w-4 shrink-0 text-brand-foreground-muted" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Search applications..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full border-none bg-transparent text-sm text-brand-foreground outline-none placeholder:text-brand-foreground-secondary"
+          />
+        </div>
+        <ManualJobDialog />
       </div>
 
       <DndContext
