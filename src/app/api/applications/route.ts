@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
   ApplicationStatus,
+  AutomationStatus,
   CurrencyCode,
   JobStatus,
   UserRole,
@@ -13,6 +14,10 @@ import { stripHtml } from "@/lib/utils";
 import { createApplicationSchema } from "@/lib/validations/application";
 import { applyRateLimiter, dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
 import { getMissingSkillNames } from "@/lib/seeker-dashboard";
+import {
+  GENERATION_TIMEOUT_MS,
+  GENERATION_TIMEOUT_REASON,
+} from "@/lib/generation/automation-status";
 
 /*
  * formatSalaryRange
@@ -175,6 +180,20 @@ export async function GET() {
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
+
+  // Resolve stale GENERATING runs (dead workers etc.) so the tracker board
+  // never shows a spinner forever — same timeout as the per-application route.
+  await prisma.application.updateMany({
+    where: {
+      seekerId: session.user.id,
+      automationStatus: AutomationStatus.GENERATING,
+      generationStartedAt: { lt: new Date(Date.now() - GENERATION_TIMEOUT_MS) },
+    },
+    data: {
+      automationStatus: AutomationStatus.FAILED,
+      failureReason: GENERATION_TIMEOUT_REASON,
+    },
+  });
 
   const applications = await prisma.application.findMany({
     where: { seekerId: session.user.id },

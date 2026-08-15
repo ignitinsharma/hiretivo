@@ -57,7 +57,7 @@ export default function DashboardPage() {
           </span>
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <button
             onClick={() => {
               if (quota && !quota.allowed) {
@@ -85,16 +85,16 @@ export default function DashboardPage() {
             </div>
           </button>
 
-          <div className="rounded-xl border border-brand-border bg-brand-surface flex flex-col items-center justify-center gap-3 min-h-80 col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-3">
+          <div className="rounded-xl border border-brand-border bg-brand-surface flex flex-col items-center justify-center gap-3 min-h-80 col-span-1 px-4 lg:col-span-2 xl:col-span-3">
             <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center">
               <Search className="w-6 h-6 text-brand-primary" />
             </div>
             <div className="text-center max-w-xs">
               <p className="text-sm font-semibold text-brand-foreground">
-                Live job recommendations are on the way
+                Your go-to for remote jobs
               </p>
               <p className="text-xs text-brand-foreground-muted mt-1">
-                In the meantime, add a job from any company using the card above.
+                Browse jobs right here instead of hopping between platforms. Found one elsewhere? Add it here or from outside, and we&apos;ll tailor it for you.
               </p>
             </div>
           </div>

@@ -782,22 +782,28 @@ export function ApplicationPageClient() {
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <select
-                  className="text-xs border border-brand-border rounded-lg h-9 px-2 bg-white text-brand-foreground"
-                  value={selectedVersionId ?? data.activeVersion?.id ?? ""}
-                  onChange={(e) => setSelectedVersionId(e.target.value || null)}
-                >
-                  {data.versions.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      v{v.version} —{" "}
-                      {v.sourceType === "ai-generated"
-                        ? "AI Generated"
-                        : v.sourceType === "uploaded"
-                          ? "Uploaded"
-                          : "Manual Edit"}
-                    </option>
-                  ))}
-                </select>
+                {data.versions.length > 0 ? (
+                  <select
+                    className="text-xs border border-brand-border rounded-lg h-9 px-2 bg-white text-brand-foreground"
+                    value={selectedVersionId ?? data.activeVersion?.id ?? ""}
+                    onChange={(e) => setSelectedVersionId(e.target.value || null)}
+                  >
+                    {data.versions.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        v{v.version} —{" "}
+                        {v.sourceType === "ai-generated"
+                          ? "AI Generated"
+                          : v.sourceType === "uploaded"
+                            ? "Uploaded"
+                            : "Manual Edit"}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="inline-flex h-9 items-center rounded-lg border border-brand-border bg-white px-2 text-xs text-brand-foreground-muted">
+                    Resume
+                  </span>
+                )}
                 <Button
                   variant="default"
                   size="sm"

@@ -33,6 +33,18 @@ export async function generateCoverLetter(
     resumeName: resumeJson.personalInfo.name,
     resumeSummary: resumeJson.summary,
     resumeSkills: resumeJson.skills.categories.flatMap((c) => c.items),
+    experience: resumeJson.experience.slice(0, 3).map((exp) => ({
+      title: exp.title,
+      company: exp.company,
+      period: [exp.startDate, exp.endDate ?? (exp.current ? "Present" : null)]
+        .filter(Boolean)
+        .join(" – "),
+      bullets: exp.bullets.slice(0, 3).map((b) => b.text),
+    })),
+    projects: resumeJson.projects.slice(0, 2).map((proj) => ({
+      name: proj.name,
+      bullets: proj.bullets.slice(0, 3).map((b) => b.text),
+    })),
   };
 
   const { system, user } = buildCoverLetterPrompt(input);
@@ -68,6 +80,7 @@ export async function generateCoverLetter(
   }
 
   const content = [
+    parsed.subject ? `Subject: ${parsed.subject}` : null,
     parsed.greeting,
     "",
     ...parsed.body_paragraphs,
@@ -75,7 +88,7 @@ export async function generateCoverLetter(
     parsed.closing,
     "",
     parsed.signoff,
-  ].join("\n");
+  ].filter((line): line is string => line !== null).join("\n");
 
   return { status: "success", content, raw: parsed };
 }

@@ -86,6 +86,13 @@ export async function GET(
     select: { resumeJson: true },
   });
 
+  // Profile social links — merged into returned versions below so the editor,
+  // preview, and download always reflect the user's current profile links.
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { linkedinUrl: true, githubUrl: true, websiteUrl: true },
+  });
+
   const masterSkillNames = extractSkillNames(masterResume?.resumeJson);
 
   const jobSkills: JobSkillInput[] =
@@ -137,7 +144,7 @@ export async function GET(
           id: activeVersion.id,
           version: activeVersion.version,
           sourceType: activeVersion.sourceType,
-          resumeJson: activeVersion.resumeJson,
+          resumeJson: enrichWithProfileLinks(activeVersion.resumeJson, seekerProfile),
           styleConfig: activeVersion.styleConfig ?? null,
           createdAt: activeVersion.createdAt.toISOString(),
         }
@@ -146,7 +153,7 @@ export async function GET(
       id: v.id,
       version: v.version,
       sourceType: v.sourceType,
-      resumeJson: v.resumeJson,
+      resumeJson: enrichWithProfileLinks(v.resumeJson, seekerProfile),
       createdAt: v.createdAt.toISOString(),
     })),
   });
@@ -238,4 +245,23 @@ function extractSkillNames(resumeJson: unknown): string[] {
   const categories = (resumeJson as { skills?: { categories?: { items: string[] }[] } })
     ?.skills?.categories ?? [];
   return categories.flatMap((c) => c.items ?? []);
+}
+
+/* Fills null social fields in a version's personalInfo from the seeker profile. */
+function enrichWithProfileLinks(
+  resumeJson: unknown,
+  profile: { linkedinUrl: string | null; githubUrl: string | null; websiteUrl: string | null } | null,
+): unknown {
+  if (!profile) return resumeJson;
+  const doc = resumeJson as ResumeDocument | null;
+  if (!doc?.personalInfo) return resumeJson;
+  return {
+    ...doc,
+    personalInfo: {
+      ...doc.personalInfo,
+      linkedin: doc.personalInfo.linkedin || profile.linkedinUrl || null,
+      github: doc.personalInfo.github || profile.githubUrl || null,
+      websiteUrl: doc.personalInfo.websiteUrl || profile.websiteUrl || null,
+    },
+  };
 }

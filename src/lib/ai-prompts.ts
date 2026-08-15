@@ -183,9 +183,22 @@ export interface MatchAnalysis {
 
 export interface CoverLetterOutput {
   greeting: string;
+  subject: string | null;
   body_paragraphs: string[];
   closing: string;
   signoff: string;
+}
+
+export interface CoverLetterExperience {
+  title: string;
+  company: string;
+  period: string;
+  bullets: string[];
+}
+
+export interface CoverLetterProject {
+  name: string;
+  bullets: string[];
 }
 
 export interface CoverLetterInput {
@@ -195,28 +208,54 @@ export interface CoverLetterInput {
   resumeName: string;
   resumeSummary: string;
   resumeSkills: string[];
+  experience: CoverLetterExperience[];
+  projects: CoverLetterProject[];
 }
 
 export function buildCoverLetterPrompt(input: CoverLetterInput): { system: string; user: string } {
+  const experienceBlock = input.experience
+    .map(
+      (exp) =>
+        `- ${exp.title} @ ${exp.company}${exp.period ? ` (${exp.period})` : ""}\n` +
+        exp.bullets.map((b) => `  • ${b}`).join("\n"),
+    )
+    .join("\n\n");
+  const projectsBlock = input.projects
+    .map(
+      (proj) =>
+        `- ${proj.name}\n` + proj.bullets.map((b) => `  • ${b}`).join("\n"),
+    )
+    .join("\n\n");
+
   return {
-    system: `You are a professional cover letter writer. Write a compelling, concise cover letter tailored to the job description and candidate profile.
+    system: `You are a professional cover letter writer. Write a compelling, concise cover letter tailored to the job description and the candidate's real experience.
 
 Rules:
-- Return ONLY a valid JSON object with exactly these keys: {"greeting": "...", "body_paragraphs": ["..."], "closing": "...", "signoff": "..."}
-- greeting: A professional salutation (e.g. "Dear Hiring Team,")
-- body_paragraphs: 2-3 concise paragraphs connecting the candidate's experience to the job requirements
-- closing: A brief closing statement
-- signoff: The candidate's name and any contact info
-- No markdown, no code fences, no explanation — only valid JSON
-- Keep each paragraph under 4 sentences
-- Be specific to the job and company — avoid generic templates`,
+- Return ONLY a valid JSON object with exactly these keys: {"greeting": "...", "subject": "...", "body_paragraphs": ["..."], "closing": "...", "signoff": "..."}
+- greeting: A natural salutation. Prefer "Dear [Company] Hiring Team," or "Dear Hiring Manager," — fall back to "Dear Hiring Team," only when no better option exists.
+- subject: A concise email subject line (under 10 words), e.g. "Application for Senior Frontend Engineer — Jane Doe"
+- body_paragraphs: EXACTLY 2-3 concise paragraphs:
+  - Paragraph 1 (opening hook): name the specific role and company, mirror 2-3 keywords from the job description, and state why the candidate is applying.
+  - Paragraphs 2-3 (evidence): connect the candidate's specific experience and projects to the job's requirements. Cite concrete details from the candidate profile — role titles, companies, project names, measurable outcomes. NEVER invent experience, numbers, or skills not present in the candidate profile.
+- closing: A brief closing statement inviting next steps.
+- signoff: The candidate's name and any contact info.
+- Keep each paragraph under 4 sentences and the whole letter under 250 words.
+- No markdown, no code fences, no explanation — only valid JSON`,
     user: `Job Title: ${input.jobTitle}
 Company: ${input.company}
 Job Description: ${input.jdText}
 
 Candidate Name: ${input.resumeName}
 Candidate Summary: ${input.resumeSummary}
-Candidate Skills: ${input.resumeSkills.join(", ")}`,
+Candidate Skills: ${input.resumeSkills.join(", ")}
+
+Relevant Experience (most relevant first):
+${experienceBlock || "None"}
+
+Relevant Projects:
+${projectsBlock || "None"}
+
+Write the cover letter.`,
   };
 }
 
