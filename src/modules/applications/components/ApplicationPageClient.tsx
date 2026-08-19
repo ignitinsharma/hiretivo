@@ -238,7 +238,9 @@ export function ApplicationPageClient() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${data.job.title.replace(/\s+/g, "_")}_Resume.pdf`;
+      const company = (data.job.companyName ?? "").replace(/\s+/g, "_");
+      const title = data.job.title.replace(/\s+/g, "_");
+      a.download = company ? `${company}_${title}_Resume.pdf` : `${title}_Resume.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
