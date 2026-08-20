@@ -35,6 +35,8 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
+  // Cosmetic only — the server never trusts this param.
+  const isSet = searchParams.get("mode") === "set";
 
   const form = useForm<ResetPasswordFormInput>({
     resolver: zodResolver(ResetPasswordFormSchema),
@@ -53,7 +55,7 @@ function ResetPasswordContent() {
         token,
         newPassword: values.newPassword,
       });
-      toast.success("Password updated");
+      toast.success(isSet ? "Password created" : "Password updated");
       router.push("/seeker/login");
     } catch (error) {
       toast.error(
@@ -67,10 +69,12 @@ function ResetPasswordContent() {
       <section className="w-full max-w-md space-y-8">
         <div className="space-y-3">
           <h1 className="font-bold text-3xl md:text-4xl leading-tight tracking-tight text-brand-foreground">
-            Reset password
+            {isSet ? "Set your password" : "Reset password"}
           </h1>
           <p className="text-lg font-medium leading-relaxed text-brand-foreground-muted">
-            Choose a new password for your Hiretivo account.
+            {isSet
+              ? "Create a password for your Hiretivo account."
+              : "Choose a new password for your Hiretivo account."}
           </p>
         </div>
 
@@ -95,7 +99,7 @@ function ResetPasswordContent() {
                 htmlFor="newPassword"
                 className="text-sm font-bold text-brand-foreground"
               >
-                New password
+                {isSet ? "Password" : "New password"}
               </Label>
               <PasswordInput
                 id="newPassword"
@@ -142,10 +146,10 @@ function ResetPasswordContent() {
               {form.formState.isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Updating...
+                  {isSet ? "Setting..." : "Updating..."}
                 </>
               ) : (
-                "Update password"
+                isSet ? "Set password" : "Update password"
               )}
             </Button>
           </form>
