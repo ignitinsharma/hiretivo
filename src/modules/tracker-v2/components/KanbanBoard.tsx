@@ -15,7 +15,6 @@ import { applicationService } from "@/services/application.service";
 import { PipelineStage } from "@/constants/enums";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanCard, KanbanCardOverlay } from "./KanbanCard";
-import { ManualJobDialog } from "./ManualJobDialog";
 import { BoardSkeleton } from "./BoardSkeleton";
 import { BoardError } from "./BoardError";
 import { useKanbanDrag } from "../hooks/useKanbanDrag";
@@ -286,7 +285,6 @@ export function KanbanBoard() {
             className="w-full border-none bg-transparent text-sm text-brand-foreground outline-none placeholder:text-brand-foreground-secondary"
           />
         </div>
-        <ManualJobDialog />
       </div>
 
       <DndContext
