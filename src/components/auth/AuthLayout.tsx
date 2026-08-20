@@ -81,12 +81,6 @@ export function AuthLayout({
             >
               Terms of Service
             </Link>
-            <Link
-              href="/help"
-              className="text-[11px] font-semibold text-brand-foreground-secondary uppercase tracking-wider hover:text-brand-foreground transition-colors"
-            >
-              Help Center
-            </Link>
           </div>
         </div>
       </section>

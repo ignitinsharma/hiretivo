@@ -22,10 +22,12 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email },
-    select: { passwordHash: true },
+    select: { id: true },
   });
 
-  if (user?.passwordHash) {
+  // Send to any existing user — including passwordless (Google-created) accounts,
+  // so they can set a first password when Google sign-in is unavailable.
+  if (user) {
     await sendPasswordResetEmail(parsed.data.email).catch((err: unknown) => {
       console.error('[reset-password] send failed (non-fatal):', err);
     });
