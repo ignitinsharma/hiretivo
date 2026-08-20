@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { applicationService } from "@/services/application.service";
 import { ApplicationStatus, AutomationStatus } from "@/constants/enums";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { SeekerApplicationItem } from "@/modules/seeker/applications/types/application.types";
 
 type Tab = "All" | ApplicationStatus;
@@ -115,11 +116,33 @@ export function ApplicationsTable() {
                 <th className="w-12 px-5 py-3"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody aria-busy={isLoading}>
               {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-sm text-brand-foreground-muted">Loading...</td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-brand-border">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <Skeleton className="h-6 w-20 rounded-pill" />
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <Skeleton className="h-4 w-16" />
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1">
+                        <Skeleton className="h-7 w-7 rounded-pill" />
+                        <Skeleton className="h-7 w-7 rounded-pill" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : (
                 filtered.map((app) => {
                   const dynamicStatus = getDynamicStatus(app);
