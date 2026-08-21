@@ -5,6 +5,10 @@ interface UIState {
   openAddCustomJobModal: () => void;
   closeAddCustomJobModal: () => void;
 
+  generatingJobIds: Set<string>;
+  addGeneratingJobId: (jobId: string) => void;
+  removeGeneratingJobId: (jobId: string) => void;
+
   isApplyModalOpen: boolean;
   applyJobId: string | null;
   selectedJobId: string | null;
@@ -37,6 +41,15 @@ export const useUIStore = create<UIState>((set) => ({
   isAddCustomJobModalOpen: false,
   openAddCustomJobModal: () => set({ isAddCustomJobModalOpen: true }),
   closeAddCustomJobModal: () => set({ isAddCustomJobModalOpen: false }),
+
+  generatingJobIds: new Set<string>(),
+  addGeneratingJobId: (jobId) => set((s) => ({ generatingJobIds: new Set(s.generatingJobIds).add(jobId) })),
+  removeGeneratingJobId: (jobId) =>
+    set((s) => {
+      const next = new Set(s.generatingJobIds);
+      next.delete(jobId);
+      return { generatingJobIds: next };
+    }),
 
   isApplyModalOpen: false,
   applyJobId: null,

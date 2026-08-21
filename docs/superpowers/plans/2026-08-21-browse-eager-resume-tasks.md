@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer Cancel/Generate/Download/Open/MarkApplied + gates), Tasks 3-8 pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer), Task 3 ✅ DONE (ensure + eager gen + toasts + generatingJobIds), Tasks 4-8 pending.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -43,7 +43,7 @@
 
 ---
 
-#### TASK 3 — Idempotent Ensure + Eager Background Generation (toast-only, no redirect)
+#### TASK 3 — Idempotent Ensure + Eager Background Generation (toast-only, no redirect) ✅ DONE
 *   Create `POST /api/applications/ensure` — body `{ jobId }` — steps mirror `POST /api/applications` `src/app/api/applications/route.ts:54` but idempotent:
   *   IP apply limiter `applyRateLimiter:56` + user write limiter `writeRateLimiter:70`
   *   `auth()` `62` → `401`, `SEEKER` role `66` → `403`, `VERIFIED` gate `80` → `403` with actionable message

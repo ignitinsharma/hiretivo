@@ -30,6 +30,11 @@ export const applicationService = {
     return data;
   },
 
+  ensureApplication: async (jobId: string): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/applications/ensure', { jobId });
+    return data;
+  },
+
   generateResume: async (applicationId: string): Promise<void> => {
     await apiClient.post(`/applications/${applicationId}/generate`);
   },

@@ -12,6 +12,8 @@ import { JobDrawer } from "@/components/shared/JobDrawer";
 import { useFeed, type FeedFilters } from "@/hooks/use-feed";
 import { Skeleton } from "@/components/ui/skeleton";
 import { applicationService } from "@/services/application.service";
+import { useUIStore } from "@/store/use-ui-store";
+import { useVerificationStatus } from "@/hooks/use-verification-status";
 
 export function BrowseJobGrid() {
   const [filters, setFilters] = useState<FeedFilters>({});
@@ -19,6 +21,10 @@ export function BrowseJobGrid() {
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const hiretivo = useVerificationStatus();
+  const generatingJobIds = useUIStore((s) => s.generatingJobIds);
+  const addGeneratingJobId = useUIStore((s) => s.addGeneratingJobId);
+  const removeGeneratingJobId = useUIStore((s) => s.removeGeneratingJobId);
 
   const activeFilters = useMemo(() => {
     const f: FeedFilters = { ...filters };
@@ -42,7 +48,6 @@ export function BrowseJobGrid() {
   const handleApply = useCallback(async (jobId: string) => {
     setDrawerJobId(null);
     setApplyingId(jobId);
-
     try {
       const app = await applicationService.applyToJob({ jobId });
       await applicationService.generateResume(app.id);
@@ -56,6 +61,38 @@ export function BrowseJobGrid() {
       setApplyingId(null);
     }
   }, [queryClient]);
+
+  const handleGenerate = useCallback(async (jobId: string) => {
+    if (generatingJobIds.has(jobId)) return;
+    if (hiretivo.isLoading) return;
+    if (!hiretivo.isVerified) {
+      const label = hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW" ? "Verification pending — check back soon." : hiretivo.status === "REJECTED" ? "Verification rejected. Check your email." : "Submit your profile for verification to generate.";
+      toast.error(label);
+      return;
+    }
+    addGeneratingJobId(jobId);
+    toast.info("Resume generation in progress.");
+    try {
+      const app = await applicationService.ensureApplication(jobId);
+      await applicationService.generateResume(app.id);
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      // Done toast comes from status poll in Task 4; keep generating spinner until poll flips to READY/FAILED
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to start generation.";
+      // Extract API error body if available via axios
+      const apiMsg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      toast.error(apiMsg ?? msg);
+      removeGeneratingJobId(jobId);
+    }
+  }, [generatingJobIds, hiretivo.isLoading, hiretivo.isVerified, hiretivo.status, addGeneratingJobId, removeGeneratingJobId, queryClient]);
+
+  const drawerGenerationStatus = drawerJobId && generatingJobIds.has(drawerJobId) ? "GENERATING" as const : "idle" as const;
+  const applyLockedLabel = (() => {
+    if (hiretivo.isLoading || hiretivo.isVerified) return undefined;
+    if (hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW") return "Verification pending";
+    if (hiretivo.status === "REJECTED") return "Fix profile to generate";
+    return "Get verified to generate";
+  })();
 
   const handleCardClick = useCallback((jobId: string) => {
     setDrawerJobId(jobId);
@@ -125,6 +162,9 @@ export function BrowseJobGrid() {
         open={drawerJobId !== null}
         onOpenChange={(open) => { if (!open) setDrawerJobId(null); }}
         onApply={handleApply}
+        onGenerate={handleGenerate}
+        generationStatus={drawerGenerationStatus}
+        applyLockedLabel={applyLockedLabel}
       />
     </div>
   );
