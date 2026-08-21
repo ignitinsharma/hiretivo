@@ -1,31 +1,37 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { SearchBar } from "@/components/shared/SearchBar";
 import { FilterChips } from "@/components/shared/FilterChips";
-import { JobCard } from "@/components/shared/JobCard";
+import { PastelJobCard, PastelCardSkeleton } from "@/components/shared/PastelJobCard";
 import { JobDrawer } from "@/components/shared/JobDrawer";
 import { useBrowse, type BrowseFilters } from "@/hooks/use-browse";
-import { Skeleton } from "@/components/ui/skeleton";
 import { applicationService } from "@/services/application.service";
+import { seekerService, type SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
-import { useVerificationStatus } from "@/hooks/use-verification-status";
+import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { useApplicationStatus } from "@/hooks/use-application-status";
 
+/*
+ * BrowseJobGrid
+ * All-jobs browse — pastel cards index%5, infinite scroll sentinel, Pass/Apply footer.
+ * Apply on card opens drawer; drawer Apply generates in background, toast, remove card.
+ * Plan gate: if quota !allowed → Upgrade Plan modal/tooltip.
+ */
 export function BrowseJobGrid() {
   const [filters, setFilters] = useState<BrowseFilters>({});
   const [search, setSearch] = useState("");
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
-  const [applyingId, setApplyingId] = useState<string | null>(null);
   const [jobAppIdMap, setJobAppIdMap] = useState<Record<string, string>>({});
   const [readyJobIds, setReadyJobIds] = useState<Set<string>>(new Set());
   const [failedInfo, setFailedInfo] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
-  const hiretivo = useVerificationStatus();
+  const { data: quota } = useGenerationQuota();
+  const { openPaidFeatureModal } = useUIStore();
   const generatingJobIds = useUIStore((s) => s.generatingJobIds);
   const addGeneratingJobId = useUIStore((s) => s.addGeneratingJobId);
   const removeGeneratingJobId = useUIStore((s) => s.removeGeneratingJobId);
@@ -52,29 +58,42 @@ export function BrowseJobGrid() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const handleApply = useCallback(async (jobId: string) => {
-    setDrawerJobId(null);
-    setApplyingId(jobId);
-    try {
-      const app = await applicationService.applyToJob({ jobId });
-      await applicationService.generateResume(app.id);
-      await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      await queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      window.location.href = "/dashboard/tracker";
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to apply. Please try again.";
-      toast.error(message);
-    } finally {
-      setApplyingId(null);
-    }
+  // Optimistic remove helper
+  const removeJobFromBrowse = useCallback((jobId: string) => {
+    queryClient.setQueryData(["browse"], (old: any) => {
+      if (!old?.pages) return old;
+      return {
+        ...old,
+        pages: old.pages.map((p: SeekerFeedResponse) => ({ ...p, jobs: p.jobs.filter((j) => j.id !== jobId) })),
+      };
+    });
+    // Also handle the actual queryKey with filters — invalidate to keep consistency
+    queryClient.invalidateQueries({ queryKey: ["browse"] });
   }, [queryClient]);
+
+  const dismissMutation = useMutation({
+    mutationFn: seekerService.dismissJob,
+    onMutate: async (jobId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["browse"] });
+      const prev = queryClient.getQueryData(["browse"]);
+      removeJobFromBrowse(jobId);
+      return { prev };
+    },
+    onError: (_e, _id, ctx: any) => {
+      if (ctx?.prev) queryClient.setQueryData(["browse"], ctx.prev);
+      toast.error("Failed to pass");
+    },
+    onSuccess: () => toast.success("Job passed"),
+  });
 
   const handleGenerate = useCallback(async (jobId: string) => {
     if (generatingJobIds.has(jobId)) return;
-    if (hiretivo.isLoading) return;
-    if (!hiretivo.isVerified) {
-      const label = hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW" ? "Verification pending — check back soon." : hiretivo.status === "REJECTED" ? "Verification rejected. Check your email." : "Submit your profile for verification to generate.";
-      toast.error(label);
+    if (quota && !quota.allowed) {
+      openPaidFeatureModal({
+        feature: "resume_generation",
+        title: "Upgrade plan",
+        description: `You've used all ${quota.limit} generations this month. Upgrade to continue.`,
+      });
       return;
     }
     addGeneratingJobId(jobId);
@@ -84,15 +103,21 @@ export function BrowseJobGrid() {
       setJobAppIdMap((prev) => ({ ...prev, [jobId]: app.id }));
       await applicationService.generateResume(app.id);
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      // Remove from browse view after generate starts (per flow: added to All Applications, removed from UI)
+      removeJobFromBrowse(jobId);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Failed to start generation.";
       const apiMsg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      toast.error(apiMsg ?? msg);
+      const text = apiMsg ?? msg;
+      if (text.toLowerCase().includes("limit") || text.toLowerCase().includes("upgrade")) {
+        openPaidFeatureModal({ feature: "resume_generation", title: "Upgrade plan", description: text });
+      } else {
+        toast.error(text);
+      }
       removeGeneratingJobId(jobId);
     }
-  }, [generatingJobIds, hiretivo.isLoading, hiretivo.isVerified, hiretivo.status, addGeneratingJobId, removeGeneratingJobId, queryClient]);
+  }, [generatingJobIds, quota, openPaidFeatureModal, addGeneratingJobId, removeGeneratingJobId, queryClient, removeJobFromBrowse]);
 
-  // Poll status for drawer job — toast on completion and transition to READY/FAILED
   React.useEffect(() => {
     if (!drawerJobId || !currentAppId || !appStatus) return;
     const status = appStatus.automationStatus;
@@ -117,14 +142,13 @@ export function BrowseJobGrid() {
     return "idle" as const;
   })();
   const drawerFailureReason = drawerJobId ? failedInfo[drawerJobId] ?? null : null;
-  const applyLockedLabel = (() => {
-    if (hiretivo.isLoading || hiretivo.isVerified) return undefined;
-    if (hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW") return "Verification pending";
-    if (hiretivo.status === "REJECTED") return "Fix profile to generate";
-    return "Get verified to generate";
-  })();
 
   const handleCardClick = useCallback((jobId: string) => {
+    setDrawerJobId(jobId);
+  }, []);
+
+  const handleCardApply = useCallback((jobId: string) => {
+    // Card Apply opens drawer (per flow), not generates directly
     setDrawerJobId(jobId);
   }, []);
 
@@ -177,22 +201,34 @@ export function BrowseJobGrid() {
     }
   }, [jobAppIdMap, queryClient]);
 
+  const quotaBlocked = quota ? !quota.allowed : false;
+
+  // Infinite scroll sentinel
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "400px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   return (
     <div className="space-y-5">
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        resultCount={totalCount}
-      />
-      <FilterChips
-        activeFilters={filters as Partial<Record<string, string | undefined>>}
-        onFilterChange={handleFilterChange}
-      />
+      <SearchBar value={search} onChange={setSearch} resultCount={totalCount} />
+      <FilterChips activeFilters={filters as Partial<Record<string, string | undefined>>} onFilterChange={handleFilterChange} />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-xl" />
+            <PastelCardSkeleton key={i} index={i} className="w-full" />
           ))}
         </div>
       ) : isError ? (
@@ -206,47 +242,40 @@ export function BrowseJobGrid() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {jobs.map((job) => (
+          {jobs.map((job, idx) => (
             <div key={job.id} className="cursor-pointer" onClick={() => handleCardClick(job.id)}>
-              <JobCard
+              <PastelJobCard
                 job={job}
-                onApply={() => handleApply(job.id)}
+                index={idx}
+                className="w-full"
+                onApply={() => handleCardApply(job.id)}
+                onPass={() => dismissMutation.mutate(job.id)}
               />
             </div>
           ))}
         </div>
       )}
 
-      {hasNextPage && !isLoading && (
-        <div className="text-center pt-4">
-          <button
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-            className="text-sm font-medium text-brand-primary hover:underline disabled:opacity-50"
-          >
-            {isFetchingNextPage ? (
-              <span className="flex items-center gap-2 justify-center">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Loading more...
-              </span>
-            ) : (
-              "Load more jobs"
-            )}
-          </button>
+      {isFetchingNextPage && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <PastelCardSkeleton key={`more-${i}`} index={i} className="w-full" />
+          ))}
         </div>
       )}
+
+      <div ref={sentinelRef} className="h-1" />
 
       <JobDrawer
         jobId={drawerJobId}
         open={drawerJobId !== null}
         onOpenChange={(open) => { if (!open) setDrawerJobId(null); }}
-        onApply={handleApply}
         onGenerate={handleGenerate}
         onDownload={handleDownload}
         onMarkApplied={handleMarkApplied}
         generationStatus={drawerGenerationStatus}
         failureReason={drawerFailureReason}
-        applyLockedLabel={applyLockedLabel}
+        applyLockedLabel={quotaBlocked ? "Upgrade plan" : undefined}
       />
     </div>
   );

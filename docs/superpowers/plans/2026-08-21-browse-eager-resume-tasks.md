@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE … Task 9 ✅ DONE. Next: Tasks 10-15 Tsenta-parity polish (see below).
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE … Task 15 ✅ DONE.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -128,13 +128,13 @@
 
 ---
 
-#### TASK 10 — Dashboard: one row only (Tsenta Top job matches) — pending
+#### TASK 10 — Dashboard: one row only (Tsenta Top job matches) ✅ DONE
 *   Change `src/app/(app)/dashboard/page.tsx:44` `BrowseJobGrid` on dashboard to single-row horizontal scroll: wrap in `overflow-x-auto flex gap-4 pb-2 snap-x` with `scrollbar-none`, limit fetched `limit=5` (`useFeed({limit:5})` or `useBrowse` variant), no `Load more`, no grid multi-row
 *   Keep `FreePlanBanner` + `ResumeParseBanner` + `ApplicationsTable` below; one row sits between them as before but now `Top job matches` header with `Browse jobs` link
 
 ---
 
-#### TASK 11 — Card: random pastel palette + skeleton (Tsenta Image 2/3) — pending
+#### TASK 11 — Card: random pastel palette + skeleton (Tsenta Image 2/3) ✅ DONE
 *   Create `src/lib/jobs/pastel-colors.ts` with 5 reused pastels `["#E6F0FF","#E6FFF4","#F3E8FF","#FFF9E6","#FFE6E6"]` (blue/green/purple/yellow/pink) — `index % 5` deterministic, not random per render
 *   New variant `PastelJobCard` (or `variant="pastel"` on `SeekerJobBaseCard.tsx:42` / `JobCard.tsx:56`) with pastel `bgColor` class, top `location • 4 days ago` + `77% MATCH` ring top-right, middle title + 3-4 skill pills, bottom `companyLogo+name` + `Pass (ghost pill) | Apply (black pill)`; Keep existing white `SeekerJobBaseCard` for detail use, pastel for Dashboard row + Browse grid (reuse)
 *   Dashboard row uses pastel cards, Browse grid uses same pastel variant (reused palette) per your “add your own color choices … will be applied to browse jobs page too”
@@ -143,14 +143,14 @@
 
 ---
 
-#### TASK 12 — Drawer: Apply button placement + description bullets — pending
+#### TASK 12 — Drawer: Apply button placement + description bullets ✅ DONE
 *   `src/components/shared/JobDrawer.tsx:91` footer re-layout per Figma `Image 4/5`: bottom bar `border-t` with `left: View original posting (ghost + ExternalLink)` + `center: bookmark Save` + `right: Apply (black pill, w-auto, not hidden behind Chat widget)` — fix `z-index`/`pb` so `Apply` not under `Chat`; keep `Pass/Not Interested` row above or inside card as `Pass/Apply` pair — mirror Figma `Pass | Apply` bottom-right
 *   Content: `DESCRIPTION` section bullet points — split `job.description` by `\n•|-` or new helper `splitDescriptionBullets(description): string[]` `src/lib/jobs/format-description.ts` — render important points as `<ul class="list-disc ml-4 space-y-1 text-sm">` with bold/regular per bullet; skills section unchanged (top pill row) — `SeekerJobBaseCard` facts already show `location/workType`
 *   Keep `Cancel` as sheet close (X top-right); keep skills pill row at top
 
 ---
 
-#### TASK 13 — Gate: replace verification with plan/tokens (no Get Verified) — pending
+#### TASK 13 — Gate: replace verification with plan/tokens (no Get Verified) ✅ DONE
 *   Remove `useVerificationStatus` gate from `JobDrawer.tsx:22` + `BrowseJobGrid.tsx:24` `hiretivo` checks + `POST /api/applications/ensure` `VerificationStatus.VERIFIED` gate `line 80`; keep `MasterResume` check
 *   Use `useGenerationQuota()` `src/hooks/use-generation-quota.ts` — `allowed/limit/used/plan` — if `!allowed` or `plan===FREE && used>=limit` → `Apply` becomes `Upgrade Plan` (primary disabled with `Tooltip` “Upgrade plan” on hover) or swaps label to `Upgrade Plan` that opens `useUIStore.openPaidFeatureModal` (like `ResumeParseBanner` does); when `allowed` → normal `Apply/Generate Resume`
 *   Update `ensure` route to check quota via `canGenerate`/`getQuota` instead of verification; map `quota_exceeded` to `PaidFeatureModal`
@@ -158,14 +158,14 @@
 
 ---
 
-#### TASK 14 — Flow: Apply opens drawer, drawer Apply generates + removes card + infinite scroll — pending
+#### TASK 14 — Flow: Apply opens drawer, drawer Apply generates + removes card + infinite scroll ✅ DONE
 *   `RecommendedJobsList.tsx` + `BrowseJobGrid.tsx` card `Apply` click: currently `handleApply` does `applyToJob→generate→redirect`; change to `onClick: setDrawerJobId(job.id)` — open drawer only (no generation yet)
 *   Drawer `Apply` click: `ensureApplication(jobId)` → `generateResume(appId)` background (no redirect), toast `in progress` → `done` (already wired via `useApplicationStatus`), create `Application` with `pipelineStage:NOT_APPLIED` (so `All Applications` already works), then **optimistically remove** card from its source list: `queryClient.setQueryData(["browse"], remove id)` + `queryClient.setQueryData(["jobs"], remove id)` for Browse, and `queryClient.setQueryData(["jobs"], ...)` / `["seeker-dashboard-summary"]` for Recommended — so card disappears from that view instantly
 *   If out of tokens → don't call `ensure`, show `Upgrade Plan` per Task 13
 
 ---
 
-#### TASK 15 — Browse infinite scroll (replace Load more button) — pending
+#### TASK 15 — Browse infinite scroll (replace Load more button) ✅ DONE
 *   `BrowseJobGrid.tsx:141` `Load more jobs` button → `IntersectionObserver` sentinel `src/modules/seeker/dashboard/components/RecommendedJobsList.tsx:169` pattern: `useRef sentinel` + `useEffect` `IntersectionObserver(rootMargin 400px)` → `fetchNextPage()` when `intersecting && hasNextPage && !isFetchingNextPage`
 *   Keep button as hidden fallback (`sr-only` while `hasNextPage`), show `Loader2` spinner when `isFetchingNextPage`
 *   Reuse same sentinel for future `Dashboard` one-row? Dashboard one-row has fixed 5, no scroll needed

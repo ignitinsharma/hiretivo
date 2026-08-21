@@ -1,3 +1,6 @@
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config({ path: ".env" });
 import { fetchAndAutoClose } from "../src/services/ats-job-fetcher.service";
 import { AtsSource } from "../src/constants/enums";
 

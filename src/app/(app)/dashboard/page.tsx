@@ -3,11 +3,12 @@
 import { FreePlanBanner } from "@/modules/dashboard/components/FreePlanBanner";
 import { ResumeParseBanner } from "@/modules/dashboard/components/ResumeParseBanner";
 import { ApplicationsTable } from "@/modules/dashboard/components/ApplicationsTable";
-import { BrowseJobGrid } from "@/modules/browse/components/BrowseJobGrid";
+import { TopJobRow } from "@/modules/dashboard/components/TopJobRow";
 
 /*
  * DashboardPage
- * Shows BrowseJobGrid as the primary feed + ApplicationsTable below.
+ * Single-row Top job matches (Tsenta parity) + All Applications table.
+ * Browse all-jobs lives at /dashboard/browse via BrowseJobGrid.
  */
 export default function DashboardPage() {
   return (
@@ -15,10 +16,7 @@ export default function DashboardPage() {
       <FreePlanBanner />
       <ResumeParseBanner />
 
-      <div>
-        <h2 className="text-lg font-bold text-brand-foreground mb-4">Browse jobs</h2>
-        <BrowseJobGrid />
-      </div>
+      <TopJobRow />
 
       <ApplicationsTable />
     </div>

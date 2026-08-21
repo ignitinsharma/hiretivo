@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Download, Briefcase, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ExternalLink, Download, Briefcase, Loader2, CheckCircle2, AlertCircle, Bookmark } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -10,13 +10,28 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { jobService } from "@/services/job.service";
 import { MatchRing } from "@/components/shared/MatchRing";
-import { useVerificationStatus } from "@/hooks/use-verification-status";
+
+/*
+ * splitBullets
+ * Splits job description into bullet points for important points.
+ */
+function splitBullets(text: string): string[] {
+  if (!text) return [];
+  const parts = text
+    .split(/\n+/)
+    .flatMap((line) => line.split(/(?:^|\s)[•\-]\s+/))
+    .map((s) => s.trim())
+    .filter((s) => s.length > 20);
+  if (parts.length >= 3) return parts.slice(0, 8);
+  const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 30);
+  return sentences.slice(0, 6);
+}
 
 /*
  * JobDrawer
- * Sheet/drawer showing full job details. Triggered from Browse grid on card click.
- * Footer states: idle (Cancel + Generate Resume) → GENERATING (spinner) → READY (Download + Open in new tab + I have applied) → FAILED (retry).
- * Gates: unauth → Login toast, unverified → disabled with label, no master resume → toast.
+ * Sheet/drawer showing full job details. Tsenta parity bottom bar: left View original | center Save | right Apply (not hidden).
+ * Footer states: idle (Apply) → GENERATING (spinner) → READY (Download + Open in new tab + I have applied) → FAILED (retry).
+ * Gate: plan/tokens via applyLockedLabel (Upgrade plan) — no verification gate.
  */
 interface JobDrawerProps {
   jobId: string | null;
@@ -34,7 +49,6 @@ interface JobDrawerProps {
 
 export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDownload, onMarkApplied, generationStatus = "idle", failureReason, applyLockedLabel }: JobDrawerProps) {
   const { data: session } = useSession();
-  const hiretivo = useVerificationStatus();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["job-detail", jobId],
     queryFn: () => jobService.getJobById(jobId!),
@@ -56,10 +70,8 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
       toast.error("Please log in to generate a resume.");
       return;
     }
-    if (hiretivo.isLoading) return;
-    if (!hiretivo.isVerified) {
-      const msg = applyLockedLabel ?? (hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW" ? "Verification pending — check back soon." : "Get verified to apply");
-      toast.error(msg);
+    if (applyLockedLabel) {
+      toast.error(applyLockedLabel);
       return;
     }
     if (onGenerate) onGenerate(job.id);
@@ -119,8 +131,16 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-semibold text-brand-foreground uppercase tracking-wider mb-1">Description</h4>
-                  <p className="text-sm text-brand-foreground-muted leading-relaxed whitespace-pre-line">{job.description}</p>
+                  <h4 className="text-xs font-semibold text-brand-foreground uppercase tracking-wider mb-2">Description</h4>
+                  {splitBullets(job.description).length > 0 ? (
+                    <ul className="list-disc ml-4 space-y-1.5 text-sm text-brand-foreground-muted leading-relaxed">
+                      {splitBullets(job.description).map((b, i) => (
+                        <li key={i}>{b}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-brand-foreground-muted leading-relaxed whitespace-pre-line">{job.description}</p>
+                  )}
                 </div>
               </div>
 
@@ -132,61 +152,73 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
               )}
             </div>
 
-            <div className="border-t border-brand-border p-6 flex flex-col gap-3">
-              {/* READY state — Download + Open in new tab + I have applied */}
+            <div className="border-t border-brand-border p-4 bg-white flex flex-col gap-3">
               {isReady ? (
                 <>
                   <Button variant="primary" size="sm" className="w-full" onClick={handleDownload}>
                     <Download className="mr-1.5 h-4 w-4" />
                     Download Resume
                   </Button>
-                  {externalApplyUrl ? (
-                    <Button variant="secondary" size="sm" className="w-full" onClick={handleOpenExternal}>
-                      <ExternalLink className="mr-1.5 h-4 w-4" />
-                      Open in new tab
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={handleOpenExternal} className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground py-2">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View original posting
+                    </button>
+                    <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
+                      <Bookmark className="h-4 w-4" />
+                    </button>
+                    <Button variant="primary" size="sm" className="rounded-full bg-[#0a0a0a] hover:bg-black px-5" onClick={handleOpenExternal}>
+                      Apply
                     </Button>
-                  ) : null}
+                  </div>
                   <Button variant="ghost" size="sm" className="w-full" onClick={handleMarkApplied}>
                     <CheckCircle2 className="mr-1.5 h-4 w-4" />I have applied
-                  </Button>
-                  <Button variant="ghost" size="sm" className="w-full" onClick={() => onOpenChange(false)}>
-                    Cancel
                   </Button>
                 </>
               ) : (
                 <>
-                  {applyLockedLabel && !isGenerating ? (
-                    <Button variant="secondary" size="sm" className="w-full cursor-not-allowed" disabled aria-disabled="true">
-                      {applyLockedLabel}
-                    </Button>
-                  ) : (
-                    <Button variant="primary" size="sm" className="w-full" onClick={handleGenerate} disabled={isGenerating} aria-busy={isGenerating}>
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                          Generating...
-                        </>
-                      ) : isFailed ? (
-                        <>
-                          <Briefcase className="mr-1.5 h-4 w-4" />
-                          Retry Generate Resume
-                        </>
-                      ) : (
-                        <>
-                          <Briefcase className="mr-1.5 h-4 w-4" />
-                          Generate Resume
-                        </>
-                      )}
-                    </Button>
-                  )}
-                  {externalApplyUrl && !isReady ? (
-                    <button type="button" onClick={handleOpenExternal} className="w-full text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground text-center py-1">
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={handleOpenExternal} className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground py-2 border border-brand-border rounded-lg bg-white">
+                      <ExternalLink className="h-3.5 w-3.5" />
                       View original posting
                     </button>
-                  ) : null}
-                  <Button variant="ghost" size="sm" className="w-full" onClick={() => onOpenChange(false)} disabled={isGenerating}>
+                    <button type="button" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
+                      <Bookmark className="h-4 w-4" />
+                    </button>
+                    {applyLockedLabel && !isGenerating ? (
+                      <div className="relative group flex-1">
+                        <Button variant="primary" size="sm" className="w-full rounded-full bg-[#0a0a0a] hover:bg-black opacity-60 cursor-not-allowed" disabled aria-disabled="true" title={applyLockedLabel}>
+                          Upgrade plan
+                        </Button>
+                        <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-[11px] text-white opacity-0 group-hover:opacity-100 transition">
+                          {applyLockedLabel}
+                        </span>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="flex-1 rounded-full bg-[#0a0a0a] hover:bg-black"
+                        onClick={handleGenerate}
+                        disabled={isGenerating}
+                        aria-busy={isGenerating}
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : isFailed ? (
+                          "Retry Apply"
+                        ) : (
+                          "Apply"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => onOpenChange(false)} className="w-full text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground py-1" disabled={isGenerating}>
                     Cancel
-                  </Button>
+                  </button>
                 </>
               )}
             </div>

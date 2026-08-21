@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { JobStatus, UserRole, VerificationStatus, PipelineStage } from "@/constants/enums";
+import { JobStatus, UserRole, PipelineStage } from "@/constants/enums";
 import { ApplicationStatus } from "@/constants/enums";
 import { applyRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
 
 /*
  * POST /api/applications/ensure
  * Idempotent ensure: if seeker already has an Application for jobId, returns it (200).
- * Otherwise creates one with pipelineStage NOT_APPLIED (shows in Tracker's first column, not Applied).
- * Used by Browse drawer's Generate Resume — background generation without auto-promoting to APPLIED.
+ * Otherwise creates one with pipelineStage NOT_APPLIED.
+ * Plan gate (quota) is checked client-side via useGenerationQuota and server-side in tailorResume;
+ * no verification gate here per Task 13.
  */
 
 const ensureSchema = z.object({
@@ -35,14 +36,6 @@ export async function POST(req: NextRequest) {
   const { success: userSuccess } = await writeRateLimiter.limit(session.user.id);
   if (!userSuccess) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  }
-
-  const seekerUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { verificationStatus: true },
-  });
-  if (seekerUser?.verificationStatus !== VerificationStatus.VERIFIED) {
-    return NextResponse.json({ error: "Complete verification to generate resumes" }, { status: 403 });
   }
 
   let body: unknown;

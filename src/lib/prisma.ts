@@ -1,4 +1,8 @@
-import "server-only";
+try {
+  // eslint-disable-next-line
+  require("server-only");
+} catch {}
+
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
