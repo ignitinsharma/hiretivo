@@ -12,6 +12,8 @@ export interface FeedFilters {
   jobType?: string;
   workType?: string;
   locationClass?: string;
+  visaSponsored?: boolean;
+  experienceLevel?: string;
 }
 
 /*
@@ -22,7 +24,7 @@ export interface FeedFilters {
  */
 export function useFeed(filters?: FeedFilters) {
   return useInfiniteQuery<SeekerFeedResponse>({
-    queryKey: ["jobs", filters?.q ?? "", filters?.jobType, filters?.workType, filters?.locationClass],
+    queryKey: ["jobs", filters?.q ?? "", filters?.jobType, filters?.workType, filters?.locationClass, filters?.visaSponsored, filters?.experienceLevel],
     queryFn: ({ pageParam, signal }) =>
       seekerService.getFeed(
         { cursor: pageParam as string | undefined, limit: PAGE_SIZE, ...filters },

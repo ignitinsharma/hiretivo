@@ -13,7 +13,7 @@ import {
 import {
   parseJobFromUrl,
   parseJobFromText,
-  isUnsupportedAtsDomain,
+  isSupportedAtsDomain,
   isAshbyUrl,
 } from "@/lib/ai/jd-parser";
 import {
@@ -168,11 +168,11 @@ export async function POST(req: Request) {
     jobData = await parseJobFromUrl(url);
   }
   if (!jobData) {
-    const unsupportedAts = isUnsupportedAtsDomain(url);
+    const unsupportedAts = !isSupportedAtsDomain(url);
     return NextResponse.json(
       {
         error: unsupportedAts
-          ? "This job board isn't supported for auto-fetch. Switch to 'Paste Description' and copy the job details instead."
+          ? "We can't auto-fetch from this site yet. Paste the job description and we'll do the rest."
           : isAshbyUrl(url)
             ? "This posting is no longer active or isn't publicly listed. Use the current job link or paste the description instead."
             : "Could not parse job from this URL. Try pasting the job description instead.",

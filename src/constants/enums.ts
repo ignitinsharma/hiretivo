@@ -331,3 +331,17 @@ export enum AtsSource {
   GREENHOUSE = 'greenhouse',
   LEVER = 'lever',
 }
+
+export enum ExperienceLevel {
+  ENTRY = 'ENTRY',
+  MID = 'MID',
+  SENIOR = 'SENIOR',
+  LEAD = 'LEAD',
+}
+
+export const EXPERIENCE_LEVEL_VALUES = [
+  ExperienceLevel.ENTRY,
+  ExperienceLevel.MID,
+  ExperienceLevel.SENIOR,
+  ExperienceLevel.LEAD,
+] as const;

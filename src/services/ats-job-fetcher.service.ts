@@ -13,6 +13,19 @@ import { extractCandidateSkillsFromJD, reconcileAndInsertSkills } from '@/lib/ai
 const SYSTEM_USER_ID = 'system-ats-user';
 const COMPANY_CHUNK_SIZE = 10;
 
+// ponytail: global cap on LLM skill enrichment per cron run — prevents the
+// 60s Vercel Hobby function limit from being exceeded on large batches.
+const MAX_ENRICHMENTS_PER_RUN = 20;
+let enrichmentsThisRun = 0;
+
+/*
+ * resetEnrichmentCounter
+ * Call at the start of each fetchAndAutoClose invocation to reset the per-run cap.
+ */
+export function resetEnrichmentCounter(): void {
+  enrichmentsThisRun = 0;
+}
+
 /*
  * upsertJobSkillIds
  * Maps extracted skill names to DB skill IDs using the full skill catalogue.
@@ -47,6 +60,7 @@ async function enrichJobSkills(
   job: NormalizedJob,
   allSkills: Array<{ id: string; name: string; aliases: string[] }>,
 ): Promise<void> {
+  if (enrichmentsThisRun >= MAX_ENRICHMENTS_PER_RUN) return;
   if (job.skillMatches.length >= 3) return;
 
   const candidates = await extractCandidateSkillsFromJD(job.description);
@@ -71,6 +85,9 @@ async function enrichJobSkills(
       `[ats-fetch] Catalog enrichment for ${job.companyName}/${job.title}: ${result.created.length} new, ${result.aliasesAdded.length} aliases, ${result.rejected.length} rejected`,
     );
   }
+
+  // Count only when an LLM call actually ran (candidates non-empty)
+  enrichmentsThisRun += 1;
 }
 
 /*
@@ -122,6 +139,7 @@ export async function fetchAndUpsertAllJobs(): Promise<{
   total: { created: number; updated: number; closed: number };
   errors: number;
 }> {
+  resetEnrichmentCounter();
   const allSkills = await prisma.skill.findMany({ select: { id: true, name: true, aliases: true } });
   const blocklist = await prisma.atsBlocklist.findMany({ select: { companyName: true } });
   const blockedNames = new Set(blocklist.map((b) => b.companyName.toLowerCase()));
@@ -178,6 +196,7 @@ export async function fetchAndAutoClose(source: AtsSource): Promise<{
   closed: number;
   errors: number;
 }> {
+  resetEnrichmentCounter();
   const allSkills = await prisma.skill.findMany({ select: { id: true, name: true, aliases: true } });
   const blocklist = await prisma.atsBlocklist.findMany({ select: { companyName: true } });
   const blockedNames = new Set(blocklist.map((b) => b.companyName.toLowerCase()));

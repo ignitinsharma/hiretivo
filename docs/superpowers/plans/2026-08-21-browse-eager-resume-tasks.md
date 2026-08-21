@@ -1,11 +1,11 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Status: DRAFT — no code until approved. Work task-by-task on a new branch `feature/browse-eager-resume` cut from `staging`. Each task is a commit. No code beyond the task at hand.
-> Prereq: `2026-08-04-ats-aggregation-relight-plan.md` (Tasks 0) is merged or this plan's Task 0 completes it. Browse is disabled today (`src/app/(app)/dashboard/browse/page.tsx:3` redirects).
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Tasks 1-8 pending.
+> Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
 
-#### TASK 0 — Relight Foundation (reenable browse, fix feed) — Hobby-safe
+#### TASK 0 — Relight Foundation (reenable browse, fix feed) — Hobby-safe ✅ DONE
 *   Create `src/app/api/cron/ats-fetch/_verify-cron-secret.ts` — verify `Authorization: Bearer {CRON_SECRET}`
 *   Create 2 cron routes (Hobby limit = 2 crons max): `src/app/api/cron/ats-fetch/greenhouse/route.ts` (`15 9 * * *`) and `src/app/api/cron/ats-fetch/ashby-lever/route.ts` (`0 9 * * *`) — `ashby-lever` calls `fetchAndAutoClose(Ashby)` then `fetchAndAutoClose(Lever)` sequentially within one 60s invocation (Lever lightest at start, ~25 rows → stays <60s with cap 5 `line 246` + enrichment cap 20). Each acquires `cron-lock` per source → release → JSON counters
 *   Update `vercel.json` — 2 crons `0 9 * * *` (ashby-lever) / `15 9 * * *` (greenhouse), remove stale `weekly-digest` — confirms fetching works for **all 70-80 companies** on Hobby without Pro; `ats-cleanup 00:30` (Task 5) runs via GitHub Actions `curl` to avoid 3rd Vercel cron (or piggybacked as tail of greenhouse cron) — also Hobby-safe

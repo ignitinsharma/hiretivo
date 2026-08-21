@@ -14,8 +14,12 @@
   },
   "crons": [
     {
-      "path": "/api/cron/weekly-digest",
-      "schedule": "0 9 * * 1"
+      "path": "/api/cron/ats-fetch/ashby-lever",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/ats-fetch/greenhouse",
+      "schedule": "15 9 * * *"
     }
   ]
 }

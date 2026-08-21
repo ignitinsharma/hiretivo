@@ -102,8 +102,17 @@ export function AddCustomJobModal() {
 
       if (!res.ok) {
         if (res.status === 422) {
-          setUnsupportedAts(data.unsupportedAts ?? false);
-          setError(data.error ?? "Could not parse this URL.");
+          const isUnsupported = data.unsupportedAts ?? false;
+          setUnsupportedAts(isUnsupported);
+          if (isUnsupported) {
+            setTab("text");
+            setState("idle");
+            setError(null);
+            setPreview(null);
+            setShowFullJd(false);
+          } else {
+            setError(data.error ?? "Could not parse this URL.");
+          }
         } else if (res.status === 409) {
           setError(data.error ?? "You have already applied to this job.");
         } else {

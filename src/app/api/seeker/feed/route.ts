@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid query params' }, { status: 400 });
   }
 
-  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored, q } = parsed.data;
+  const { cursor, limit, jobType, workType, recentOffset, locationClass, visaSponsored, experienceLevel, q } = parsed.data;
 
   const appliedRows = await prisma.application.findMany({
     where: { seekerId: session.user.id },
@@ -138,6 +138,7 @@ export async function GET(req: NextRequest) {
   if (workType) feedFilterWhere.workType = workType as PrismaWorkType;
   if (locationClass) feedFilterWhere.locationClass = locationClass;
   if (visaSponsored) feedFilterWhere.visaSponsored = true;
+  if (experienceLevel) feedFilterWhere.experienceLevel = experienceLevel;
 
   // Hybrid mode: recentOffset provided → unmatched jobs tail
   if (recentOffset !== undefined) {
@@ -212,6 +213,7 @@ export async function GET(req: NextRequest) {
       workType: true,
       locationClass: true,
       visaSponsored: true,
+      experienceLevel: true,
       companyName: true,
     },
   });
@@ -227,6 +229,7 @@ export async function GET(req: NextRequest) {
     if (workType && job.workType !== workType) return false;
     if (locationClass && job.locationClass !== locationClass) return false;
     if (visaSponsored && !job.visaSponsored) return false;
+    if (experienceLevel && job.experienceLevel !== experienceLevel) return false;
     if (q) {
       const qLower = q.toLowerCase();
       const companyName = job.companyName ?? '';

@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
-import { parseJobFromUrl, isUnsupportedAtsDomain } from "../../src/lib/ai/jd-parser";
+import { parseJobFromUrl, isSupportedAtsDomain } from "../../src/lib/ai/jd-parser";
 
 async function main() {
   const urls = process.argv.slice(2);
@@ -15,8 +15,8 @@ async function main() {
   for (const url of urls) {
     process.stdout.write(`Testing: ${url.slice(0, 80)}... `);
 
-    if (isUnsupportedAtsDomain(url)) {
-      console.log("SKIP (blocked: JS-heavy ATS domain)");
+    if (!isSupportedAtsDomain(url)) {
+      console.log("SKIP (blocked: not in allowlist)");
       results.push({ url, status: "FAIL", reason: "blocked domain" });
       continue;
     }
