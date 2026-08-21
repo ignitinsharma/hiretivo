@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer), Task 3 ✅ DONE (ensure), Task 4 ✅ DONE (status poll + download + mark applied), Tasks 5-8 pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer), Task 3 ✅ DONE (ensure), Task 4 ✅ DONE (poll+download), Task 5 ✅ DONE (60d/48h close + 30d delete via GH Action), Tasks 6-8 pending.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -71,7 +71,7 @@
 
 ---
 
-#### TASK 5 — Job Lifecycle — `60d` Close + `48h` Unseen + `30d` Hard Delete (watch ATS, not blind age) — Hobby-safe
+#### TASK 5 — Job Lifecycle — `60d` Close + `48h` Unseen + `30d` Hard Delete (watch ATS, not blind age) — Hobby-safe ✅ DONE
 *   Keep `autoCloseStaleJobs` `src/services/ats-job-fetcher.service.ts:552`:
   *   `lastSeenAt < now-48h` `line 566` → `CLOSED` — authoritative ATS signal (job disappeared from board); scoped per `AtsSource`, skipped for `companyErrors` companies to avoid false close on outage
   *   `publishedAt < now-60d` `line 578` → `CLOSED` — freshness cap even if ATS still lists (zombie evergreen roles); scoped per source, excludes `erroredCompanies`
