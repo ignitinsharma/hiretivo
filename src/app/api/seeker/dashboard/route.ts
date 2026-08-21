@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { touchLastActive } from '@/lib/touch-last-active';
 import {
   getSkillGapSummary,
   getQuickStatsSummary,
@@ -18,6 +19,8 @@ export async function GET() {
   if (session.user.role !== UserRole.SEEKER) {
     return new Response('Forbidden', { status: 403 });
   }
+
+  void touchLastActive(session.user.id);
 
   const { success } = await rateLimiter.limit(session.user.id);
   if (!success) {
