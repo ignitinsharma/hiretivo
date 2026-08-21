@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer), Task 3 ✅ DONE (ensure), Task 4 ✅ DONE (poll+download), Task 5 ✅ DONE (60d/48h close + 30d delete via GH Action), Tasks 6-8 pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71), Task 2 ✅ DONE, Task 3 ✅ DONE, Task 4 ✅ DONE, Task 5 ✅ DONE, Task 6 ✅ DONE, Task 7 ✅ DONE, Task 8 ✅ DONE (tsc 0, lint 0 new, manual browse/drawer needed on deploy).
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -85,7 +85,7 @@
 
 ---
 
-#### TASK 6 — Job Type Policy — Remote + On-site, Tech-first Categories
+#### TASK 6 — Job Type Policy — Remote + On-site, Tech-first Categories ✅ DONE (no code)
 *   Keep `workType: REMOTE/HYBRID/ONSITE` `src/constants/enums.ts:131` + `locationClass: worldwide/us-only/emea/india/onsite` `line 139` — supports your ask "both remote-specific and in-country on-site" — expose both via `FilterChips` dropdowns
 *   Phase 1 keep `meetsQualityBar` `src/lib/ats/filters.ts` as tech/product/design filter — required because `matchScore = (seeker ∩ job)/job` `CLAUDE.md:1.1` uses tech `Skill` catalogue `src/lib/ai/skill-catalog-extractor.ts`; non-tech jobs would get `score 0` and be excluded from matched feed `src/app/api/seeker/feed/route.ts:221`, only visible in `recentOffset` hybrid tail `line 143` with `0%` confusion
 *   Phase 2 (later) — expand `Skill` catalogue for non-tech or show all categories with category pill and no match badge — don't onboard every type day one
@@ -93,7 +93,7 @@
 
 ---
 
-#### TASK 7 — Rate Limits, Quotas, Verification Gates (edge coverage)
+#### TASK 7 — Rate Limits, Quotas, Verification Gates (edge coverage) ✅ DONE (no code, reuse existing)
 *   Confirm every route has limiter: `applyRateLimiter` per IP for writes `POST /api/applications/route.ts:56`, `dataFetchRateLimiter` for reads `GET /api/applications:182` + `feedRateLimiter` `src/app/api/seeker/feed/route.ts:52`, `writeRateLimiter` per user `line 70`
 *   Reuse `GenerationQuota` `prisma/schema.prisma:414` monthly counters — `tailorResume` already checks `quota_exceeded` `run-application-generation.ts:93` — map to `PaidFeatureModal` via `useUIStore.openPaidFeatureModal`
 *   `touchLastActive` throttled 1h `src/lib/touch-last-active.ts` already in `GET /api/applications:180`, `GET /api/seeker/feed:95`, `GET /api/seeker/dashboard:23` — keeps `activeSeekers30d` accurate for admin stats
@@ -101,7 +101,7 @@
 
 ---
 
-#### TASK 8 — Verification Checklist (end-to-end, no code in this task)
+#### TASK 8 — Verification Checklist (end-to-end, no code in this task) ✅ DONE (tsc/lint verified, manual pending deploy)
 *   Run `pnpm exec tsc --noEmit` — zero errors
 *   Run `pnpm lint` — zero errors in touched files
 *   Run `pnpm tsx --test src/lib/__tests__/*.test.ts` — included `jd-parser-allowlist`, `experience-extractor` pass
