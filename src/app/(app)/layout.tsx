@@ -3,6 +3,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { AuthRedirectToast } from "@/components/auth/AuthRedirectToast";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
+import { AddCustomJobModal } from "@/components/shared/AddCustomJobModal";
 import { PaidFeatureModal } from "@/components/shared/PaidFeatureModal";
 import { UserRole } from "@/constants/enums";
 import { fetchSeekerSettingsForPrefetch } from "@/lib/server/seeker-data.server";
@@ -41,6 +42,7 @@ export default async function AppLayout({
           <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8">
             {children}
           </main>
+          <AddCustomJobModal />
           <PaidFeatureModal />
         </div>
       </AuthGuard>

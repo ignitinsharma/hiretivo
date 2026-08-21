@@ -6,9 +6,10 @@ import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SEEKER_NAV_ITEMS } from "@/constants/nav";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
+import { useUIStore } from "@/store/use-ui-store";
 
 const NAV_ITEMS = SEEKER_NAV_ITEMS.filter(
   (item) => item.href !== "/profile",
@@ -72,6 +73,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <AddJobHeaderButton />
           <QuotaDisplay />
           <button
             className="md:hidden flex items-center justify-center w-8 h-8 rounded-pill text-gray-500 hover:bg-gray-100"
@@ -129,6 +131,49 @@ export function AppHeader() {
         </nav>
       )}
     </header>
+  );
+}
+
+function AddJobHeaderButton() {
+  const { openAddCustomJobModal, openPaidFeatureModal } = useUIStore();
+  const { data: quota } = useGenerationQuota();
+  return (
+    <>
+      <button
+        onClick={() => {
+          if (quota && !quota.allowed) {
+            openPaidFeatureModal({
+              feature: "resume_generation",
+              title: "No generations left",
+              description: `You've used all ${quota.limit} generations this month. Upgrade to generate more tailored resumes.`,
+            });
+            return;
+          }
+          openAddCustomJobModal();
+        }}
+        className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-brand-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#5a47d9] transition-colors"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add job
+      </button>
+      <button
+        onClick={() => {
+          if (quota && !quota.allowed) {
+            openPaidFeatureModal({
+              feature: "resume_generation",
+              title: "No generations left",
+              description: `You've used all ${quota.limit} generations this month. Upgrade to generate more tailored resumes.`,
+            });
+            return;
+          }
+          openAddCustomJobModal();
+        }}
+        className="md:hidden inline-flex items-center gap-1.5 rounded-full bg-brand-primary px-3 py-1.5 text-xs font-semibold text-white"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add job
+      </button>
+    </>
   );
 }
 
