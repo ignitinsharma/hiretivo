@@ -1,4 +1,4 @@
-import { OAuthIntentSource } from "@/constants/enums";
+import { AuthErrorCode, OAuthIntentSource } from "@/constants/enums";
 import type { AuthError } from "next-auth";
 import type { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
@@ -39,7 +39,7 @@ export function parseOAuthIntentCookieValue(
 }
 
 const OAUTH_AUTH_JS_ERROR_MAP: Record<string, string> = {
-  OAuthAccountNotLinked: "account_not_linked",
+  OAuthAccountNotLinked: AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED,
   OAuthSignin: "oauth_signin",
   OAuthCallback: "oauth_callback",
   OAuthCreateAccount: "oauth_create_account",
@@ -51,7 +51,7 @@ const OAUTH_AUTH_JS_ERROR_MAP: Record<string, string> = {
 export function mapOAuthAuthJsError(
   error: string | null,
 ): string {
-  if (!error) return "unknown";
+  if (!error) return AuthErrorCode.OAUTH_SIGNIN_FAILED;
   return OAUTH_AUTH_JS_ERROR_MAP[error] ?? OAUTH_AUTH_JS_ERROR_MAP.default;
 }
 

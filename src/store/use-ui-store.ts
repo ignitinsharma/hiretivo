@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 
 interface UIState {
-  isLoginModalOpen: boolean;
-  openLoginModal: () => void;
-  closeLoginModal: () => void;
-
   isAddCustomJobModalOpen: boolean;
   openAddCustomJobModal: () => void;
   closeAddCustomJobModal: () => void;
@@ -18,23 +14,6 @@ interface UIState {
   showExternalConfirm: boolean;
   openApplyModal: (jobId: string, title?: string, companyName?: string, externalApplyUrl?: string | null) => void;
   closeApplyModal: () => void;
-
-  isPostJobModalOpen: boolean;
-  editJobId: string | null;
-  openPostJobModal: () => void;
-  openEditJobModal: (jobId: string) => void;
-  closePostJobModal: () => void;
-
-  isCandidateDrawerOpen: boolean;
-  selectedApplicationId: string | null;
-  openCandidateDrawer: (id: string) => void;
-  closeCandidateDrawer: () => void;
-
-  isScheduleModalOpen: boolean;
-  scheduleInterviewApplicationId: string | null;
-  scheduledInterviewId: string | null; // present when rescheduling existing interview
-  openScheduleModal: (applicationId: string, interviewId?: string | null) => void;
-  closeScheduleModal: () => void;
 
   paidFeatureModal: {
     isOpen: boolean;
@@ -55,10 +34,6 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  isLoginModalOpen: false,
-  openLoginModal: () => set({ isLoginModalOpen: true }),
-  closeLoginModal: () => set({ isLoginModalOpen: false }),
-
   isAddCustomJobModalOpen: false,
   openAddCustomJobModal: () => set({ isAddCustomJobModalOpen: true }),
   closeAddCustomJobModal: () => set({ isAddCustomJobModalOpen: false }),
@@ -94,31 +69,6 @@ export const useUIStore = create<UIState>((set) => ({
     selectedCompanyName: '',
     selectedExternalApplyUrl: null,
     showExternalConfirm: false,
-  }),
-
-  isPostJobModalOpen: false,
-  editJobId: null,
-  openPostJobModal: () => set({ isPostJobModalOpen: true, editJobId: null }),
-  openEditJobModal: (jobId) => set({ isPostJobModalOpen: true, editJobId: jobId }),
-  closePostJobModal: () => set({ isPostJobModalOpen: false, editJobId: null }),
-
-  isCandidateDrawerOpen: false,
-  selectedApplicationId: null,
-  openCandidateDrawer: (id) => set({ isCandidateDrawerOpen: true, selectedApplicationId: id }),
-  closeCandidateDrawer: () => set({ isCandidateDrawerOpen: false, selectedApplicationId: null }),
-
-  isScheduleModalOpen: false,
-  scheduleInterviewApplicationId: null,
-  scheduledInterviewId: null,
-  openScheduleModal: (applicationId, interviewId) => set({
-    isScheduleModalOpen: true,
-    scheduleInterviewApplicationId: applicationId,
-    scheduledInterviewId: interviewId ?? null,
-  }),
-  closeScheduleModal: () => set({
-    isScheduleModalOpen: false,
-    scheduleInterviewApplicationId: null,
-    scheduledInterviewId: null,
   }),
 
   paidFeatureModal: {

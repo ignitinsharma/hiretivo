@@ -8,6 +8,7 @@ import { redis } from '@/lib/redis';
 import { computeAllMatches } from '@/lib/match';
 import { feedFilterSchema } from '@/lib/validations/match';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { touchLastActive } from '@/lib/touch-last-active';
 import { getMissingSkillNames } from '@/lib/seeker-dashboard';
 import { resolveJobCompany, resolveCompanyLogoUrl } from '@/lib/jobs/resolve-job-company';
 import { stripHtml } from '@/lib/utils';
@@ -90,6 +91,8 @@ export async function GET(req: NextRequest) {
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+
+  void touchLastActive(session.user.id);
 
   const { success } = await feedRateLimiter.limit(session.user.id);
   if (!success) {

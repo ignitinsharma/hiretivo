@@ -21,6 +21,7 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthErrorCode, OAuthIntentSource, UserRole } from "@/constants/enums";
 import { trackEvent } from "@/lib/analytics";
 import { setBrowserOAuthIntentCookie } from "@/lib/auth/oauth-intent";
+import { useGoogleProvider } from "@/lib/auth/use-google-provider";
 import {
   seekerRegisterSchema,
   type SeekerRegisterInput,
@@ -87,9 +88,12 @@ function SeekerRegisterContent() {
     React.useState(false);
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
+  const googleStatus = useGoogleProvider();
   const hasOAuthRoleMismatch = false;
   const hasOAuthAccountNotLinked =
     authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
+  const hasOAuthSigninError =
+    !!authError && authError !== AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
   React.useEffect(() => {
     if (!hasOAuthRoleMismatch) return;
@@ -233,11 +237,29 @@ function SeekerRegisterContent() {
           </div>
         )}
 
-        <OAuthButton
-          provider="google"
-          onClick={handleGoogleSignIn}
-          isLoading={isGoogleLoading}
-        />
+        {hasOAuthSigninError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-800">
+              Sign-up failed. Please try again, or sign up with email and
+              password.
+            </p>
+          </div>
+        )}
+
+        {googleStatus === "available" ? (
+          <OAuthButton
+            provider="google"
+            onClick={handleGoogleSignIn}
+            isLoading={isGoogleLoading}
+          />
+        ) : googleStatus === "unavailable" ? (
+          <div className="rounded-xl border border-brand-border bg-white p-4">
+            <p className="text-sm font-medium text-brand-foreground-muted">
+              Google sign-up is temporarily unavailable. Sign up with email and
+              password instead.
+            </p>
+          </div>
+        ) : null}
 
         <div className="relative flex items-center">
           <div className="grow border-t border-brand-border"></div>

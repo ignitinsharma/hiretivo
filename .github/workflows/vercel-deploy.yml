@@ -27,10 +27,17 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment Info
-        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel pull --yes --environment=preview --git-branch=${GITHUB_REF_NAME} --token=${{ secrets.VERCEL_TOKEN }}
+          fi
 
       - name: Build Project
         run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_GIT_COMMIT_REF: ${{ github.ref_name }}
 
       # Apply committed Prisma migrations to the target environment's DB BEFORE
       # the deploy. migrate deploy is forward-only and applies only reviewed,
@@ -60,3 +67,8 @@ jobs:
           BRANCH=${GITHUB_REF_NAME}
           ALIAS="hiretivo-git-${BRANCH}-ignitinsharmas-projects.vercel.app"
           vercel alias set "${{ steps.deploy.outputs.deployment_url }}" "$ALIAS" --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Verify the deployed app actually registered the Google OAuth provider.
+      # Guards against env drift (missing GOOGLE_* secrets) ever reaching users.
+      - name: Verify Google OAuth provider on deployment
+        run: pnpm verify:oauth-provider "${{ steps.deploy.outputs.deployment_url }}"

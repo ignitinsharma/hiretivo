@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveLogoUrl } from "@/lib/r2";
 import { stripHtml } from "@/lib/utils";
 import { createApplicationSchema } from "@/lib/validations/application";
+import { touchLastActive } from "@/lib/touch-last-active";
 import { applyRateLimiter, dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
 import { getMissingSkillNames } from "@/lib/seeker-dashboard";
 import {
@@ -175,6 +176,8 @@ export async function GET() {
   if (session.user.role !== UserRole.SEEKER) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  void touchLastActive(session.user.id);
 
   const { success } = await dataFetchRateLimiter.limit(session.user.id);
   if (!success) {

@@ -31,5 +31,6 @@ declare module "next-auth/jwt" {
     onboardingCompleted?: boolean | null;
     onboardingStep?: number | null;
     isAdmin?: boolean;
+    passwordChangedAt?: Date | null;
   }
 }

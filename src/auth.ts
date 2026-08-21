@@ -100,6 +100,20 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       return true;
     },
     async jwt({ token, user, trigger, session }) {
+      // Session revocation: if the password changed after this JWT was issued
+      // (reset by someone else, or changed in settings), kill the session.
+      if (token.sub && !user && token.passwordChangedAt) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub as string },
+          select: { passwordChangedAt: true },
+        });
+        const tokenTs = new Date(token.passwordChangedAt as string).getTime();
+        const dbTs = dbUser?.passwordChangedAt?.getTime() ?? 0;
+        if (dbTs > tokenTs) {
+          return {};
+        }
+      }
+
       if (user?.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
@@ -111,6 +125,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             onboardingCompleted: true,
             onboardingStep: true,
             isAdmin: true,
+            passwordChangedAt: true,
           },
         });
         if (dbUser) {
@@ -121,6 +136,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           token.onboardingCompleted = dbUser.onboardingCompleted ?? null;
           token.onboardingStep = dbUser.onboardingStep ?? null;
           token.isAdmin = dbUser.isAdmin ?? false;
+          token.passwordChangedAt = dbUser.passwordChangedAt ?? null;
         }
       }
 

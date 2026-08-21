@@ -24,6 +24,7 @@ import {
   type AuthMethod,
 } from "@/lib/auth/last-used-method";
 import { setBrowserOAuthIntentCookie } from "@/lib/auth/oauth-intent";
+import { useGoogleProvider } from "@/lib/auth/use-google-provider";
 import {
   seekerLoginSchema,
   type SeekerLoginInput,
@@ -78,12 +79,15 @@ function SeekerLoginContent() {
   const [isHandlingOAuthMismatch, setIsHandlingOAuthMismatch] = React.useState(false);
   const [lastUsedAuthMethod, setLastUsedAuthMethod] =
     React.useState<AuthMethod | null>(null);
+  const googleStatus = useGoogleProvider();
   const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
   const authError = searchParams.get("authError");
   const accountRole = searchParams.get("accountRole");
   const hasOAuthRoleMismatch = false;
   const hasOAuthAccountNotLinked =
     authError === AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
+  const hasOAuthSigninError =
+    !!authError && authError !== AuthErrorCode.OAUTH_ACCOUNT_NOT_LINKED;
 
   React.useEffect(() => {
     setLastUsedAuthMethod(getLastUsedAuthMethodFromDocument("seeker"));
@@ -216,12 +220,37 @@ function SeekerLoginContent() {
           </div>
         )}
 
-        <OAuthButton
-          provider="google"
-          onClick={handleGoogleSignIn}
-          isLoading={isGoogleLoading}
-          showLastUsed={lastUsedAuthMethod === "google"}
-        />
+        {hasOAuthSigninError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-800">
+              Sign-in failed. Please try again, or sign in with email and
+              password.
+            </p>
+          </div>
+        )}
+
+        {googleStatus === "available" ? (
+          <OAuthButton
+            provider="google"
+            onClick={handleGoogleSignIn}
+            isLoading={isGoogleLoading}
+            showLastUsed={lastUsedAuthMethod === "google"}
+          />
+        ) : googleStatus === "unavailable" ? (
+          <div className="rounded-xl border border-brand-border bg-white p-4">
+            <p className="text-sm font-medium text-brand-foreground-muted">
+              Google sign-in is temporarily unavailable. Sign in with email and
+              password, or{" "}
+              <Link
+                href="/forgot-password"
+                className="font-bold text-black underline underline-offset-4"
+              >
+                reset your password
+              </Link>{" "}
+              if you signed up with Google.
+            </p>
+          </div>
+        ) : null}
 
         <div className="relative flex items-center">
           <div className="grow border-t border-brand-border"></div>

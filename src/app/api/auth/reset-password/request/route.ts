@@ -6,6 +6,7 @@ import { createRateLimiter } from '@/lib/rate-limit';
 import { RequestResetSchema } from '@/lib/validations/password-reset.schema';
 
 const resetRequestLimiter = createRateLimiter('reset-password-request', 5, '15 m');
+const resetRequestEmailLimiter = createRateLimiter('reset-password-request-email', 3, '15 m');
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
@@ -20,13 +21,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  // Per-email budget — IP spoofing can't bypass this, and it stops email
+  // bombing of a victim's inbox (bursts of reset links to one address).
+  const { success: emailOk } = await resetRequestEmailLimiter.limit(parsed.data.email);
+  if (!emailOk) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email },
-    select: { passwordHash: true },
+    select: {
+      passwordHash: true,
+      accounts: { select: { provider: true } },
+    },
   });
 
-  if (user?.passwordHash) {
-    await sendPasswordResetEmail(parsed.data.email).catch((err: unknown) => {
+  // Send to any existing user — including passwordless (Google-created) accounts,
+  // so they can set a first password when Google sign-in is unavailable.
+  if (user) {
+    const mode = user.passwordHash ? 'reset' : 'set';
+    await sendPasswordResetEmail(parsed.data.email, mode).catch((err: unknown) => {
       console.error('[reset-password] send failed (non-fatal):', err);
     });
   }

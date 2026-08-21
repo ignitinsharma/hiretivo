@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email },
-    select: { id: true },
+    select: { id: true, passwordHash: true },
   });
   if (!user) {
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
@@ -40,7 +40,12 @@ export async function POST(req: NextRequest) {
   const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash },
+    data: {
+      passwordHash,
+      // Bump only for real resets: previously issued JWTs die. An OAuth user
+      // setting a first password keeps their existing Google sessions.
+      ...(user.passwordHash ? { passwordChangedAt: new Date() } : {}),
+    },
   });
 
   return NextResponse.json({ data: { ok: true } }, { status: 200 });
