@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71), Task 2 ✅ DONE, Task 3 ✅ DONE, Task 4 ✅ DONE, Task 5 ✅ DONE, Task 6 ✅ DONE, Task 7 ✅ DONE, Task 8 ✅ DONE — Task 9 ✅ DONE (browse all-jobs).
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE … Task 9 ✅ DONE. Next: Tasks 10-15 Tsenta-parity polish (see below).
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -102,19 +102,8 @@
 ---
 
 #### TASK 8 — Verification Checklist (end-to-end, no code in this task) ✅ DONE (tsc/lint verified, manual pending deploy)
-
----
-
-#### TASK 9 — Browse = All jobs (fix empty browse, Recommended stays matched) ✅ DONE
-*   Create `GET /api/seeker/browse` `src/app/api/seeker/browse/route.ts` — every `OPEN` job ordered `publishedAt desc` (cursor base64 `{publishedAt,id}`), filterable by `jobType/workType/locationClass/visaSponsored/experienceLevel/q` (same `feedFilterSchema`), excludes `applied/dismissed` only, computes `matchScore` ad-hoc via `JobMatch` but **not filtered** — Browse shows all kinds, search works (Tsenta pattern)
-*   Create `useBrowse` `src/hooks/use-browse.ts` infinite query `["browse", q, ...filters]` → `seekerService.getBrowseFeed` `/api/seeker/browse`, `PAGE_SIZE 10`, `stale 30s`
-*   Add `seekerService.getBrowseFeed` `src/services/seeker.service.ts` alongside `getFeed`
-*   Wire `BrowseJobGrid.tsx:29` `useBrowse` instead of `useFeed` — `Browse` now shows all `OPEN` regardless of `JobMatch` (fixes `No jobs found matching your criteria` when seeker has 0 skills), while `RecommendedJobsList.tsx` keeps `useFeed` matched flow (`/dashboard` Recommended stays skill-matched)
-*   Rate limit `browseRateLimiter 30/min`, `touchLastActive`, `401/403/429` gates, cursor `publishedAt+id` pagination, `totalCount` for header
-*   Verify: `/dashboard` shows matched only, `/dashboard/browse` shows all OPEN (even with 0 skills) + search/filters 200, `tsc` clean
 *   Run `pnpm exec tsc --noEmit` — zero errors
 *   Run `pnpm lint` — zero errors in touched files
-*   Run `pnpm tsx --test src/lib/__tests__/*.test.ts` — included `jd-parser-allowlist`, `experience-extractor` pass
 *   Run `pnpm tsx scripts/sync-ats-jobs.ts ashby` and `lever`/`greenhouse` — each <60s, counts logged
 *   Manual `pnpm dev`:
   1. `/dashboard/browse` renders `BrowseJobGrid` with real jobs, match rings, company logos, infinite scroll
@@ -126,3 +115,58 @@
   7. Mobile 390px: grid 1 col, chips scroll, drawer full-width, footer stacks
 *   Check cron logs: Hobby 2-cron stagger 09:00 (ashby-lever) / 09:15 (greenhouse) no overlap via `cron-lock.ts`, `ats-cleanup` via GitHub Actions 00:30 deletes only `CLOSED>30d` without applications, tracker history intact
 *   Confirm all 70-80 companies fetched daily on Hobby — no Pro needed, no per-company cost (public ATS JSON), execution ~50s/day total
+
+---
+
+#### TASK 9 — Browse = All jobs (fix empty browse, Recommended stays matched) ✅ DONE
+*   Create `GET /api/seeker/browse` `src/app/api/seeker/browse/route.ts` — every `OPEN` job ordered `publishedAt desc` (cursor base64 `{publishedAt,id}`), filterable by `jobType/workType/locationClass/visaSponsored/experienceLevel/q` (same `feedFilterSchema`), excludes `applied/dismissed` only, computes `matchScore` ad-hoc via `JobMatch` but **not filtered** — Browse shows all kinds, search works (Tsenta pattern)
+*   Create `useBrowse` `src/hooks/use-browse.ts` infinite query `["browse", q, ...filters]` → `seekerService.getBrowseFeed` `/api/seeker/browse`, `PAGE_SIZE 10`, `stale 30s`
+*   Add `seekerService.getBrowseFeed` `src/services/seeker.service.ts` alongside `getFeed`
+*   Wire `BrowseJobGrid.tsx:29` `useBrowse` instead of `useFeed` — `Browse` now shows all `OPEN` regardless of `JobMatch` (fixes `No jobs found matching your criteria` when seeker has 0 skills), while `RecommendedJobsList.tsx` keeps `useFeed` matched flow (`/dashboard` Recommended stays skill-matched)
+*   Rate limit `browseRateLimiter 30/min`, `touchLastActive`, `401/403/429` gates, cursor `publishedAt+id` pagination, `totalCount` for header
+*   Verify: `/dashboard` shows matched only, `/dashboard/browse` shows all OPEN (even with 0 skills) + search/filters 200, `tsc` clean
+
+---
+
+#### TASK 10 — Dashboard: one row only (Tsenta Top job matches) — pending
+*   Change `src/app/(app)/dashboard/page.tsx:44` `BrowseJobGrid` on dashboard to single-row horizontal scroll: wrap in `overflow-x-auto flex gap-4 pb-2 snap-x` with `scrollbar-none`, limit fetched `limit=5` (`useFeed({limit:5})` or `useBrowse` variant), no `Load more`, no grid multi-row
+*   Keep `FreePlanBanner` + `ResumeParseBanner` + `ApplicationsTable` below; one row sits between them as before but now `Top job matches` header with `Browse jobs` link
+
+---
+
+#### TASK 11 — Card: random pastel palette + skeleton (Tsenta Image 2/3) — pending
+*   Create `src/lib/jobs/pastel-colors.ts` with 5 reused pastels `["#E6F0FF","#E6FFF4","#F3E8FF","#FFF9E6","#FFE6E6"]` (blue/green/purple/yellow/pink) — `index % 5` deterministic, not random per render
+*   New variant `PastelJobCard` (or `variant="pastel"` on `SeekerJobBaseCard.tsx:42` / `JobCard.tsx:56`) with pastel `bgColor` class, top `location • 4 days ago` + `77% MATCH` ring top-right, middle title + 3-4 skill pills, bottom `companyLogo+name` + `Pass (ghost pill) | Apply (black pill)`; Keep existing white `SeekerJobBaseCard` for detail use, pastel for Dashboard row + Browse grid (reuse)
+*   Dashboard row uses pastel cards, Browse grid uses same pastel variant (reused palette) per your “add your own color choices … will be applied to browse jobs page too”
+*   Skeleton `Image 2` parity: `src/components/shared/JobCardSkeleton.tsx` or `BrowseJobGrid` `isLoading` gray pill blocks matching pastel card shape (top line + circle, title block, 3 pills, footer logo+2 pills) — currently `Skeleton h-64` generic is replaced
+*   Verify: ~390px row scrolls horizontally (no wrap), pastel reuse `i%5` stable across reloads with same order, `0% MATCH` still renders but pastel ensures `0%` not stark white
+
+---
+
+#### TASK 12 — Drawer: Apply button placement + description bullets — pending
+*   `src/components/shared/JobDrawer.tsx:91` footer re-layout per Figma `Image 4/5`: bottom bar `border-t` with `left: View original posting (ghost + ExternalLink)` + `center: bookmark Save` + `right: Apply (black pill, w-auto, not hidden behind Chat widget)` — fix `z-index`/`pb` so `Apply` not under `Chat`; keep `Pass/Not Interested` row above or inside card as `Pass/Apply` pair — mirror Figma `Pass | Apply` bottom-right
+*   Content: `DESCRIPTION` section bullet points — split `job.description` by `\n•|-` or new helper `splitDescriptionBullets(description): string[]` `src/lib/jobs/format-description.ts` — render important points as `<ul class="list-disc ml-4 space-y-1 text-sm">` with bold/regular per bullet; skills section unchanged (top pill row) — `SeekerJobBaseCard` facts already show `location/workType`
+*   Keep `Cancel` as sheet close (X top-right); keep skills pill row at top
+
+---
+
+#### TASK 13 — Gate: replace verification with plan/tokens (no Get Verified) — pending
+*   Remove `useVerificationStatus` gate from `JobDrawer.tsx:22` + `BrowseJobGrid.tsx:24` `hiretivo` checks + `POST /api/applications/ensure` `VerificationStatus.VERIFIED` gate `line 80`; keep `MasterResume` check
+*   Use `useGenerationQuota()` `src/hooks/use-generation-quota.ts` — `allowed/limit/used/plan` — if `!allowed` or `plan===FREE && used>=limit` → `Apply` becomes `Upgrade Plan` (primary disabled with `Tooltip` “Upgrade plan” on hover) or swaps label to `Upgrade Plan` that opens `useUIStore.openPaidFeatureModal` (like `ResumeParseBanner` does); when `allowed` → normal `Apply/Generate Resume`
+*   Update `ensure` route to check quota via `canGenerate`/`getQuota` instead of verification; map `quota_exceeded` to `PaidFeatureModal`
+*   Remove `Get verified to generate` strings from drawer + `applyLockedLabel` logic
+
+---
+
+#### TASK 14 — Flow: Apply opens drawer, drawer Apply generates + removes card + infinite scroll — pending
+*   `RecommendedJobsList.tsx` + `BrowseJobGrid.tsx` card `Apply` click: currently `handleApply` does `applyToJob→generate→redirect`; change to `onClick: setDrawerJobId(job.id)` — open drawer only (no generation yet)
+*   Drawer `Apply` click: `ensureApplication(jobId)` → `generateResume(appId)` background (no redirect), toast `in progress` → `done` (already wired via `useApplicationStatus`), create `Application` with `pipelineStage:NOT_APPLIED` (so `All Applications` already works), then **optimistically remove** card from its source list: `queryClient.setQueryData(["browse"], remove id)` + `queryClient.setQueryData(["jobs"], remove id)` for Browse, and `queryClient.setQueryData(["jobs"], ...)` / `["seeker-dashboard-summary"]` for Recommended — so card disappears from that view instantly
+*   If out of tokens → don't call `ensure`, show `Upgrade Plan` per Task 13
+
+---
+
+#### TASK 15 — Browse infinite scroll (replace Load more button) — pending
+*   `BrowseJobGrid.tsx:141` `Load more jobs` button → `IntersectionObserver` sentinel `src/modules/seeker/dashboard/components/RecommendedJobsList.tsx:169` pattern: `useRef sentinel` + `useEffect` `IntersectionObserver(rootMargin 400px)` → `fetchNextPage()` when `intersecting && hasNextPage && !isFetchingNextPage`
+*   Keep button as hidden fallback (`sr-only` while `hasNextPage`), show `Loader2` spinner when `isFetchingNextPage`
+*   Reuse same sentinel for future `Dashboard` one-row? Dashboard one-row has fixed 5, no scroll needed
+*   Verify: scroll to bottom auto-loads next `10` `publishedAt` page, no click needed, `tsc` clean, 390px single column still loads on scroll
