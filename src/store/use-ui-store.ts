@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 
 interface UIState {
+  isAddCustomJobModalOpen: boolean;
+  openAddCustomJobModal: () => void;
+  closeAddCustomJobModal: () => void;
+
   isApplyModalOpen: boolean;
   applyJobId: string | null;
   selectedJobId: string | null;
@@ -30,6 +34,10 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
+  isAddCustomJobModalOpen: false,
+  openAddCustomJobModal: () => set({ isAddCustomJobModalOpen: true }),
+  closeAddCustomJobModal: () => set({ isAddCustomJobModalOpen: false }),
+
   isApplyModalOpen: false,
   applyJobId: null,
   selectedJobId: null,
