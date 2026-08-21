@@ -9,7 +9,7 @@ import { SearchBar } from "@/components/shared/SearchBar";
 import { FilterChips } from "@/components/shared/FilterChips";
 import { JobCard } from "@/components/shared/JobCard";
 import { JobDrawer } from "@/components/shared/JobDrawer";
-import { useFeed, type FeedFilters } from "@/hooks/use-feed";
+import { useBrowse, type BrowseFilters } from "@/hooks/use-browse";
 import { Skeleton } from "@/components/ui/skeleton";
 import { applicationService } from "@/services/application.service";
 import { useUIStore } from "@/store/use-ui-store";
@@ -17,7 +17,7 @@ import { useVerificationStatus } from "@/hooks/use-verification-status";
 import { useApplicationStatus } from "@/hooks/use-application-status";
 
 export function BrowseJobGrid() {
-  const [filters, setFilters] = useState<FeedFilters>({});
+  const [filters, setFilters] = useState<BrowseFilters>({});
   const [search, setSearch] = useState("");
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
@@ -34,12 +34,12 @@ export function BrowseJobGrid() {
   const { data: appStatus } = useApplicationStatus(currentAppId);
 
   const activeFilters = useMemo(() => {
-    const f: FeedFilters = { ...filters };
+    const f: BrowseFilters = { ...filters };
     if (search.trim()) f.q = search.trim();
     return f;
   }, [filters, search]);
 
-  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeed(activeFilters);
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useBrowse(activeFilters);
 
   const jobs = useMemo(() => {
     if (!data?.pages) return [];

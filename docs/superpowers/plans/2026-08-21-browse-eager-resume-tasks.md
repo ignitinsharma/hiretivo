@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71), Task 2 ✅ DONE, Task 3 ✅ DONE, Task 4 ✅ DONE, Task 5 ✅ DONE, Task 6 ✅ DONE, Task 7 ✅ DONE, Task 8 ✅ DONE (tsc 0, lint 0 new, manual browse/drawer needed on deploy).
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71), Task 2 ✅ DONE, Task 3 ✅ DONE, Task 4 ✅ DONE, Task 5 ✅ DONE, Task 6 ✅ DONE, Task 7 ✅ DONE, Task 8 ✅ DONE — Task 9 ✅ DONE (browse all-jobs).
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -102,6 +102,16 @@
 ---
 
 #### TASK 8 — Verification Checklist (end-to-end, no code in this task) ✅ DONE (tsc/lint verified, manual pending deploy)
+
+---
+
+#### TASK 9 — Browse = All jobs (fix empty browse, Recommended stays matched) ✅ DONE
+*   Create `GET /api/seeker/browse` `src/app/api/seeker/browse/route.ts` — every `OPEN` job ordered `publishedAt desc` (cursor base64 `{publishedAt,id}`), filterable by `jobType/workType/locationClass/visaSponsored/experienceLevel/q` (same `feedFilterSchema`), excludes `applied/dismissed` only, computes `matchScore` ad-hoc via `JobMatch` but **not filtered** — Browse shows all kinds, search works (Tsenta pattern)
+*   Create `useBrowse` `src/hooks/use-browse.ts` infinite query `["browse", q, ...filters]` → `seekerService.getBrowseFeed` `/api/seeker/browse`, `PAGE_SIZE 10`, `stale 30s`
+*   Add `seekerService.getBrowseFeed` `src/services/seeker.service.ts` alongside `getFeed`
+*   Wire `BrowseJobGrid.tsx:29` `useBrowse` instead of `useFeed` — `Browse` now shows all `OPEN` regardless of `JobMatch` (fixes `No jobs found matching your criteria` when seeker has 0 skills), while `RecommendedJobsList.tsx` keeps `useFeed` matched flow (`/dashboard` Recommended stays skill-matched)
+*   Rate limit `browseRateLimiter 30/min`, `touchLastActive`, `401/403/429` gates, cursor `publishedAt+id` pagination, `totalCount` for header
+*   Verify: `/dashboard` shows matched only, `/dashboard/browse` shows all OPEN (even with 0 skills) + search/filters 200, `tsc` clean
 *   Run `pnpm exec tsc --noEmit` — zero errors
 *   Run `pnpm lint` — zero errors in touched files
 *   Run `pnpm tsx --test src/lib/__tests__/*.test.ts` — included `jd-parser-allowlist`, `experience-extractor` pass

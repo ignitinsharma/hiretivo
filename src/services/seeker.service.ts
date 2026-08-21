@@ -44,6 +44,14 @@ export const seekerService = {
     return data;
   },
 
+  getBrowseFeed: async (
+    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string; visaSponsored?: boolean; experienceLevel?: string },
+    signal?: AbortSignal,
+  ): Promise<SeekerFeedResponse> => {
+    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/browse', { params, signal });
+    return data;
+  },
+
   getDashboardSummary: async (): Promise<SeekerDashboardData> => {
     const { data } = await apiClient.get<DataResponse<SeekerDashboardData>>('/seeker/dashboard');
     return data.data;
