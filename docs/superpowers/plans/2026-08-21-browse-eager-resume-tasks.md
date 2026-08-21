@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer), Task 3 ✅ DONE (ensure + eager gen + toasts + generatingJobIds), Tasks 4-8 pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer), Task 3 ✅ DONE (ensure), Task 4 ✅ DONE (status poll + download + mark applied), Tasks 5-8 pending.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -59,7 +59,7 @@
 
 ---
 
-#### TASK 4 — Polling, Download, `Open in new tab` + `I have applied` → Tracker
+#### TASK 4 — Polling, Download, `Open in new tab` + `I have applied` → Tracker ✅ DONE
 *   Create lightweight `GET /api/applications/{id}/status` — `auth` → select `{automationStatus, failureReason, activeVersionId, generationStartedAt}` + call `resolveAutomationStatus` `src/lib/generation/automation-status.ts:21` (stale `GENERATING > GENERATION_TIMEOUT_MS=5m` `line 4` flips to `FAILED`)
 *   Create hook `src/hooks/use-application-status.ts` — `useQuery(['app-status',id], statusFetch, {refetchInterval: GENERATING?3000:false})`, pause on `document.visibilitychange` hidden, manual `retry` clears `FAILED`
 *   `JobDrawer.tsx` consumes hook — footer `Generate Resume` → `GENERATING` spinner disabled, `READY` → swaps to `Download Resume (primary)` + `Open in new tab (secondary, window.open(externalApplyUrl,'_blank','noopener,noreferrer'))` + `I have applied (ghost)`

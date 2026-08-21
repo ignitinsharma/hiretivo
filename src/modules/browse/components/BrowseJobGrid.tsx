@@ -14,17 +14,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { applicationService } from "@/services/application.service";
 import { useUIStore } from "@/store/use-ui-store";
 import { useVerificationStatus } from "@/hooks/use-verification-status";
+import { useApplicationStatus } from "@/hooks/use-application-status";
 
 export function BrowseJobGrid() {
   const [filters, setFilters] = useState<FeedFilters>({});
   const [search, setSearch] = useState("");
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [jobAppIdMap, setJobAppIdMap] = useState<Record<string, string>>({});
+  const [readyJobIds, setReadyJobIds] = useState<Set<string>>(new Set());
+  const [failedInfo, setFailedInfo] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
   const hiretivo = useVerificationStatus();
   const generatingJobIds = useUIStore((s) => s.generatingJobIds);
   const addGeneratingJobId = useUIStore((s) => s.addGeneratingJobId);
   const removeGeneratingJobId = useUIStore((s) => s.removeGeneratingJobId);
+
+  const currentAppId = drawerJobId ? jobAppIdMap[drawerJobId] ?? null : null;
+  const { data: appStatus } = useApplicationStatus(currentAppId);
 
   const activeFilters = useMemo(() => {
     const f: FeedFilters = { ...filters };
@@ -71,22 +78,45 @@ export function BrowseJobGrid() {
       return;
     }
     addGeneratingJobId(jobId);
-    toast.info("Resume generation in progress.");
+    toast("Resume generation in progress.");
     try {
       const app = await applicationService.ensureApplication(jobId);
+      setJobAppIdMap((prev) => ({ ...prev, [jobId]: app.id }));
       await applicationService.generateResume(app.id);
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      // Done toast comes from status poll in Task 4; keep generating spinner until poll flips to READY/FAILED
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Failed to start generation.";
-      // Extract API error body if available via axios
       const apiMsg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
       toast.error(apiMsg ?? msg);
       removeGeneratingJobId(jobId);
     }
   }, [generatingJobIds, hiretivo.isLoading, hiretivo.isVerified, hiretivo.status, addGeneratingJobId, removeGeneratingJobId, queryClient]);
 
-  const drawerGenerationStatus = drawerJobId && generatingJobIds.has(drawerJobId) ? "GENERATING" as const : "idle" as const;
+  // Poll status for drawer job — toast on completion and transition to READY/FAILED
+  React.useEffect(() => {
+    if (!drawerJobId || !currentAppId || !appStatus) return;
+    const status = appStatus.automationStatus;
+    if (status === "READY" && generatingJobIds.has(drawerJobId)) {
+      removeGeneratingJobId(drawerJobId);
+      setReadyJobIds((prev) => new Set(prev).add(drawerJobId));
+      toast.success("Your resume generation is done.");
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ["application-status", currentAppId] });
+    } else if (status === "FAILED" && generatingJobIds.has(drawerJobId)) {
+      removeGeneratingJobId(drawerJobId);
+      setFailedInfo((prev) => ({ ...prev, [drawerJobId]: appStatus.failureReason ?? "Generation failed — please retry" }));
+      toast.error(appStatus.failureReason ?? "Resume generation failed.");
+    }
+  }, [appStatus, drawerJobId, currentAppId, generatingJobIds, removeGeneratingJobId, queryClient]);
+
+  const drawerGenerationStatus = (() => {
+    if (!drawerJobId) return "idle" as const;
+    if (readyJobIds.has(drawerJobId)) return "READY" as const;
+    if (failedInfo[drawerJobId]) return "FAILED" as const;
+    if (generatingJobIds.has(drawerJobId)) return "GENERATING" as const;
+    return "idle" as const;
+  })();
+  const drawerFailureReason = drawerJobId ? failedInfo[drawerJobId] ?? null : null;
   const applyLockedLabel = (() => {
     if (hiretivo.isLoading || hiretivo.isVerified) return undefined;
     if (hiretivo.status === "PENDING" || hiretivo.status === "IN_REVIEW") return "Verification pending";
@@ -97,6 +127,55 @@ export function BrowseJobGrid() {
   const handleCardClick = useCallback((jobId: string) => {
     setDrawerJobId(jobId);
   }, []);
+
+  const handleDownload = useCallback(async (jobId: string) => {
+    const appId = jobAppIdMap[jobId];
+    if (!appId) {
+      toast.error("No resume found for this job. Generate first.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/applications/${appId}/download`);
+      if (!res.ok) {
+        const j = await res.json().catch(() => null);
+        throw new Error(j?.error ?? "Download failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const disp = res.headers.get("Content-Disposition") ?? "";
+      const m = disp.match(/filename="?([^"]+)"?/);
+      a.download = m?.[1] ?? "Resume.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    }
+  }, [jobAppIdMap]);
+
+  const handleMarkApplied = useCallback(async (jobId: string) => {
+    const appId = jobAppIdMap[jobId];
+    if (!appId) {
+      toast.error("Generate a resume first, then mark as applied.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/applications/${appId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark_applied" }),
+      });
+      const j = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(j?.error ?? "Failed to mark as applied");
+      toast.success("Marked as applied — check Tracker.");
+      setReadyJobIds((prev) => { const n = new Set(prev); n.delete(jobId); return n; });
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      await queryClient.invalidateQueries({ queryKey: ["application-status", appId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to mark as applied");
+    }
+  }, [jobAppIdMap, queryClient]);
 
   return (
     <div className="space-y-5">
@@ -163,7 +242,10 @@ export function BrowseJobGrid() {
         onOpenChange={(open) => { if (!open) setDrawerJobId(null); }}
         onApply={handleApply}
         onGenerate={handleGenerate}
+        onDownload={handleDownload}
+        onMarkApplied={handleMarkApplied}
         generationStatus={drawerGenerationStatus}
+        failureReason={drawerFailureReason}
         applyLockedLabel={applyLockedLabel}
       />
     </div>
