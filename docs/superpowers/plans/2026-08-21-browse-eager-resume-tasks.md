@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies: 24 Ashby + 28 Greenhouse + 18 Lever + 1 flex), Tasks 2-8 pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies), Task 2 ✅ DONE (drawer Cancel/Generate/Download/Open/MarkApplied + gates), Tasks 3-8 pending.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -31,7 +31,7 @@
 
 ---
 
-#### TASK 2 — Drawer UX — `Generate Resume` + `Cancel` (Tsenta screenshot 2 parity)
+#### TASK 2 — Drawer UX — `Generate Resume` + `Cancel` (Tsenta screenshot 2 parity) ✅ DONE
 *   Modify `src/components/shared/JobDrawer.tsx:27` — keep `Sheet` `sm:max-w-lg`; header title/company + `MatchRing` `line 65`; facts `locationClass/workType/experienceLevel/applicantCount` `src/components/shared/SeekerJobBaseCard.tsx:114`; `skills` + `description` + `missingSkillsHint`
 *   Replace footer `View Original + Apply` `JobDrawer.tsx:92-111` with `Cancel (ghost, closes drawer)` + `Generate Resume (primary)` — state machine `idle → GENERATING → READY → FAILED` — when `READY` footer swaps `Generate Resume` → `Download Resume (primary)` + `Open in new tab (secondary)` + `I have applied (ghost)`
 *   Keep `BrowseJobGrid.tsx:66` `SearchBar` + `FilterChips` + `JobCard` grid `1/2/3/4 col` `line 92`; card click `handleCardClick:60` opens drawer without triggering generate
