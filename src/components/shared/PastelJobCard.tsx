@@ -28,7 +28,7 @@ export function PastelJobCard({ job, index, onApply, onPass, isPassing, classNam
 
   return (
     <div
-      className={`flex flex-col rounded-xl border border-gray-200 overflow-hidden ${className ?? "shrink-0 w-[280px] sm:w-[300px] snap-start"}`}
+      className={`flex flex-col rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all duration-150 ${className ?? "shrink-0 w-[280px] sm:w-[300px] snap-start"}`}
       style={{ backgroundColor: bg }}
     >
       <div className="p-4 flex-1 flex flex-col gap-3">

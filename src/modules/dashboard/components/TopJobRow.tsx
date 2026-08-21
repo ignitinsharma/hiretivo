@@ -180,7 +180,9 @@ export function TopJobRow() {
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
         {jobs.map((job, idx) => (
-          <PastelJobCard key={job.id} job={job} index={idx} onApply={() => handleApplyClick(job.id)} onPass={() => handlePass(job.id)} />
+          <div key={job.id} className="cursor-pointer" onClick={() => handleApplyClick(job.id)}>
+            <PastelJobCard job={job} index={idx} onApply={() => handleApplyClick(job.id)} onPass={() => handlePass(job.id)} />
+          </div>
         ))}
       </div>
       <JobDrawer

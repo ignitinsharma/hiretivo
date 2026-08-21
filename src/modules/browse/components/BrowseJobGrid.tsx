@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { FilterChips } from "@/components/shared/FilterChips";
 import { PastelJobCard, PastelCardSkeleton } from "@/components/shared/PastelJobCard";
+import { AddYourOwnLinkCard } from "@/components/shared/AddYourOwnLinkCard";
 import { JobDrawer } from "@/components/shared/JobDrawer";
 import { useBrowse, type BrowseFilters } from "@/hooks/use-browse";
 import { applicationService } from "@/services/application.service";
@@ -242,11 +243,13 @@ export function BrowseJobGrid() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {/* First card — Add Your Own Link (sticky, not filtered) */}
+          <AddYourOwnLinkCard className="w-full" />
           {jobs.map((job, idx) => (
             <div key={job.id} className="cursor-pointer" onClick={() => handleCardClick(job.id)}>
               <PastelJobCard
                 job={job}
-                index={idx}
+                index={idx + 1}
                 className="w-full"
                 onApply={() => handleCardApply(job.id)}
                 onPass={() => dismissMutation.mutate(job.id)}

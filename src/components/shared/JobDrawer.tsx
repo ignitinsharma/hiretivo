@@ -159,35 +159,47 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
                     <Download className="mr-1.5 h-4 w-4" />
                     Download Resume
                   </Button>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={handleOpenExternal} className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground py-2">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      View original posting
-                    </button>
-                    <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
-                      <Bookmark className="h-4 w-4" />
-                    </button>
-                    <Button variant="primary" size="sm" className="rounded-full bg-[#0a0a0a] hover:bg-black px-5" onClick={handleOpenExternal}>
-                      Apply
-                    </Button>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={handleOpenExternal} className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        View original posting
+                      </button>
+                      <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
+                        <Bookmark className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" size="sm" className="h-8 px-3" onClick={() => onOpenChange(false)}>
+                        Cancel
+                      </Button>
+                      <Button variant="primary" size="sm" className="h-8 px-4" onClick={handleOpenExternal}>
+                        Apply
+                      </Button>
+                    </div>
                   </div>
                   <Button variant="ghost" size="sm" className="w-full" onClick={handleMarkApplied}>
                     <CheckCircle2 className="mr-1.5 h-4 w-4" />I have applied
                   </Button>
                 </>
               ) : (
-                <>
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={handleOpenExternal} className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground py-2 border border-brand-border rounded-lg bg-white">
+                    <button type="button" onClick={handleOpenExternal} className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground">
                       <ExternalLink className="h-3.5 w-3.5" />
-                      View original posting
+                      View job posting
                     </button>
-                    <button type="button" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
+                    <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
                       <Bookmark className="h-4 w-4" />
                     </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="secondary" size="sm" className="h-8 px-3" onClick={() => onOpenChange(false)} disabled={isGenerating}>
+                      Cancel
+                    </Button>
                     {applyLockedLabel && !isGenerating ? (
-                      <div className="relative group flex-1">
-                        <Button variant="primary" size="sm" className="w-full rounded-full bg-[#0a0a0a] hover:bg-black opacity-60 cursor-not-allowed" disabled aria-disabled="true" title={applyLockedLabel}>
+                      <div className="relative group">
+                        <Button variant="primary" size="sm" className="h-8 px-4 opacity-60 cursor-not-allowed" disabled aria-disabled="true" title={applyLockedLabel}>
                           Upgrade plan
                         </Button>
                         <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-[11px] text-white opacity-0 group-hover:opacity-100 transition">
@@ -195,14 +207,7 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
                         </span>
                       </div>
                     ) : (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="flex-1 rounded-full bg-[#0a0a0a] hover:bg-black"
-                        onClick={handleGenerate}
-                        disabled={isGenerating}
-                        aria-busy={isGenerating}
-                      >
+                      <Button variant="primary" size="sm" className="h-8 px-4" onClick={handleGenerate} disabled={isGenerating} aria-busy={isGenerating}>
                         {isGenerating ? (
                           <>
                             <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -216,10 +221,7 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
                       </Button>
                     )}
                   </div>
-                  <button type="button" onClick={() => onOpenChange(false)} className="w-full text-xs font-medium text-brand-foreground-muted hover:text-brand-foreground py-1" disabled={isGenerating}>
-                    Cancel
-                  </button>
-                </>
+                </div>
               )}
             </div>
           </div>
