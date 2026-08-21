@@ -53,6 +53,41 @@ export const COMPANY_REGISTRY: AtsCompany[] = [
   { name: 'MongoDB', website: 'mongodb.com', ats: AtsSource.GREENHOUSE, boardToken: 'mongodb' },
   { name: 'Tailscale', website: 'tailscale.com', ats: AtsSource.GREENHOUSE, boardToken: 'tailscale' },
   { name: 'Vercel', website: 'vercel.com', ats: AtsSource.GREENHOUSE, boardToken: 'vercel' },
+
+  // ===== GREENHOUSE (12 added) — funded startups, remote-friendly =====
+  { name: 'Coinbase', website: 'coinbase.com', ats: AtsSource.GREENHOUSE, boardToken: 'coinbase' },
+  { name: 'Lyft', website: 'lyft.com', ats: AtsSource.GREENHOUSE, boardToken: 'lyft' },
+  { name: 'DoorDash', website: 'doordash.com', ats: AtsSource.GREENHOUSE, boardToken: 'doordash' },
+  { name: 'Instacart', website: 'instacart.com', ats: AtsSource.GREENHOUSE, boardToken: 'instacart' },
+  { name: 'Airtable', website: 'airtable.com', ats: AtsSource.GREENHOUSE, boardToken: 'airtable' },
+  { name: 'Dropbox', website: 'dropbox.com', ats: AtsSource.GREENHOUSE, boardToken: 'dropbox' },
+  { name: 'Intercom', website: 'intercom.com', ats: AtsSource.GREENHOUSE, boardToken: 'intercom' },
+  { name: 'Brex', website: 'brex.com', ats: AtsSource.GREENHOUSE, boardToken: 'brex' },
+  { name: 'Lattice', website: 'lattice.com', ats: AtsSource.GREENHOUSE, boardToken: 'lattice' },
+  { name: 'Fivetran', website: 'fivetran.com', ats: AtsSource.GREENHOUSE, boardToken: 'fivetran' },
+  { name: 'Scale AI', website: 'scale.com', ats: AtsSource.GREENHOUSE, boardToken: 'scaleai' },
+  { name: 'Perplexity', website: 'perplexity.ai', ats: AtsSource.GREENHOUSE, boardToken: 'perplexityai' },
+
+  // ===== LEVER (19 added) — API fetchable, capped 5/board =====
+  { name: 'Netflix', website: 'netflix.com', ats: AtsSource.LEVER, boardToken: 'netflix' },
+  { name: 'Affirm', website: 'affirm.com', ats: AtsSource.LEVER, boardToken: 'affirm' },
+  { name: 'Shopify-Lever', website: 'shopify.com', ats: AtsSource.LEVER, boardToken: 'shopify' },
+  { name: 'Duolingo', website: 'duolingo.com', ats: AtsSource.LEVER, boardToken: 'duolingo' },
+  { name: 'Nuro', website: 'nuro.ai', ats: AtsSource.LEVER, boardToken: 'nuro' },
+  { name: 'Palantir-Lever', website: 'palantir.com', ats: AtsSource.LEVER, boardToken: 'palantir' },
+  { name: 'Asana', website: 'asana.com', ats: AtsSource.LEVER, boardToken: 'asana' },
+  { name: 'Quora', website: 'quora.com', ats: AtsSource.LEVER, boardToken: 'quora' },
+  { name: 'Coursera', website: 'coursera.org', ats: AtsSource.LEVER, boardToken: 'coursera' },
+  { name: 'Braze', website: 'braze.com', ats: AtsSource.LEVER, boardToken: 'braze' },
+  { name: 'Mixpanel', website: 'mixpanel.com', ats: AtsSource.LEVER, boardToken: 'mixpanel' },
+  { name: 'Outreach', website: 'outreach.io', ats: AtsSource.LEVER, boardToken: 'outreach' },
+  { name: 'Segment', website: 'segment.com', ats: AtsSource.LEVER, boardToken: 'segment' },
+  { name: 'Whatnot', website: 'whatnot.com', ats: AtsSource.LEVER, boardToken: 'whatnot' },
+  { name: 'Faire', website: 'faire.com', ats: AtsSource.LEVER, boardToken: 'faire' },
+  { name: 'Retool-Lever', website: 'retool.com', ats: AtsSource.LEVER, boardToken: 'retool' },
+  { name: 'Loom', website: 'loom.com', ats: AtsSource.LEVER, boardToken: 'loom' },
+  { name: 'Carta', website: 'carta.com', ats: AtsSource.LEVER, boardToken: 'carta' },
+  { name: 'Flexport', website: 'flexport.com', ats: AtsSource.GREENHOUSE, boardToken: 'flexport' },
 ];
 
 export function getCompaniesBySource(source: AtsSource): AtsCompany[] {

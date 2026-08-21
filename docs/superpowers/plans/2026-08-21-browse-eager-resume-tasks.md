@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Tasks 1-8 pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE, Task 1 ✅ DONE (71 companies: 24 Ashby + 28 Greenhouse + 18 Lever + 1 flex), Tasks 2-8 pending.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -22,7 +22,7 @@
 
 ---
 
-#### TASK 1 — Company Registry Expansion — 70-80 US targets (Greenhouse/Lever/Ashby only)
+#### TASK 1 — Company Registry Expansion — 70-80 US targets (Greenhouse/Lever/Ashby only) ✅ DONE
 *   Curate 40 new rows to reach 70-80: ~25 Lever (currently 0) + ~15 Greenhouse, funded startups + scale-ups (validate each `boardToken` live via `fetchLever/Greenhouse/AshbyJobs` before commit — top 5 slice check)
 *   Append to `COMPANY_REGISTRY` `src/lib/ats/registry.ts:12` — fields `name, website, ats, boardToken, logoUrl` — keep cap `slice(0,5)` `src/services/ats-job-fetcher.service.ts:246` + chunk 10 `line 14`
 *   Document onboarding method in plan: add company = PR to `registry.ts` (code-reviewed); delete/pause = row in `AtsBlocklist` `prisma/schema.prisma:316` — `fetchAndUpsertSource:229` skips `blockedNames`, `closeBlockedCompanyJobs` closes OPEN jobs, no deploy needed
