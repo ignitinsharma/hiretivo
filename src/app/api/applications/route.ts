@@ -190,7 +190,7 @@ export async function GET(req: NextRequest) {
   const q = (url.searchParams.get("q") ?? "").trim();
   const tab = url.searchParams.get("tab") ?? "All";
   const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
-  const limit = [10, 25, 50].includes(rawLimit) ? rawLimit : 10;
+  const limit = [10, 25, 50, 100].includes(rawLimit) ? rawLimit : 10;
 
   // Resolve stale GENERATING runs (dead workers etc.) so the tracker board
   // never shows a spinner forever — same timeout as the per-application route.

@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import { ApplicationStatus } from '@/constants/enums';
 import type { CreateApplicationInput } from '@/lib/validations/application';
+import type { ExternalApplicationInput } from '@/lib/validations/external-application';
 import type { SeekerApplicationItem } from '@/modules/seeker/applications/types/application.types';
 
 interface ApplicationApiItem {
@@ -37,12 +38,18 @@ export const applicationService = {
     return data;
   },
 
+  logExternalJob: async (payload: ExternalApplicationInput): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/applications/log-external', payload);
+    return data;
+  },
+
   generateResume: async (applicationId: string): Promise<void> => {
     await apiClient.post(`/applications/${applicationId}/generate`);
   },
 
   getMyApplications: async (): Promise<SeekerApplicationItem[]> => {
-    const { data } = await apiClient.get<{ data: ApplicationApiItem[]; pagination: { page: number; limit: number; total: number; totalPages: number } } | ApplicationApiItem[]>('/applications');
+    // Kanban needs all applications, not paginated 10 — fetch with large limit
+    const { data } = await apiClient.get<{ data: ApplicationApiItem[]; pagination: { page: number; limit: number; total: number; totalPages: number } } | ApplicationApiItem[]>('/applications', { params: { limit: 100, page: 1 } });
     const raw = Array.isArray(data) ? data : (data as any).data ?? data;
     return (raw as ApplicationApiItem[]).map((application) => ({
       ...application,
