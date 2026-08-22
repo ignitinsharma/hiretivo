@@ -55,34 +55,24 @@ export function ApplicationsTable() {
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-  const { data: applications = [], isLoading } = useQuery({
-    queryKey: ["applications"],
-    queryFn: applicationService.getMyApplications,
+  const { data: queryData, isLoading } = useQuery({
+    queryKey: ["applications", page, rowsPerPage, search, activeTab],
+    queryFn: () => applicationService.getMyApplicationsPaginated({ page, limit: rowsPerPage, q: search, tab: activeTab }),
     staleTime: 5_000,
     refetchInterval: (query) => {
-      const data = query.state.data as SeekerApplicationItem[] | undefined;
-      const hasGenerating = data?.some((a) => a.automationStatus === AutomationStatus.GENERATING);
+      const data = query.state.data as { data: SeekerApplicationItem[] } | undefined;
+      const hasGenerating = data?.data?.some((a) => a.automationStatus === AutomationStatus.GENERATING);
       return hasGenerating ? 3000 : false;
     },
   });
 
-  const filtered = React.useMemo(() => {
-    let list = activeTab === "All" ? applications : applications.filter((a) => a.status === activeTab);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter((a) => a.companyName.toLowerCase().includes(q) || a.jobTitle.toLowerCase().includes(q));
-    }
-    return list;
-  }, [applications, activeTab, search]);
+  const applications = queryData?.data ?? [];
+  const pagination = queryData?.pagination ?? { page, limit: rowsPerPage, total: 0, totalPages: 1 };
+  const total = pagination.total;
+  const totalPages = pagination.totalPages;
+  const paginated = applications;
 
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
-  const paginated = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    return filtered.slice(start, start + rowsPerPage);
-  }, [filtered, page, rowsPerPage]);
-
-  // Edge: reset page when filters/search/rowsPerPage change or when total shrinks (e.g., after dismiss)
+  // Edge: reset page when filters/search/rowsPerPage change
   React.useEffect(() => { setPage(1); }, [search, activeTab, rowsPerPage]);
   React.useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
@@ -126,7 +116,7 @@ export function ApplicationsTable() {
         </div>
       </div>
 
-      {!isLoading && filtered.length === 0 ? (
+      {!isLoading && total === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
           <div className="w-10 h-10 rounded-xl border border-brand-border bg-brand-surface flex items-center justify-center">
             <Briefcase className="w-5 h-5 text-brand-foreground-secondary" />
@@ -134,7 +124,7 @@ export function ApplicationsTable() {
           <div className="text-center">
             <p className="text-brand-foreground font-semibold text-base">No applications yet</p>
             <p className="text-brand-foreground-muted text-sm mt-1">
-              {applications.length > 0
+              {search || activeTab !== "All"
                 ? "No applications match this search or status."
                 : "Start applying to jobs to track your progress here."}
             </p>
