@@ -54,8 +54,11 @@ export function ApplicationsTable() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = React.useState<Tab>("All");
   const [search, setSearch] = React.useState("");
+  const deferredSearch = React.useDeferredValue(search);
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [jumpPage, setJumpPage] = React.useState("");
+  const [isPending, startTransition] = React.useTransition();
 
   // URL sync for shareable pagination (deep-linkable, back button)
   React.useEffect(() => {
@@ -85,12 +88,23 @@ export function ApplicationsTable() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
+  // Rows per page persist
+  React.useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("applications.rowsPerPage") : null;
+    if (saved && ["10", "25", "50"].includes(saved)) setRowsPerPage(Number(saved));
+  }, []);
+  React.useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("applications.rowsPerPage", String(rowsPerPage));
+  }, [rowsPerPage]);
+
   const { data: queryData, isLoading, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ["applications", page, rowsPerPage, search, activeTab],
-    queryFn: () => applicationService.getMyApplicationsPaginated({ page, limit: rowsPerPage, q: search, tab: activeTab }),
+    queryKey: ["applications", page, rowsPerPage, deferredSearch, activeTab],
+    queryFn: () => applicationService.getMyApplicationsPaginated({ page, limit: rowsPerPage, q: deferredSearch, tab: activeTab }),
     staleTime: 5_000,
     gcTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
+    // select transform: keep server shape but ensure stable reference
+    select: (data) => data,
     refetchInterval: (query) => {
       const data = query.state.data as { data: SeekerApplicationItem[] } | undefined;
       const hasGenerating = data?.data?.some((a) => a.automationStatus === AutomationStatus.GENERATING);
@@ -337,47 +351,85 @@ export function ApplicationsTable() {
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setPage(1)}
-              disabled={page === 1 || (isFetching as boolean)}
+              onClick={() => startTransition(() => setPage(1))}
+              disabled={page === 1 || (isFetching as boolean) || isPending}
               className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
               aria-label="First page"
             >
               <ChevronsLeft className="h-3.5 w-3.5" />
             </button>
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1 || (isFetching as boolean)}
+              onClick={() => startTransition(() => setPage((p) => Math.max(1, p - 1)))}
+              disabled={page === 1 || (isFetching as boolean) || isPending}
               className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
               aria-label="Previous page"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            {Array.from({ length: Math.min(4, totalPages) }).map((_, i) => {
-              const n = i + 1;
-              const pageNum = n;
-              if (pageNum > totalPages) return null;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setPage(pageNum)}
-                  onMouseEnter={() => {
-                    queryClient.prefetchQuery({
-                      queryKey: ["applications", pageNum, rowsPerPage, search, activeTab],
-                      queryFn: () => applicationService.getMyApplicationsPaginated({ page: pageNum, limit: rowsPerPage, q: search, tab: activeTab }),
-                      staleTime: 5_000,
-                    });
-                  }}
-                  disabled={isFetching as boolean}
-                  className={`h-7 min-w-7 px-2 flex items-center justify-center rounded-lg text-xs font-semibold border disabled:opacity-40 ${page === pageNum ? "bg-[#0a0a0a] text-white border-[#0a0a0a]" : "bg-white border-brand-border hover:bg-brand-surface"}`}
-                  aria-current={page === pageNum ? "page" : undefined}
-                >
-                  {pageNum}
-                </button>
+            {(() => {
+              const pages: (number | string)[] = [];
+              if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                pages.push(1);
+                if (page > 3) pages.push("...");
+                const start = Math.max(2, page - 1);
+                const end = Math.min(totalPages - 1, page + 1);
+                for (let i = start; i <= end; i++) pages.push(i);
+                if (page < totalPages - 2) pages.push("...");
+                pages.push(totalPages);
+              }
+              return pages.map((p, idx) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="w-7 h-7 flex items-center justify-center text-[11px] text-brand-foreground-muted">...</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => startTransition(() => setPage(p as number))}
+                    onMouseEnter={() => {
+                      queryClient.prefetchQuery({
+                        queryKey: ["applications", p, rowsPerPage, deferredSearch, activeTab],
+                        queryFn: () => applicationService.getMyApplicationsPaginated({ page: p as number, limit: rowsPerPage, q: deferredSearch, tab: activeTab }),
+                        staleTime: 5_000,
+                      });
+                    }}
+                    disabled={isFetching as boolean}
+                    className={`h-7 min-w-7 px-2 flex items-center justify-center rounded-lg text-xs font-semibold border disabled:opacity-40 ${page === p ? "bg-[#0a0a0a] text-white border-[#0a0a0a]" : "bg-white border-brand-border hover:bg-brand-surface"}`}
+                    aria-current={page === p ? "page" : undefined}
+                  >
+                    {p}
+                  </button>
+                )
               );
-            })}
+            })()}
+            <div className="flex items-center gap-1 ml-1">
+              <span className="text-xs text-brand-foreground-muted">Jump to</span>
+              <input
+                value={jumpPage}
+                onChange={(e) => setJumpPage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const n = Number(jumpPage);
+                    if (Number.isFinite(n) && n >= 1 && n <= totalPages) startTransition(() => setPage(n));
+                  }
+                }}
+                placeholder="#"
+                className="w-10 h-7 border border-brand-border rounded-lg bg-white px-1.5 text-xs text-center"
+                aria-label="Jump to page"
+              />
+              <button
+                onClick={() => {
+                  const n = Number(jumpPage);
+                  if (Number.isFinite(n) && n >= 1 && n <= totalPages) startTransition(() => setPage(n));
+                }}
+                className="h-7 px-2 flex items-center justify-center rounded-lg border border-brand-border bg-white hover:bg-brand-surface text-xs font-medium"
+              >
+                Go
+              </button>
+            </div>
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages || (isFetching as boolean)}
+              onClick={() => startTransition(() => setPage((p) => Math.min(totalPages, p + 1)))}
+              disabled={page === totalPages || (isFetching as boolean) || isPending}
               onMouseEnter={prefetchNext}
               className="h-7 px-2.5 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface text-xs font-medium"
             >
@@ -385,8 +437,8 @@ export function ApplicationsTable() {
               <ChevronRight className="h-3.5 w-3.5 ml-1" />
             </button>
             <button
-              onClick={() => setPage(totalPages)}
-              disabled={page === totalPages || (isFetching as boolean)}
+              onClick={() => startTransition(() => setPage(totalPages))}
+              disabled={page === totalPages || (isFetching as boolean) || isPending}
               className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
               aria-label="Last page"
             >
