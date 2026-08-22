@@ -13,7 +13,7 @@ export function AddYourOwnLinkCard({ className }: { className?: string }) {
 
   return (
     <div
-      className={`flex flex-col rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all duration-150 h-[285px] ${className ?? "w-full"}`}
+      className={`flex flex-col rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all duration-150 ${className ?? "w-full"}`}
       style={{ backgroundColor: "#E6FFF4" }}
       onClick={openAddCustomJobModal}
       role="button"
@@ -32,10 +32,10 @@ export function AddYourOwnLinkCard({ className }: { className?: string }) {
           </div>
         </div>
 
-        <h3 className="text-xl font-semibold leading-tight text-brand-foreground">Add Your Own Link</h3>
+        <h3 className="text-[15px] font-semibold leading-snug text-brand-foreground line-clamp-2 min-h-[44px]">Add Your Own Link</h3>
 
         <p className="text-xs text-brand-foreground-muted">Paste a URL and optional job description</p>
-        <p className="text-[11px] text-brand-foreground-muted mt-1">Add any ATS link or paste description directly — our quick apply supports all major boards.</p>
+        <p className="text-[11px] text-brand-foreground-muted line-clamp-2">Add any ATS link or paste description directly — quick apply supports all major boards.</p>
       </div>
 
       <div className="bg-white flex items-center justify-between px-3 py-2.5 border-t border-gray-200">
