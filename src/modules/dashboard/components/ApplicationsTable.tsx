@@ -3,8 +3,8 @@
 import React from "react";
 import { Search, Eye, MoreHorizontal, Briefcase, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { applicationService } from "@/services/application.service";
 import { ApplicationStatus, AutomationStatus } from "@/constants/enums";
@@ -50,15 +50,47 @@ function getAppliedColumn(app: SeekerApplicationItem): string {
 
 export function ApplicationsTable() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = React.useState<Tab>("All");
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-  const { data: queryData, isLoading } = useQuery({
+  // URL sync for shareable pagination (deep-linkable, back button)
+  React.useEffect(() => {
+    const p = Number(searchParams.get("page") ?? "1");
+    const l = Number(searchParams.get("limit") ?? "10");
+    const q = searchParams.get("q") ?? "";
+    const t = (searchParams.get("tab") as Tab) ?? "All";
+    if (Number.isFinite(p) && p !== page) setPage(p);
+    if ([10, 25, 50].includes(l) && l !== rowsPerPage) setRowsPerPage(l);
+    if (q !== search) setSearch(q);
+    if (t !== activeTab) setActiveTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateUrl = React.useCallback((next: Partial<{ page: number; limit: number; q: string; tab: string }>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next.page !== undefined) params.set("page", String(next.page));
+    if (next.limit !== undefined) params.set("limit", String(next.limit));
+    if (next.q !== undefined) {
+      if (next.q) params.set("q", next.q);
+      else params.delete("q");
+    }
+    if (next.tab !== undefined) {
+      if (next.tab && next.tab !== "All") params.set("tab", next.tab);
+      else params.delete("tab");
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
+  const { data: queryData, isLoading, isFetching, isPlaceholderData } = useQuery({
     queryKey: ["applications", page, rowsPerPage, search, activeTab],
     queryFn: () => applicationService.getMyApplicationsPaginated({ page, limit: rowsPerPage, q: search, tab: activeTab }),
     staleTime: 5_000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: keepPreviousData,
     refetchInterval: (query) => {
       const data = query.state.data as { data: SeekerApplicationItem[] } | undefined;
       const hasGenerating = data?.data?.some((a) => a.automationStatus === AutomationStatus.GENERATING);
@@ -71,10 +103,25 @@ export function ApplicationsTable() {
   const total = pagination.total;
   const totalPages = pagination.totalPages;
   const paginated = applications;
+  const isPageLoading = isFetching && Boolean(isPlaceholderData);
 
   // Edge: reset page when filters/search/rowsPerPage change
   React.useEffect(() => { setPage(1); }, [search, activeTab, rowsPerPage]);
   React.useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
+  // URL sync + prefetch for next page (performance)
+  React.useEffect(() => {
+    updateUrl({ page, limit: rowsPerPage, q: search, tab: activeTab });
+  }, [page, rowsPerPage, search, activeTab, updateUrl]);
+
+  const prefetchNext = React.useCallback(() => {
+    if (page < totalPages) {
+      queryClient.prefetchQuery({
+        queryKey: ["applications", page + 1, rowsPerPage, search, activeTab],
+        queryFn: () => applicationService.getMyApplicationsPaginated({ page: page + 1, limit: rowsPerPage, q: search, tab: activeTab }),
+        staleTime: 5_000,
+      });
+    }
+  }, [page, totalPages, rowsPerPage, search, activeTab, queryClient]);
 
   const showingFrom = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
   const showingTo = Math.min(page * rowsPerPage, total);
@@ -131,8 +178,16 @@ export function ApplicationsTable() {
           </div>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto relative">
+          {isPageLoading && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+              <div className="flex items-center gap-2 bg-white border border-brand-border rounded-full px-3 py-1.5 shadow-sm">
+                <Loader2 className="h-4 w-4 animate-spin text-brand-primary" />
+                <span className="text-xs font-medium">Loading page {page}...</span>
+              </div>
+            </div>
+          )}
+          <table className={`w-full ${isPageLoading ? "opacity-40 pointer-events-none" : ""}`}>
             <thead>
               <tr className="border-t border-brand-border">
                 <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Company</th>
@@ -142,8 +197,8 @@ export function ApplicationsTable() {
                 <th className="w-12 px-5 py-3"></th>
               </tr>
             </thead>
-            <tbody aria-busy={isLoading}>
-              {isLoading ? (
+            <tbody aria-busy={isLoading || isPageLoading}>
+              {isLoading && !isPlaceholderData ? (
                 Array.from({ length: rowsPerPage === 10 ? 5 : Math.min(rowsPerPage, 5) }).map((_, i) => (
                   <tr key={i} className="border-t border-brand-border">
                     <td className="px-5 py-3.5">
@@ -262,7 +317,7 @@ export function ApplicationsTable() {
         </div>
       )}
 
-      {/* Pagination — Rows per page 10/25/50 + 1 2 3 4 Next, handles lots */}
+      {/* Pagination — Rows per page 10/25/50 + 1 2 3 4 Next, handles lots, dark skeleton while fetching */}
       {total > 0 && (
         <div className="flex items-center justify-between px-5 py-3 border-t border-brand-border bg-white flex-wrap gap-3">
           <div className="flex items-center gap-2 text-xs text-brand-foreground-muted">
@@ -270,7 +325,8 @@ export function ApplicationsTable() {
             <select
               value={rowsPerPage}
               onChange={(e) => setRowsPerPage(Number(e.target.value))}
-              className="border border-brand-border rounded-lg bg-white px-2 py-1 text-xs text-brand-foreground"
+              disabled={isFetching}
+              className="border border-brand-border rounded-lg bg-white px-2 py-1 text-xs text-brand-foreground disabled:opacity-50"
               aria-label="Rows per page"
             >
               <option value={10}>10</option>
@@ -282,7 +338,7 @@ export function ApplicationsTable() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage(1)}
-              disabled={page === 1}
+              disabled={page === 1 || (isFetching as boolean)}
               className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
               aria-label="First page"
             >
@@ -290,7 +346,7 @@ export function ApplicationsTable() {
             </button>
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={page === 1 || (isFetching as boolean)}
               className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
               aria-label="Previous page"
             >
@@ -298,24 +354,31 @@ export function ApplicationsTable() {
             </button>
             {Array.from({ length: Math.min(4, totalPages) }).map((_, i) => {
               const n = i + 1;
-              // Simple: show 1..4, and if totalPages>4, 4th is last page when page>4? For minimal keep 1-4 only. User asked simple 1 2 3 4 Next.
               const pageNum = n;
               if (pageNum > totalPages) return null;
               return (
                 <button
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
-                  className={`h-7 min-w-7 px-2 flex items-center justify-center rounded-lg text-xs font-semibold border ${page === pageNum ? "bg-[#0a0a0a] text-white border-[#0a0a0a]" : "bg-white border-brand-border hover:bg-brand-surface"}`}
+                  onMouseEnter={() => {
+                    queryClient.prefetchQuery({
+                      queryKey: ["applications", pageNum, rowsPerPage, search, activeTab],
+                      queryFn: () => applicationService.getMyApplicationsPaginated({ page: pageNum, limit: rowsPerPage, q: search, tab: activeTab }),
+                      staleTime: 5_000,
+                    });
+                  }}
+                  disabled={isFetching as boolean}
+                  className={`h-7 min-w-7 px-2 flex items-center justify-center rounded-lg text-xs font-semibold border disabled:opacity-40 ${page === pageNum ? "bg-[#0a0a0a] text-white border-[#0a0a0a]" : "bg-white border-brand-border hover:bg-brand-surface"}`}
                   aria-current={page === pageNum ? "page" : undefined}
                 >
                   {pageNum}
                 </button>
               );
             })}
-            {/* Next */}
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              disabled={page === totalPages || (isFetching as boolean)}
+              onMouseEnter={prefetchNext}
               className="h-7 px-2.5 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface text-xs font-medium"
             >
               Next
@@ -323,7 +386,7 @@ export function ApplicationsTable() {
             </button>
             <button
               onClick={() => setPage(totalPages)}
-              disabled={page === totalPages}
+              disabled={page === totalPages || (isFetching as boolean)}
               className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
               aria-label="Last page"
             >
