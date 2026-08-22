@@ -80,7 +80,7 @@ export function ApplyJobModal() {
 
   return (
     <Dialog open={isApplyModalOpen} onOpenChange={closeApplyModal}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto p-8 sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto p-6 sm:max-w-md rounded-xl border border-brand-border bg-white">
         <div className="flex flex-col items-center text-center">
           <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10">
             <Briefcase className="h-8 w-8 text-brand-primary" />

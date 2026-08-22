@@ -12,6 +12,7 @@ import { applicationService } from "@/services/application.service";
 import { useUIStore } from "@/store/use-ui-store";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { useApplicationStatus } from "@/hooks/use-application-status";
+import { useSavedJobs, useSaveJob, useUnsaveJob } from "@/modules/seeker/saved-jobs/queries/use-saved-jobs";
 
 /*
  * TopJobRow
@@ -32,6 +33,10 @@ export function TopJobRow() {
 
   const currentAppId = drawerJobId ? jobAppIdMap[drawerJobId] ?? null : null;
   const { data: appStatus } = useApplicationStatus(currentAppId);
+  const { data: savedData } = useSavedJobs();
+  const saveMutation = useSaveJob();
+  const unsaveMutation = useUnsaveJob();
+  const savedJobIds = new Set((savedData?.pages.flatMap((p) => p.data.map((s) => s.job.id)) ?? []));
 
   const { data, isLoading, isError } = useFeed();
   const jobs = (data?.pages.flatMap((p) => p.jobs) ?? []).slice(0, 5);
@@ -120,6 +125,14 @@ export function TopJobRow() {
   const drawerFailureReason = drawerJobId ? failedInfo[drawerJobId] ?? null : null;
   const quotaBlocked = quota ? !quota.allowed : false;
 
+  const handleToggleSave = useCallback((jobId: string) => {
+    if (savedJobIds.has(jobId)) {
+      unsaveMutation.mutate(jobId, { onSuccess: () => toast.success("Removed from saved"), onError: () => toast.error("Failed to remove") });
+    } else {
+      saveMutation.mutate(jobId, { onSuccess: () => toast.success("Job saved"), onError: () => toast.error("Failed to save") });
+    }
+  }, [savedJobIds, saveMutation, unsaveMutation]);
+
   const handleDownload = useCallback(async (jobId: string) => {
     const appId = jobAppIdMap[jobId];
     if (!appId) return toast.error("No resume found. Generate first.");
@@ -192,6 +205,8 @@ export function TopJobRow() {
         onGenerate={handleGenerate}
         onDownload={handleDownload}
         onMarkApplied={handleMarkApplied}
+        onToggleSave={drawerJobId ? () => handleToggleSave(drawerJobId) : undefined}
+        isSaved={drawerJobId ? savedJobIds.has(drawerJobId) : false}
         generationStatus={drawerGenerationStatus}
         failureReason={drawerFailureReason}
         applyLockedLabel={quotaBlocked ? "Upgrade plan" : undefined}

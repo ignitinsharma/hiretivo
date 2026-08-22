@@ -216,7 +216,7 @@ export function AddCustomJobModal() {
 
   return (
     <Dialog open={isAddCustomJobModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg rounded-xl border border-brand-border bg-white p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-brand-foreground">
             Add Custom Job

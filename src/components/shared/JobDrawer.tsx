@@ -37,17 +37,18 @@ interface JobDrawerProps {
   jobId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /* Legacy apply — kept for dashboard fallback, prefer onGenerate */
   onApply?: (jobId: string) => void;
   onGenerate?: (jobId: string) => void;
   onDownload?: (jobId: string) => void;
   onMarkApplied?: (jobId: string) => void;
+  onToggleSave?: () => void;
+  isSaved?: boolean;
   generationStatus?: "idle" | "GENERATING" | "READY" | "FAILED";
   failureReason?: string | null;
   applyLockedLabel?: string;
 }
 
-export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDownload, onMarkApplied, generationStatus = "idle", failureReason, applyLockedLabel }: JobDrawerProps) {
+export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDownload, onMarkApplied, onToggleSave, isSaved = false, generationStatus = "idle", failureReason, applyLockedLabel }: JobDrawerProps) {
   const { data: session } = useSession();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["job-detail", jobId],
@@ -98,11 +99,29 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
         {isLoading ? (
-          <div className="space-y-4 p-6">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
+          <div className="space-y-6 p-6 animate-pulse">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+              <Skeleton className="h-12 w-12 rounded-full" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-16 rounded-md" />
+              <Skeleton className="h-6 w-16 rounded-md" />
+              <Skeleton className="h-6 w-20 rounded-md" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-4/6" />
+            </div>
+            <div className="border-t border-brand-border pt-4 flex items-center justify-between gap-3">
+              <Skeleton className="h-8 w-24 rounded-lg" />
+              <Skeleton className="h-8 w-20 rounded-full" />
+            </div>
           </div>
         ) : isError ? (
           <div className="p-6 text-center">
@@ -165,8 +184,8 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
                         <ExternalLink className="h-3.5 w-3.5" />
                         View original posting
                       </button>
-                      <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
-                        <Bookmark className="h-4 w-4" />
+                      <button type="button" onClick={onToggleSave} className={`flex h-8 w-8 items-center justify-center rounded-lg border hover:bg-brand-surface ${isSaved ? "border-amber-200 bg-amber-50 text-amber-600" : "border-brand-border bg-white text-brand-foreground-muted"}`} aria-label={isSaved ? "Unsave job" : "Save job"} aria-pressed={isSaved}>
+                        <Bookmark className={`h-4 w-4 ${isSaved ? "fill-amber-600" : ""}`} />
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
@@ -189,8 +208,8 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
                       <ExternalLink className="h-3.5 w-3.5" />
                       View job posting
                     </button>
-                    <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-foreground-muted hover:bg-brand-surface" aria-label="Save job">
-                      <Bookmark className="h-4 w-4" />
+                    <button type="button" onClick={onToggleSave} className={`flex h-8 w-8 items-center justify-center rounded-lg border hover:bg-brand-surface ${isSaved ? "border-amber-200 bg-amber-50 text-amber-600" : "border-brand-border bg-white text-brand-foreground-muted"}`} aria-label={isSaved ? "Unsave job" : "Save job"} aria-pressed={isSaved}>
+                      <Bookmark className={`h-4 w-4 ${isSaved ? "fill-amber-600" : ""}`} />
                     </button>
                   </div>
                   <div className="flex items-center gap-2">

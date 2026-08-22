@@ -7,15 +7,19 @@ import { toast } from "sonner";
 
 import { SearchBar } from "@/components/shared/SearchBar";
 import { FilterChips } from "@/components/shared/FilterChips";
+import { Bookmark } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PastelJobCard, PastelCardSkeleton } from "@/components/shared/PastelJobCard";
 import { AddYourOwnLinkCard } from "@/components/shared/AddYourOwnLinkCard";
 import { JobDrawer } from "@/components/shared/JobDrawer";
+import { SavedJobsModal } from "@/components/shared/SavedJobsModal";
 import { useBrowse, type BrowseFilters } from "@/hooks/use-browse";
 import { applicationService } from "@/services/application.service";
 import { seekerService, type SeekerFeedResponse } from "@/services/seeker.service";
 import { useUIStore } from "@/store/use-ui-store";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { useApplicationStatus } from "@/hooks/use-application-status";
+import { useSavedJobs, useSaveJob, useUnsaveJob } from "@/modules/seeker/saved-jobs/queries/use-saved-jobs";
 
 /*
  * BrowseJobGrid
@@ -27,6 +31,7 @@ export function BrowseJobGrid() {
   const [filters, setFilters] = useState<BrowseFilters>({});
   const [search, setSearch] = useState("");
   const [drawerJobId, setDrawerJobId] = useState<string | null>(null);
+  const [savedModalOpen, setSavedModalOpen] = useState(false);
   const [jobAppIdMap, setJobAppIdMap] = useState<Record<string, string>>({});
   const [readyJobIds, setReadyJobIds] = useState<Set<string>>(new Set());
   const [failedInfo, setFailedInfo] = useState<Record<string, string>>({});
@@ -36,6 +41,11 @@ export function BrowseJobGrid() {
   const generatingJobIds = useUIStore((s) => s.generatingJobIds);
   const addGeneratingJobId = useUIStore((s) => s.addGeneratingJobId);
   const removeGeneratingJobId = useUIStore((s) => s.removeGeneratingJobId);
+  const { data: savedJobsData } = useSavedJobs();
+  const saveMutation = useSaveJob();
+  const unsaveMutation = useUnsaveJob();
+  const savedCount = (savedJobsData?.pages.flatMap((p) => p.data) ?? []).length;
+  const savedJobIds = new Set((savedJobsData?.pages.flatMap((p) => p.data.map((s) => s.job.id)) ?? []));
 
   const currentAppId = drawerJobId ? jobAppIdMap[drawerJobId] ?? null : null;
   const { data: appStatus } = useApplicationStatus(currentAppId);
@@ -221,10 +231,33 @@ export function BrowseJobGrid() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handleToggleSave = useCallback((jobId: string) => {
+    if (savedJobIds.has(jobId)) {
+      unsaveMutation.mutate(jobId, { onSuccess: () => toast.success("Removed from saved"), onError: () => toast.error("Failed to remove") });
+    } else {
+      saveMutation.mutate(jobId, { onSuccess: () => toast.success("Job saved"), onError: () => toast.error("Failed to save") });
+    }
+  }, [savedJobIds, saveMutation, unsaveMutation]);
+
   return (
     <div className="space-y-5">
       <SearchBar value={search} onChange={setSearch} resultCount={totalCount} />
-      <FilterChips activeFilters={filters as Partial<Record<string, string | undefined>>} onFilterChange={handleFilterChange} />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <FilterChips activeFilters={filters as Partial<Record<string, string | undefined>>} onFilterChange={handleFilterChange} />
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="shrink-0 gap-1.5"
+          onClick={() => setSavedModalOpen(true)}
+          aria-label={`Saved jobs ${savedCount}`}
+        >
+          <Bookmark className={`h-4 w-4 ${savedCount > 0 ? "fill-amber-500 text-amber-600" : ""}`} />
+          Save Jobs{savedCount > 0 ? ` (${savedCount})` : ""}
+        </Button>
+      </div>
+      <SavedJobsModal open={savedModalOpen} onOpenChange={setSavedModalOpen} />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -276,6 +309,8 @@ export function BrowseJobGrid() {
         onGenerate={handleGenerate}
         onDownload={handleDownload}
         onMarkApplied={handleMarkApplied}
+        onToggleSave={drawerJobId ? () => handleToggleSave(drawerJobId) : undefined}
+        isSaved={drawerJobId ? savedJobIds.has(drawerJobId) : false}
         generationStatus={drawerGenerationStatus}
         failureReason={drawerFailureReason}
         applyLockedLabel={quotaBlocked ? "Upgrade plan" : undefined}
