@@ -16,8 +16,8 @@ import { useSavedJobs, useSaveJob, useUnsaveJob } from "@/modules/seeker/saved-j
 
 /*
  * TopJobRow
- * Dashboard single-row horizontal scroll of recommended (matched) jobs — Tsenta Top job matches.
- * 5 cards max, pastel index%5, Pass/Apply. Card Apply opens drawer; drawer Apply generates → toast → remove from row → All Applications.
+ * Dashboard 4-only grid (no scroll) of recommended (matched) jobs — Tsenta Top job matches.
+ * 4 cards max, pastel index%5, Pass/Apply. Card Apply opens drawer; drawer Apply generates → toast → remove from row → All Applications.
  */
 export function TopJobRow() {
   const queryClient = useQueryClient();
@@ -39,7 +39,7 @@ export function TopJobRow() {
   const savedJobIds = new Set((savedData?.pages.flatMap((p) => p.data.map((s) => s.job.id)) ?? []));
 
   const { data, isLoading, isError } = useFeed();
-  const jobs = (data?.pages.flatMap((p) => p.jobs) ?? []).slice(0, 5);
+  const jobs = (data?.pages.flatMap((p) => p.jobs) ?? []).slice(0, 4);
 
   const dismissMutation = useMutation({
     mutationFn: seekerService.dismissJob,
@@ -167,9 +167,9 @@ export function TopJobRow() {
     return (
       <div>
         <h2 className="text-sm font-bold text-brand-foreground mb-3">Top job matches</h2>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <PastelCardSkeleton key={i} index={i} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <PastelCardSkeleton key={i} index={i} className="w-full" />
           ))}
         </div>
       </div>
@@ -191,10 +191,10 @@ export function TopJobRow() {
         <h2 className="text-sm font-bold text-brand-foreground">Top job matches</h2>
         <a href="/dashboard/browse" className="text-xs font-semibold text-brand-primary hover:underline">Browse jobs →</a>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {jobs.map((job, idx) => (
           <div key={job.id} className="cursor-pointer" onClick={() => handleApplyClick(job.id)}>
-            <PastelJobCard job={job} index={idx} onApply={() => handleApplyClick(job.id)} onPass={() => handlePass(job.id)} />
+            <PastelJobCard job={job} index={idx} className="w-full" onApply={() => handleApplyClick(job.id)} onPass={() => handlePass(job.id)} />
           </div>
         ))}
       </div>
