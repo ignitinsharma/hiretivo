@@ -50,11 +50,12 @@ interface JobDrawerProps {
 
 export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDownload, onMarkApplied, onToggleSave, isSaved = false, generationStatus = "idle", failureReason, applyLockedLabel }: JobDrawerProps) {
   const { data: session } = useSession();
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isFetching } = useQuery({
     queryKey: ["job-detail", jobId],
     queryFn: () => jobService.getJobById(jobId!),
     enabled: Boolean(jobId) && open,
     staleTime: 60_000,
+    retry: 1,
   });
 
   const job = data?.job;
@@ -95,37 +96,52 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
     else toast.success("Marked as applied — check Tracker.");
   };
 
+  // Skeleton when loading or when job not yet available (prevents white flash)
+  const showSkeleton = isLoading || isFetching || (!job && !isError);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
-        {isLoading ? (
-          <div className="space-y-6 p-6 animate-pulse">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-1/3" />
+      <SheetContent className="w-full sm:max-w-lg overflow-hidden p-0 flex flex-col">
+        {showSkeleton ? (
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 animate-pulse">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+                <Skeleton className="h-12 w-12 rounded-full" />
               </div>
-              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-16 rounded-md" />
+                <Skeleton className="h-6 w-16 rounded-md" />
+                <Skeleton className="h-6 w-20 rounded-md" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/6" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Skeleton className="h-6 w-16 rounded-md" />
-              <Skeleton className="h-6 w-16 rounded-md" />
-              <Skeleton className="h-6 w-20 rounded-md" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="h-4 w-4/6" />
-            </div>
-            <div className="border-t border-brand-border pt-4 flex items-center justify-between gap-3">
-              <Skeleton className="h-8 w-24 rounded-lg" />
-              <Skeleton className="h-8 w-20 rounded-full" />
+            <div className="sticky bottom-0 bg-white border-t border-brand-border p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-20 rounded-lg" />
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-16 rounded-lg" />
+                <Skeleton className="h-8 w-20 rounded-full" />
+              </div>
             </div>
           </div>
         ) : isError ? (
           <div className="p-6 text-center">
             <p className="text-sm text-brand-foreground-muted">Failed to load job details.</p>
+            <Button variant="secondary" size="sm" className="mt-3" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
           </div>
         ) : job ? (
           <div className="flex flex-col h-full">
@@ -171,7 +187,7 @@ export function JobDrawer({ jobId, open, onOpenChange, onApply, onGenerate, onDo
               )}
             </div>
 
-            <div className="border-t border-brand-border p-4 bg-white flex flex-col gap-3">
+            <div className="sticky bottom-0 bg-white border-t border-brand-border p-4 flex flex-col gap-3">
               {isReady ? (
                 <>
                   <Button variant="primary" size="sm" className="w-full" onClick={handleDownload}>
