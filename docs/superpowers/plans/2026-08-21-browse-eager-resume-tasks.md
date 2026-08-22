@@ -1,6 +1,6 @@
 # Browse → Drawer → Eager Resume — Tasks
 
-> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE … Task 15 ✅ DONE — Task 16 per-job Saved Jobs (no Apply All) pending.
+> Branch: `feature/browse-eager-resume` from `staging`. Work task-by-task. Progress: Task 0 ✅ DONE … Task 16 ✅ DONE.
 > Prereq: `2026-08-04-ats-aggregation-relight-plan.md` is covered by Task 0. Browse was disabled (`src/app/(app)/dashboard/browse/page.tsx:3` redirects) — now re-enabled.
 
 ---
@@ -169,7 +169,7 @@
 
 ---
 
-#### TASK 16 — Saved Jobs: per-job Apply only, handling lots (no Apply All) — pending
+#### TASK 16 — Saved Jobs: per-job Apply only, handling lots (no Apply All) ✅ DONE
 *   **CTA on Browse top:** `BrowseJobGrid.tsx` header right gap (`Filters + 44 jobs found` row) add `Bookmark Save Jobs (N)` `bg-white border-brand-border` + amber badge `N` from `useSavedJobs:1` `pages.flatMap length`; click → `openSavedJobsModal(true)` (if `src/app/**/saved/page.tsx` exists later, route will be added — modal is default)
 *   **Modal `SavedJobsModal` (Image 2 minus Apply All):** `Dialog max-h-[85vh] sm:max-w-2xl rounded-xl p-0` with `DialogTitle sr-only Saved Jobs` (fixes `DialogContent requires a DialogTitle`) + header `Bookmark amber Save Jobs • N job(s) saved • X`; body `max-h-[50vh] overflow-y-auto` list of saved rows — pastel mint `bg-[#E6FFF4] index%5` variant with per-row right `Apply` black pill only (no global `Apply All`), plus row actions `→` (open `JobDrawer`), `↗` (`window.open externalApplyUrl`), `Bookmark orange` (unsave via `useUnsaveJob`); footer sticky `text Saved jobs are automatically removed when you apply…` plus when `N>10` right `View all saved jobs →` link to `/dashboard/saved`
 *   **Page for lots `src/app/(app)/dashboard/saved/page.tsx`:** route `/(app)/dashboard/saved` header `Saved Jobs • N • Search company…` (`q` input) reusing same `GET /api/seeker/saved-jobs?cursor&limit=10&q` infinite query `["saved-jobs"]` already built; handles lots via `IntersectionObserver sentinel 400px` like `Browse` (`limit 10` + `nextCursor {createdAt,id}`), `PastelCardSkeleton w-full` while `isFetchingNextPage`; same per-row `Apply` calls `ensure→generate` → `toast in progress/done` → optimistic `remove from saved` via `setQueryData(["saved-jobs"])`; no batch
