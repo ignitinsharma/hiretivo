@@ -1,6 +1,6 @@
 # Hiretivo — Development Rules
 
-**Version 3.1** · Apply across ALL sessions, tools, and phases. Reference at the start of every chat.
+**Version 3.2** · Apply across ALL sessions, tools, and phases. Reference at the start of every chat.
 
 ---
 
@@ -9,7 +9,7 @@
 ```
 1. CHECK FIRST  → search services/, lib/, modules/*/, components/shared/, app/api/
                   before building. Exists → use it. Not → build it. No duplicates.
-2. STYLING      → brand tokens → native tailwind → arbitrary (rare) → globals → style={{}} (last)
+2. STYLING      → brand tokens → CANONICAL native tailwind (prefer `*-N` over `[Npx]`) → arbitrary `[..]` (ONLY when no canonical exists) → globals → style={{}} (last)
 3. TYPES        → never `any`. Path aliases, never ../../../. Enums, never string unions.
 4. RENDER       → DRY with .map(). Handle isLoading / isError / empty / data — every time.
 5. UI           → mobile-first base, then sm:/md:/lg:. No shadows. No dark mode. No rounded-full.
@@ -99,7 +99,9 @@ new Date().toLocaleDateString()    // ❌
 
 ### Arbitrary Values
 
-Before writing `[Xpx]`, use the canonical class. Arbitrary `[X]` is ONLY valid when: value NOT divisible by 4 (310px, 132px) · ratio/em with no named equivalent · CSS feature (perspective, translateZ, blur) · sub-pixel micro-typography (10/11/13px) · a color (still follow token priority).
+Before writing `[Xpx]`, use the canonical class. Any `*-[Xpx]` where `X ÷ 4` is an integer and a `*-{X/4}` canonical utility exists (true in Tailwind v4) → use the canonical class. Arbitrary `[X]` is ONLY valid when: value NOT divisible by 4 (310px, 132px) · ratio/em with no named equivalent · CSS feature (perspective, translateZ, blur) · sub-pixel micro-typography (10/11/13px) · a color (still follow token priority).
+
+If the Tailwind language server flags an arbitrary class via `suggestCanonicalClasses`, the canonical class is MANDATORY — never emit the arbitrary form.
 
 | Arbitrary | Canonical | Arbitrary | Canonical |
 |-----------|-----------|-----------|-----------|
@@ -107,7 +109,10 @@ Before writing `[Xpx]`, use the canonical class. Arbitrary `[X]` is ONLY valid w
 | `text-[48px]` | `text-5xl` | `leading-[1.625]`/`[1.7]` | `leading-relaxed` |
 | `text-[36px]` | `text-4xl` | `leading-[2]` | `leading-loose` |
 | `text-[30px]` | `text-3xl` | `tracking-[-0.05em]` | `tracking-tighter` |
-| `max-w/w/h/gap/p-[Xpx]` where X÷4=N | `*-N` | `tracking-[-0.025em]` | `tracking-tight` |
+| `h/w/min-h/min-w/max-h/max-w/size-[Xpx]` where X÷4=N | `*-N` | `tracking-[-0.025em]` | `tracking-tight` |
+| `min-h-[44px]` | `min-h-11` | `h-[72px]` | `h-18` |
+| `min-h-[80px]` | `min-h-20` | `max-h-[400px]` | `max-h-100` |
+| `w-[280px]` | `w-70` | `h-[1px]` / `w-[1px]` | `h-px` / `w-px` |
 
 ### Component Patterns
 
@@ -151,6 +156,8 @@ className="dark:bg-gray-900"                 // no dark mode
 className="font-extrabold"                   // → font-bold (no 800+)
 className="rounded-full"                     // on inputs/cards → rounded-lg / rounded-xl
 className="max-w-[460px]"                    // arbitrary when canonical exists → max-w-lg
+className="min-h-[44px]"                    // arbitrary when canonical exists → min-h-11 (44 ÷ 4 = 11)
+className="[Npx]" for N divisible by 4      // arbitrary when canonical exists → *-{N/4}
 ```
 
 ---

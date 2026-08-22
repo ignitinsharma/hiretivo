@@ -32,10 +32,10 @@ export function AddYourOwnLinkCard({ className }: { className?: string }) {
           </div>
         </div>
 
-        <h3 className="text-[15px] font-semibold leading-snug text-brand-foreground line-clamp-2 min-h-[44px]">Add Your Own Link</h3>
+        <h3 className="text-5 font-semibold leading-snug text-brand-foreground line-clamp-2 min-h-[44px]">Add Your Own Link</h3>
 
         <p className="text-xs text-brand-foreground-muted">Paste a URL and optional job description</p>
-        {/* <p className="text-[11px] text-brand-foreground-muted line-clamp-2">Add any ATS link or paste description directly — quick apply supports all major boards.</p> */}
+        <p className="text-[11px] leading-3 text-brand-foreground-muted line-clamp-2">Add any ATS link or paste description directly — quick apply supports all major boards.</p>
       </div>
 
       <div className="bg-white flex items-center justify-between px-3 py-2.5 border-t border-gray-200">

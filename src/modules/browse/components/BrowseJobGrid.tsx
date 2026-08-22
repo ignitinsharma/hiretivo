@@ -107,16 +107,21 @@ export function BrowseJobGrid() {
       });
       return;
     }
+    // Optimistic immediate remove — job disappears from UI on click, not after network
+    const previousBrowse = queryClient.getQueryData(["browse"]);
+    removeJobFromBrowse(jobId);
     addGeneratingJobId(jobId);
     toast("Resume generation in progress.");
     try {
       const app = await applicationService.ensureApplication(jobId);
       setJobAppIdMap((prev) => ({ ...prev, [jobId]: app.id }));
-      await applicationService.generateResume(app.id);
+      // Invalidate so dashboard table shows row immediately as Generating
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      // Remove from browse view after generate starts (per flow: added to All Applications, removed from UI)
-      removeJobFromBrowse(jobId);
+      await applicationService.generateResume(app.id);
+      // Done toast comes from status poll; keep removed from browse
     } catch (error: unknown) {
+      // Rollback on failure — put card back
+      if (previousBrowse) queryClient.setQueryData(["browse"], previousBrowse);
       const msg = error instanceof Error ? error.message : "Failed to start generation.";
       const apiMsg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
       const text = apiMsg ?? msg;

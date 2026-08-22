@@ -82,15 +82,17 @@ export function TopJobRow() {
       openPaidFeatureModal({ feature: "resume_generation", title: "Upgrade plan", description: `You've used all ${quota.limit} generations this month. Upgrade to continue.` });
       return;
     }
+    const previous = queryClient.getQueryData(["jobs"]);
+    removeFromRow(jobId);
     addGeneratingJobId(jobId);
     toast("Resume generation in progress.");
     try {
       const app = await applicationService.ensureApplication(jobId);
       setJobAppIdMap((prev) => ({ ...prev, [jobId]: app.id }));
-      await applicationService.generateResume(app.id);
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      removeFromRow(jobId);
+      await applicationService.generateResume(app.id);
     } catch (error: any) {
+      if (previous) queryClient.setQueryData(["jobs"], previous);
       const apiMsg = error?.response?.data?.error;
       const text = apiMsg ?? (error instanceof Error ? error.message : "Failed to start generation.");
       if (text.toLowerCase().includes("limit") || text.toLowerCase().includes("upgrade")) {

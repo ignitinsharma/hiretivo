@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, Eye, MoreHorizontal, Briefcase } from "lucide-react";
+import { Search, Eye, MoreHorizontal, Briefcase, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -25,12 +25,18 @@ const STATUS_LABELS: Record<string, string> = {
   [ApplicationStatus.REJECTED]: "Rejected",
 };
 
-function getDynamicStatus(app: SeekerApplicationItem): { label: string; className: string } {
-  if (app.automationStatus === AutomationStatus.SUBMITTED) {
-    return { label: "Applied", className: "text-brand-success bg-brand-success/10" };
+function getDynamicStatus(app: SeekerApplicationItem): { label: string; className: string; isGenerating?: boolean } {
+  if (app.automationStatus === AutomationStatus.GENERATING) {
+    return { label: "Generating", className: "text-amber-700 bg-amber-50 border border-amber-200", isGenerating: true };
   }
   if (app.automationStatus === AutomationStatus.READY) {
-    return { label: "Resume Generated", className: "text-amber-600 bg-amber-50" };
+    return { label: "Generated", className: "text-emerald-700 bg-emerald-50 border border-emerald-200" };
+  }
+  if (app.automationStatus === AutomationStatus.FAILED) {
+    return { label: "Resume Failed", className: "text-red-700 bg-red-50 border border-red-200" };
+  }
+  if (app.automationStatus === AutomationStatus.SUBMITTED) {
+    return { label: "Applied", className: "text-brand-success bg-brand-success/10" };
   }
   return { label: "Not Ready", className: "text-brand-foreground-secondary bg-brand-foreground-secondary/10" };
 }
@@ -45,16 +51,43 @@ function getAppliedColumn(app: SeekerApplicationItem): string {
 export function ApplicationsTable() {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState<Tab>("All");
+  const [search, setSearch] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationService.getMyApplications,
-    staleTime: 30_000,
+    staleTime: 5_000,
+    refetchInterval: (query) => {
+      const data = query.state.data as SeekerApplicationItem[] | undefined;
+      const hasGenerating = data?.some((a) => a.automationStatus === AutomationStatus.GENERATING);
+      return hasGenerating ? 3000 : false;
+    },
   });
 
-  const filtered = activeTab === "All"
-    ? applications
-    : applications.filter((a) => a.status === activeTab);
+  const filtered = React.useMemo(() => {
+    let list = activeTab === "All" ? applications : applications.filter((a) => a.status === activeTab);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((a) => a.companyName.toLowerCase().includes(q) || a.jobTitle.toLowerCase().includes(q));
+    }
+    return list;
+  }, [applications, activeTab, search]);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+  const paginated = React.useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    return filtered.slice(start, start + rowsPerPage);
+  }, [filtered, page, rowsPerPage]);
+
+  // Edge: reset page when filters/search/rowsPerPage change or when total shrinks (e.g., after dismiss)
+  React.useEffect(() => { setPage(1); }, [search, activeTab, rowsPerPage]);
+  React.useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
+
+  const showingFrom = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
+  const showingTo = Math.min(page * rowsPerPage, total);
 
   return (
     <div className="bg-white rounded-card border border-brand-border shadow-card overflow-hidden">
@@ -85,7 +118,9 @@ export function ApplicationsTable() {
             <input
               type="text"
               placeholder="Search company..."
-              className="bg-transparent border-none outline-none text-xs text-brand-foreground placeholder:text-brand-foreground-muted w-28"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-transparent border-none outline-none text-xs text-brand-foreground placeholder:text-brand-foreground-muted w-32"
             />
           </div>
         </div>
@@ -100,7 +135,7 @@ export function ApplicationsTable() {
             <p className="text-brand-foreground font-semibold text-base">No applications yet</p>
             <p className="text-brand-foreground-muted text-sm mt-1">
               {applications.length > 0
-                ? "No applications match this status."
+                ? "No applications match this search or status."
                 : "Start applying to jobs to track your progress here."}
             </p>
           </div>
@@ -111,6 +146,7 @@ export function ApplicationsTable() {
             <thead>
               <tr className="border-t border-brand-border">
                 <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Company</th>
+                <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Resume</th>
                 <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Status</th>
                 <th className="text-left text-xs font-medium text-brand-foreground-secondary px-5 py-3">Applied</th>
                 <th className="w-12 px-5 py-3"></th>
@@ -118,7 +154,7 @@ export function ApplicationsTable() {
             </thead>
             <tbody aria-busy={isLoading}>
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
+                Array.from({ length: rowsPerPage === 10 ? 5 : Math.min(rowsPerPage, 5) }).map((_, i) => (
                   <tr key={i} className="border-t border-brand-border">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
@@ -128,6 +164,9 @@ export function ApplicationsTable() {
                           <Skeleton className="h-3 w-24" />
                         </div>
                       </div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <Skeleton className="h-6 w-20 rounded-pill" />
                     </td>
                     <td className="px-5 py-3.5">
                       <Skeleton className="h-6 w-20 rounded-pill" />
@@ -144,8 +183,9 @@ export function ApplicationsTable() {
                   </tr>
                 ))
               ) : (
-                filtered.map((app) => {
+                paginated.map((app) => {
                   const dynamicStatus = getDynamicStatus(app);
+                  const isGenerating = app.automationStatus === AutomationStatus.GENERATING;
                   return (
                     <tr
                       key={app.id}
@@ -173,6 +213,26 @@ export function ApplicationsTable() {
                             <p className="text-xs text-brand-foreground-muted">{app.jobTitle}</p>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {isGenerating ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-pill border border-amber-200 bg-amber-50 text-amber-700">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Generating
+                          </span>
+                        ) : app.automationStatus === AutomationStatus.READY ? (
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded-pill border border-emerald-200 bg-emerald-50 text-emerald-700">
+                            Generated
+                          </span>
+                        ) : app.automationStatus === AutomationStatus.FAILED ? (
+                          <span className="text-xs font-semibold px-2.5 py-1 rounded-pill border border-red-200 bg-red-50 text-red-700" title={app.failureReason ?? undefined}>
+                            Failed
+                          </span>
+                        ) : (
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${dynamicStatus.className}`}>
+                            {dynamicStatus.label}
+                          </span>
+                        )}
                       </td>
                       <td className="px-5 py-3.5">
                         <span className={`text-xs font-semibold px-2.5 py-1 rounded-pill ${dynamicStatus.className}`}>
@@ -209,6 +269,77 @@ export function ApplicationsTable() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination — Rows per page 10/25/50 + 1 2 3 4 Next, handles lots */}
+      {total > 0 && (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-brand-border bg-white flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-xs text-brand-foreground-muted">
+            <span>Rows per page</span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => setRowsPerPage(Number(e.target.value))}
+              className="border border-brand-border rounded-lg bg-white px-2 py-1 text-xs text-brand-foreground"
+              aria-label="Rows per page"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+            <span>Showing {showingFrom}–{showingTo} of {total}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
+              aria-label="First page"
+            >
+              <ChevronsLeft className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            {Array.from({ length: Math.min(4, totalPages) }).map((_, i) => {
+              const n = i + 1;
+              // Simple: show 1..4, and if totalPages>4, 4th is last page when page>4? For minimal keep 1-4 only. User asked simple 1 2 3 4 Next.
+              const pageNum = n;
+              if (pageNum > totalPages) return null;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`h-7 min-w-7 px-2 flex items-center justify-center rounded-lg text-xs font-semibold border ${page === pageNum ? "bg-[#0a0a0a] text-white border-[#0a0a0a]" : "bg-white border-brand-border hover:bg-brand-surface"}`}
+                  aria-current={page === pageNum ? "page" : undefined}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            {/* Next */}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="h-7 px-2.5 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface text-xs font-medium"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            </button>
+            <button
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              className="h-7 w-7 flex items-center justify-center rounded-lg border border-brand-border bg-white disabled:opacity-40 hover:bg-brand-surface"
+              aria-label="Last page"
+            >
+              <ChevronsRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </div>
