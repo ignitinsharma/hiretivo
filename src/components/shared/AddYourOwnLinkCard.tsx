@@ -13,7 +13,7 @@ export function AddYourOwnLinkCard({ className }: { className?: string }) {
 
   return (
     <div
-      className={`flex flex-col rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all duration-150 ${className ?? "w-full"}`}
+      className={`flex flex-col rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all duration-150 h-[285px] ${className ?? "w-full"}`}
       style={{ backgroundColor: "#E6FFF4" }}
       onClick={openAddCustomJobModal}
       role="button"
@@ -21,7 +21,7 @@ export function AddYourOwnLinkCard({ className }: { className?: string }) {
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openAddCustomJobModal(); } }}
     >
-      <div className="p-4 flex-1 flex flex-col gap-4">
+      <div className="p-4 flex-1 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-sm font-medium text-brand-foreground">Workday, Greenhouse</p>
