@@ -17,6 +17,19 @@ Before building any feature or multi-step task:
 1. Load the **brainstorming** skill (`skill({ name: "brainstorming" })`) to explore intent, requirements, and design before implementation.
 2. For any multi-step task, load **writing-plans** (`skill({ name: "writing-plans" })`) to produce a plan before touching code.
 
+## Breaking changes — mandatory disclosure
+
+Before building any feature, check whether the change breaks existing features
+(e.g. Feature A touches shared code that Feature B depends on). If a breaking
+change is found or expected:
+
+1. STOP and notify the user in advance — list exactly what will break and why.
+2. Do NOT start implementing until the user acknowledges.
+3. After any change, call out affected areas so the user can test them.
+
+Applies to shared utilities, components, types, API routes, DB schema, and any
+code reused by other features. No silent breakage.
+
 ## Debugging
 
 For any bug investigation, test failure, or unexpected behavior:

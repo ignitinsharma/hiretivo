@@ -165,9 +165,9 @@ export async function POST(req: NextRequest) {
 /*
  * GET /api/applications
  * Lists the authenticated seeker's applications with job summary data.
- * Returns normalized application cards or auth/rate-limit errors.
+ * Server paginated (?page & ?limit & ?q & ?tab) for scale — front-end 10/25/50.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -184,6 +184,14 @@ export async function GET() {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
+  const url = new URL(req.url);
+  const rawPage = Number(url.searchParams.get("page") ?? "1");
+  const rawLimit = Number(url.searchParams.get("limit") ?? "10");
+  const q = (url.searchParams.get("q") ?? "").trim();
+  const tab = url.searchParams.get("tab") ?? "All";
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+  const limit = [10, 25, 50, 100].includes(rawLimit) ? rawLimit : 10;
+
   // Resolve stale GENERATING runs (dead workers etc.) so the tracker board
   // never shows a spinner forever — same timeout as the per-application route.
   await prisma.application.updateMany({
@@ -198,8 +206,33 @@ export async function GET() {
     },
   });
 
+  // Server pagination + search/tab for scale (dedicated server 10/25/50)
+  const where: any = { seekerId: session.user.id };
+  if (tab !== "All" && (Object.values(ApplicationStatus) as string[]).includes(tab)) {
+    where.status = tab;
+  }
+  if (q) {
+    where.job = {
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { companyName: { contains: q, mode: "insensitive" } },
+      ],
+    };
+  }
+
+  const seekerProfile = await prisma.seekerProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { skills: { select: { skillId: true } } },
+  });
+  const seekerSkillIds = seekerProfile?.skills.map((s) => s.skillId) ?? [];
+
+  const total = await prisma.application.count({ where });
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(page, totalPages);
+  const skip = (safePage - 1) * limit;
+
   const applications = await prisma.application.findMany({
-    where: { seekerId: session.user.id },
+    where,
     select: {
       id: true,
       jobId: true,
@@ -236,21 +269,15 @@ export async function GET() {
       },
     },
     orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
   });
-
-  // Seeker skill IDs for per-application matched/missing skill computation
-  const seekerProfile = await prisma.seekerProfile.findUnique({
-    where: { userId: session.user.id },
-    select: { skills: { select: { skillId: true } } },
-  });
-  const seekerSkillIds = seekerProfile?.skills.map((s) => s.skillId) ?? [];
 
   const validApplications = applications.filter((a) => a.job);
 
-  return NextResponse.json(
-    validApplications.map((application) => {
-      const job = application.job!;
-      return ({
+  const data = validApplications.map((application) => {
+    const job = application.job!;
+    return {
       id: application.id,
       jobId: application.jobId,
       jobTitle: job.title,
@@ -258,11 +285,7 @@ export async function GET() {
       companyName: job.companyName ?? "Unknown Company",
       companyLogoUrl: resolveLogoUrl(job.companyLogoUrl),
       location: job.location,
-      salaryRange: formatSalaryRange(
-        job.salaryMin,
-        job.salaryMax,
-        job.currency,
-      ),
+      salaryRange: formatSalaryRange(job.salaryMin, job.salaryMax, job.currency),
       jobType: job.jobType,
       workType: job.workType,
       experienceLevel: job.experienceLevel,
@@ -273,15 +296,17 @@ export async function GET() {
       failureReason: application.failureReason,
       pipelineStage: application.pipelineStage,
       skills: job.skills.map((jobSkill) => jobSkill.skill.name),
-      matchedSkillNames: job.skills
-        .filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId))
-        .map((jobSkill) => jobSkill.skill.name),
+      matchedSkillNames: job.skills.filter((jobSkill) => seekerSkillIds.includes(jobSkill.skillId)).map((jobSkill) => jobSkill.skill.name),
       missingSkills: getMissingSkillNames(seekerSkillIds, job.skills),
       description: job.description ? stripHtml(job.description) : null,
       applicantCount: job._count.applications,
       status: application.status,
       appliedAt: application.createdAt.toISOString(),
-    });
-  }),
-  );
+    };
+  });
+
+  return NextResponse.json({
+    data,
+    pagination: { page: safePage, limit, total, totalPages },
+  });
 }

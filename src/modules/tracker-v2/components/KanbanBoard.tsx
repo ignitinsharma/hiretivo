@@ -8,7 +8,7 @@ import {
   useDndContext,
   pointerWithin,
 } from "@dnd-kit/core";
-import { Search, LineChart, TrendingUp, Clock, Send, Users, Star, XCircle } from "lucide-react";
+import { Search, LineChart, TrendingUp, Clock, Send, Users, Star, XCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { applicationService } from "@/services/application.service";
@@ -17,6 +17,8 @@ import { KanbanColumn } from "./KanbanColumn";
 import { KanbanCard, KanbanCardOverlay } from "./KanbanCard";
 import { BoardSkeleton } from "./BoardSkeleton";
 import { BoardError } from "./BoardError";
+import { LogExternalJobDialog } from "./LogExternalJobDialog";
+import { Button } from "@/components/ui/button";
 import { useKanbanDrag } from "../hooks/useKanbanDrag";
 
 import type { SeekerApplicationItem } from "@/modules/seeker/applications/types/application.types";
@@ -175,6 +177,7 @@ export function KanbanBoard() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
   const { snapshotScroll, restoreIfNeeded } = useScrollPreservation(boardRef);
 
@@ -285,7 +288,12 @@ export function KanbanBoard() {
             className="w-full border-none bg-transparent text-sm text-brand-foreground outline-none placeholder:text-brand-foreground-secondary"
           />
         </div>
+        <Button variant="secondary" size="sm" className="shrink-0 h-9 gap-1.5" onClick={() => setLogDialogOpen(true)} aria-label="Log external apply">
+          <Plus className="h-3.5 w-3.5" />
+          Log External Apply
+        </Button>
       </div>
+      <LogExternalJobDialog open={logDialogOpen} onOpenChange={setLogDialogOpen} />
 
       <DndContext
         sensors={sensors}

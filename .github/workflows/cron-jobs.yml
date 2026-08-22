@@ -2,44 +2,34 @@ name: ATS Cron Jobs
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # Ashby      — 00:00 UTC daily
-    - cron: '15 0 * * *'  # Greenhouse — 00:15 UTC daily
-    - cron: '30 0 * * *'  # Lever      — 00:30 UTC daily
-    - cron: '0 3 * * 0'   # Cleanup    — 03:00 UTC every Sunday
+    - cron: '0 9 * * *'   # Ashby+Lever — 09:00 UTC daily (Hobby 2-cron split)
+    - cron: '15 9 * * *'  # Greenhouse — 09:15 UTC daily
+    - cron: '30 0 * * *'  # Cleanup — 00:30 UTC daily (CLOSED>30d delete, no Verce cron)
 
 jobs:
-  ashby:
-    if: github.event.schedule == '0 0 * * *'
+  ashby-lever:
+    if: github.event.schedule == '0 9 * * *'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Ashby fetch
+      - name: Trigger Ashby+Lever fetch (Hobby-safe combined)
         run: |
-          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-ashby" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-fetch/ashby-lever" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   greenhouse:
-    if: github.event.schedule == '15 0 * * *'
+    if: github.event.schedule == '15 9 * * *'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Greenhouse fetch
         run: |
-          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-greenhouse" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
-
-  lever:
-    if: github.event.schedule == '30 0 * * *'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Lever fetch
-        run: |
-          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-lever" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-fetch/greenhouse" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   cleanup:
-    if: github.event.schedule == '0 3 * * 0'
+    if: github.event.schedule == '30 0 * * *'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger ATS cleanup
+      - name: Trigger ATS cleanup (CLOSED>30d delete)
         run: |
           curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-cleanup" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

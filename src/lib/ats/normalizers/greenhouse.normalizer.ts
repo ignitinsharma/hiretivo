@@ -1,6 +1,7 @@
 import { classifyLocation } from '@/lib/ats/location-normalizer';
 import { extractSkillsFromText } from '@/lib/ats/skill-extractor';
 import { detectVisaSponsorship } from '@/lib/ats/visa-extractor';
+import { detectExperienceLevel } from '@/lib/ats/experience-extractor';
 import { stripHtml } from '@/lib/utils';
 import type { NormalizedJob } from './ashby.normalizer';
 
@@ -58,6 +59,7 @@ export function normalizeGreenhouseJob(
   const allText = `${job.title} ${description}`;
   const skillMatches = extractSkillsFromText(allText, skills);
   const visaSponsored = detectVisaSponsorship(description);
+  const experienceLevel = detectExperienceLevel(job.title ?? "", description);
 
   return {
     atsSource: 'greenhouse',
@@ -69,7 +71,7 @@ export function normalizeGreenhouseJob(
     salaryMin: null,
     salaryMax: null,
     currency: null,
-    experienceLevel: null,
+    experienceLevel,
     category: job.departments?.[0]?.name ?? null,
     location: locationStr,
     locationClass: classified.locationClass,

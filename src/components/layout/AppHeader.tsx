@@ -31,28 +31,11 @@ export function AppHeader() {
           aria-label="Main navigation"
         >
           {NAV_ITEMS.map((item) => {
-            const isDisabled = item.href === "/dashboard/browse";
             const isActive =
               item.href === "/dashboard"
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
-            if (isDisabled) {
-              return (
-                <span
-                  key={item.href}
-                  className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-pill cursor-default opacity-60"
-                  aria-disabled="true"
-                  role="link"
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {item.label}
-                  <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary">
-                    Soon
-                  </span>
-                </span>
-              );
-            }
             return (
               <Link
                 key={item.href}
@@ -88,28 +71,11 @@ export function AppHeader() {
       {mobileMenuOpen && (
         <nav className="md:hidden border-t border-brand-border bg-white px-4 py-3 space-y-1">
           {NAV_ITEMS.map((item) => {
-            const isDisabled = item.href === "/dashboard/browse";
             const isActive =
               item.href === "/dashboard"
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
-            if (isDisabled) {
-              return (
-                <span
-                  key={item.href}
-                  className="flex items-center gap-3 text-sm font-medium px-4 py-2 rounded-pill cursor-default opacity-60"
-                  aria-disabled="true"
-                  role="link"
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                  <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary">
-                    Soon
-                  </span>
-                </span>
-              );
-            }
             return (
               <Link
                 key={item.href}

@@ -324,11 +324,15 @@ export function extractJobPostingJsonLd(html: string): JobPostingJsonLd | null {
  * ── Public API ───────────────────────────────────────────
  */
 
-const JS_APP_DOMAINS = [
-  "workday", "myworkdayjobs",
-  "taleo",
-  "successfactors", "sapsf",
-  "icims",
+/*
+ * SUPPORTED_ATS_DOMAINS — positive allowlist of ATS domains whose job pages
+ * are server-rendered and fetchable by parseJobFromUrl. URLs outside this list
+ * are rejected and the user is redirected to paste the description instead.
+ */
+const SUPPORTED_ATS_DOMAINS = [
+  "jobs.ashbyhq.com",
+  "boards.greenhouse.io",
+  "jobs.lever.co",
 ];
 
 const GREENHOUSE_CUSTOM_BOARDS: Record<string, string> = {
@@ -395,15 +399,22 @@ async function parseGreenhouseJobFromUrl(url: string): Promise<ParsedJob | null>
   }
 }
 
-function isUnsupportedAtsDomain(url: string): boolean {
-  return JS_APP_DOMAINS.some((d) => url.includes(d));
+/*
+ * isSupportedAtsDomain
+ * Returns true if the URL belongs to an ATS whose job page we can auto-fetch.
+ */
+export function isSupportedAtsDomain(url: string): boolean {
+  try {
+    const lower = url.toLowerCase();
+    return SUPPORTED_ATS_DOMAINS.some((d) => lower.includes(d));
+  } catch {
+    return false;
+  }
 }
 
-export { isUnsupportedAtsDomain };
-
 export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
-  if (isUnsupportedAtsDomain(url)) {
-    console.warn(`[jd-parser] Unsupported JS-heavy ATS domain — ${url}`);
+  if (!isSupportedAtsDomain(url)) {
+    console.warn(`[jd-parser] URL not in the auto-fetch allowlist — ${url}`);
     return null;
   }
   if (isAshbyUrl(url)) {
