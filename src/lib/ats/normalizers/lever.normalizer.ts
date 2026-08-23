@@ -1,6 +1,7 @@
 import { classifyLocation } from '@/lib/ats/location-normalizer';
 import { extractSkillsFromText } from '@/lib/ats/skill-extractor';
 import { detectVisaSponsorship } from '@/lib/ats/visa-extractor';
+import { detectExperienceLevel } from '@/lib/ats/experience-extractor';
 import { stripHtml } from '@/lib/utils';
 import type { NormalizedJob } from './ashby.normalizer';
 
@@ -67,6 +68,7 @@ export function normalizeLeverJob(
   const allText = `${job.text} ${description}`;
   const skillMatches = extractSkillsFromText(allText, skills);
   const visaSponsored = detectVisaSponsorship(description);
+  const experienceLevel = detectExperienceLevel(job.text ?? "", description);
 
   const jobType = mapLeverCommitment(job.categories?.commitment);
 
@@ -80,7 +82,7 @@ export function normalizeLeverJob(
     salaryMin: job.salaryRange?.min ?? null,
     salaryMax: job.salaryRange?.max ?? null,
     currency: job.salaryRange?.currency ?? null,
-    experienceLevel: null,
+    experienceLevel,
     category: job.categories?.department ?? job.categories?.team ?? null,
     location: locationStr,
     locationClass: classified.locationClass,

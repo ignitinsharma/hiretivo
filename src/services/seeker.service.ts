@@ -37,10 +37,18 @@ export interface SeekerSettingsData {
 
 export const seekerService = {
   getFeed: async (
-    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string },
+    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string; visaSponsored?: boolean; experienceLevel?: string },
     signal?: AbortSignal,
   ): Promise<SeekerFeedResponse> => {
     const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params, signal });
+    return data;
+  },
+
+  getBrowseFeed: async (
+    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string; visaSponsored?: boolean; experienceLevel?: string },
+    signal?: AbortSignal,
+  ): Promise<SeekerFeedResponse> => {
+    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/browse', { params, signal });
     return data;
   },
 

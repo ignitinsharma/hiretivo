@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import { BrowseJobGrid } from "@/modules/browse/components/BrowseJobGrid";
 
+/*
+ * BrowseJobsPage
+ * Authenticated job feed — search, filters, infinite scroll, job drawer.
+ */
 export default function BrowseJobsPage() {
-  redirect("/dashboard");
+  return <BrowseJobGrid />;
 }

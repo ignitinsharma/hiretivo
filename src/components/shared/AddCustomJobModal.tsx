@@ -102,8 +102,17 @@ export function AddCustomJobModal() {
 
       if (!res.ok) {
         if (res.status === 422) {
-          setUnsupportedAts(data.unsupportedAts ?? false);
-          setError(data.error ?? "Could not parse this URL.");
+          const isUnsupported = data.unsupportedAts ?? false;
+          setUnsupportedAts(isUnsupported);
+          if (isUnsupported) {
+            setTab("text");
+            setState("idle");
+            setError(null);
+            setPreview(null);
+            setShowFullJd(false);
+          } else {
+            setError(data.error ?? "Could not parse this URL.");
+          }
         } else if (res.status === 409) {
           setError(data.error ?? "You have already applied to this job.");
         } else {
@@ -207,7 +216,7 @@ export function AddCustomJobModal() {
 
   return (
     <Dialog open={isAddCustomJobModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg rounded-xl border border-brand-border bg-white p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-brand-foreground">
             Add Custom Job
