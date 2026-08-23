@@ -180,6 +180,18 @@ export default async function AdminPage({
         </SectionCard>
       </div>
 
+      <SectionCard title="Seekers">
+        <SeekersTable
+          seekers={stats.seekers}
+          total={stats.totalSeekersForTable}
+          page={stats.page}
+          pageSize={stats.pageSize}
+          query={params.q ?? ""}
+        />
+      </SectionCard>
+
+      <hr className="border-t border-brand-border" />
+
       <SectionCard title="Active Jobs · Overview">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard label="Active jobs" value={jobsStats.totalActive} hint="OPEN · visible in Browse" />
@@ -208,16 +220,6 @@ export default async function AdminPage({
           pageSize={jobsStats.pageSize}
           query={params.jq ?? ""}
           source={params.jsrc ?? "All"}
-        />
-      </SectionCard>
-
-      <SectionCard title="Seekers">
-        <SeekersTable
-          seekers={stats.seekers}
-          total={stats.totalSeekersForTable}
-          page={stats.page}
-          pageSize={stats.pageSize}
-          query={params.q ?? ""}
         />
       </SectionCard>
     </div>
