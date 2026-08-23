@@ -52,6 +52,31 @@ export interface AdminSeekerRow {
   applicationCount: number;
 }
 
+export interface AdminJobRow {
+  id: string;
+  title: string;
+  companyName: string | null;
+  atsSource: string | null;
+  location: string | null;
+  locationClass: string | null;
+  publishedAt: Date | null;
+  lastSeenAt: Date | null;
+  applicantCount: number;
+  status: string;
+}
+
+export interface AdminJobsStats {
+  totalActive: number;
+  totalClosed: number;
+  totalManual: number;
+  newJobs7d: number;
+  perSource: { source: string; count: number }[];
+  jobs: AdminJobRow[];
+  totalForTable: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface AdminDashboardStats {
   newSeekers7d: number;
   totalSeekers: number;
@@ -190,6 +215,89 @@ export async function getAdminDashboardStats(
       applicationCount: s._count.applications,
     })),
     totalSeekersForTable,
+    page,
+    pageSize,
+  };
+}
+
+export async function getAdminJobsStats({
+  page = 1,
+  pageSize = 25,
+  q,
+  source,
+}: {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  source?: string;
+} = {}): Promise<AdminJobsStats> {
+  const now = new Date();
+  const whereActive: Prisma.JobWhereInput = { status: "OPEN" };
+  const whereForTable: Prisma.JobWhereInput = {
+    status: "OPEN",
+    ...(source && source !== "All" ? { atsSource: source } : {}),
+    ...(q?.trim()
+      ? {
+          OR: [
+            { title: { contains: q.trim(), mode: "insensitive" as const } },
+            { companyName: { contains: q.trim(), mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+
+  const [totalActive, totalClosed, totalManual, newJobs7d, perSourceRaw, jobs, totalForTable] = await Promise.all([
+    prisma.job.count({ where: { status: "OPEN" } }),
+    prisma.job.count({ where: { status: "CLOSED" } }),
+    prisma.job.count({ where: { status: "DRAFT", isManual: true } }),
+    prisma.job.count({ where: { status: "OPEN", createdAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } } }),
+    prisma.job.groupBy({
+      by: ["atsSource"],
+      where: { status: "OPEN" },
+      _count: { _all: true },
+    }),
+    prisma.job.findMany({
+      where: whereForTable,
+      select: {
+        id: true,
+        title: true,
+        companyName: true,
+        atsSource: true,
+        location: true,
+        locationClass: true,
+        publishedAt: true,
+        lastSeenAt: true,
+        status: true,
+        _count: { select: { applications: true } },
+      },
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.job.count({ where: whereForTable }),
+  ]);
+
+  const perSource = perSourceRaw.map((g) => ({ source: g.atsSource ?? "—", count: g._count._all }));
+
+  return {
+    totalActive,
+    totalClosed,
+    totalManual,
+    newJobs7d,
+    perSource,
+    jobs: jobs.map((j) => ({
+      id: j.id,
+      title: j.title,
+      companyName: j.companyName,
+      atsSource: j.atsSource,
+      location: j.location,
+      locationClass: j.locationClass,
+      publishedAt: j.publishedAt,
+      lastSeenAt: j.lastSeenAt,
+      applicantCount: j._count.applications,
+      status: j.status,
+    })),
+    totalForTable,
     page,
     pageSize,
   };
