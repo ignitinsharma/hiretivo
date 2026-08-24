@@ -2,18 +2,19 @@ name: ATS Cron Jobs
 
 on:
   schedule:
-    - cron: '0 9 * * *'   # Ashby+Lever — 09:00 UTC daily (Hobby 2-cron split)
+    - cron: '0 9 * * *'   # Ashby — 09:00 UTC daily
     - cron: '15 9 * * *'  # Greenhouse — 09:15 UTC daily
+    - cron: '30 9 * * *'  # Lever — 09:30 UTC daily
     - cron: '30 0 * * *'  # Cleanup — 00:30 UTC daily (CLOSED>30d delete, no Verce cron)
 
 jobs:
-  ashby-lever:
+  ashby:
     if: github.event.schedule == '0 9 * * *'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Ashby+Lever fetch (Hobby-safe combined)
+      - name: Trigger Ashby fetch
         run: |
-          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-fetch/ashby-lever" \
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-fetch/ashby" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   greenhouse:
@@ -23,6 +24,15 @@ jobs:
       - name: Trigger Greenhouse fetch
         run: |
           curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-fetch/greenhouse" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+  lever:
+    if: github.event.schedule == '30 9 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Lever fetch
+        run: |
+          curl -sfL -X GET "${{ secrets.PROD_URL }}/api/cron/ats-fetch/lever" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   cleanup:

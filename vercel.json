@@ -14,7 +14,7 @@
   },
   "crons": [
     {
-      "path": "/api/cron/ats-fetch/ashby-lever",
+      "path": "/api/cron/ats-fetch/ashby",
       "schedule": "0 9 * * *"
     },
     {
