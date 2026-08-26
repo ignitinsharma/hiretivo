@@ -233,9 +233,11 @@ export async function getAdminJobsStats({
 } = {}): Promise<AdminJobsStats> {
   const now = new Date();
   const whereActive: Prisma.JobWhereInput = { status: "OPEN" };
+  // Manual = atsSource null (from-link external), keep separate from cron sources
+  const isManualFilter = source === "Manual";
   const whereForTable: Prisma.JobWhereInput = {
     status: "OPEN",
-    ...(source && source !== "All" ? { atsSource: source } : {}),
+    ...(source && source !== "All" ? (isManualFilter ? { atsSource: null } : { atsSource: source }) : {}),
     ...(q?.trim()
       ? {
           OR: [
@@ -277,7 +279,14 @@ export async function getAdminJobsStats({
     prisma.job.count({ where: whereForTable }),
   ]);
 
-  const perSource = perSourceRaw.map((g) => ({ source: g.atsSource ?? "—", count: g._count._all }));
+  // Proper per-source: Manual for null, ensure Lever shows even if 0 (was hidden as — 12)
+  const sourceMap = new Map(perSourceRaw.map((g) => [g.atsSource ?? "Manual", g._count._all]));
+  const perSource = [
+    { source: "Ashby", count: sourceMap.get("ashby") ?? 0 },
+    { source: "Greenhouse", count: sourceMap.get("greenhouse") ?? 0 },
+    { source: "Lever", count: sourceMap.get("lever") ?? 0 },
+    { source: "Manual", count: sourceMap.get("Manual") ?? 0 },
+  ].filter((p) => p.count > 0);
 
   return {
     totalActive,

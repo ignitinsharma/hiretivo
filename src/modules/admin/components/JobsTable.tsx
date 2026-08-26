@@ -13,6 +13,7 @@ const SOURCE_COLOR: Record<string, string> = {
   ashby: "bg-violet-100 text-violet-700",
   greenhouse: "bg-emerald-100 text-emerald-700",
   lever: "bg-blue-100 text-blue-700",
+  Manual: "bg-gray-100 text-gray-600",
 };
 
 export function JobsTable({
@@ -74,6 +75,7 @@ export function JobsTable({
             <option value="ashby">Ashby</option>
             <option value="greenhouse">Greenhouse</option>
             <option value="lever">Lever</option>
+            <option value="Manual">Manual</option>
           </select>
         </div>
         <span className="text-xs text-brand-foreground-muted">
@@ -102,14 +104,14 @@ export function JobsTable({
                 <td className="py-2 pr-4 font-medium text-brand-foreground max-w-[260px] truncate" title={j.title}>{j.title}</td>
                 <td className="py-2 pr-4 text-brand-foreground-muted">{j.companyName ?? "—"}</td>
                 <td className="py-2 pr-4">
-                  <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${SOURCE_COLOR[j.atsSource ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
-                    {j.atsSource ?? "—"}
+                  <span className={`rounded-md px-2 py-0.5 text-xs font-semibold capitalize ${SOURCE_COLOR[j.atsSource ?? "Manual"] ?? "bg-gray-100 text-gray-600"}`}>
+                    {j.atsSource ?? "Manual"}
                   </span>
                 </td>
-                <td className="py-2 pr-4 text-brand-foreground-muted">{j.location ?? j.locationClass ?? "—"}</td>
-                <td className="py-2 pr-4 text-brand-foreground-muted">{fmtDate(j.publishedAt)}</td>
+                <td className="py-2 pr-4 text-brand-foreground-muted">{j.location ?? j.locationClass ?? "Manual"}</td>
+                <td className="py-2 pr-4 text-brand-foreground-muted">{fmtDate(j.publishedAt ?? j.lastSeenAt)}</td>
                 <td className="py-2 pr-4 text-brand-foreground-muted">{j.applicantCount}</td>
-                <td className="py-2 pr-4 text-brand-foreground-muted">{fmtDate(j.lastSeenAt)}</td>
+                <td className="py-2 pr-4 text-brand-foreground-muted">{fmtDate(j.lastSeenAt ?? j.publishedAt)}</td>
               </tr>
             ))}
           </tbody>
