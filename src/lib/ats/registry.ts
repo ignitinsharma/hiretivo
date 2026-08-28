@@ -88,6 +88,23 @@ export const COMPANY_REGISTRY: AtsCompany[] = [
   { name: 'Loom', website: 'loom.com', ats: AtsSource.LEVER, boardToken: 'loom' },
   { name: 'Carta', website: 'carta.com', ats: AtsSource.LEVER, boardToken: 'carta' },
   { name: 'Flexport', website: 'flexport.com', ats: AtsSource.GREENHOUSE, boardToken: 'flexport' },
+
+  // ===== ASHBY (15 added) — big + small startups, verified live 200 + meetsQualityBar =====
+  { name: 'Cohere', website: 'cohere.com', ats: AtsSource.ASHBY, boardToken: 'cohere' },
+  { name: 'Harvey', website: 'harvey.ai', ats: AtsSource.ASHBY, boardToken: 'harvey' },
+  { name: 'Airwallex', website: 'airwallex.com', ats: AtsSource.ASHBY, boardToken: 'airwallex' },
+  { name: 'Crusoe', website: 'crusoe.ai', ats: AtsSource.ASHBY, boardToken: 'crusoe' },
+  { name: 'Docker', website: 'docker.com', ats: AtsSource.ASHBY, boardToken: 'docker' },
+  { name: 'Benchling', website: 'benchling.com', ats: AtsSource.ASHBY, boardToken: 'benchling' },
+  { name: 'Perplexity Ashby', website: 'perplexity.ai', ats: AtsSource.ASHBY, boardToken: 'perplexity' },
+  { name: 'Anyscale', website: 'anyscale.com', ats: AtsSource.ASHBY, boardToken: 'anyscale' },
+  { name: 'Exa', website: 'exa.ai', ats: AtsSource.ASHBY, boardToken: 'exa' },
+  { name: 'Character AI', website: 'character.ai', ats: AtsSource.ASHBY, boardToken: 'character' },
+  { name: 'Pylon', website: 'pylon.ai', ats: AtsSource.ASHBY, boardToken: 'pylon' },
+  { name: 'Arch', website: 'arch.dev', ats: AtsSource.ASHBY, boardToken: 'arch' },
+  { name: 'Browserbase', website: 'browserbase.com', ats: AtsSource.ASHBY, boardToken: 'browserbase' },
+  { name: 'Zapier', website: 'zapier.com', ats: AtsSource.ASHBY, boardToken: 'zapier' },
+  { name: 'Confluent', website: 'confluent.io', ats: AtsSource.ASHBY, boardToken: 'confluent' },
 ];
 
 export function getCompaniesBySource(source: AtsSource): AtsCompany[] {
