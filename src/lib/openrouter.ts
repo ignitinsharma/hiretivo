@@ -52,8 +52,9 @@ export function getResumeModel(): string {
 }
 
 /*
- * RESUME_PARSE_MODEL — model for PDF resume parsing (extracting structured JSON).
+ * RESUME_PARSE_MODEL — model for PDF resume parsing via file vision (Tier 2/3).
  * Defaults to Gemini 2.5 Flash (native file input, no reasoning overhead).
+ * Tier 1 (text-first) uses AI_LITE_MODEL (Luna) — see parseResumeWithVision.
  * Override via RESUME_PARSE_MODEL env var.
  */
 export function getResumeParseModel(): string {
@@ -63,10 +64,10 @@ export function getResumeParseModel(): string {
 
 /*
  * JD_PARSE_MODEL — model for job description extraction from URLs and pasted text.
- * Defaults to Gemini 2.5 Flash (fast, reliable extraction).
+ * Defaults to GPT 5.6 Luna (fast, cheap, clean JSON).
  * Override via JD_PARSE_MODEL env var.
  */
 export function getJDParseModel(): string {
   const model = process.env.JD_PARSE_MODEL?.trim();
-  return model || 'google/gemini-2.5-flash';
+  return model || 'openai/gpt-5.6-luna';
 }
