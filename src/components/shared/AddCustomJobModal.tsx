@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
 import { cn } from "@/lib/utils";
 import {
@@ -105,14 +106,18 @@ export function AddCustomJobModal() {
           const isUnsupported = data.unsupportedAts ?? false;
           setUnsupportedAts(isUnsupported);
           if (isUnsupported) {
+            toast.error(
+              data.error ??
+                "We can't auto-fetch from this site yet. Paste the job description and we'll do the rest.",
+            );
             setTab("text");
             setState("idle");
             setError(null);
             setPreview(null);
             setShowFullJd(false);
-          } else {
-            setError(data.error ?? "Could not parse this URL.");
+            return;
           }
+          setError(data.error ?? "Could not parse this URL.");
         } else if (res.status === 409) {
           setError(data.error ?? "You have already applied to this job.");
         } else {
