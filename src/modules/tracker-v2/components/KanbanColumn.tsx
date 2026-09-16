@@ -36,7 +36,7 @@ export function KanbanColumn({
   const Icon = column.icon;
 
   return (
-    <div className="shrink-0 w-[280px] sm:w-[300px] lg:w-[320px] flex flex-col max-h-[calc(100vh-300px)] snap-start rounded-xl border border-brand-border bg-white">
+    <div className="shrink-0 w-[280px] sm:w-[300px] lg:w-[320px] flex flex-col snap-start rounded-xl border border-brand-border bg-white">
       <div className="px-4 pb-3 pt-3.5">
         <div className="flex items-center gap-2">
           <Icon
@@ -74,7 +74,7 @@ export function KanbanColumn({
             items={cardIds}
             strategy={verticalListSortingStrategy}
           >
-            <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2">
               {applications.map((app) => (
                 <KanbanCard
                   key={app.id}
