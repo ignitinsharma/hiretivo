@@ -304,7 +304,7 @@ export function KanbanBoard() {
       >
         <div
           ref={boardRef}
-          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory"
+          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory items-start"
         >
           {COLUMN_DEFS.map((col) => (
             <KanbanColumn
