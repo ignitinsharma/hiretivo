@@ -184,8 +184,6 @@ const SKILLS = [
   { name: 'Communication', slug: 'communication', category: 'Other' },
 ];
 
-const SYSTEM_USER_ID = 'system-ats-user';
-
 async function main() {
   const result = await prisma.skill.createMany({
     data: SKILLS,
@@ -201,18 +199,6 @@ async function main() {
   });
   console.log('Apache Spark alias seeded: spark');
 
-  // Ghost user required by Job.recruiterId FK — all ATS-imported jobs are owned by this row.
-  await prisma.user.upsert({
-    where: { id: SYSTEM_USER_ID },
-    create: {
-      id: SYSTEM_USER_ID,
-      name: 'ATS System',
-      email: 'system@hiretivo.com',
-      isAdmin: true,
-    },
-    update: {},
-  });
-  console.log(`System ATS user ensured: ${SYSTEM_USER_ID}`);
 }
 
 main()

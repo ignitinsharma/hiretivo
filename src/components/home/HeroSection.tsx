@@ -47,11 +47,6 @@ export function HeroSection() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-          {/* <Button asChild variant="secondary" size="lg">
-            <Link href="/dashboard/browse">
-              Browse Open Jobs
-            </Link>
-          </Button> */}
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">

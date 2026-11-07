@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
-  Search,
   LineChart,
   Settings,
 } from "lucide-react";
@@ -16,7 +15,6 @@ export interface NavItem {
 
 export const SEEKER_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Browse jobs", href: "/dashboard/browse", icon: Search },
   { label: "Tracker", href: "/dashboard/tracker", icon: LineChart },
   { label: "Settings", href: "/settings", icon: Settings },
 ];

@@ -35,14 +35,14 @@ export const RESUME_ENGINE_SECTION = {
 export const JOB_DASHBOARD_SECTION = {
   eyebrow: 'YOUR JOB SEARCH HQ',
   heading: 'Every job and application. One dashboard.',
-  body: 'Browse roles matched to your skills, add any job with a link, and move each application from applied to offer. No spreadsheets. No lost threads.',
+  body: 'Add any job with a link and move each application from applied to offer. No spreadsheets. No lost threads.',
   bullets: [
-    'Skill-matched recommendations for your profile',
+    'Keep jobs you find in one private tracker',
     'Add any job listing by pasting a URL',
     'Kanban tracker — applied, interview, offer, archived',
   ],
-  linkText: 'Browse open jobs',
-  linkHref: '/dashboard',
+  linkText: 'Open tracker',
+  linkHref: '/dashboard/tracker',
 } as const;
 
 /**
@@ -51,9 +51,9 @@ export const JOB_DASHBOARD_SECTION = {
 export const SEEKER_STEPS = [
   {
     number: '01',
-    title: 'Find Jobs',
+    title: 'Add a Job',
     description:
-      'Browse our curated feed or paste any job URL to add it to your list.',
+      'Add a job manually or paste its URL to keep it in your tracker.',
   },
   {
     number: '02',
