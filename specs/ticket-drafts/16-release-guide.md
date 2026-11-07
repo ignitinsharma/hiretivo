@@ -10,4 +10,4 @@
 
 - [ ] Backup restores database and files
 - [ ] Upgrade preserves data
-- [ ] License, setup and migration are documented
+- [ ] The MIT License, setup and migration are documented, and package metadata names MIT
