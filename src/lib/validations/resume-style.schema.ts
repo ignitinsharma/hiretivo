@@ -2,6 +2,10 @@ import { z } from "zod";
 
 // --- Enums ---
 export const ResumeTemplateEnum = z.enum(["compact", "centered", "structured"]);
+export const ResumeThemeEnum = z.enum([
+  "classic", "modern", "editorial", "executive", "minimal", "academic",
+  "slate", "sage", "terracotta", "ocean", "plum", "monochrome",
+]);
 export const PaperSizeEnum = z.enum(["letter", "a4", "legal"]);
 export const AccentColorScopeEnum = z.enum(["all_headings", "name_only", "section_headers_only", "links_icons_only"]);
 export const FontFamilyEnum = z.enum([
@@ -47,6 +51,7 @@ export const BOUNDS = {
 
 // --- Schema ---
 export const ResumeStyleConfigSchema = z.object({
+  themeId: ResumeThemeEnum.default("classic"),
   template: ResumeTemplateEnum,
   paperSize: PaperSizeEnum,
   accentColor: AccentColorSchema.default("#000000"),
@@ -130,6 +135,7 @@ export const TEMPLATE_DEFAULTS: Record<
   ResumeStyleConfig
 > = {
   compact: {
+    themeId: "classic",
     template: "compact",
     paperSize: "letter",
     accentColor: "#000000",
@@ -147,6 +153,7 @@ export const TEMPLATE_DEFAULTS: Record<
     lastFitSnapshot: null,
   },
   centered: {
+    themeId: "classic",
     template: "centered",
     paperSize: "letter",
     accentColor: "#000000",
@@ -164,6 +171,7 @@ export const TEMPLATE_DEFAULTS: Record<
     lastFitSnapshot: null,
   },
   structured: {
+    themeId: "classic",
     template: "structured",
     paperSize: "letter",
     accentColor: "#000000",

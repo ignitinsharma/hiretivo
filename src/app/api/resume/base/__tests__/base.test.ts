@@ -14,6 +14,7 @@ const resume = {
 
 let userId: string | null = "owner";
 let saved: typeof resume | null = { ...resume };
+let savedStyle: unknown = null;
 let versionWrites = 0;
 
 before(() => {
@@ -21,10 +22,11 @@ before(() => {
   mock.module("@/lib/prisma", { namedExports: { prisma: {
     seekerProfile: { findUnique: async () => ({ resumeKey: null }) },
     masterResume: {
-      findUnique: async () => saved ? { id: "master-1", resumeJson: saved, updatedAt: new Date("2026-01-01") } : null,
-      upsert: async ({ update, create }: { update: { resumeJson: typeof resume }, create: { resumeJson: typeof resume } }) => {
+      findUnique: async () => saved ? { id: "master-1", resumeJson: saved, styleConfig: savedStyle, updatedAt: new Date("2026-01-01") } : null,
+      upsert: async ({ update, create }: { update: { resumeJson: typeof resume; styleConfig: unknown }, create: { resumeJson: typeof resume; styleConfig: unknown } }) => {
         saved = saved ? update.resumeJson : create.resumeJson;
-        return { resumeJson: saved, updatedAt: new Date("2026-01-02") };
+        savedStyle = savedStyle ? update.styleConfig : create.styleConfig;
+        return { id: "master-1", resumeJson: saved, styleConfig: savedStyle, updatedAt: new Date("2026-01-02") };
       },
     },
     resumeVersion: { create: async () => { versionWrites++; } },
@@ -32,6 +34,7 @@ before(() => {
   mock.module("@/lib/rate-limit", { namedExports: {
     dataFetchRateLimiter: { limit: async () => ({ success: true }) },
     writeRateLimiter: { limit: async () => ({ success: true }) },
+    createRateLimiter: () => ({ limit: async () => ({ success: true }) }),
   } });
 });
 
@@ -97,5 +100,32 @@ describe("base resume API", () => {
   it("recognizes a manually created base resume without an uploaded file", async () => {
     const { GET } = await import("../../parse-status/route");
     assert.equal((await (await GET()).json()).status, "parsed");
+  });
+
+  it("saves the selected presentation with the base resume for future visits", async () => {
+    const { GET, PUT } = await import("../route");
+    const { BUILT_IN_THEMES } = await import("../../../../../lib/resume/style/built-in-themes");
+    assert.equal(BUILT_IN_THEMES.length, 12);
+    const styleConfig = BUILT_IN_THEMES[7].config;
+    const response = await PUT(new Request("http://localhost/api/resume/base", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resumeJson: saved, styleConfig }),
+    }));
+    assert.equal(response.status, 200);
+    assert.deepEqual((await (await GET()).json()).data.styleConfig, styleConfig);
+  });
+
+  it("exports a valid PDF using the selected paper size", async () => {
+    const { POST } = await import("../../preview-pdf/route");
+    const { PDFDocument } = await import("pdf-lib");
+    const { BUILT_IN_THEMES } = await import("../../../../../lib/resume/style/built-in-themes");
+    const response = await POST(new Request("http://localhost/api/resume/preview-pdf", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resumeJson: saved, styleConfig: { ...BUILT_IN_THEMES[7].config, paperSize: "a4" } }),
+    }) as Parameters<typeof POST>[0]);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "application/pdf");
+    const pdf = await PDFDocument.load(await response.arrayBuffer());
+    assert.equal(Math.round(pdf.getPage(0).getWidth()), 595);
   });
 });
