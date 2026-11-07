@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ExternalLink, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -91,6 +92,15 @@ export function ResumeSection({ resumeKey }: ResumeSectionProps) {
           <Upload className="mr-2 h-4 w-4" />
           {isUploading ? "Uploading..." : "Upload resume"}
         </Button>
+      </div>
+      <div className="border-t border-brand-border p-6">
+        <h4 className="text-sm font-semibold text-brand-foreground">Base resume</h4>
+        <p className="mt-1 text-sm text-brand-foreground-muted">
+          Correct your resume details and use them for future tailored applications.
+        </p>
+        <Link href="/resume" className="mt-3 inline-flex text-sm font-medium text-brand-primary hover:underline">
+          Edit base resume
+        </Link>
       </div>
     </section>
   );

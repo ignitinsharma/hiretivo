@@ -29,15 +29,10 @@ export async function GET() {
       }),
     ]);
 
-    if (!profile?.resumeKey) {
-      return NextResponse.json({ status: "no_resume" });
+    if (masterResume) {
+      return NextResponse.json({ status: "parsed" });
     }
-
-    if (!masterResume) {
-      return NextResponse.json({ status: "unparsed" });
-    }
-
-    return NextResponse.json({ status: "parsed" });
+    return NextResponse.json({ status: profile?.resumeKey ? "unparsed" : "no_resume" });
   } catch (error) {
     console.error("[parse-status] Error:", error);
     return NextResponse.json({ status: "no_resume" }, { status: 200 });
