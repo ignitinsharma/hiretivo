@@ -47,7 +47,7 @@ const SEEKER_LOGIN_BLURBS: AuthValueBlurb[] = [
   {
     icon: Search,
     title: "Job matching",
-    description: "Browse roles matched to your skills, or paste any job link.",
+    description: "Add jobs to your private tracker, with or without a link.",
   },
   {
     icon: LayoutDashboard,

@@ -234,7 +234,7 @@ export default function HowItWorksPage() {
                 </Link>
               </Button>
               <Button asChild variant="secondary" size="lg">
-                <Link href="/dashboard/browse">Browse Open Jobs</Link>
+                <Link href="/dashboard/tracker">Open Tracker</Link>
               </Button>
             </div>
           </div>

@@ -16,8 +16,7 @@ import { applicationService } from "@/services/application.service";
 
 /*
  * LogExternalJobDialog
- * Renamed from ManualJobDialog — for jobs applied elsewhere, to track in Kanban without confusing with
- * Browse Add Your Own Link (which generates resume). Creates DRAFT Job + Application via POST /log-external.
+ * Adds a private job and application to the tracker through POST /log-external.
  */
 
 const STAGE_OPTIONS = [
@@ -39,14 +38,14 @@ export function LogExternalJobDialog({ open, onOpenChange }: LogExternalJobDialo
 
   const form = useForm<ExternalApplicationInput>({
     resolver: zodResolver(externalApplicationSchema),
-    defaultValues: { title: "", companyName: "", location: "", pipelineStage: PipelineStage.APPLIED },
+    defaultValues: { title: "", companyName: "", location: "", url: "", pipelineStage: PipelineStage.NOT_APPLIED },
   });
 
   const onSubmit = async (data: ExternalApplicationInput) => {
     setSubmitting(true);
     try {
       await applicationService.logExternalJob(data);
-      toast.success("External job logged to tracker");
+      toast.success("Job added to tracker");
       form.reset();
       onOpenChange(false);
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -63,9 +62,9 @@ export function LogExternalJobDialog({ open, onOpenChange }: LogExternalJobDialo
     <Dialog open={open} onOpenChange={(v) => { if (!v) form.reset(); onOpenChange(v); }}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md rounded-xl border border-brand-border bg-white p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-brand-foreground">Log External Apply</DialogTitle>
+          <DialogTitle className="text-lg font-bold text-brand-foreground">Add job</DialogTitle>
           <DialogDescription className="text-sm text-brand-foreground-muted">
-            Applied elsewhere (LinkedIn, company site)? Log it here to track — won&apos;t appear in Browse, private to your tracker.
+            Track a job you found. Add its URL if you have one.
           </DialogDescription>
         </DialogHeader>
 
@@ -85,6 +84,12 @@ export function LogExternalJobDialog({ open, onOpenChange }: LogExternalJobDialo
           <div className="space-y-2">
             <Label htmlFor="ext-location">Location</Label>
             <Input id="ext-location" placeholder="San Francisco, CA" {...form.register("location")} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ext-url">Job URL</Label>
+            <Input id="ext-url" type="url" placeholder="https://example.com/jobs/123" {...form.register("url")} />
+            {form.formState.errors.url && <p className="text-xs text-brand-danger">{form.formState.errors.url.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -112,7 +117,7 @@ export function LogExternalJobDialog({ open, onOpenChange }: LogExternalJobDialo
               Cancel
             </Button>
             <Button type="submit" variant="primary" className="flex-1" disabled={submitting}>
-              {submitting ? "Logging..." : "Log to Tracker"}
+              {submitting ? "Adding..." : "Add to tracker"}
             </Button>
           </div>
         </form>

@@ -22,6 +22,21 @@ export interface ReconcileResult {
   rejected: Array<{ name: string; reason: string }>;
 }
 
+/* Match parsed job skills against the catalogue, including existing aliases. */
+export function upsertJobSkillIds(
+  skillNames: string[],
+  allSkills: Array<{ id: string; name: string; aliases: string[] }>,
+): string[] {
+  const nameMap = new Map(allSkills.map((skill) => [skill.name, skill.id]));
+  const aliasMap = new Map<string, string>();
+  for (const skill of allSkills) {
+    for (const alias of skill.aliases) aliasMap.set(alias, skill.id);
+  }
+  return skillNames
+    .map((name) => nameMap.get(name) ?? aliasMap.get(name))
+    .filter((id): id is string => id !== undefined);
+}
+
 function deriveSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }

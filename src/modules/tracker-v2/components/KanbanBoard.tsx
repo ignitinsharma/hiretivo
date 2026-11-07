@@ -288,9 +288,9 @@ export function KanbanBoard() {
             className="w-full border-none bg-transparent text-sm text-brand-foreground outline-none placeholder:text-brand-foreground-secondary"
           />
         </div>
-        <Button variant="secondary" size="sm" className="shrink-0 h-9 gap-1.5" onClick={() => setLogDialogOpen(true)} aria-label="Log external apply">
+        <Button variant="secondary" size="sm" className="shrink-0 h-9 gap-1.5" onClick={() => setLogDialogOpen(true)} aria-label="Add job to tracker">
           <Plus className="h-3.5 w-3.5" />
-          Log External Apply
+          Add job
         </Button>
       </div>
       <LogExternalJobDialog open={logDialogOpen} onOpenChange={setLogDialogOpen} />

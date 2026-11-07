@@ -56,7 +56,7 @@ Provide a complete, password protected, self hosted HireTivo that starts with Do
 - Add first class local interview and deadline data connected to applications. Show a month view and agenda. Google Calendar synchronization is deferred.
 - Make the existing MasterResume the editable canonical resume. Keep ResumeVersion as the job specific output. Add a base resume workspace with section editing, live preview, theme selection, presentation controls, and PDF export. Reuse HireTivo's existing rendering and style capabilities where possible; provide twelve distinct built-in themes through original implementation.
 - Replace production dependencies on Upstash Redis, QStash, R2, and Resend with working local paths for rate limits, background generation, files, and account bootstrap. Hosted integrations may remain optional, but no hosted credential is required to complete a local workflow.
-- Publish an explicit project license, accurate setup documentation, environment variable example without secrets, data backup and restore instructions, and an upgrade/migration guide before calling the release open source ready. Do not copy Dossier AGPL source, CSS, or assets under this spec. Any decision to reuse them requires a separate license review and spec change.
+- Publish HireTivo under the MIT License, with accurate setup documentation, environment variable example without secrets, data backup and restore instructions, and an upgrade/migration guide before calling the release open source ready. Do not copy Dossier AGPL source, CSS, or assets under this spec. Any decision to reuse them requires a separate license review and spec change.
 - Preserve existing user and application data during schema migration. Document the consequences for existing hosted users before removing routes or records.
 
 ## Testing Decisions
@@ -85,6 +85,6 @@ Provide a complete, password protected, self hosted HireTivo that starts with Do
 
 - The agreed product direction is Docker first, no mandatory onboarding, a full self hosted edition without subscription gates, manual job tracking, local calendar first, and an editable base resume alongside tailored versions.
 - The current repository describes HireTivo as a remote job portal, while the present application is centered on the job seeker's tracker and resume workflow. Product copy and documentation should be updated to match the released scope.
-- The current repository has no tracked LICENSE. Its package metadata says ISC, which is insufficient as a clear project licensing decision. Choose and publish the actual license before release.
+- The current repository has no tracked LICENSE. Its package metadata says ISC. The owner chose MIT for the open source release; publish a LICENSE file and align package metadata before release.
 - Dossier is AGPL-3.0-only. Matching general appearance and independently implementing behavior is the agreed approach; direct code or asset reuse would change the licensing decision.
 - This is a large release spec. Delivery can be split into smaller implementation issues after the shared contracts, migrations, and acceptance checks are established.

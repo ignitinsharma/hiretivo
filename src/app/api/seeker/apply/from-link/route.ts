@@ -19,8 +19,8 @@ import {
 import {
   extractCandidateSkillsFromJD,
   reconcileAndInsertSkills,
+  upsertJobSkillIds,
 } from "@/lib/ai/skill-catalog-extractor";
-import { upsertJobSkillIds } from "@/services/ats-job-fetcher.service";
 import { SkillLevel } from "@/constants/enums";
 import { JobStatus } from "@/constants/enums";
 
