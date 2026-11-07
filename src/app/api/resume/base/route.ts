@@ -5,6 +5,7 @@ import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { dataFetchRateLimiter, writeRateLimiter } from "@/lib/rate-limit";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
+import { ResumeStyleConfigSchema, resolveStyle } from "@/lib/validations/resume-style.schema";
 
 /* Creates an empty canonical document for a user who has not uploaded a resume. */
 function emptyResume(userId: string): ResumeDocument {
@@ -35,11 +36,12 @@ export async function GET() {
 
   const master = await prisma.masterResume.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, resumeJson: true, updatedAt: true },
+    select: { id: true, resumeJson: true, styleConfig: true, updatedAt: true },
   });
   return NextResponse.json({ data: {
     id: master?.id ?? null,
     resumeJson: master?.resumeJson ?? emptyResume(session.user.id),
+    styleConfig: resolveStyle(master?.styleConfig),
     updatedAt: master?.updatedAt?.toISOString() ?? null,
   } });
 }
@@ -64,6 +66,11 @@ export async function PUT(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid resume document", details: parsed.error.flatten() }, { status: 422 });
   }
+  const styleRaw = body && typeof body === "object" && "styleConfig" in body ? body.styleConfig : undefined;
+  const styleParsed = styleRaw === undefined ? null : ResumeStyleConfigSchema.safeParse(styleRaw);
+  if (styleParsed && !styleParsed.success) {
+    return NextResponse.json({ error: "Invalid resume presentation" }, { status: 422 });
+  }
 
   const { matchMeta: _matchMeta, missingSkills: _missingSkills, ...content } = parsed.data;
   const resumeJson: ResumeDocument = {
@@ -76,13 +83,14 @@ export async function PUT(request: Request) {
 
   const master = await prisma.masterResume.upsert({
     where: { userId: session.user.id },
-    update: { resumeJson: resumeJson as Prisma.InputJsonValue },
-    create: { userId: session.user.id, resumeJson: resumeJson as Prisma.InputJsonValue },
-    select: { id: true, resumeJson: true, updatedAt: true },
+    update: { resumeJson: resumeJson as Prisma.InputJsonValue, ...(styleParsed?.success ? { styleConfig: styleParsed.data as Prisma.InputJsonValue } : {}) },
+    create: { userId: session.user.id, resumeJson: resumeJson as Prisma.InputJsonValue, ...(styleParsed?.success ? { styleConfig: styleParsed.data as Prisma.InputJsonValue } : {}) },
+    select: { id: true, resumeJson: true, styleConfig: true, updatedAt: true },
   });
   return NextResponse.json({ data: {
     id: master.id,
     resumeJson: master.resumeJson,
+    styleConfig: resolveStyle(master.styleConfig),
     updatedAt: master.updatedAt.toISOString(),
   } });
 }
