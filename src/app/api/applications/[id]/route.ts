@@ -7,6 +7,7 @@ import type { ResumeDocument, ResumeMatchMeta } from "@/lib/validations/resume.s
 import { AutomationStatus, PipelineStage } from "@/constants/enums";
 import { stripHtml } from "@/lib/utils";
 import { resolveAutomationStatus } from "@/lib/generation/automation-status";
+import { furthestStage } from "@/lib/application-insights";
 import { z } from "zod";
 
 /*
@@ -204,7 +205,7 @@ export async function PATCH(
 
   const application = await prisma.application.findFirst({
     where: { id, seekerId: session.user.id },
-    select: { id: true },
+    select: { id: true, furthestPipelineStage: true },
   });
 
   if (!application) {
@@ -218,13 +219,17 @@ export async function PATCH(
         data: {
           automationStatus: AutomationStatus.SUBMITTED,
           pipelineStage: PipelineStage.APPLIED,
+          furthestPipelineStage: furthestStage(application.furthestPipelineStage as PipelineStage, PipelineStage.APPLIED),
         },
       });
       break;
     case "update_pipeline_stage":
       await prisma.application.update({
         where: { id },
-        data: { pipelineStage: parsed.data.pipelineStage },
+        data: {
+          pipelineStage: parsed.data.pipelineStage,
+          furthestPipelineStage: furthestStage(application.furthestPipelineStage as PipelineStage, parsed.data.pipelineStage),
+        },
       });
       break;
     case "revert_to_not_applied":

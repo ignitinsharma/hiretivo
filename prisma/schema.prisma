@@ -369,6 +369,7 @@ model Application {
   generationStartedAt DateTime?          @map("generation_started_at")
 
   pipelineStage PipelineStage @default(NOT_APPLIED) @map("pipeline_stage")
+  furthestPipelineStage PipelineStage @default(NOT_APPLIED) @map("furthest_pipeline_stage")
 
   coverLetter String? @db.Text
   aiSummary   String?

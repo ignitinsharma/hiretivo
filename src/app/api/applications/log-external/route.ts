@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         status: "APPLIED",
         matchScore: 0,
         pipelineStage: pipelineStage as PipelineStage,
+        furthestPipelineStage: pipelineStage === PipelineStage.REJECTED ? PipelineStage.APPLIED : pipelineStage as PipelineStage,
       },
     });
 
