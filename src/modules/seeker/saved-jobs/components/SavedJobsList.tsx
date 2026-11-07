@@ -102,11 +102,10 @@ export function SavedJobsList() {
           No saved jobs yet
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-base text-brand-foreground-muted">
-          Save jobs from your recommendations so the strongest matches stay easy
-          to revisit.
+          Jobs you saved earlier remain here. Add new jobs in your tracker.
         </p>
         <Button asChild className="mt-6" variant="primary">
-          <a href="/dashboard">Browse recommendations</a>
+          <a href="/dashboard/tracker">Open tracker</a>
         </Button>
       </Card>
     );

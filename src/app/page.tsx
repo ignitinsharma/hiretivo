@@ -19,7 +19,7 @@ const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
 export const metadata = generatePageMetadata({
   title: "Stop copy-pasting. Start landing. | Hiretivo",
   description:
-    "Paste any job link and get a tailored, ATS-ready resume in seconds. Browse jobs, generate AI resumes, apply, and track everything in one place.",
+    "Add a job, generate a tailored resume, and track every application in one place.",
 });
 
 /*

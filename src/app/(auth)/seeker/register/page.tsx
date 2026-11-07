@@ -43,7 +43,7 @@ const SEEKER_SIGNUP_BLURBS: AuthValueBlurb[] = [
   {
     icon: Search,
     title: "Job matching",
-    description: "Browse roles matched to your skills, or add any job by URL.",
+    description: "Add jobs to your private tracker, with or without a link.",
   },
   {
     icon: LayoutDashboard,
@@ -60,7 +60,7 @@ const SeekerSignupLeft = (
         <span className="text-brand-primary">faster.</span>
       </>
     }
-    subtitle="Paste any job link. Get a tailored, ATS-ready resume in seconds. Browse, apply, and track it all in one place."
+    subtitle="Add any job. Get a tailored, ATS-ready resume and track your applications in one place."
     blurbs={SEEKER_SIGNUP_BLURBS}
     footer={
       <div className="flex flex-wrap gap-2">

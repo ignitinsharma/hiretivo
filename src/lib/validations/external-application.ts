@@ -10,6 +10,7 @@ export const externalApplicationSchema = z.object({
   title: z.string().min(1, "Job title is required").max(120),
   companyName: z.string().min(1, "Company name is required").max(120),
   location: z.string().max(120).optional(),
+  url: z.url().startsWith("https://", "Use an HTTPS job URL").max(2048).optional().or(z.literal("")),
   pipelineStage: z.enum(PIPELINE_STAGE_VALUES),
 });
 

@@ -17,7 +17,7 @@ export const metadata = generatePageMetadata({
 
 const MISSION_COPY = {
   quote:
-    "Every job seeker deserves a resume that actually gets seen — and a clear path from browse to offer.",
+    "Every job seeker deserves a resume that actually gets seen — and a clear path from application to offer.",
   paragraphs: [
     "Every job seeker knows the drill — paste the same resume everywhere, tweak nothing, hope for the best. The result: 98% of resumes never pass ATS screening. We got tired of watching talented people lose out to bad formatting and generic bullet points.",
     "Hiretivo was built to solve one problem: turning a job link into a tailored, ATS-ready resume in seconds — then tracking every application from applied to offer. No fluff. No generic templates. Just a faster, clearer path to your next role.",
