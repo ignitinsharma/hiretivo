@@ -1,5 +1,15 @@
 # Hiretivo — Development Rules
 
+## Agent skills
+
+### Issue tracker
+
+Specs and tickets are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Use the single-context glossary and ADR layout. See `docs/agents/domain.md`.
+
 **Version 3.2** · Apply across ALL sessions, tools, and phases. Reference at the start of every chat.
 
 ---

@@ -19,6 +19,8 @@ build
 coverage
 .planning*
 .planning
-docs
+docs/*
+!docs/agents/
+!docs/adr/
 .superpowers/
 .worktrees
