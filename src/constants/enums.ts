@@ -57,6 +57,11 @@ export const APPLICATION_STATUS_VALUES = [
   ApplicationStatus.REJECTED,
 ] as const;
 
+export enum CalendarEventKind {
+  INTERVIEW = "INTERVIEW",
+  DEADLINE = "DEADLINE",
+}
+
 export enum AutomationStatus {
   GENERATING = "GENERATING",
   READY = "READY",

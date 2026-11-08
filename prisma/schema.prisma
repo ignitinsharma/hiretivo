@@ -101,6 +101,11 @@ enum PipelineStage {
   REJECTED
 }
 
+enum CalendarEventKind {
+  INTERVIEW
+  DEADLINE
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -379,6 +384,7 @@ model Application {
 
   resumeVersions ResumeVersion[]
   coverLetters   CoverLetter[]
+  calendarEvents CalendarEvent[]
 
   generationCount Int    @default(0)
   activeVersionId String?
@@ -395,6 +401,21 @@ model Application {
   @@index([activeVersionId])
   @@index([pipelineStage])
   @@index([automationRunId])
+}
+
+model CalendarEvent {
+  id            String            @id @default(cuid())
+  applicationId String
+  kind          CalendarEventKind
+  title         String
+  startsAt      DateTime
+  notes         String?           @db.Text
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([startsAt])
 }
 
 // MasterResume — canonical, document-only storage for the user's uploaded/parsed base resume.
