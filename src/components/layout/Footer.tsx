@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { Twitter, Linkedin, Instagram } from "lucide-react";
+import { SELF_HOSTED } from "@/lib/config";
 
 interface FooterProps {
   className?: string;
@@ -51,7 +52,7 @@ export function Footer({ className }: FooterProps) {
               <ul className="space-y-3 text-sm">
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/about">About</Link></li>
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/how-it-works">How It Works</Link></li>
-                <li><Link className="text-gray-500 hover:text-white transition-colors" href="/pricing">Pricing</Link></li>
+                {!SELF_HOSTED && <li><Link className="text-gray-500 hover:text-white transition-colors" href="/pricing">Pricing</Link></li>}
                 <li><Link className="text-gray-500 hover:text-white transition-colors" href="/contact">Contact</Link></li>
               </ul>
             </div>

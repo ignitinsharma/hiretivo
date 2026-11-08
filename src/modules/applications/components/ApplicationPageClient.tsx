@@ -33,6 +33,7 @@ const ResumePdfPreview = dynamic(
   { ssr: false },
 );
 import { QuotaBadge } from "@/modules/applications/components/QuotaBadge";
+import { SELF_HOSTED } from "@/lib/config";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { useUIStore } from "@/store/use-ui-store";
 import { toast } from "sonner";
@@ -701,7 +702,7 @@ export function ApplicationPageClient() {
           </Card>
 
           {/* Quota */}
-          <QuotaBadge />
+          {!SELF_HOSTED && <QuotaBadge />}
 
           {/* Timeline */}
           <Card>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
+import { SELF_HOSTED } from "@/lib/config";
 
 interface CoverLetterPanelProps {
   applicationId: string;
@@ -97,7 +98,7 @@ export function CoverLetterPanel({ applicationId }: CoverLetterPanelProps) {
     }
   };
 
-  const quotaNotice = coverLetterQuota ? (
+  const quotaNotice = !SELF_HOSTED && coverLetterQuota ? (
     <div className="mb-3 flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-xs">
       <span className="font-medium text-brand-foreground-muted">
         Cover letters left this month

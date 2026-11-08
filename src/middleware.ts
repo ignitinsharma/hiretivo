@@ -10,6 +10,13 @@ export default auth((req) => {
   const session = req.auth;
   const userRole = session?.user?.role as string | undefined;
 
+  if (selfHosted && pathname.startsWith("/api/billing/")) {
+    return new NextResponse(null, { status: 404 });
+  }
+  if (selfHosted && pathname.startsWith("/pricing")) {
+    return NextResponse.redirect(new URL(session ? "/dashboard" : "/seeker/login", req.url));
+  }
+
   if (pathname.startsWith("/admin")) {
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const userEmail = session?.user?.email?.trim().toLowerCase();
