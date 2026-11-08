@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authConfig } from "@/auth.config";
 
 const { auth } = NextAuth(authConfig);
+const selfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === "true";
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -37,7 +38,7 @@ export default auth((req) => {
 
   if (isPublicRoute) {
     if (session && pathname === "/") {
-      const dest = session.user?.onboardingCompleted === false
+      const dest = !selfHosted && session.user?.onboardingCompleted === false
         ? "/seeker/onboarding"
         : "/dashboard";
       return NextResponse.redirect(new URL(dest, req.url));
@@ -51,6 +52,10 @@ export default auth((req) => {
 
   const isOnboardingRoute = pathname.startsWith("/seeker/onboarding");
 
+  if (selfHosted && isOnboardingRoute) {
+    return NextResponse.redirect(new URL(session ? "/dashboard" : "/seeker/login", req.url));
+  }
+
   if (!session) {
     if (isLoginOrRegister) return NextResponse.next();
     if (pathname.startsWith("/dashboard") ||
@@ -60,7 +65,7 @@ export default auth((req) => {
   }
 
   if (isLoginOrRegister) {
-    const dest = session.user?.onboardingCompleted === false
+    const dest = !selfHosted && session.user?.onboardingCompleted === false
       ? "/seeker/onboarding"
       : "/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));

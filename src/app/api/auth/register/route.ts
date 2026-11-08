@@ -55,24 +55,29 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
+    const selfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === "true";
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
         name: name ?? null,
         passwordHash,
         role: role as Role,
-        onboardingStep: 1,
+        emailVerified: selfHosted ? new Date() : null,
+        onboardingCompleted: selfHosted,
+        onboardingStep: selfHosted ? null : 1,
       },
       select: { id: true, email: true, role: true },
     });
 
     // Send verification email — non-blocking; don't fail registration if email fails
-    sendVerificationEmail({
-      email: normalizedEmail,
-      recipientName: name,
-    }).catch((err) => {
-      console.error("[register] failed to send verification email:", err);
-    });
+    if (!selfHosted) {
+      sendVerificationEmail({
+        email: normalizedEmail,
+        recipientName: name,
+      }).catch((err) => {
+        console.error("[register] failed to send verification email:", err);
+      });
+    }
 
     return NextResponse.json(
       { id: user.id, email: user.email, role: user.role },

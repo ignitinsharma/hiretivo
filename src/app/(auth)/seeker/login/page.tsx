@@ -70,6 +70,7 @@ const SeekerLoginLeft = (
 );
 
 function SeekerLoginContent() {
+  const selfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === "true";
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -229,14 +230,14 @@ function SeekerLoginContent() {
           </div>
         )}
 
-        {googleStatus === "available" ? (
+        {!selfHosted && googleStatus === "available" ? (
           <OAuthButton
             provider="google"
             onClick={handleGoogleSignIn}
             isLoading={isGoogleLoading}
             showLastUsed={lastUsedAuthMethod === "google"}
           />
-        ) : googleStatus === "unavailable" ? (
+        ) : !selfHosted && googleStatus === "unavailable" ? (
           <div className="rounded-xl border border-brand-border bg-white p-4">
             <p className="text-sm font-medium text-brand-foreground-muted">
               Google sign-in is temporarily unavailable. Sign in with email and
@@ -252,13 +253,13 @@ function SeekerLoginContent() {
           </div>
         ) : null}
 
-        <div className="relative flex items-center">
+        {!selfHosted && <div className="relative flex items-center">
           <div className="grow border-t border-brand-border"></div>
           <span className="shrink mx-4 text-[10px] font-bold text-brand-foreground-secondary uppercase tracking-[0.2em] whitespace-nowrap">
             OR CONTINUE WITH EMAIL
           </span>
           <div className="grow border-t border-brand-border"></div>
-        </div>
+        </div>}
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
@@ -294,12 +295,12 @@ function SeekerLoginContent() {
               >
                 Password
               </Label>
-              <Link
+              {!selfHosted && <Link
                 href="/forgot-password"
                 className="text-xs font-bold text-black hover:text-black/80 transition-colors"
               >
                 Forgot password?
-              </Link>
+              </Link>}
             </div>
             <PasswordInput
               id="password"

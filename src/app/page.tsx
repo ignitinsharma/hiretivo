@@ -36,7 +36,7 @@ export default async function Home() {
 
   const session = await auth();
   if (session?.user) {
-    if (session.user.onboardingCompleted === false) {
+    if (process.env.NEXT_PUBLIC_SELF_HOSTED !== "true" && session.user.onboardingCompleted === false) {
       redirect("/seeker/onboarding");
     }
     redirect("/dashboard");
