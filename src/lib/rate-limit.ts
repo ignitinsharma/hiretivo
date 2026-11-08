@@ -10,7 +10,35 @@ export function createRateLimiter(
   id: string,
   maxRequests: number,
   window: Duration
-): Ratelimit {
+): Pick<Ratelimit, "limit"> {
+  if (process.env.NEXT_PUBLIC_SELF_HOSTED === "true") {
+    const counts = new Map<string, { count: number; reset: number }>();
+    const minutes = Number.parseInt(window, 10);
+    const windowMs = minutes * (window.endsWith("h") ? 3_600_000 : 60_000);
+    return {
+      /*
+       * limit
+       * Applies a per-process fixed window for a single-container local install.
+       * @param identifier - account or client IP
+       * @returns the request allowance and reset time
+       */
+      async limit(identifier: string) {
+        const now = Date.now();
+        const current = counts.get(identifier);
+        const next = !current || current.reset <= now
+          ? { count: 1, reset: now + windowMs }
+          : { count: current.count + 1, reset: current.reset };
+        counts.set(identifier, next);
+        return {
+          success: next.count <= maxRequests,
+          limit: maxRequests,
+          remaining: Math.max(0, maxRequests - next.count),
+          reset: next.reset,
+          pending: Promise.resolve(),
+        };
+      },
+    };
+  }
   return new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(maxRequests, window),

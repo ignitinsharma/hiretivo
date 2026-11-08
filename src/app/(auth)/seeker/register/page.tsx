@@ -78,6 +78,7 @@ const SeekerSignupLeft = (
 );
 
 function SeekerRegisterContent() {
+  const selfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === "true";
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -144,7 +145,7 @@ function SeekerRegisterContent() {
       name: "",
       email: "",
       password: "",
-      acceptTerms: false,
+      acceptTerms: selfHosted,
     },
   });
 
@@ -181,7 +182,7 @@ function SeekerRegisterContent() {
         auth_method: "credentials",
         stage: "success",
       });
-      router.push("/seeker/onboarding");
+      router.push("/dashboard");
       router.refresh();
     } catch (error) {
       toast.error(
@@ -246,13 +247,13 @@ function SeekerRegisterContent() {
           </div>
         )}
 
-        {googleStatus === "available" ? (
+        {!selfHosted && googleStatus === "available" ? (
           <OAuthButton
             provider="google"
             onClick={handleGoogleSignIn}
             isLoading={isGoogleLoading}
           />
-        ) : googleStatus === "unavailable" ? (
+        ) : !selfHosted && googleStatus === "unavailable" ? (
           <div className="rounded-xl border border-brand-border bg-white p-4">
             <p className="text-sm font-medium text-brand-foreground-muted">
               Google sign-up is temporarily unavailable. Sign up with email and
@@ -261,13 +262,13 @@ function SeekerRegisterContent() {
           </div>
         ) : null}
 
-        <div className="relative flex items-center">
+        {!selfHosted && <div className="relative flex items-center">
           <div className="grow border-t border-brand-border"></div>
           <span className="shrink mx-4 text-[10px] font-bold text-brand-foreground-secondary uppercase tracking-[0.2em] whitespace-nowrap">
             OR CONTINUE WITH EMAIL
           </span>
           <div className="grow border-t border-brand-border"></div>
-        </div>
+        </div>}
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
@@ -351,7 +352,7 @@ function SeekerRegisterContent() {
             )}
           </div>
 
-          <div className="flex items-center space-x-3 ">
+          {!selfHosted && <div className="flex items-center space-x-3 ">
             <Checkbox
               id="acceptTerms"
               className="mt-0.5 rounded border-brand-border data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
@@ -382,8 +383,8 @@ function SeekerRegisterContent() {
                 .
               </label>
             </div>
-          </div>
-          {form.formState.errors.acceptTerms && (
+          </div>}
+          {!selfHosted && form.formState.errors.acceptTerms && (
             <p className="text-sm text-destructive">
               {form.formState.errors.acceptTerms.message}
             </p>

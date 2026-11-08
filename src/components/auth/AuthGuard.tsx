@@ -55,7 +55,7 @@ export async function AuthGuard({
   }
 
   // Real user, onboarding incomplete → onboarding flow.
-  if (state === SessionUserState.NOT_ONBOARDED) {
+  if (process.env.NEXT_PUBLIC_SELF_HOSTED !== "true" && state === SessionUserState.NOT_ONBOARDED) {
     redirect(onboardingPath);
   }
 

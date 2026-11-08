@@ -1,5 +1,14 @@
 # HireTivo
 
+## Local installation
+
+Install Docker Desktop, then run `sh scripts/local-up.sh` from the repository root.
+Open http://localhost:3000 and create an account with an email address and password. No email service or OAuth account is required. Postgres data is stored in the `postgres_data` Docker volume and survives `docker compose down` and restarts. Keep `.env.self-hosted` private: it contains the database password and session secret. The app is bound to localhost only.
+
+To stop the app, run `docker compose --env-file .env.self-hosted down`. Run `sh scripts/local-up.sh` again to start it with the same account and data.
+
+This initial local slice covers installation and sign-in. Resume files and AI generation will gain local storage and model support in subsequent tickets.
+
 ## Project Overview
 HireTivo is an innovative solution designed to streamline the hiring process for companies and job seekers. Our platform connects employers and candidates, making recruitment easier and more efficient.
 
