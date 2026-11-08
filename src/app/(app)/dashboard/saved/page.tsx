@@ -10,6 +10,7 @@ import { applicationService } from "@/services/application.service";
 import { useUIStore } from "@/store/use-ui-store";
 import { useGenerationQuota } from "@/hooks/use-generation-quota";
 import { toast } from "sonner";
+import { SELF_HOSTED } from "@/lib/config";
 
 /*
  * SavedJobsPage
@@ -32,7 +33,7 @@ export default function SavedJobsPage() {
   }, [allItems, search]);
 
   const handleApply = async (jobId: string) => {
-    if (quota && !quota.allowed) {
+    if (!SELF_HOSTED && quota && !quota.allowed) {
       openPaidFeatureModal({ feature: "resume_generation", title: "Upgrade plan", description: `You've used all ${quota.limit} generations this month. Upgrade to continue.` });
       return;
     }
@@ -43,7 +44,7 @@ export default function SavedJobsPage() {
       toast("Resume generation in progress.");
     } catch (e: any) {
       const msg = e?.response?.data?.error ?? (e instanceof Error ? e.message : "Failed");
-      if (msg.toLowerCase().includes("limit") || msg.toLowerCase().includes("upgrade")) openPaidFeatureModal({ feature: "resume_generation", title: "Upgrade plan", description: msg });
+      if (!SELF_HOSTED && (msg.toLowerCase().includes("limit") || msg.toLowerCase().includes("upgrade"))) openPaidFeatureModal({ feature: "resume_generation", title: "Upgrade plan", description: msg });
       else toast.error(msg);
     } finally {
       setApplyingId(null);

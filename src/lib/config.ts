@@ -93,6 +93,9 @@ export const SUPPORT_URL = "/contact";
  */
 export const IS_SERVER = typeof window === "undefined";
 
+/** Self-hosted installations run without plan or checkout requirements. */
+export const SELF_HOSTED = process.env.NEXT_PUBLIC_SELF_HOSTED === "true";
+
 /**
  * Site metadata
  */

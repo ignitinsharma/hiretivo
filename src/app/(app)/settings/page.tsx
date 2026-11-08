@@ -14,6 +14,7 @@ import { SocialProfilesSection } from '@/modules/seeker/settings/components/Soci
 import { PlanBillingSection } from '@/modules/seeker/settings/components/PlanBillingSection';
 import { SettingsSidebar, type SettingsTab } from '@/modules/seeker/settings/components/SettingsSidebar';
 import { Button } from '@/components/ui/button';
+import { SELF_HOSTED } from '@/lib/config';
 
 /*
  * SettingsContent
@@ -34,7 +35,7 @@ function SettingsContent({ activeTab }: { activeTab: SettingsTab }) {
     case 'resume':
       return <ResumeSection resumeKey={settings?.resumeKey} />;
     case 'billing':
-      return <PlanBillingSection />;
+      return SELF_HOSTED ? null : <PlanBillingSection />;
     case 'password':
       return (
         <div className="space-y-8">

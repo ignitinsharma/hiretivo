@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { PlanTier } from "@prisma/client";
 import { addMonths, format } from "date-fns";
 import { getFreeGenerationLimit } from "@/constants/pricing";
+import { SELF_HOSTED } from "@/lib/config";
 
 export enum QuotaType {
   RESUME = "RESUME",
@@ -72,6 +73,9 @@ async function getUserPlanAndPeriod(userId: string) {
 }
 
 export async function checkGenerationQuota(userId: string, type: QuotaType = QuotaType.RESUME) {
+  if (SELF_HOSTED) {
+    return { allowed: true, used: 0, limit: Number.MAX_SAFE_INTEGER, resetsAt: "", plan: PlanTier.FREE };
+  }
   const { plan, periodKey, resetsAt } = await getUserPlanAndPeriod(userId);
 
   const limit = type === QuotaType.COVER_LETTER ? getCoverLetterLimit(plan) : getPlanLimit(plan);
@@ -86,6 +90,7 @@ export async function checkGenerationQuota(userId: string, type: QuotaType = Quo
 }
 
 export async function consumeGenerationQuota(userId: string, type: QuotaType = QuotaType.RESUME) {
+  if (SELF_HOSTED) return;
   const { periodKey } = await getUserPlanAndPeriod(userId);
 
   await prisma.generationQuota.upsert({

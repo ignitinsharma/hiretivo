@@ -9,6 +9,7 @@ import { UserRole } from "@/constants/enums";
 import { fetchSeekerSettingsForPrefetch } from "@/lib/server/seeker-data.server";
 import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { cookies } from "next/headers";
+import { SELF_HOSTED } from "@/lib/config";
 
 export default async function AppLayout({
   children,
@@ -42,7 +43,7 @@ export default async function AppLayout({
           <EmailVerificationBanner />
           {children}
           <AddCustomJobModal />
-          <PaidFeatureModal />
+          {!SELF_HOSTED && <PaidFeatureModal />}
         </AppShell>
       </AuthGuard>
     </HydrationBoundary>

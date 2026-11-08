@@ -3,6 +3,7 @@
 import React from "react";
 import { User, Globe, Wrench, FileText, CreditCard, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SELF_HOSTED } from "@/lib/config";
 
 export type SettingsTab = "personal" | "social" | "skills" | "resume" | "billing" | "password";
 
@@ -17,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "social", label: "Social Profiles", icon: Globe },
   { key: "skills", label: "Skills", icon: Wrench },
   { key: "resume", label: "Resume", icon: FileText },
-  { key: "billing", label: "Plan & Billing", icon: CreditCard },
+  ...(!SELF_HOSTED ? [{ key: "billing" as const, label: "Plan & Billing", icon: CreditCard }] : []),
   { key: "password", label: "Password", icon: ShieldCheck },
 ];
 
