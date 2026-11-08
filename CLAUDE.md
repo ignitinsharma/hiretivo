@@ -22,7 +22,7 @@ Use the single-context glossary and ADR layout. See `docs/agents/domain.md`.
 2. STYLING      → brand tokens → CANONICAL native tailwind (prefer `*-N` over `[Npx]`) → arbitrary `[..]` (ONLY when no canonical exists) → globals → style={{}} (last)
 3. TYPES        → never `any`. Path aliases, never ../../../. Enums, never string unions.
 4. RENDER       → DRY with .map(). Handle isLoading / isError / empty / data — every time.
-5. UI           → mobile-first base, then sm:/md:/lg:. No shadows. No dark mode. No rounded-full.
+5. UI           → mobile-first base, then sm:/md:/lg:. No shadows. Support light/dark themes. No rounded-full.
 6. COMMENTS     → every function, route, action, component gets a /* */ doc block.
 7. FIXES        → never a patch. Every bug, feature, or fix is a proper fix: root cause,
                   architecturally consistent, cannot regress. No temporary fixes.
@@ -162,7 +162,7 @@ className="text-[#000000]"                   // hardcoded hex (unless arbitrary 
 className="bg-indigo-600" / "bg-purple-500"  // old purple/indigo → brand tokens
 className="text-slate-700" / "text-gray-400" // → text-brand-foreground / -muted
 className="shadow-lg"                        // no shadows — borders only
-className="dark:bg-gray-900"                 // no dark mode
+className="dark:bg-gray-900"                 // use theme tokens instead of one-off dark colors
 className="font-extrabold"                   // → font-bold (no 800+)
 className="rounded-full"                     // on inputs/cards → rounded-lg / rounded-xl
 className="max-w-[460px]"                    // arbitrary when canonical exists → max-w-lg

@@ -13,7 +13,7 @@ Hiretivo is a skills-based remote job portal with a clean, professional aestheti
 - Near-black (`#0a0a0a`) primary text, gray (`#6b7280`) body text
 - Subtle grid background pattern on hero sections
 - No shadows — depth from borders only
-- Light mode only — no dark mode
+- Light and dark modes with a saved user preference
 
 ## 2. Color Palette & Roles
 
@@ -44,10 +44,12 @@ Hiretivo is a skills-based remote job portal with a clean, professional aestheti
 - **Surface Hover** (`#f3f4f6`): Hover state for surfaces
 - **Grid Line** (`rgba(0,0,0,0.04)`): Hero grid pattern lines
 
-### Removed Colors
+### Theme Colors
 
 - All monochrome/black primary colors replaced with purple (`#7560ff`)
-- All dark mode colors removed
+- Dark background: near-black (`#141417`); dark cards and sidebar: charcoal (`#1c1c21`)
+- Dark primary text: `#f4f4f5`; muted text: `#a1a1aa`; borders: `#3f3f46`
+- Use semantic and brand tokens for content so both themes remain legible. Keep purple as the primary accent.
 - Primary accent is now purple — consistent across all components
 
 ## 3. Typography Rules
@@ -201,7 +203,7 @@ Hiretivo is a skills-based remote job portal with a clean, professional aestheti
 
 - Don't use black for primary buttons/accents
 - Don't use shadows — borders only
-- Don't use dark mode
+- Don't hardcode light-only surfaces or text in new app UI
 - Don't use arbitrary purple shades — use the defined `#7560ff` / `#5a47d9`
 - Don't use `rounded-full` on inputs/cards — use `rounded-lg` or `rounded-xl`
 - Don't use heavy font weights (800+) — 700 is max for Inter
@@ -311,7 +313,7 @@ background-size: 64px 64px;
 
 1. NEVER use indigo/purple arbitrary colors — use the defined primary purple (`#7560ff`) consistently
 2. NEVER use shadows — borders only
-3. NEVER use dark mode
+3. Support the saved light/dark preference in authenticated app UI
 4. NEVER use `rounded-full` on inputs/cards — use `rounded-lg` or `rounded-xl`
 5. NEVER use font-extrabold (800) — max font-bold (700) for Inter
 6. ALWAYS use purple (`#7560ff`) for primary buttons
@@ -348,4 +350,4 @@ background-size: 64px 64px;
 4. No shadows — borders only for depth
 5. Grid background pattern on hero sections
 6. Purple primary accent — consistent across all components
-7. Light mode only — no dark mode
+7. Check light and dark mode at mobile and desktop widths
