@@ -83,9 +83,9 @@ export function SavedJobsModal({ open, onOpenChange }: SavedJobsModalProps) {
             </div>
           ) : items.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-brand-foreground-muted">No saved jobs yet — bookmark from Browse.</p>
-              <Button variant="secondary" size="sm" className="mt-3" onClick={() => { onOpenChange(false); router.push("/dashboard/browse"); }}>
-                Browse jobs →
+              <p className="text-sm text-brand-foreground-muted">No saved jobs yet. Your tracked jobs are in the tracker.</p>
+              <Button variant="secondary" size="sm" className="mt-3" onClick={() => { onOpenChange(false); router.push("/dashboard/tracker"); }}>
+                Open tracker →
               </Button>
             </div>
           ) : (

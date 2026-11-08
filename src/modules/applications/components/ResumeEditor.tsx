@@ -11,6 +11,7 @@ export interface ResumeEditorHandle {
 interface ResumeEditorProps {
   doc: ResumeDocument;
   versionId?: string;
+  onChange?: (doc: ResumeDocument) => void;
 }
 
 function deepClone<T>(obj: T): T {
@@ -18,7 +19,7 @@ function deepClone<T>(obj: T): T {
 }
 
 export const ResumeEditor = forwardRef<ResumeEditorHandle, ResumeEditorProps>(
-  function ResumeEditor({ doc, versionId }, ref) {
+  function ResumeEditor({ doc, versionId, onChange }, ref) {
   const [form, setForm] = useState<ResumeDocument>(() => deepClone(doc));
 
   const prevVersionId = useRef(versionId);
@@ -30,6 +31,7 @@ export const ResumeEditor = forwardRef<ResumeEditorHandle, ResumeEditorProps>(
   }, [versionId, doc]);
 
   useImperativeHandle(ref, () => ({ getForm: () => form }), [form]);
+  useEffect(() => { onChange?.(form); }, [form, onChange]);
 
   const set = <K extends keyof ResumeDocument>(
     key: K,

@@ -148,7 +148,7 @@ export function HowItWorksSection() {
             How it works
           </p>
           <h2 className="break-words text-3xl font-bold leading-tight tracking-tight text-brand-foreground md:text-5xl">
-            From browse to offer in 3 steps
+            From job to offer in 3 steps
           </h2>
           <Link
             href="/how-it-works"

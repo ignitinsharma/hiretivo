@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Validation failed" }, { status: 400 });
   }
 
-  const { title, companyName, location, pipelineStage } = parsed.data;
+  const { title, companyName, location, pipelineStage, url } = parsed.data;
 
   const result = await prisma.$transaction(async (tx) => {
     const job = await tx.job.create({
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         ownerId: session.user.id,
         companyName,
         location: location ?? null,
+        externalApplyUrl: url || null,
       },
     });
 
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
         status: "APPLIED",
         matchScore: 0,
         pipelineStage: pipelineStage as PipelineStage,
+        furthestPipelineStage: pipelineStage === PipelineStage.REJECTED ? PipelineStage.APPLIED : pipelineStage as PipelineStage,
       },
     });
 

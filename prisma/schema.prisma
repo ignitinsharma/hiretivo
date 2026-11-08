@@ -369,6 +369,7 @@ model Application {
   generationStartedAt DateTime?          @map("generation_started_at")
 
   pipelineStage PipelineStage @default(NOT_APPLIED) @map("pipeline_stage")
+  furthestPipelineStage PipelineStage @default(NOT_APPLIED) @map("furthest_pipeline_stage")
 
   coverLetter String? @db.Text
   aiSummary   String?
@@ -404,6 +405,7 @@ model MasterResume {
   id         String   @id @default(cuid())
   userId     String   @unique
   resumeJson Json     // Phase 0 schema JSON — canonical source of truth
+  styleConfig Json?   // selected theme and presentation for the base resume
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)

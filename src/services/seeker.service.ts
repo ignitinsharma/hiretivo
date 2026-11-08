@@ -1,6 +1,5 @@
 import { apiClient } from '@/lib/axios';
 import type { SeekerSettingsInput } from '@/lib/validations/seeker.schema';
-import type { JobListItem } from '@/modules/jobs/types/job.types';
 import type {
   SeekerDashboardData,
   SeekerInterview,
@@ -8,14 +7,6 @@ import type {
 
 interface DataResponse<T> {
   data: T;
-}
-
-export interface SeekerFeedResponse {
-  jobs: JobListItem[];
-  nextCursor: string | null;
-  totalCount?: number;
-  remainingCount?: number;
-  hasMoreRecent?: boolean;
 }
 
 export interface SeekerSettingsData {
@@ -36,22 +27,6 @@ export interface SeekerSettingsData {
 }
 
 export const seekerService = {
-  getFeed: async (
-    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string; visaSponsored?: boolean; experienceLevel?: string },
-    signal?: AbortSignal,
-  ): Promise<SeekerFeedResponse> => {
-    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/feed', { params, signal });
-    return data;
-  },
-
-  getBrowseFeed: async (
-    params?: { cursor?: string; limit?: number; q?: string; jobType?: string; workType?: string; locationClass?: string; visaSponsored?: boolean; experienceLevel?: string },
-    signal?: AbortSignal,
-  ): Promise<SeekerFeedResponse> => {
-    const { data } = await apiClient.get<SeekerFeedResponse>('/seeker/browse', { params, signal });
-    return data;
-  },
-
   getDashboardSummary: async (): Promise<SeekerDashboardData> => {
     const { data } = await apiClient.get<DataResponse<SeekerDashboardData>>('/seeker/dashboard');
     return data.data;
