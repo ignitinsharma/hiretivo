@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { FEATURES } from "@/lib/config";
 import { ReactQueryProvider } from "@/providers/query-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
+import { ThemeProvider } from "next-themes";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import "./globals.css";
@@ -27,7 +28,7 @@ export default function RootLayout({
   const analyticsEnabled = FEATURES.ANALYTICS && !!measurementId;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -37,7 +38,9 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ReactQueryProvider>
           <AuthSessionProvider>
-            {children}
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+              {children}
+            </ThemeProvider>
             <EmailVerificationModal />
             <Toaster />
             {analyticsEnabled && measurementId ? (

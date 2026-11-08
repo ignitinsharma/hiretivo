@@ -6,6 +6,14 @@
 
 @layer base {
   :root {
+    color-scheme: light;
+    --brand-foreground: #0a0a0a;
+    --brand-foreground-muted: #6b7280;
+    --brand-foreground-secondary: #9ca3af;
+    --brand-surface: #f9fafb;
+    --brand-surface-hover: #f3f4f6;
+    --brand-border: #ededed;
+    --brand-border-light: #f3f4f6;
     --background: 220 14% 97%;
     --foreground: 0 0% 4%;
 
@@ -38,6 +46,32 @@
     --radius-card: 16px;
     --radius-input: 14px;
     --radius-pill: 9999px;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --brand-foreground: #f4f4f5;
+    --brand-foreground-muted: #a1a1aa;
+    --brand-foreground-secondary: #8b8b95;
+    --brand-surface: #18181b;
+    --brand-surface-hover: #27272a;
+    --brand-border: #3f3f46;
+    --brand-border-light: #27272a;
+    --background: 240 10% 8%;
+    --foreground: 240 5% 96%;
+    --card: 240 6% 11%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 6% 11%;
+    --popover-foreground: 240 5% 96%;
+    --secondary: 240 5% 16%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 5% 16%;
+    --muted-foreground: 240 4% 66%;
+    --accent: 240 5% 18%;
+    --accent-foreground: 240 5% 96%;
+    --border: 240 5% 25%;
+    --input: 240 5% 25%;
+    --ring: 248 100% 72%;
   }
 }
 
@@ -168,6 +202,23 @@
   --sidebar-border: hsl(0 0% 93%);
   --sidebar-ring: hsl(248 100% 69%);
 }
+
+.dark {
+  --sidebar: hsl(240 6% 11%);
+  --sidebar-foreground: hsl(240 5% 91%);
+  --sidebar-primary: hsl(248 100% 72%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 5% 20%);
+  --sidebar-accent-foreground: hsl(240 5% 96%);
+  --sidebar-border: hsl(240 5% 25%);
+  --sidebar-ring: hsl(248 100% 72%);
+}
+
+/* Existing white cards and inputs use native utilities. Keep them legible in dark mode. */
+.dark .bg-white { background-color: hsl(var(--card)); }
+.dark .text-gray-700, .dark .text-gray-800, .dark .text-gray-900 { color: hsl(var(--foreground)); }
+.dark .text-gray-500, .dark .text-gray-600 { color: hsl(var(--muted-foreground)); }
+.dark .border-gray-200, .dark .border-gray-300 { border-color: hsl(var(--border)); }
 
 @theme inline {
   --color-sidebar: var(--sidebar);
