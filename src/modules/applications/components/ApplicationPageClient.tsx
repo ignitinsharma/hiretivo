@@ -284,8 +284,14 @@ export function ApplicationPageClient() {
             description: `You&apos;ve used all ${json.limit ?? quota?.limit} generations this month. Upgrade to generate more tailored resumes.`,
           });
         } else {
-          toast.error(json.error ?? "Regeneration failed");
+          toast.error(json.message ?? json.error ?? "Regeneration failed");
         }
+        setPrevMatchMeta(null);
+        return;
+      }
+      if (json.status === "FAILED") {
+        toast.error(json.failureReason ?? "Resume generation failed");
+        queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
         setPrevMatchMeta(null);
         return;
       }

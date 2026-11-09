@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/axios';
+import { isAxiosError } from 'axios';
 import { ApplicationStatus } from '@/constants/enums';
 import type { CreateApplicationInput } from '@/lib/validations/application';
 import type { ExternalApplicationInput } from '@/lib/validations/external-application';
@@ -44,7 +45,15 @@ export const applicationService = {
   },
 
   generateResume: async (applicationId: string): Promise<void> => {
-    await apiClient.post(`/applications/${applicationId}/generate`);
+    try {
+      const { data } = await apiClient.post<{ status?: string; failureReason?: string }>(`/applications/${applicationId}/generate`);
+      if (data.status === "FAILED") throw new Error(data.failureReason ?? "Resume generation failed");
+    } catch (error) {
+      if (isAxiosError<{ message?: string }>(error) && error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
   },
 
   getMyApplications: async (): Promise<SeekerApplicationItem[]> => {

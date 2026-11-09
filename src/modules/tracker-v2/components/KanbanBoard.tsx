@@ -187,8 +187,8 @@ export function KanbanBoard() {
       try {
         await applicationService.generateResume(appId);
         await queryClient.invalidateQueries({ queryKey: ["applications"] });
-      } catch {
-        toast.error("Could not start resume generation");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not start resume generation");
       } finally {
         setRetryingId(null);
       }
