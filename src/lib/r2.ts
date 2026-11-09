@@ -6,6 +6,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { SELF_HOSTED } from "@/lib/config";
+import { deleteLocalFile, writeLocalFile } from "@/lib/storage/local-files";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -49,12 +51,23 @@ export const R2_KEYS = {
     `company-logos/${recruiterId}/logo.webp`,
 } as const;
 
+/* Keep local resume file type in its key while preserving hosted R2 keys. */
+export function resumeUploadKey(userId: string, mimeType: string): string {
+  if (!SELF_HOSTED) return R2_KEYS.resume(userId);
+  const extension = mimeType === "application/pdf" ? "pdf"
+    : mimeType === "application/msword" ? "doc" : "docx";
+  return `resumes/${userId}/resume.${extension}`;
+}
+
 // ─── Signed URL helper (for private files e.g. resumes) ──────────────────────
 // Call this whenever you need to render a resume in the browser.
 // Returns a fresh signed URL (1 hour). Never store this URL — always regenerate.
 //
 export async function getSignedFileUrl(key: string): Promise<string> {
   if (key.startsWith("data:")) return key;
+  if (SELF_HOSTED) {
+    return key.startsWith("resumes/") ? "/api/upload/resume/file" : `/api/logo?key=${encodeURIComponent(key)}`;
+  }
   const client = getR2Client();
   if (!client) return `/api/logo?key=${encodeURIComponent(key)}`;
 
@@ -71,6 +84,7 @@ export async function getSignedFileUrl(key: string): Promise<string> {
 // Use when a seeker deletes their account or explicitly removes their resume.
 //
 export async function deleteFile(key: string): Promise<void> {
+  if (SELF_HOSTED) return deleteLocalFile(key);
   const client = getR2Client();
   if (!client) return;
   const bucket = requireEnv("R2_BUCKET_NAME");
@@ -117,6 +131,10 @@ export async function uploadFile(
   file: File,
   key: string
 ): Promise<UploadFileResult> {
+  if (SELF_HOSTED) {
+    await writeLocalFile(key, new Uint8Array(await file.arrayBuffer()));
+    return { url: await getSignedFileUrl(key) };
+  }
   const client = getR2Client();
   if (!client) {
     return { url: `/api/logo?key=${encodeURIComponent(key)}` };

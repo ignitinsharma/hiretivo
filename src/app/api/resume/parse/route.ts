@@ -4,6 +4,8 @@ import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl } from "@/lib/r2";
 import { parseResumeWithVision, isResumeSuspiciouslyThin } from "@/lib/ai/resume-parser";
+import { SELF_HOSTED } from "@/lib/config";
+import { readLocalFile } from "@/lib/storage/local-files";
 
 export const maxDuration = 60;
 
@@ -36,29 +38,16 @@ export async function POST(_req: NextRequest) {
       );
     }
 
-    let signedUrl: string;
-    try {
-      signedUrl = await getSignedFileUrl(profile.resumeKey);
-    } catch (err) {
-      console.error("[parse] getSignedFileUrl failed:", err);
-      return NextResponse.json(
-        { error: "Could not access uploaded file. Try uploading again." },
-        { status: 502 },
-      );
-    }
-    if (!signedUrl) {
-      return NextResponse.json(
-        { error: "Could not access uploaded file. Try uploading again." },
-        { status: 502 },
-      );
-    }
-
     let pdfBuffer: Buffer;
     try {
-      const res = await fetch(signedUrl);
-      if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-      const arrayBuffer = await res.arrayBuffer();
-      pdfBuffer = Buffer.from(arrayBuffer);
+      if (SELF_HOSTED && !profile.resumeKey.startsWith("data:")) {
+        pdfBuffer = await readLocalFile(profile.resumeKey);
+      } else {
+        const signedUrl = await getSignedFileUrl(profile.resumeKey);
+        const res = await fetch(signedUrl);
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
+        pdfBuffer = Buffer.from(await res.arrayBuffer());
+      }
       console.log("[parse] File fetched successfully, size:", pdfBuffer.length, "bytes");
     } catch (err) {
       console.error("[parse] File fetch failed:", err);

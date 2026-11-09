@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
         emailVerified: selfHosted ? new Date() : null,
         onboardingCompleted: selfHosted,
         onboardingStep: selfHosted ? null : 1,
+        ...(selfHosted && role === Role.SEEKER ? { seekerProfile: { create: {} } } : {}),
       },
       select: { id: true, email: true, role: true },
     });

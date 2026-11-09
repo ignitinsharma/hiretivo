@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
-import { R2_KEYS, uploadFile } from "@/lib/r2";
+import { resumeUploadKey, uploadFile } from "@/lib/r2";
 import { resumeUploadLimiter } from "@/lib/rate-limit";
 import {
   RESUME_MAX_BYTES,
   RESUME_MIME_TYPES,
 } from "@/lib/validations/upload.schema";
 import { sniffedTypeAllowed } from "@/lib/validations/file-signature";
+import { SELF_HOSTED } from "@/lib/config";
 
 /*
  * POST /api/resume/upload
- * Uploads a resume PDF to R2 for persistent storage.
+ * Uploads a resume to the selected persistent file store.
  * Parsing happens asynchronously after onboarding — see POST /api/resume/parse.
  */
 export async function POST(req: NextRequest) {
@@ -53,19 +54,15 @@ export async function POST(req: NextRequest) {
     }
 
     const r2configured = !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY);
-    let key: string;
+    const key = !SELF_HOSTED && !r2configured
+      ? `data:${file.type};base64,${Buffer.from(bytes).toString("base64")}`
+      : resumeUploadKey(session.user.id, file.type);
+    if (!key.startsWith("data:")) await uploadFile(file, key);
 
-    if (r2configured) {
-      key = R2_KEYS.resume(session.user.id);
-      await uploadFile(file, key);
-    } else {
-      const base64 = Buffer.from(bytes).toString("base64");
-      key = `data:${file.type};base64,${base64}`;
-    }
-
-    await prisma.seekerProfile.update({
+    await prisma.seekerProfile.upsert({
       where: { userId: session.user.id },
-      data: { resumeKey: key },
+      update: { resumeKey: key },
+      create: { userId: session.user.id, resumeKey: key },
     });
 
     // ponytail: force re-parse on next dashboard load for the new resume
