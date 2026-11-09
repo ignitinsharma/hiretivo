@@ -162,7 +162,7 @@ function parseAndValidate(raw: string): ParseResult {
     }
     return { status: "ok", data: mergeExtractedSkills(result.data as ResumeDocument) };
   } catch (err) {
-    console.error("[parseAndValidate] JSON parsing failed:", err, "\nRaw AI response:", raw);
+    console.error("[parseAndValidate] JSON parsing failed:", err instanceof Error ? err.message : "Invalid JSON");
     return { status: "error", reason: "malformed" };
   }
 }

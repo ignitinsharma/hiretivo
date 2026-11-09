@@ -19,6 +19,8 @@ export interface OpenRouterModelOption {
   isFree: boolean;
   supportsFile: boolean;
   contextLength: number | null;
+  promptPricePerMillion: number | null;
+  completionPricePerMillion: number | null;
 }
 
 /* Fetch current chat models; free availability and capabilities can change. */
@@ -40,5 +42,7 @@ export async function fetchOpenRouterModels(apiKey: string): Promise<OpenRouterM
     isFree: Number(model.pricing?.prompt) === 0 && Number(model.pricing?.completion) === 0,
     supportsFile: model.architecture?.input_modalities?.includes("file") ?? false,
     contextLength: model.context_length ?? null,
+    promptPricePerMillion: model.pricing?.prompt === undefined ? null : Number(model.pricing.prompt) * 1_000_000,
+    completionPricePerMillion: model.pricing?.completion === undefined ? null : Number(model.pricing.completion) * 1_000_000,
   }));
 }

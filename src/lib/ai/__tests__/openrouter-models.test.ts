@@ -11,8 +11,8 @@ it("shows current free chat models and records whether PDF input is supported", 
     { id: "fixture/image", name: "Image", architecture: { input_modalities: ["image"], output_modalities: ["image"] }, pricing: { prompt: "0", completion: "0" } },
   ] }), { status: 200 }));
   const models = await fetchOpenRouterModels("private-key");
-  assert.deepEqual(models.map(({ id, isFree, supportsFile }) => ({ id, isFree, supportsFile })), [
-    { id: "fixture/free:free", isFree: true, supportsFile: false },
-    { id: "fixture/pdf", isFree: false, supportsFile: true },
+  assert.deepEqual(models.map(({ id, isFree, supportsFile, promptPricePerMillion }) => ({ id, isFree, supportsFile, promptPricePerMillion })), [
+    { id: "fixture/free:free", isFree: true, supportsFile: false, promptPricePerMillion: 0 },
+    { id: "fixture/pdf", isFree: false, supportsFile: true, promptPricePerMillion: 1000 },
   ]);
 });

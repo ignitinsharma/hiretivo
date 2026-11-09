@@ -57,7 +57,7 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
 
     return { resume: parsed.resume };
   } catch (err) {
-    console.error("[resume-tailor] JSON parse failed:", err, "\nRaw:", raw);
+    console.error("[resume-tailor] JSON parse failed:", err instanceof Error ? err.message : "Invalid JSON");
     return null;
   }
 }
