@@ -3,6 +3,8 @@ import { AIProvider } from '@prisma/client';
 import { SELF_HOSTED } from '@/lib/config';
 import { prisma } from '@/lib/prisma';
 import { decryptProviderSecret } from '@/lib/ai/provider-secret';
+import { directProviderBaseUrl, isDirectProvider } from '@/lib/ai/direct-provider';
+import { normalizeLocalEndpoint } from '@/lib/ai/local-endpoint';
 
 const provider = process.env.AI_PROVIDER ?? 'openrouter';
 
@@ -82,22 +84,29 @@ export class ModelNotConfiguredError extends Error {
 }
 
 /* Resolve a model for one user and task without sharing their credential globally. */
-export async function getUserAIContext(userId: string, task: AITask): Promise<{ client: OpenAI; model: string; supportsFile: boolean }> {
+export async function getUserAIContext(userId: string, task: AITask): Promise<{ client: OpenAI; model: string; supportsFile: boolean; provider: AIProvider }> {
   if (!SELF_HOSTED) {
     const model = task === 'resume' ? getResumeModel() : task === 'parse' ? getResumeParseModel()
       : task === 'lite' ? getLiteAIModel() : getJDParseModel();
-    return { client: openrouter, model, supportsFile: true };
+    return { client: openrouter, model, supportsFile: true, provider: AIProvider.OPENROUTER };
   }
   const settings = await prisma.aISettings.findUnique({ where: { userId } });
   if (settings?.provider === AIProvider.LOCAL && settings.endpoint) {
-    const { normalizeLocalEndpoint } = await import('@/lib/ai/local-endpoint');
-    return { client: new OpenAI({ apiKey: 'local', baseURL: normalizeLocalEndpoint(settings.endpoint) }), model: settings.model, supportsFile: false };
+    return { client: new OpenAI({ apiKey: 'local', baseURL: normalizeLocalEndpoint(settings.endpoint) }), model: settings.model, supportsFile: false, provider: AIProvider.LOCAL };
   }
-  if (!settings?.encryptedApiKey || settings.provider !== AIProvider.OPENROUTER) throw new ModelNotConfiguredError();
+  if (!settings?.encryptedApiKey) throw new ModelNotConfiguredError();
+  if (isDirectProvider(settings.provider)) {
+    return {
+      client: new OpenAI({ apiKey: decryptProviderSecret(settings.encryptedApiKey), baseURL: directProviderBaseUrl(settings.provider),
+        ...(settings.provider === AIProvider.ANTHROPIC ? { defaultHeaders: { 'anthropic-version': '2026-10-21' } } : {}) }),
+      model: settings.model, supportsFile: false, provider: settings.provider,
+    };
+  }
+  if (settings.provider !== AIProvider.OPENROUTER) throw new ModelNotConfiguredError();
   const client = new OpenAI({
     apiKey: decryptProviderSecret(settings.encryptedApiKey),
     baseURL: 'https://openrouter.ai/api/v1',
     defaultHeaders: { 'HTTP-Referer': 'https://hiretivo.com', 'X-Title': 'Hiretivo' },
   });
-  return { client, model: settings.model, supportsFile: settings.supportsFile };
+  return { client, model: settings.model, supportsFile: settings.supportsFile, provider: AIProvider.OPENROUTER };
 }

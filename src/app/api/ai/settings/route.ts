@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { fetchOpenRouterModels } from "@/lib/ai/openrouter-models";
 import { fetchLocalModels, normalizeLocalEndpoint } from "@/lib/ai/local-endpoint";
+import { fetchDirectModels, isDirectProvider } from "@/lib/ai/direct-provider";
 import { decryptProviderSecret, encryptProviderSecret } from "@/lib/ai/provider-secret";
 import { SELF_HOSTED } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,7 @@ import { createRateLimiter } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter("ai-settings", 10, "1 m");
 const inputSchema = z.object({
-  provider: z.enum([AIProvider.OPENROUTER, AIProvider.LOCAL]),
+  provider: z.nativeEnum(AIProvider),
   model: z.string().trim().min(1).max(200),
   apiKey: z.string().trim().min(1).max(500).optional(),
   endpoint: z.string().trim().max(300).optional(),
@@ -59,9 +60,22 @@ export async function PUT(request: Request) {
     });
     return NextResponse.json({ data: { provider: AIProvider.LOCAL, model: parsed.data.model, endpoint, hasKey: false, supportsFile: false } });
   }
-  const apiKey = parsed.data.apiKey ?? (current?.provider === AIProvider.OPENROUTER && current.encryptedApiKey
+  const apiKey = parsed.data.apiKey ?? (current?.provider === parsed.data.provider && current.encryptedApiKey
     ? decryptProviderSecret(current.encryptedApiKey) : null);
-  if (!apiKey) return NextResponse.json({ error: "Enter an OpenRouter API key" }, { status: 400 });
+  if (!apiKey) return NextResponse.json({ error: "Enter an API key for the selected provider" }, { status: 400 });
+
+  if (isDirectProvider(parsed.data.provider)) {
+    let models: string[];
+    try { models = await fetchDirectModels(parsed.data.provider, apiKey); }
+    catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify provider key" }, { status: 422 }); }
+    if (!models.includes(parsed.data.model)) return NextResponse.json({ error: "Choose a text-capable model from this provider." }, { status: 422 });
+    await prisma.aISettings.upsert({
+      where: { userId: session.user.id },
+      update: { provider: parsed.data.provider, model: parsed.data.model, supportsFile: false, encryptedApiKey: encryptProviderSecret(apiKey), endpoint: null },
+      create: { userId: session.user.id, provider: parsed.data.provider, model: parsed.data.model, supportsFile: false, encryptedApiKey: encryptProviderSecret(apiKey) },
+    });
+    return NextResponse.json({ data: { provider: parsed.data.provider, model: parsed.data.model, hasKey: true, supportsFile: false } });
+  }
 
   let models;
   try { models = await fetchOpenRouterModels(apiKey); }

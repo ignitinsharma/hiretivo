@@ -7,7 +7,7 @@ const src = readFileSync(SOURCE, "utf8");
 
 describe("parseResumeWithVision cascade", () => {
   it("parses text-first with the lite model", () => {
-    assert.match(src, /callModelText\(text, liteModel, false, lite\.client\)/);
+    assert.match(src, /callModelText\(text, liteModel, false, lite\.client, lite\.provider\)/);
   });
   it("skips text tier for scanned PDFs and goes straight to file tier", () => {
     assert.match(src, /No extractable text — scanned PDF/);

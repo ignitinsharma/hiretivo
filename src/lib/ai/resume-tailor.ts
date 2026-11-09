@@ -1,4 +1,5 @@
 import { getUserAIContext } from "@/lib/openrouter";
+import { completionTokenLimit, isDirectProvider } from "@/lib/ai/direct-provider";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { checkGenerationQuota, consumeGenerationQuota } from "@/lib/ai/generation-quota";
@@ -123,10 +124,10 @@ export async function tailorResume(
           { role: "system", content: system },
           { role: "user", content: userMessage },
         ],
-        temperature: TAILOR_RESUME_CONFIG.temperature,
-        max_tokens: maxTokens,
+        ...(ai.provider && isDirectProvider(ai.provider) ? {} : { temperature: TAILOR_RESUME_CONFIG.temperature }),
+        ...completionTokenLimit(ai.provider, maxTokens),
         // DeepSeek defaults reasoning to HIGH — cap it: thinking time dominated latency
-        reasoning: { effort: "low" },
+        ...(ai.provider && isDirectProvider(ai.provider) ? {} : { reasoning: { effort: "low" } }),
       } as ChatCompletionCreateParamsNonStreaming, { signal });
       const usage = completion.usage;
       console.log("[resume-tailor] call", {
