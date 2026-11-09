@@ -1,49 +1,27 @@
 # HireTivo
 
-## Local installation
+HireTivo is a self-hosted job application tracker and resume workspace. It keeps application history, an interview and deadline calendar, a weekly dashboard, and an editable base resume with multiple PDF themes. You can use a local model or bring your own OpenRouter, OpenAI, Anthropic, or Google AI Studio API key.
 
-Install Docker Desktop, then run `sh scripts/local-up.sh` from the repository root.
-Open http://localhost:3000 and create an account with an email address and password. No email service or OAuth account is required. Postgres data is stored in the `postgres_data` Docker volume and survives `docker compose down` and restarts. Keep `.env.self-hosted` private: it contains the database password and session secret. The app is bound to localhost only.
+## Start locally
 
-To stop the app, run `docker compose --env-file .env.self-hosted down`. Run `sh scripts/local-up.sh` again to start it with the same account and data.
+Install Docker Desktop or another Docker Compose installation, then run:
 
-In Settings → AI model, select **Local model** to use a separately running OpenAI-compatible model server. The server must expose `/v1/models` and `/v1/chat/completions`; inside Docker, enter an endpoint such as `http://host.docker.internal:11434/v1`. The app does not install or start a model server. It can parse text-based PDFs locally; scanned PDFs need a model with file input. You can also bring your own OpenRouter, OpenAI, Anthropic, or Google AI Studio API key in the same settings section. Cloud providers receive resume and job content when you use them. Keys are encrypted in the database and never returned to the browser.
+```sh
+sh scripts/local-up.sh
+```
 
-## Project Overview
-HireTivo is an innovative solution designed to streamline the hiring process for companies and job seekers. Our platform connects employers and candidates, making recruitment easier and more efficient.
+Open <http://localhost:3000> and create an account with an email address and password. The installer creates private secrets in `.env.self-hosted`; `.env.self-hosted.example` lists the required names without real secrets. Keep the actual file private. The app binds to localhost, and Postgres and uploaded resumes live in Docker volumes.
 
-## Tech Stack
-- **Frontend:** React.js, HTML5, CSS3
-- **Backend:** Node.js, Express
-- **Database:** MongoDB
-- **Deployment:** AWS, Docker
+In **Settings → AI model**, select your provider. A model is optional for manual job tracking and base resume editing. AI parsing and tailored resume generation require a configured model. Local inference requires a separately running OpenAI-compatible server; HireTivo does not install or start one. In Docker, connect through `host.docker.internal`, for example `http://host.docker.internal:11434/v1`. Local and direct cloud providers parse text-based PDFs; scanned PDFs need a model with file input. Cloud providers receive the resume and job content you send for AI tasks. Provider API keys are encrypted in the local database.
 
-## Setup Instructions
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/ignitinsharma/hiretivo.git
-   cd hiretivo
-   ```
-2. Install the required dependencies:
-   ```bash
-   npm install
-   ```
-3. Set up environment variables:
-   - Create a `.env` file in the root directory and add your environment-specific configurations.
-4. Start the application:
-   ```bash
-   npm start
-   ```
+See [Self-hosting guide](docs/self-hosting.md) for backup, restore, upgrade, and migration steps.
 
-## End-to-End Flow
-1. Users register and create profiles.
-2. Employers post job openings.
-3. Candidates apply to jobs that match their skills and interests.
-4. Employers review applications and schedule interviews.
-5. Candidates can track their application status through the platform.
+## Develop
 
-## Development Guidelines
-- Follow the **GitFlow** branching model for feature development.
-- Write clean and maintainable code, adhering to the company's coding standards.
-- Submit pull requests for review before merging to the main branch.
-- Make sure to run tests before pushing changes.
+HireTivo uses Next.js, TypeScript, Prisma, and PostgreSQL. Install Node.js 22 and pnpm 10, then run `pnpm install`. Development requires a PostgreSQL `DATABASE_URL` and an `AUTH_SECRET`; self-hosted development also needs `NEXT_PUBLIC_SELF_HOSTED=true` and `HIRETIVO_ENCRYPTION_KEY`. Run `pnpm exec prisma migrate deploy`, then `pnpm dev`. Docker Compose is the supported one-command local installation.
+
+The self-hosted edition does not require a HireTivo subscription, OAuth account, email service, or hosted job feed. Managed hosting and billing remain separate from the self-hosted experience.
+
+## License
+
+HireTivo is released under the [MIT License](LICENSE). Its Dossier-inspired features and appearance are independently implemented; Dossier source code and assets are not included.
