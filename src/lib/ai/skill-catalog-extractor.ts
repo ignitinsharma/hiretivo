@@ -1,4 +1,6 @@
 import { getUserAIContext } from "@/lib/openrouter";
+import { AIProvider } from "@prisma/client";
+import { completionTokenLimit, isDirectProvider } from "@/lib/ai/direct-provider";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { prisma } from "@/lib/prisma";
@@ -77,14 +79,14 @@ export async function extractCandidateSkillsFromJD(
     const completion = await withRetry(async (signal) => {
       return await ai.client.chat.completions.create({
         model: ai.model,
-        response_format: { type: "json_object" },
+        ...(ai.provider === AIProvider.ANTHROPIC ? {} : { response_format: { type: "json_object" } }),
         messages: [
           { role: "system", content: EXTRACTION_PROMPT.system },
           { role: "user", content: text },
         ],
-        temperature: 0.1,
-        max_tokens: 1000,
-        reasoning: { effort: "low" },
+        ...(ai.provider && isDirectProvider(ai.provider) ? {} : { temperature: 0.1 }),
+        ...completionTokenLimit(ai.provider, 1000),
+        ...(ai.provider && isDirectProvider(ai.provider) ? {} : { reasoning: { effort: "low" } }),
       } as ChatCompletionCreateParamsNonStreaming, { signal });
     }, { timeoutMs: 30_000, maxRetries: 0 });
 

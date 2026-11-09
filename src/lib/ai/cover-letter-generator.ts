@@ -1,4 +1,5 @@
 import { getUserAIContext } from "@/lib/openrouter";
+import { completionTokenLimit, isDirectProvider } from "@/lib/ai/direct-provider";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { buildCoverLetterPrompt } from "@/lib/ai-prompts";
@@ -58,9 +59,9 @@ export async function generateCoverLetter(
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      max_tokens: 800,
-      temperature: 0.7,
-      reasoning: { effort: "low" },
+      ...completionTokenLimit(ai.provider, 800),
+      ...(ai.provider && isDirectProvider(ai.provider) ? {} : { temperature: 0.7 }),
+      ...(ai.provider && isDirectProvider(ai.provider) ? {} : { reasoning: { effort: "low" } }),
     } as ChatCompletionCreateParamsNonStreaming, { signal });
     const text = completion.choices?.[0]?.message?.content;
     if (!text) return null;

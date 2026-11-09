@@ -1,5 +1,7 @@
 import type OpenAI from "openai";
 import { getUserAIContext } from "@/lib/openrouter";
+import { AIProvider } from "@prisma/client";
+import { completionTokenLimit, isDirectProvider } from "@/lib/ai/direct-provider";
 import { withRetry } from "@/lib/ai/with-retry";
 import { extractPdfText } from "@/lib/ai/pdf-text-extract";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
@@ -172,6 +174,7 @@ async function callModelText(
   model: string,
   condense: boolean,
   client: OpenAI,
+  provider?: AIProvider,
 ): Promise<ParseResult> {
   const systemPrompt = condense ? SYSTEM_PROMPT + condenseInstructions() : SYSTEM_PROMPT;
 
@@ -182,10 +185,9 @@ async function callModelText(
   const aiResult = await withRetry(async (signal) => {
     const completion = await client.chat.completions.create({
       model,
-      response_format: { type: "json_object" },
-      max_tokens: MAX_OUTPUT_TOKENS,
-      temperature: 0.1,
-       reasoning: { max_tokens: REASONING_CAP },
+      ...(provider === AIProvider.ANTHROPIC ? {} : { response_format: { type: "json_object" } }),
+      ...completionTokenLimit(provider, MAX_OUTPUT_TOKENS),
+      ...(provider && isDirectProvider(provider) ? {} : { temperature: 0.1, reasoning: { max_tokens: REASONING_CAP } }),
        messages: [
          { role: "system", content: systemPrompt },
          { role: "user", content: `${USER_PROMPT}\n\nRESUME TEXT:\n${text}` },
@@ -297,7 +299,7 @@ export async function parseResumeWithVision(
   if (hasText) {
     // Tier 1 — cheap, fast text parse
     console.log(`[parseResumeWithVision] Tier 1 text: ${liteModel}`);
-    const r1 = await callModelText(text, liteModel, false, lite.client);
+    const r1 = await callModelText(text, liteModel, false, lite.client, lite.provider);
     if (r1.status === "ok") {
       const totalSkills = r1.data.skills.categories.reduce((sum, c) => sum + c.items.length, 0);
       if (totalSkills >= 3) {

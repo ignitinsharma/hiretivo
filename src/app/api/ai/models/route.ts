@@ -4,13 +4,14 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { fetchOpenRouterModels } from "@/lib/ai/openrouter-models";
 import { fetchLocalModels } from "@/lib/ai/local-endpoint";
+import { fetchDirectModels, isDirectProvider } from "@/lib/ai/direct-provider";
 import { decryptProviderSecret } from "@/lib/ai/provider-secret";
 import { SELF_HOSTED } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter("ai-models", 10, "1 m");
-const inputSchema = z.object({ provider: z.enum([AIProvider.OPENROUTER, AIProvider.LOCAL]).optional(), apiKey: z.string().trim().min(1).max(500).optional(), endpoint: z.string().trim().max(300).optional() });
+const inputSchema = z.object({ provider: z.nativeEnum(AIProvider).optional(), apiKey: z.string().trim().min(1).max(500).optional(), endpoint: z.string().trim().max(300).optional() });
 
 /* List live OpenRouter models using a submitted or saved key, never returning the key. */
 export async function POST(request: Request) {
@@ -33,10 +34,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error instanceof Error ? error.message : "Local model server is unreachable" }, { status: 502 });
     }
   }
+  const selectedProvider = parsed.data.provider ?? AIProvider.OPENROUTER;
   const current = parsed.data.apiKey ? null : await prisma.aISettings.findUnique({ where: { userId: session.user.id } });
-  const apiKey = parsed.data.apiKey ?? (current?.provider === AIProvider.OPENROUTER && current.encryptedApiKey
+  const apiKey = parsed.data.apiKey ?? (current?.provider === selectedProvider && current.encryptedApiKey
     ? decryptProviderSecret(current.encryptedApiKey) : null);
-  if (!apiKey) return NextResponse.json({ error: "Enter an OpenRouter API key" }, { status: 400 });
+  if (!apiKey) return NextResponse.json({ error: "Enter an API key for the selected provider" }, { status: 400 });
+  if (isDirectProvider(selectedProvider)) {
+    try {
+      const models = await fetchDirectModels(selectedProvider, apiKey);
+      return NextResponse.json({ data: models.map((id) => ({ id, name: id, isFree: false, supportsFile: false, contextLength: null, promptPricePerMillion: null, completionPricePerMillion: null })) });
+    } catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Could not load models" }, { status: 502 });
+    }
+  }
   try {
     const models = await fetchOpenRouterModels(apiKey);
     return NextResponse.json({ data: models });

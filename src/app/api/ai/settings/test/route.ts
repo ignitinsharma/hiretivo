@@ -4,12 +4,13 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { decryptProviderSecret } from "@/lib/ai/provider-secret";
 import { normalizeLocalEndpoint } from "@/lib/ai/local-endpoint";
+import { completionTokenLimit, directProviderBaseUrl, isDirectProvider } from "@/lib/ai/direct-provider";
 import { SELF_HOSTED } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter("ai-test", 5, "1 m");
-const inputSchema = z.object({ provider: z.enum([AIProvider.OPENROUTER, AIProvider.LOCAL]).optional(), apiKey: z.string().trim().min(1).max(500).optional(), model: z.string().trim().min(1).max(200).optional(), endpoint: z.string().trim().max(300).optional() });
+const inputSchema = z.object({ provider: z.nativeEnum(AIProvider).optional(), apiKey: z.string().trim().min(1).max(500).optional(), model: z.string().trim().min(1).max(200).optional(), endpoint: z.string().trim().max(300).optional() });
 
 /* Make a minimal generation request to verify the chosen OpenRouter connection. */
 export async function POST(request: Request) {
@@ -22,8 +23,9 @@ export async function POST(request: Request) {
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid test request" }, { status: 400 });
   const current = await prisma.aISettings.findUnique({ where: { userId: session.user.id } });
-  const local = parsed.data.provider === AIProvider.LOCAL;
-  const apiKey = parsed.data.apiKey ?? (current?.provider === AIProvider.OPENROUTER && current.encryptedApiKey
+  const provider = parsed.data.provider ?? AIProvider.OPENROUTER;
+  const local = provider === AIProvider.LOCAL;
+  const apiKey = parsed.data.apiKey ?? (current?.provider === provider && current.encryptedApiKey
     ? decryptProviderSecret(current.encryptedApiKey) : null);
   const model = parsed.data.model ?? current?.model;
   if ((!local && !apiKey) || !model) return NextResponse.json({ error: "Enter a key and choose a model" }, { status: 400 });
@@ -33,12 +35,15 @@ export async function POST(request: Request) {
     try { url = `${normalizeLocalEndpoint(parsed.data.endpoint ?? current?.endpoint ?? "")}/chat/completions`; }
     catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid local endpoint" }, { status: 400 }); }
   }
+  if (isDirectProvider(provider)) url = `${directProviderBaseUrl(provider)}/chat/completions`;
 
   try {
     const response = await fetch(url, {
       method: "POST",
-      headers: local ? { "Content-Type": "application/json" } : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://hiretivo.com", "X-Title": "Hiretivo" },
-      body: JSON.stringify({ model, messages: [{ role: "user", content: "Reply with OK." }], max_tokens: 12 }),
+      headers: local ? { "Content-Type": "application/json" } : isDirectProvider(provider)
+        ? { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", ...(provider === AIProvider.ANTHROPIC ? { "anthropic-version": "2026-10-21" } : {}) }
+        : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://hiretivo.com", "X-Title": "Hiretivo" },
+      body: JSON.stringify({ model, messages: [{ role: "user", content: "Reply with OK." }], ...completionTokenLimit(provider, 12) }),
       cache: "no-store",
       signal: AbortSignal.timeout(20_000),
     });

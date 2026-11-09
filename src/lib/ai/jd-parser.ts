@@ -1,4 +1,5 @@
 import { getUserAIContext } from "@/lib/openrouter";
+import { completionTokenLimit, isDirectProvider } from "@/lib/ai/direct-provider";
 import { withRetry } from "@/lib/ai/with-retry";
 import { stripHtml } from "@/lib/utils";
 
@@ -138,8 +139,8 @@ async function callExtractionLlm(text: string, context: string, userId: string):
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `TEXT:\n${text}` },
       ],
-      temperature: 0.1,
-      max_tokens: 16000,
+      ...(ai.provider && isDirectProvider(ai.provider) ? {} : { temperature: 0.1 }),
+      ...completionTokenLimit(ai.provider, 16000),
     }, { signal });
 
     return {
