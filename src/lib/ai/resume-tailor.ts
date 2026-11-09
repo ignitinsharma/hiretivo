@@ -1,4 +1,4 @@
-import { openrouter, getResumeModel } from "@/lib/openrouter";
+import { getUserAIContext } from "@/lib/openrouter";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { checkGenerationQuota, consumeGenerationQuota } from "@/lib/ai/generation-quota";
@@ -57,7 +57,7 @@ function parseAiResponse(raw: string): AiTailorResponse | null {
 
     return { resume: parsed.resume };
   } catch (err) {
-    console.error("[resume-tailor] JSON parse failed:", err, "\nRaw:", raw);
+    console.error("[resume-tailor] JSON parse failed:", err instanceof Error ? err.message : "Invalid JSON");
     return null;
   }
 }
@@ -112,12 +112,13 @@ export async function tailorResume(
     jobSkills,
     jobTitle,
   });
+  const ai = await getUserAIContext(userId, "resume");
 
   const callTailor = (maxTokens: number) =>
     withRetry(async (signal) => {
       const startedAt = Date.now();
-      const completion = await openrouter.chat.completions.create({
-        model: getResumeModel(),
+      const completion = await ai.client.chat.completions.create({
+        model: ai.model,
         messages: [
           { role: "system", content: system },
           { role: "user", content: userMessage },

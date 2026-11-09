@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { User, Globe, Wrench, FileText, CreditCard, ShieldCheck } from "lucide-react";
+import { User, Globe, Wrench, FileText, CreditCard, ShieldCheck, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SELF_HOSTED } from "@/lib/config";
 
-export type SettingsTab = "personal" | "social" | "skills" | "resume" | "billing" | "password";
+export type SettingsTab = "personal" | "social" | "skills" | "resume" | "ai" | "billing" | "password";
 
 interface NavItem {
   key: SettingsTab;
@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "social", label: "Social Profiles", icon: Globe },
   { key: "skills", label: "Skills", icon: Wrench },
   { key: "resume", label: "Resume", icon: FileText },
+  ...(SELF_HOSTED ? [{ key: "ai" as const, label: "AI models", icon: Bot }] : []),
   ...(!SELF_HOSTED ? [{ key: "billing" as const, label: "Plan & Billing", icon: CreditCard }] : []),
   { key: "password", label: "Password", icon: ShieldCheck },
 ];

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { openrouter, getResumeModel } from "@/lib/openrouter";
+import { getUserAIContext } from "@/lib/openrouter";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { checkGenerationQuota, consumeGenerationQuota, QuotaType } from "@/lib/ai/generation-quota";
@@ -98,9 +98,10 @@ Rules:
 - Do not fabricate experience, education, or other credentials not present in the input
 - The "id" fields should remain exactly as provided (do not regenerate them)`;
 
+  const ai = await getUserAIContext(session.user.id, "resume");
   const rewriteResponse = await withRetry(async (signal) => {
-    const completion = await openrouter.chat.completions.create({
-      model: getResumeModel(),
+    const completion = await ai.client.chat.completions.create({
+      model: ai.model,
       messages: [
         { role: "system", content: systemPrompt },
         {

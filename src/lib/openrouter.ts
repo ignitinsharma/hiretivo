@@ -1,4 +1,8 @@
 import OpenAI from 'openai';
+import { AIProvider } from '@prisma/client';
+import { SELF_HOSTED } from '@/lib/config';
+import { prisma } from '@/lib/prisma';
+import { decryptProviderSecret } from '@/lib/ai/provider-secret';
 
 const provider = process.env.AI_PROVIDER ?? 'openrouter';
 
@@ -69,4 +73,27 @@ export function getResumeParseModel(): string {
 export function getJDParseModel(): string {
   const model = process.env.JD_PARSE_MODEL?.trim();
   return model || 'google/gemini-2.5-flash';
+}
+
+export type AITask = 'resume' | 'parse' | 'lite' | 'jd';
+
+export class ModelNotConfiguredError extends Error {
+  constructor() { super('Choose an AI model in Settings before using this feature.'); }
+}
+
+/* Resolve a model for one user and task without sharing their credential globally. */
+export async function getUserAIContext(userId: string, task: AITask): Promise<{ client: OpenAI; model: string; supportsFile: boolean }> {
+  if (!SELF_HOSTED) {
+    const model = task === 'resume' ? getResumeModel() : task === 'parse' ? getResumeParseModel()
+      : task === 'lite' ? getLiteAIModel() : getJDParseModel();
+    return { client: openrouter, model, supportsFile: true };
+  }
+  const settings = await prisma.aISettings.findUnique({ where: { userId } });
+  if (!settings?.encryptedApiKey || settings.provider !== AIProvider.OPENROUTER) throw new ModelNotConfiguredError();
+  const client = new OpenAI({
+    apiKey: decryptProviderSecret(settings.encryptedApiKey),
+    baseURL: 'https://openrouter.ai/api/v1',
+    defaultHeaders: { 'HTTP-Referer': 'https://hiretivo.com', 'X-Title': 'Hiretivo' },
+  });
+  return { client, model: settings.model, supportsFile: settings.supportsFile };
 }

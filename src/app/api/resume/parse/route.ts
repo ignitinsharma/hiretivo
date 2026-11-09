@@ -4,6 +4,7 @@ import { UserRole } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { getSignedFileUrl } from "@/lib/r2";
 import { parseResumeWithVision, isResumeSuspiciouslyThin } from "@/lib/ai/resume-parser";
+import { ModelNotConfiguredError } from "@/lib/openrouter";
 import { SELF_HOSTED } from "@/lib/config";
 import { readLocalFile } from "@/lib/storage/local-files";
 
@@ -57,9 +58,12 @@ export async function POST(_req: NextRequest) {
       );
     }
 
-    const result = await parseResumeWithVision(pdfBuffer);
+    const result = await parseResumeWithVision(pdfBuffer, session.user.id);
 
     if (result.status === "error") {
+      if (result.reason === "unsupported_file") {
+        return NextResponse.json({ error: "This model cannot read scanned PDFs. Choose a PDF-capable model or upload a text-based PDF." }, { status: 422 });
+      }
       console.error(
         `[parse] parseResumeWithVision error — reason=${result.reason}`,
         "see [parseResumeWithVision] logs above",
@@ -118,6 +122,7 @@ export async function POST(_req: NextRequest) {
       data: { parsed: true, ...(warnings.length > 0 ? { warnings } : {}) },
     });
   } catch (error) {
+    if (error instanceof ModelNotConfiguredError) return NextResponse.json({ error: error.message }, { status: 412 });
     console.error("[parse] Unhandled error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred while parsing your resume. Please try again." },
