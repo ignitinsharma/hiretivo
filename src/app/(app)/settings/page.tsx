@@ -15,6 +15,7 @@ import { PlanBillingSection } from '@/modules/seeker/settings/components/PlanBil
 import { SettingsSidebar, type SettingsTab } from '@/modules/seeker/settings/components/SettingsSidebar';
 import { Button } from '@/components/ui/button';
 import { SELF_HOSTED } from '@/lib/config';
+import { AISettingsSection } from '@/modules/seeker/settings/components/AISettingsSection';
 
 /*
  * SettingsContent
@@ -34,6 +35,8 @@ function SettingsContent({ activeTab }: { activeTab: SettingsTab }) {
       return <SkillsSection settings={settings} isLoading={isLoading} />;
     case 'resume':
       return <ResumeSection resumeKey={settings?.resumeKey} />;
+    case 'ai':
+      return SELF_HOSTED ? <AISettingsSection /> : null;
     case 'billing':
       return SELF_HOSTED ? null : <PlanBillingSection />;
     case 'password':

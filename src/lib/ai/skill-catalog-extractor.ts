@@ -1,4 +1,4 @@
-import { openrouter, getLiteAIModel } from "@/lib/openrouter";
+import { getUserAIContext } from "@/lib/openrouter";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { prisma } from "@/lib/prisma";
@@ -68,13 +68,15 @@ Output ONLY a valid JSON object with this exact shape:
 
 export async function extractCandidateSkillsFromJD(
   jdText: string,
+  userId = "",
 ): Promise<SkillCandidate[]> {
   const text = jdText.slice(0, 5000);
 
   try {
+    const ai = await getUserAIContext(userId, "lite");
     const completion = await withRetry(async (signal) => {
-      return await openrouter.chat.completions.create({
-        model: getLiteAIModel(),
+      return await ai.client.chat.completions.create({
+        model: ai.model,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: EXTRACTION_PROMPT.system },

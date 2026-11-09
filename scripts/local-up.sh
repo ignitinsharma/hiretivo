@@ -8,7 +8,13 @@ if [ ! -f .env.self-hosted ]; then
   cat > .env.self-hosted <<EOF
 HIRETIVO_DB_PASSWORD=$(openssl rand -hex 24)
 HIRETIVO_AUTH_SECRET=$(openssl rand -hex 32)
+HIRETIVO_ENCRYPTION_KEY=$(openssl rand -hex 32)
 EOF
+fi
+
+if ! grep -q '^HIRETIVO_ENCRYPTION_KEY=' .env.self-hosted; then
+  umask 077
+  printf 'HIRETIVO_ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 32)" >> .env.self-hosted
 fi
 
 docker compose --env-file .env.self-hosted up --build -d

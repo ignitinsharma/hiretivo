@@ -19,6 +19,7 @@ services:
     environment:
       DATABASE_URL: postgresql://hiretivo:${HIRETIVO_DB_PASSWORD:?Run ./scripts/local-up.sh}@db:5432/hiretivo
       AUTH_SECRET: ${HIRETIVO_AUTH_SECRET:?Run ./scripts/local-up.sh}
+      HIRETIVO_ENCRYPTION_KEY: ${HIRETIVO_ENCRYPTION_KEY:?Run ./scripts/local-up.sh}
       AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_SELF_HOSTED: "true"
       NEXT_PUBLIC_SHOW_COMING_SOON: "false"

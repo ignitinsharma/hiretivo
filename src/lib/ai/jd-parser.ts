@@ -1,4 +1,4 @@
-import { openrouter, getJDParseModel } from "@/lib/openrouter";
+import { getUserAIContext } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { stripHtml } from "@/lib/utils";
 
@@ -129,10 +129,11 @@ Only return valid JSON. No markdown formatting. No text before or after the JSON
  * ── AI call ──────────────────────────────────────────────
  */
 
-async function callExtractionLlm(text: string, context: string): Promise<ParsedJob | null> {
+async function callExtractionLlm(text: string, context: string, userId: string): Promise<ParsedJob | null> {
+  const ai = await getUserAIContext(userId, "jd");
   const result = await withRetry(async (signal) => {
-      const completion = await openrouter.chat.completions.create({
-      model: getJDParseModel(),
+      const completion = await ai.client.chat.completions.create({
+      model: ai.model,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `TEXT:\n${text}` },
@@ -412,7 +413,7 @@ export function isSupportedAtsDomain(url: string): boolean {
   }
 }
 
-export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
+export async function parseJobFromUrl(url: string, userId = ""): Promise<ParsedJob | null> {
   if (!isSupportedAtsDomain(url)) {
     console.warn(`[jd-parser] URL not in the auto-fetch allowlist — ${url}`);
     return null;
@@ -435,11 +436,12 @@ export async function parseJobFromUrl(url: string): Promise<ParsedJob | null> {
       skills: [],
     };
   }
-  return callExtractionLlm(page.text, "url");
+  return callExtractionLlm(page.text, "url", userId);
 }
 
 export async function parseJobFromText(
   text: string,
+  userId = "",
 ): Promise<ParsedJob | null> {
-  return callExtractionLlm(text, "text");
+  return callExtractionLlm(text, "text", userId);
 }

@@ -34,12 +34,13 @@ async function enrichAndLinkJobSkills(
   jobId: string,
   description: string,
   parsedSkills: string[] = [],
+  userId = "",
 ): Promise<void> {
   // Prefer the JD parser's skill list (LLM-extracted with the full description);
   // fall back to description extraction only when the parser found nothing.
   const candidates = parsedSkills.length
     ? parsedSkills.map((name) => ({ name, category: "tool" as const }))
-    : await extractCandidateSkillsFromJD(description);
+    : await extractCandidateSkillsFromJD(description, userId);
   if (candidates.length === 0) return;
   await reconcileAndInsertSkills(candidates);
   const allSkills = await prisma.skill.findMany({
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
 
     let jobData = tryPreviewData(body.previewData) as JobPreview | null;
     if (!jobData) {
-      jobData = await parseJobFromText(parsed.data.description);
+      jobData = await parseJobFromText(parsed.data.description, session.user.id);
     }
     if (!jobData) {
       return NextResponse.json(
@@ -123,7 +124,7 @@ export async function POST(req: Request) {
       },
     });
 
-    await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills);
+    await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills, session.user.id);
 
     const application = await prisma.application.create({
       data: {
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
 
   let jobData = tryPreviewData(body.previewData) as JobPreview | null;
   if (!jobData) {
-    jobData = await parseJobFromUrl(url);
+    jobData = await parseJobFromUrl(url, session.user.id);
   }
   if (!jobData) {
     const unsupportedAts = !isSupportedAtsDomain(url);
@@ -212,7 +213,7 @@ export async function POST(req: Request) {
     },
   });
 
-  await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills);
+  await enrichAndLinkJobSkills(job.id, jobData.description, jobData.skills, session.user.id);
 
   const application = await prisma.application.create({
     data: {

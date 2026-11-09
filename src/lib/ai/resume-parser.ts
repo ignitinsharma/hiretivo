@@ -1,4 +1,5 @@
-import { openrouter, getResumeParseModel, getLiteAIModel } from "@/lib/openrouter";
+import type OpenAI from "openai";
+import { getUserAIContext } from "@/lib/openrouter";
 import { withRetry } from "@/lib/ai/with-retry";
 import { extractPdfText } from "@/lib/ai/pdf-text-extract";
 import { ResumeDocumentSchema, type ResumeDocument } from "@/lib/validations/resume.schema";
@@ -7,7 +8,7 @@ import { mergeExtractedSkills } from "@/lib/ai/skill-merge";
 export type ParseResult =
   | { status: "ok"; data: ResumeDocument }
   | { status: "truncated" }
-  | { status: "error"; reason: "ai_unreachable" | "empty_response" | "malformed" };
+  | { status: "error"; reason: "ai_unreachable" | "empty_response" | "malformed" | "unsupported_file" };
 
 export function isResumeSuspiciouslyThin(resume: ResumeDocument): string[] {
   const warnings: string[] = [];
@@ -170,6 +171,7 @@ async function callModelText(
   text: string,
   model: string,
   condense: boolean,
+  client: OpenAI,
 ): Promise<ParseResult> {
   const systemPrompt = condense ? SYSTEM_PROMPT + condenseInstructions() : SYSTEM_PROMPT;
 
@@ -178,7 +180,7 @@ async function callModelText(
   );
 
   const aiResult = await withRetry(async (signal) => {
-    const completion = await openrouter.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model,
       response_format: { type: "json_object" },
       max_tokens: MAX_OUTPUT_TOKENS,
@@ -188,7 +190,7 @@ async function callModelText(
          { role: "system", content: systemPrompt },
          { role: "user", content: `${USER_PROMPT}\n\nRESUME TEXT:\n${text}` },
         ],
-     } as Parameters<typeof openrouter.chat.completions.create>[0], { signal });
+     } as Parameters<typeof client.chat.completions.create>[0], { signal });
 
     const msg = (completion as { choices: Array<{ message?: { content?: string | null }; finish_reason?: string | null }> }).choices?.[0];
     return {
@@ -204,6 +206,7 @@ async function callModelFile(
   pdfBuffer: Buffer,
   model: string,
   condense: boolean,
+  client: OpenAI,
 ): Promise<ParseResult> {
   const base64 = pdfBuffer.toString("base64");
   const dataUrl = `data:application/pdf;base64,${base64}`;
@@ -215,7 +218,7 @@ async function callModelFile(
   );
 
   const aiResult = await withRetry(async (signal) => {
-    const completion = await openrouter.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model,
       response_format: { type: "json_object" },
       max_tokens: MAX_OUTPUT_TOKENS,
@@ -234,7 +237,7 @@ async function callModelFile(
           ],
          },
         ],
-     } as Parameters<typeof openrouter.chat.completions.create>[0], { signal });
+     } as Parameters<typeof client.chat.completions.create>[0], { signal });
 
     const msg = (completion as { choices: Array<{ message?: { content?: string | null }; finish_reason?: string | null }> }).choices?.[0];
     return {
@@ -281,9 +284,12 @@ function handleAiResult(
  */
 export async function parseResumeWithVision(
   pdfBuffer: Buffer,
+  userId: string,
 ): Promise<ParseResult> {
-  const liteModel = getLiteAIModel();
-  const flashModel = getResumeParseModel();
+  const lite = await getUserAIContext(userId, "lite");
+  const file = await getUserAIContext(userId, "parse");
+  const liteModel = lite.model;
+  const flashModel = file.model;
 
   const text = await extractPdfText(pdfBuffer);
   const hasText = text.length >= 150;
@@ -291,7 +297,7 @@ export async function parseResumeWithVision(
   if (hasText) {
     // Tier 1 — cheap, fast text parse
     console.log(`[parseResumeWithVision] Tier 1 text: ${liteModel}`);
-    const r1 = await callModelText(text, liteModel, false);
+    const r1 = await callModelText(text, liteModel, false, lite.client);
     if (r1.status === "ok") {
       const totalSkills = r1.data.skills.categories.reduce((sum, c) => sum + c.items.length, 0);
       if (totalSkills >= 3) {
@@ -300,22 +306,27 @@ export async function parseResumeWithVision(
         return r1;
       }
       console.log("[parseResumeWithVision] Tier 1 thin skills → Tier 2 file");
+      if (!file.supportsFile) return r1;
     } else if (r1.status === "truncated") {
       console.log(`[parseResumeWithVision] Tier 1 truncated → Tier 3 condense (${flashModel})`);
-      return callModelFile(pdfBuffer, flashModel, true);
+      if (!file.supportsFile) return { status: "error", reason: "unsupported_file" };
+      return callModelFile(pdfBuffer, flashModel, true, file.client);
     } else {
       console.log(`[parseResumeWithVision] Tier 1 error:${r1.reason} → Tier 2 (${flashModel})`);
+      if (!file.supportsFile) return r1;
     }
   } else {
     console.log("[parseResumeWithVision] No extractable text — scanned PDF, skipping to Tier 2");
   }
 
+  if (!file.supportsFile) return { status: "error", reason: "unsupported_file" };
+
   // Tier 2 — file-based vision parse
-  const r2 = await callModelFile(pdfBuffer, flashModel, false);
+  const r2 = await callModelFile(pdfBuffer, flashModel, false, file.client);
   if (r2.status === "ok") return r2;
   if (r2.status === "truncated") {
     console.log(`[parseResumeWithVision] Tier 2 truncated → Tier 3 condense (${flashModel})`);
-    return callModelFile(pdfBuffer, flashModel, true);
+    return callModelFile(pdfBuffer, flashModel, true, file.client);
   }
 
   console.log(`[parseResumeWithVision] All tiers exhausted — ${r2.status}:${r2.reason}`);

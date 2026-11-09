@@ -149,6 +149,7 @@ export async function POST(
   }
 
   const result = await generateCoverLetter(
+    session.user.id,
     parsed.data,
     jdText,
     application.job.title,

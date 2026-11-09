@@ -1,4 +1,4 @@
-import { openrouter, getResumeModel } from "@/lib/openrouter";
+import { getUserAIContext } from "@/lib/openrouter";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 import { withRetry } from "@/lib/ai/with-retry";
 import { buildCoverLetterPrompt } from "@/lib/ai-prompts";
@@ -21,6 +21,7 @@ export type CoverLetterResult =
  * @returns CoverLetterResult — success with content, or typed error
  */
 export async function generateCoverLetter(
+  userId: string,
   resumeJson: ResumeDocument,
   jdText: string,
   jobTitle: string,
@@ -48,10 +49,11 @@ export async function generateCoverLetter(
   };
 
   const { system, user } = buildCoverLetterPrompt(input);
+  const ai = await getUserAIContext(userId, "resume");
 
   const parsed = await withRetry(async (signal) => {
-    const completion = await openrouter.chat.completions.create({
-      model: getResumeModel(),
+    const completion = await ai.client.chat.completions.create({
+      model: ai.model,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
