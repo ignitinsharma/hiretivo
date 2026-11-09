@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { fetchOpenRouterModels } from "@/lib/ai/openrouter-models";
+import { fetchLocalModels, normalizeLocalEndpoint } from "@/lib/ai/local-endpoint";
 import { decryptProviderSecret, encryptProviderSecret } from "@/lib/ai/provider-secret";
 import { SELF_HOSTED } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
@@ -10,9 +11,10 @@ import { createRateLimiter } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter("ai-settings", 10, "1 m");
 const inputSchema = z.object({
-  provider: z.literal(AIProvider.OPENROUTER),
+  provider: z.enum([AIProvider.OPENROUTER, AIProvider.LOCAL]),
   model: z.string().trim().min(1).max(200),
   apiKey: z.string().trim().min(1).max(500).optional(),
+  endpoint: z.string().trim().max(300).optional(),
 });
 
 /* Return only public model settings; stored credentials never reach the browser. */
@@ -26,6 +28,7 @@ export async function GET() {
     model: settings.model,
     hasKey: Boolean(settings.encryptedApiKey),
     supportsFile: settings.supportsFile,
+    endpoint: settings.provider === AIProvider.LOCAL ? settings.endpoint : null,
   } : null });
 }
 
@@ -41,6 +44,21 @@ export async function PUT(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid model settings" }, { status: 400 });
 
   const current = await prisma.aISettings.findUnique({ where: { userId: session.user.id } });
+  if (parsed.data.provider === AIProvider.LOCAL) {
+    let endpoint: string;
+    try { endpoint = normalizeLocalEndpoint(parsed.data.endpoint ?? current?.endpoint ?? ""); }
+    catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid local endpoint" }, { status: 400 }); }
+    let models: string[];
+    try { models = await fetchLocalModels(endpoint); }
+    catch { return NextResponse.json({ error: "Local model server is unreachable. Start it and check the endpoint." }, { status: 502 }); }
+    if (!models.includes(parsed.data.model)) return NextResponse.json({ error: "Choose a model installed on the local server." }, { status: 422 });
+    await prisma.aISettings.upsert({
+      where: { userId: session.user.id },
+      update: { provider: AIProvider.LOCAL, model: parsed.data.model, endpoint, supportsFile: false, encryptedApiKey: null },
+      create: { userId: session.user.id, provider: AIProvider.LOCAL, model: parsed.data.model, endpoint, supportsFile: false },
+    });
+    return NextResponse.json({ data: { provider: AIProvider.LOCAL, model: parsed.data.model, endpoint, hasKey: false, supportsFile: false } });
+  }
   const apiKey = parsed.data.apiKey ?? (current?.provider === AIProvider.OPENROUTER && current.encryptedApiKey
     ? decryptProviderSecret(current.encryptedApiKey) : null);
   if (!apiKey) return NextResponse.json({ error: "Enter an OpenRouter API key" }, { status: 400 });

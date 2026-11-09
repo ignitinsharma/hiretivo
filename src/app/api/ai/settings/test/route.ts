@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { decryptProviderSecret } from "@/lib/ai/provider-secret";
+import { normalizeLocalEndpoint } from "@/lib/ai/local-endpoint";
 import { SELF_HOSTED } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter("ai-test", 5, "1 m");
-const inputSchema = z.object({ apiKey: z.string().trim().min(1).max(500).optional(), model: z.string().trim().min(1).max(200).optional() });
+const inputSchema = z.object({ provider: z.enum([AIProvider.OPENROUTER, AIProvider.LOCAL]).optional(), apiKey: z.string().trim().min(1).max(500).optional(), model: z.string().trim().min(1).max(200).optional(), endpoint: z.string().trim().max(300).optional() });
 
 /* Make a minimal generation request to verify the chosen OpenRouter connection. */
 export async function POST(request: Request) {
@@ -21,24 +22,31 @@ export async function POST(request: Request) {
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid test request" }, { status: 400 });
   const current = await prisma.aISettings.findUnique({ where: { userId: session.user.id } });
+  const local = parsed.data.provider === AIProvider.LOCAL;
   const apiKey = parsed.data.apiKey ?? (current?.provider === AIProvider.OPENROUTER && current.encryptedApiKey
     ? decryptProviderSecret(current.encryptedApiKey) : null);
   const model = parsed.data.model ?? current?.model;
-  if (!apiKey || !model) return NextResponse.json({ error: "Enter a key and choose a model" }, { status: 400 });
+  if ((!local && !apiKey) || !model) return NextResponse.json({ error: "Enter a key and choose a model" }, { status: 400 });
+
+  let url = "https://openrouter.ai/api/v1/chat/completions";
+  if (local) {
+    try { url = `${normalizeLocalEndpoint(parsed.data.endpoint ?? current?.endpoint ?? "")}/chat/completions`; }
+    catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid local endpoint" }, { status: 400 }); }
+  }
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://hiretivo.com", "X-Title": "Hiretivo" },
+      headers: local ? { "Content-Type": "application/json" } : { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://hiretivo.com", "X-Title": "Hiretivo" },
       body: JSON.stringify({ model, messages: [{ role: "user", content: "Reply with OK." }], max_tokens: 12 }),
       cache: "no-store",
       signal: AbortSignal.timeout(20_000),
     });
-    if (!response.ok) return NextResponse.json({ error: "The model connection failed. Check the key, model, and provider limits." }, { status: 422 });
+    if (!response.ok) return NextResponse.json({ error: local ? "The local model did not answer. Check its name and server logs." : "The model connection failed. Check the key, model, and provider limits." }, { status: 422 });
     const result = await response.json();
     if (!result?.choices?.[0]?.message?.content) throw new Error("Empty response");
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "The model connection failed. Try again later." }, { status: 502 });
+    return NextResponse.json({ error: local ? "Local model server is unreachable. Start it and check the endpoint." : "The model connection failed. Try again later." }, { status: 502 });
   }
 }
