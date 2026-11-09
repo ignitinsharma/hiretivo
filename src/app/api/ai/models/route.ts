@@ -3,13 +3,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { fetchOpenRouterModels } from "@/lib/ai/openrouter-models";
+import { fetchLocalModels } from "@/lib/ai/local-endpoint";
 import { decryptProviderSecret } from "@/lib/ai/provider-secret";
 import { SELF_HOSTED } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter("ai-models", 10, "1 m");
-const inputSchema = z.object({ apiKey: z.string().trim().min(1).max(500).optional() });
+const inputSchema = z.object({ provider: z.enum([AIProvider.OPENROUTER, AIProvider.LOCAL]).optional(), apiKey: z.string().trim().min(1).max(500).optional(), endpoint: z.string().trim().max(300).optional() });
 
 /* List live OpenRouter models using a submitted or saved key, never returning the key. */
 export async function POST(request: Request) {
@@ -21,6 +22,17 @@ export async function POST(request: Request) {
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (parsed.data.provider === AIProvider.LOCAL) {
+    const current = await prisma.aISettings.findUnique({ where: { userId: session.user.id } });
+    const endpoint = parsed.data.endpoint ?? (current?.provider === AIProvider.LOCAL ? current.endpoint : null);
+    if (!endpoint) return NextResponse.json({ error: "Enter a local model endpoint" }, { status: 400 });
+    try {
+      const models = await fetchLocalModels(endpoint);
+      return NextResponse.json({ data: models.map((id) => ({ id, name: id, isFree: true, supportsFile: false, contextLength: null, promptPricePerMillion: 0, completionPricePerMillion: 0 })) });
+    } catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Local model server is unreachable" }, { status: 502 });
+    }
+  }
   const current = parsed.data.apiKey ? null : await prisma.aISettings.findUnique({ where: { userId: session.user.id } });
   const apiKey = parsed.data.apiKey ?? (current?.provider === AIProvider.OPENROUTER && current.encryptedApiKey
     ? decryptProviderSecret(current.encryptedApiKey) : null);

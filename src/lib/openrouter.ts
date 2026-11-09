@@ -89,6 +89,10 @@ export async function getUserAIContext(userId: string, task: AITask): Promise<{ 
     return { client: openrouter, model, supportsFile: true };
   }
   const settings = await prisma.aISettings.findUnique({ where: { userId } });
+  if (settings?.provider === AIProvider.LOCAL && settings.endpoint) {
+    const { normalizeLocalEndpoint } = await import('@/lib/ai/local-endpoint');
+    return { client: new OpenAI({ apiKey: 'local', baseURL: normalizeLocalEndpoint(settings.endpoint) }), model: settings.model, supportsFile: false };
+  }
   if (!settings?.encryptedApiKey || settings.provider !== AIProvider.OPENROUTER) throw new ModelNotConfiguredError();
   const client = new OpenAI({
     apiKey: decryptProviderSecret(settings.encryptedApiKey),

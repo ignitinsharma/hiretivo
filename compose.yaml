@@ -16,6 +16,8 @@ services:
 
   app:
     build: .
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       DATABASE_URL: postgresql://hiretivo:${HIRETIVO_DB_PASSWORD:?Run ./scripts/local-up.sh}@db:5432/hiretivo
       AUTH_SECRET: ${HIRETIVO_AUTH_SECRET:?Run ./scripts/local-up.sh}

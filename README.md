@@ -7,7 +7,7 @@ Open http://localhost:3000 and create an account with an email address and passw
 
 To stop the app, run `docker compose --env-file .env.self-hosted down`. Run `sh scripts/local-up.sh` again to start it with the same account and data.
 
-This initial local slice covers installation and sign-in. Resume files and AI generation will gain local storage and model support in subsequent tickets.
+In Settings → AI model, select **Local model** to use a separately running OpenAI-compatible model server. The server must expose `/v1/models` and `/v1/chat/completions`; inside Docker, enter an endpoint such as `http://host.docker.internal:11434/v1`. The app does not install or start a model server. It can parse text-based PDFs locally; scanned PDFs need a model with file input. To use OpenRouter instead, select it in the same settings section and supply your own key.
 
 ## Project Overview
 HireTivo is an innovative solution designed to streamline the hiring process for companies and job seekers. Our platform connects employers and candidates, making recruitment easier and more efficient.
