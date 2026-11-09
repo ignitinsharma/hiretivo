@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSignedFileUrl } from '@/lib/r2';
 import { getRateLimitIp, publicReadRateLimiter } from '@/lib/rate-limit';
+import { SELF_HOSTED } from '@/lib/config';
+import { readLocalFile } from '@/lib/storage/local-files';
 
 const ALLOWED_PREFIXES = ['company-logos/', 'avatars/'];
 
@@ -22,6 +24,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    if (SELF_HOSTED) {
+      const body = await readLocalFile(key);
+      return new NextResponse(new Uint8Array(body), {
+        headers: { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=3600' },
+      });
+    }
     const signedUrl = await getSignedFileUrl(key);
     const r2Res = await fetch(signedUrl);
     if (!r2Res.ok) return new NextResponse('Not found', { status: 404 });

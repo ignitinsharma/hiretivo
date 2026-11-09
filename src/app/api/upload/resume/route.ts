@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { UserRole } from '@/constants/enums';
 import { prisma } from '@/lib/prisma';
-import { R2_KEYS, uploadFile } from '@/lib/r2';
+import { resumeUploadKey, uploadFile } from '@/lib/r2';
 import { uploadRateLimiter } from '@/lib/rate-limit';
 import {
   RESUME_MAX_BYTES,
@@ -48,12 +48,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const key = R2_KEYS.resume(session.user.id);
+  const key = resumeUploadKey(session.user.id, file.type);
   const { url } = await uploadFile(file, key);
 
-  await prisma.seekerProfile.update({
+  await prisma.seekerProfile.upsert({
     where: { userId: session.user.id },
-    data: { resumeKey: key },
+    update: { resumeKey: key },
+    create: { userId: session.user.id, resumeKey: key },
   });
 
   return NextResponse.json({ data: { key, url } }, { status: 200 });

@@ -22,6 +22,9 @@ services:
       AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_SELF_HOSTED: "true"
       NEXT_PUBLIC_SHOW_COMING_SOON: "false"
+      HIRETIVO_FILES_DIR: /app/data/files
+    volumes:
+      - uploaded_files:/app/data/files
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -31,3 +34,4 @@ services:
 
 volumes:
   postgres_data:
+  uploaded_files:
