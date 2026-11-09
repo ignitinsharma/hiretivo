@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { publishGenerationJob } from "@/lib/generation/qstash";
 import { runApplicationGeneration } from "@/lib/generation/run-application-generation";
 import type { GenerationJobMessage } from "@/lib/generation/qstash";
+import { SELF_HOSTED } from "@/lib/config";
 
 export const GENERATION_WORKER_PATH = "/api/internal/generation-worker";
 
@@ -16,7 +17,7 @@ export interface GenerationDispatchResult {
  * - production enqueues to QStash (signed delivery, retries) with the worker
  *   URL derived from the request origin so the job always lands on the same
  *   deployment that enqueued it;
- * - non-production runs the exact same worker function inline. QStash can
+ * - self-hosted and non-production run the exact same worker function inline. QStash can
  *   never reach a localhost dev server, so queueing there fails
  *   deterministically — inline keeps dev/test on the identical code path the
  *   worker executes in production.
@@ -26,7 +27,7 @@ export async function dispatchGenerationJob(
   message: GenerationJobMessage,
   requestUrl: string,
 ): Promise<GenerationDispatchResult> {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && !SELF_HOSTED) {
     const workerUrl = new URL(GENERATION_WORKER_PATH, requestUrl).toString();
     await publishGenerationJob(message, workerUrl);
     return { queued: true };

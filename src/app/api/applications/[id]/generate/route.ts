@@ -6,6 +6,7 @@ import { AutomationStatus } from "@/constants/enums";
 import { prisma } from "@/lib/prisma";
 import { dispatchGenerationJob } from "@/lib/generation/dispatch-generation";
 import { stripHtml } from "@/lib/utils";
+import { SELF_HOSTED } from "@/lib/config";
 
 const generateRequestSchema = z.object({
   jdText: z.string().optional(),
@@ -40,6 +41,16 @@ export async function POST(
       data: { automationStatus: AutomationStatus.FAILED, failureReason: "No master resume found — upload one first" },
     });
     return NextResponse.json({ error: "no_master_resume", message: "Upload your resume to get started" }, { status: 409 });
+  }
+
+  if (SELF_HOSTED) {
+    const settings = await prisma.aISettings.findUnique({
+      where: { userId: session.user.id },
+      select: { model: true, encryptedApiKey: true },
+    });
+    if (!settings?.model || !settings.encryptedApiKey) {
+      return NextResponse.json({ error: "model_not_configured", message: "Choose an AI model in Settings before generating a resume." }, { status: 412 });
+    }
   }
 
   let body: unknown = {};

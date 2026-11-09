@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
 import { cn } from "@/lib/utils";
+import { SELF_HOSTED } from "@/lib/config";
 import {
   Link,
   FileText,
@@ -57,7 +58,7 @@ export function AddCustomJobModal() {
   const router = useRouter();
   const { isAddCustomJobModalOpen, closeAddCustomJobModal } = useUIStore();
 
-  const [tab, setTab] = useState<Tab>("url");
+  const [tab, setTab] = useState<Tab>(SELF_HOSTED ? "text" : "url");
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
   const [showFullJd, setShowFullJd] = useState(false);
@@ -70,7 +71,7 @@ export function AddCustomJobModal() {
   const [description, setDescription] = useState("");
 
   const reset = useCallback(() => {
-    setTab("url");
+    setTab(SELF_HOSTED ? "text" : "url");
     setState("idle");
     setError(null);
     setUnsupportedAts(false);
@@ -146,6 +147,7 @@ export function AddCustomJobModal() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pastedText: description.trim(),
+          ...(SELF_HOSTED ? { title: title.trim(), company: company.trim() } : {}),
           previewOnly: true,
         }),
       });
@@ -164,7 +166,7 @@ export function AddCustomJobModal() {
       setError("Network error. Check your connection and try again.");
       setState("error");
     }
-  }, [description]);
+  }, [description, title, company]);
 
   const handleConfirm = useCallback(async () => {
     if (!preview) return;
@@ -198,9 +200,14 @@ export function AddCustomJobModal() {
       });
       const generateData = await generateRes.json();
       if (!generateRes.ok) {
-        setError(generateData.message ?? generateData.error ?? "Could not start resume generation.");
-        setState("error");
+        toast.error(generateData.message ?? generateData.error ?? "Could not start resume generation.");
+        handleClose();
+        router.push(`/applications/${data.applicationId}`);
         return;
+      }
+
+      if (generateData.status === "FAILED") {
+        toast.error(generateData.failureReason ?? "Resume generation failed. Open the application to retry.");
       }
 
       handleClose();
@@ -433,6 +440,7 @@ export function AddCustomJobModal() {
 
             {tab === "text" && (
               <div className="space-y-4">
+                {SELF_HOSTED && <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="local-job-title">Job title</Label><Input id="local-job-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} disabled={state === "fetching"} /></div><div className="space-y-2"><Label htmlFor="local-job-company">Company</Label><Input id="local-job-company" value={company} onChange={(event) => setCompany(event.target.value)} maxLength={200} disabled={state === "fetching"} /></div></div>}
                 <div className="space-y-2">
                   <Label htmlFor="job-description">Job description</Label>
                   <Textarea
@@ -457,17 +465,17 @@ export function AddCustomJobModal() {
                 <Button
                   className="w-full"
                   onClick={handleFetchText}
-                  disabled={!description.trim() || state === "fetching"}
+                  disabled={!description.trim() || (SELF_HOSTED && (!title.trim() || !company.trim())) || state === "fetching"}
                 >
                   {state === "fetching" ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Parsing...
+                      {SELF_HOSTED ? "Preparing..." : "Parsing..."}
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Parse & Preview
+                      {SELF_HOSTED ? "Preview job" : "Parse & Preview"}
                     </>
                   )}
                 </Button>

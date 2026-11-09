@@ -23,6 +23,8 @@ import {
 } from "@/lib/ai/skill-catalog-extractor";
 import { SkillLevel } from "@/constants/enums";
 import { JobStatus } from "@/constants/enums";
+import { SELF_HOSTED } from "@/lib/config";
+import { ModelNotConfiguredError } from "@/lib/openrouter";
 
 function tryPreviewData(raw: unknown): JobPreview | null {
   if (!raw) return null;
@@ -83,7 +85,14 @@ export async function POST(req: Request) {
 
     let jobData = tryPreviewData(body.previewData) as JobPreview | null;
     if (!jobData) {
-      jobData = await parseJobFromText(parsed.data.description, session.user.id);
+      if (SELF_HOSTED) {
+        if (!parsed.data.title || !parsed.data.company) {
+          return NextResponse.json({ error: "Enter a job title and company to add this job locally." }, { status: 422 });
+        }
+        jobData = { title: parsed.data.title, company: parsed.data.company, description: parsed.data.description, skills: [] };
+      } else {
+        jobData = await parseJobFromText(parsed.data.description, session.user.id);
+      }
     }
     if (!jobData) {
       return NextResponse.json(
@@ -166,7 +175,14 @@ export async function POST(req: Request) {
 
   let jobData = tryPreviewData(body.previewData) as JobPreview | null;
   if (!jobData) {
-    jobData = await parseJobFromUrl(url, session.user.id);
+    try {
+      jobData = await parseJobFromUrl(url, session.user.id);
+    } catch (error) {
+      if (error instanceof ModelNotConfiguredError) {
+        return NextResponse.json({ error: "Choose an AI model in Settings to parse this URL, or paste the job details manually." }, { status: 412 });
+      }
+      throw error;
+    }
   }
   if (!jobData) {
     const unsupportedAts = !isSupportedAtsDomain(url);
