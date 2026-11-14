@@ -1,0 +1,222 @@
+"use server";
+
+import { z } from "zod";
+
+import { JobStatus, Tone } from "@/generated/prisma/enums";
+import { action, ActionError } from "@/lib/action";
+import { createApplicationFromDocuments } from "@/lib/application-create";
+import { matchSchema } from "@/lib/application-data";
+import { handOffPastedPosting } from "@/lib/connector/handoff";
+import { AUTOMATIC_APPLICATION_KEY, automaticApplicationJob } from "@/lib/jobs/automatic-application";
+import { readPostingJob } from "@/lib/jobs/read-posting";
+import { scorePastedPostingJob } from "@/lib/jobs/score-posting";
+import { startJob } from "@/lib/jobs/runner";
+import { writeDocumentsJob } from "@/lib/jobs/write-documents";
+import { fetchPosting } from "@/lib/posting-fetch";
+import { withCreationLock } from "@/lib/jobs/creation-lock";
+import { prisma } from "@/lib/prisma";
+
+/** One submit starts the complete application, including fetching a pasted link. */
+export const preparePosting = action(
+  z.object({ input: z.string().trim().min(1, "Paste a job link or posting first.").max(100_000), sourceUrl: z.string().trim().max(2000).default("") }),
+  async ({ input, sourceUrl }) => {
+    if (!isPostingLink(input)) return { text: input, url: postingLink(sourceUrl) };
+    const fetched = await fetchPosting(postingLink(input));
+    if (!fetched.ok) throw new ActionError(fetched.error);
+    if (fetched.text.length > 100_000) throw new ActionError("That posting is too long. Paste a shorter description instead.");
+    return { text: fetched.text, url: fetched.url };
+  },
+);
+
+/** One submit starts the complete application from the approved posting. */
+export const startAutomaticApplication = action(
+  z.object({
+    input: z.string().trim().min(1, "Paste a job link or posting first.").max(100_000),
+    sourceUrl: z.string().trim().max(2000).default(""),
+    tone: z.enum(Tone),
+    note: z.string().trim().max(2000),
+    postingId: z.string().min(1).max(100).nullish(),
+    startupId: z.string().min(1).max(100).nullish(),
+  }),
+  ({ input, sourceUrl, tone, note, postingId, startupId }) => {
+    const source = isPostingLink(input)
+      ? { kind: "url" as const, url: postingLink(input) }
+      : { kind: "text" as const, posting: input, url: postingLink(sourceUrl) };
+    return withCreationLock(async () => {
+      const active = await prisma.job.findFirst({ where: { type: "automatic-application", status: { in: [JobStatus.QUEUED, JobStatus.RUNNING] } }, select: { id: true } });
+      if (active) return active.id;
+      return startJob(automaticApplicationJob, { source, tone, note, postingId: postingId ?? null, startupId: startupId ?? null }, { key: AUTOMATIC_APPLICATION_KEY });
+    });
+  },
+);
+
+/** "Read the posting →": starts reading it in the background and returns the job's id (E7-2). */
+export const startReadingPosting = action(
+  z.object({ posting: z.string().trim().min(1, "Paste a job posting first.").max(100_000) }),
+  ({ posting }) => startJob(readPostingJob, { posting }),
+);
+
+/**
+ * "Write it with Claude →" (#221, the connector on and no AI model of
+ * Hiretivo's own): keeps the posting for the connector to read and gives the
+ * claude.ai chat to open, where Claude writes the application on the user's
+ * own Claude plan.
+ */
+export const handOffToClaude = action(
+  z.object({
+    posting: z.string().trim().min(1, "Paste a job posting first.").max(100_000),
+    postingUrl: z.string().trim().max(2000),
+  }),
+  async ({ posting, postingUrl }) => {
+    const link = isPostingLink(posting) ? postingLink(posting) : "";
+    const fetched = link ? await fetchPosting(link) : null;
+    if (fetched && !fetched.ok) throw new ActionError(fetched.error);
+    return { url: await handOffPastedPosting({ text: fetched?.ok ? fetched.text : posting, url: fetched?.ok ? fetched.url : /^https?:\/\//i.test(postingUrl) ? postingUrl : "" }) };
+  },
+);
+
+const detailsSchema = z.object({
+  title: z.string().trim().max(300),
+  company: z.string().trim().max(200),
+  role: z.string().trim().max(200),
+  location: z.string().trim().max(200),
+  mode: z.string().trim().max(200),
+  salary: z.string().trim().max(200),
+  deadline: z.union([z.literal(""), z.iso.date()]),
+});
+
+/** "Score it" in the review (public issue 66): how well the posting fits, with reasons, in the background. */
+export const startScoringPosting = action(
+  z.object({ posting: z.string().trim().min(1).max(100_000), details: detailsSchema.pick({ title: true, company: true, location: true, mode: true, salary: true }) }),
+  ({ posting, details }) => startJob(scorePastedPostingJob, { posting, ...details }),
+);
+
+const STALE = "That reading of the posting is no longer available. Read the posting again.";
+
+/** The finished job that read the posting, with its input and result. */
+async function finishedReading(id: string) {
+  const job = await prisma.job.findUnique({ where: { id } });
+  if (!job || job.type !== readPostingJob.type || job.status !== JobStatus.DONE) throw new ActionError(STALE);
+  return { input: readPostingJob.input.parse(job.input), result: readPostingJob.result.parse(job.result) };
+}
+
+/**
+ * "Create application →": writes the tailored documents in the background
+ * (E7-6). The details as edited go into the prompts; nothing is saved yet.
+ */
+export const startWritingDocuments = action(
+  z.object({
+    readJobId: z.string().min(1),
+    details: detailsSchema,
+    match: matchSchema,
+    tone: z.enum(Tone),
+    note: z.string().trim().max(2000),
+  }),
+  async ({ readJobId, details, match, tone, note }) => {
+    const reading = await finishedReading(readJobId);
+    const orNull = (value: string) => value || null;
+    const extracted = {
+      ...reading.result.extracted,
+      title: orNull(details.title),
+      company: orNull(details.company),
+      role: orNull(details.role),
+      location: orNull(details.location),
+      mode: orNull(details.mode),
+      salary: orNull(details.salary),
+      deadline: orNull(details.deadline),
+    };
+    return startJob(writeDocumentsJob, { readJobId, posting: reading.input.posting, extracted, match, tone, note });
+  },
+);
+
+/**
+ * "Fetch" (E7-8, NEW-9): the posting's text from its link, for the user to
+ * check before it's read. The request goes to the job site from the server.
+ */
+export const fetchPostingText = action(z.object({ link: z.string().max(2000) }), async ({ link }) => {
+  const url = postingLink(link);
+  if (!url) throw new ActionError("Enter the link to the posting first.");
+  const fetched = await fetchPosting(url);
+  if (!fetched.ok) throw new ActionError(fetched.error);
+  return { text: fetched.text, url: fetched.url };
+});
+
+/** A link as typed, with https:// added when it has no scheme; empty stays empty. */
+function isPostingLink(value: string): boolean {
+  return !/\s/.test(value) && /^(?:https?:\/\/|www\.|[\w.-]+\.[a-z]{2,}(?:\/|$))/i.test(value);
+}
+
+function postingLink(value: string): string {
+  const link = value.trim();
+  if (!link) return "";
+  const withScheme = /^[a-z][a-z\d+.-]*:\/\//i.test(link) ? link : `https://${link}`;
+  try {
+    const url = new URL(withScheme);
+    if (url.protocol === "http:" || url.protocol === "https:") return url.toString();
+  } catch {
+    // Not a link.
+  }
+  throw new ActionError("The link to the posting doesn't look like a web address. Fix it or leave it empty.");
+}
+
+/** A write-documents job's key once an application was made from it: "application:<id>". */
+const CLAIMED = "application:";
+
+/**
+ * Creates the application from the finished documents job (E7-6): the Draft
+ * application, its resume and cover letter in the base theme, and the first
+ * chat message, in one transaction. Creating twice from the same job returns
+ * the application that already exists.
+ */
+export const createApplication = action(
+  z.object({
+    writeJobId: z.string().min(1),
+    details: detailsSchema,
+    postingUrl: z.string().max(2000),
+    /** The Find jobs posting it was started from (E14-8). */
+    postingId: z.string().min(1).max(100).nullish(),
+    /** The startup it was started from on Startups (#222). */
+    startupId: z.string().min(1).max(100).nullish(),
+  }),
+  async ({ writeJobId, details, postingUrl, postingId, startupId }) => {
+    const job = await prisma.job.findUnique({ where: { id: writeJobId } });
+    if (!job || job.type !== writeDocumentsJob.type || job.status !== JobStatus.DONE) {
+      throw new ActionError("Those documents aren't ready. Try creating the application again.");
+    }
+    if (job.key?.startsWith(CLAIMED)) return job.key.slice(CLAIMED.length);
+
+    const input = writeDocumentsJob.input.parse(job.input);
+    const documents = writeDocumentsJob.result.parse(job.result);
+    const reading = await finishedReading(input.readJobId);
+    return createApplicationFromDocuments({
+      reading: { posting: reading.input.posting, ...reading.result },
+      documents,
+      match: input.match,
+      details,
+      postingUrl: postingLink(postingUrl),
+      tone: input.tone,
+      note: input.note,
+      claim: { kind: "manual", writeJobId, readJobId: input.readJobId, postingId: postingId ?? null, startupId: startupId ?? null },
+    });
+  },
+);
+
+/** Fresh modal configuration and recovery state; never returns an old form draft. */
+export const loadApplicationModal = action(
+  z.object({ posting: z.string().optional(), startup: z.string().optional() }),
+  async ({ posting, startup }) => {
+    const [{ isAiConfigured, isAiUsable }, { handsOffToClaude }, { loadSettings }, { postingText }, { getStartup, startupPostingText }] = await Promise.all([
+      import("@/lib/ai/config"), import("@/lib/connector/handoff"), import("@/lib/settings-data"), import("@/lib/job-search/search"), import("@/lib/startups/store"),
+    ]);
+    const [aiReady, usable, settings, selected, company, active] = await Promise.all([
+      isAiConfigured(), isAiUsable(), loadSettings(),
+      posting ? prisma.posting.findUnique({ where: { id: posting } }) : null,
+      startup ? getStartup(startup) : null,
+      prisma.job.findFirst({ where: { type: "automatic-application", status: { in: [JobStatus.QUEUED, JobStatus.RUNNING] } }, orderBy: { createdAt: "desc" }, select: { id: true } }),
+    ]);
+    if ((posting && !selected) || (startup && !company)) throw new ActionError("That posting is no longer available. Start a new application instead.");
+    return { aiReady, writeInClaude: await handsOffToClaude(usable), defaultTone: settings.defaultTone, activeId: active?.id ?? null,
+      fromPosting: selected ? { id: selected.id, text: postingText(selected), url: selected.url, complete: selected.complete }
+        : company ? { id: null, startup: { id: company.id, company: company.company }, text: startupPostingText(company), url: company.links[0]?.url ?? company.website, complete: true } : null };
+  },
+);

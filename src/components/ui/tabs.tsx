@@ -1,55 +1,64 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
+import { Tabs as TabsPrimitive } from "radix-ui";
+import { createContext, use } from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn";
 
-const Tabs = TabsPrimitive.Root
+/**
+ * Tabs following the WAI-ARIA pattern: Tab moves into and out of the tab
+ * list, the arrow keys move between tabs, and a tab's panel shows when it's
+ * focused. Built on Radix Tabs; use `value`/`onValueChange` to control it.
+ */
+export const Tabs = TabsPrimitive.Root;
 
-const TabsList = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
-      className
-    )}
-    {...props}
-  />
-))
-TabsList.displayName = TabsPrimitive.List.displayName
+type TabsVariant = "underline" | "segmented";
 
-const TabsTrigger = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+const VariantContext = createContext<TabsVariant>("underline");
 
-const TabsContent = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Content
-    ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className
-    )}
-    {...props}
-  />
-))
-TabsContent.displayName = TabsPrimitive.Content.displayName
+export type TabsListProps = TabsPrimitive.TabsListProps & {
+  /** `underline` for page tabs, `segmented` for tabs inside a panel. */
+  variant?: TabsVariant;
+};
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export function TabsList({ variant = "underline", className, ...props }: TabsListProps) {
+  return (
+    <VariantContext value={variant}>
+      <TabsPrimitive.List
+        className={cn(
+          "flex",
+          variant === "underline"
+            ? "flex-wrap gap-x-7 border-b border-line"
+            : "rounded-[10px] bg-track p-[3px]",
+          className,
+        )}
+        {...props}
+      />
+    </VariantContext>
+  );
+}
+
+const triggerClassNames: Record<TabsVariant, string> = {
+  underline:
+    "-mb-px border-b-2 border-transparent pt-2.5 pb-[13px] text-ui font-medium text-muted hover:text-ink data-[state=active]:border-primary data-[state=active]:font-semibold data-[state=active]:text-ink",
+  segmented:
+    "flex-1 rounded-control p-2 text-control font-medium data-[state=active]:bg-card data-[state=active]:shadow-raised",
+};
+
+export function TabsTrigger({ className, ...props }: TabsPrimitive.TabsTriggerProps) {
+  const variant = use(VariantContext);
+  return (
+    <TabsPrimitive.Trigger
+      className={cn(
+        triggerClassNames[variant],
+        "disabled:cursor-not-allowed disabled:text-faint",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TabsContent({ className, ...props }: TabsPrimitive.TabsContentProps) {
+  return <TabsPrimitive.Content className={cn("outline-offset-4", className)} {...props} />;
+}

@@ -1,73 +1,28 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+
+import { deploymentMode } from "@/lib/deployment-mode";
 
 import { prisma } from "@/lib/prisma";
-import { createRateLimiter, getRateLimitIp } from "@/lib/rate-limit";
-import { redis } from "@/lib/redis";
+import { appVersion } from "@/lib/version";
 
-/*
- * GET /api/health
- * Liveness and readiness probe for uptime monitors and canary verification.
- * Pings Postgres and Redis. Returns 200 with per-dependency status when healthy,
- * 503 if any dependency fails. Cache-Control: no-store so monitors always see fresh state.
- * Rate-limited at 60/min per IP to prevent abuse of the public endpoint.
+/** A database that doesn't answer within this counts as down. */
+const DB_TIMEOUT_MS = 3_000;
+
+/**
+ * GET /api/health (E12-4), for CapRover's and Docker's health checks: 200
+ * when the database answers, 503 when it doesn't. Open without a session
+ * (the proxy skips it), so it says nothing private: only the version.
  */
-
-const healthRateLimiter = createRateLimiter("health", 60, "1 m");
-
-type DependencyStatus = "ok" | "down";
-
-async function checkPrisma(): Promise<{ status: DependencyStatus; latencyMs: number; error?: string }> {
-  const start = Date.now();
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    return { status: "ok", latencyMs: Date.now() - start };
-  } catch (err) {
-    return {
-      status: "down",
-      latencyMs: Date.now() - start,
-      error: err instanceof Error ? err.message : "unknown",
-    };
-  }
-}
-
-async function checkRedis(): Promise<{ status: DependencyStatus; latencyMs: number; error?: string }> {
-  const start = Date.now();
-  try {
-    const pong = await redis.ping();
-    if (pong !== "PONG") throw new Error(`unexpected redis response: ${pong}`);
-    return { status: "ok", latencyMs: Date.now() - start };
-  } catch (err) {
-    return {
-      status: "down",
-      latencyMs: Date.now() - start,
-      error: err instanceof Error ? err.message : "unknown",
-    };
-  }
-}
-
-export async function GET(req: NextRequest) {
-  const ip = getRateLimitIp(req);
-  const { success } = await healthRateLimiter.limit(ip);
-  if (!success) {
-    return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
-  }
-
-  const [db, cache] = await Promise.all([checkPrisma(), checkRedis()]);
-
-  const allOk = db.status === "ok" && cache.status === "ok";
-
-  // Expose only up/down per dependency. Latency and internal error strings are
-  // withheld from this public endpoint to avoid leaking infra detail.
+export async function GET() {
+  const db = await Promise.race([
+    (deploymentMode() === "hosted"
+      ? import("@/lib/auth/hosted/store").then(({ authPool }) => authPool().query("SELECT 1"))
+      : prisma.$queryRaw`SELECT 1`
+    ).then(() => "ok" as const),
+    new Promise<"unreachable">((resolve) => setTimeout(() => resolve("unreachable"), DB_TIMEOUT_MS).unref()),
+  ]).catch(() => "unreachable" as const);
   return NextResponse.json(
-    {
-      status: allOk ? "ok" : "degraded",
-      time: new Date().toISOString(),
-      uptimeSec: Math.round(process.uptime()),
-      checks: { db: db.status, redis: cache.status },
-    },
-    {
-      status: allOk ? 200 : 503,
-      headers: { "Cache-Control": "no-store, max-age=0" },
-    },
+    { status: db === "ok" ? "ok" : "unavailable", version: appVersion, db },
+    { status: db === "ok" ? 200 : 503, headers: { "cache-control": "no-store" } },
   );
 }

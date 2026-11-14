@@ -1,45 +1,44 @@
 "use client";
 
-import * as React from "react";
-import * as TogglePrimitive from "@radix-ui/react-toggle";
-import { cva, type VariantProps } from "class-variance-authority";
+import { Switch } from "radix-ui";
+import { useId, type ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
-const toggleVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors hover:bg-brand-border/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-brand-primary/10 data-[state=on]:text-brand-primary",
-  {
-    variants: {
-      variant: {
-        default: "bg-transparent",
-        outline:
-          "border border-brand-border bg-transparent hover:bg-brand-border/20 data-[state=on]:border-brand-primary",
-      },
-      size: {
-        default: "h-9 px-3",
-        sm: "h-8 px-2.5",
-        lg: "h-10 px-4",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
+export type ToggleProps = Omit<Switch.SwitchProps, "children"> & {
+  label: ReactNode;
+  description?: ReactNode;
+};
 
-const Toggle = React.forwardRef<
-  React.ElementRef<typeof TogglePrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root> &
-    VariantProps<typeof toggleVariants>
->(({ className, variant, size, ...props }, ref) => (
-  <TogglePrimitive.Root
-    ref={ref}
-    className={cn(toggleVariants({ variant, size, className }))}
-    {...props}
-  />
-));
-
-Toggle.displayName = TogglePrimitive.Root.displayName;
-
-export { Toggle, toggleVariants };
+/**
+ * An on/off switch (`role="switch"` with `aria-checked`) in a settings row:
+ * label and description on the left, switch on the right. Space toggles it,
+ * and so does clicking the label.
+ */
+export function Toggle({ label, description, id, className, ...props }: ToggleProps) {
+  const generated = useId();
+  const switchId = id ?? generated;
+  const descriptionId = description ? `${switchId}-description` : undefined;
+  return (
+    <div className={cn("flex items-center gap-5", className)}>
+      <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
+        <label htmlFor={switchId} className="w-fit cursor-pointer text-label font-semibold">
+          {label}
+        </label>
+        {description && (
+          <p id={descriptionId} className="text-meta text-muted">
+            {description}
+          </p>
+        )}
+      </div>
+      <Switch.Root
+        id={switchId}
+        aria-describedby={descriptionId}
+        className="flex h-6 w-10 shrink-0 items-center rounded-full bg-toggle-off p-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary motion-safe:transition-colors"
+        {...props}
+      >
+        <Switch.Thumb className="block size-[18px] rounded-full bg-white shadow-knob data-[state=checked]:translate-x-4 motion-safe:transition-transform" />
+      </Switch.Root>
+    </div>
+  );
+}

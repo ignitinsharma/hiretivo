@@ -1,92 +1,79 @@
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import { Loader2 } from "lucide-react";
+import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
+import { Spinner } from "./spinner";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 select-none",
-  {
-    variants: {
-      variant: {
-        default:
-          "border border-input bg-white text-gray-700 font-medium hover:bg-gray-50 rounded-md h-10 px-4 py-2",
-        primary:
-          "bg-brand-primary text-white font-bold rounded-md h-10 px-5 py-2.5 hover:bg-brand-primary-dark active:bg-[#4a37c9]",
-        destructive:
-          "bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 rounded-md h-10 px-4 py-2",
-        secondary:
-          "bg-white text-gray-700 font-medium border border-brand-border hover:bg-gray-50 rounded-md h-10 px-4 py-2",
-        ghost:
-          "font-medium hover:bg-gray-50 hover:text-foreground rounded-md h-10 px-4 py-2",
-        link: "font-medium text-foreground underline-offset-4 hover:underline h-auto px-0 py-0",
-      },
-      size: {
-        sm: "h-9 rounded-md px-3 text-xs",
-        default: "h-10 px-4 py-2",
-        lg: "h-12 rounded-md px-8 text-base",
-        icon: "h-10 w-10 rounded-md",
-        "icon-sm": "h-8 w-8 rounded-md",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "text"
+  | "danger-text"
+  | "danger-outline"
+  | "danger";
+export type ButtonSize = "lg" | "md" | "sm";
 
-export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-  loading?: boolean;
-  loadingText?: string;
+const base =
+  "inline-flex items-center justify-center gap-2 rounded-control font-medium whitespace-nowrap motion-safe:transition-colors disabled:cursor-not-allowed aria-disabled:cursor-not-allowed";
+
+const variants: Record<ButtonVariant, string> = {
+  primary:
+    "bg-primary font-semibold text-on-primary shadow-cta hover:bg-primary-hover disabled:bg-faint aria-disabled:bg-faint",
+  secondary:
+    "border border-line-control bg-input text-ink shadow-control hover:border-line-strong hover:bg-hover disabled:border-line-field disabled:text-muted aria-disabled:text-muted",
+  // Text buttons have no horizontal padding so they line up with the text around them.
+  text: "px-0! text-muted hover:text-ink disabled:text-faint aria-disabled:text-faint",
+  "danger-text": "px-0! font-normal text-danger hover:text-error-strong disabled:text-faint",
+  "danger-outline":
+    "border border-danger-control bg-input text-error-strong hover:border-error-strong disabled:text-faint",
+  danger:
+    "bg-danger-fill text-white hover:bg-danger-fill-hover disabled:bg-danger-disabled aria-disabled:bg-danger-disabled",
+};
+
+const sizes: Record<ButtonSize, string> = {
+  lg: "min-h-10 px-4 py-2 text-ui",
+  md: "min-h-[34px] px-3 py-1.5 text-sm",
+  sm: "min-h-[30px] px-3 py-1 text-control font-semibold",
+};
+
+/** Button styles, for links that look like buttons: `<Link className={buttonClassName()}>`. */
+export function buttonClassName(
+  variant: ButtonVariant = "primary",
+  size: ButtonSize = "md",
+  className?: string,
+): string {
+  return cn(base, variants[variant], sizes[size], className);
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      asChild = false,
-      loading = false,
-      loadingText,
-      disabled,
-      children,
-      type = "button",
-      ...props
-    },
-    ref,
-  ) => {
-    const Comp = asChild ? Slot : "button";
-    const isDisabled = disabled || loading;
+export type ButtonProps = ComponentProps<"button"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  /** Shows a spinner before the label; callers keep their existing busy guard. */
+  loading?: boolean;
+};
 
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={isDisabled}
-        type={type}
-        aria-busy={loading}
-        aria-disabled={isDisabled}
-        {...props}
-      >
-        {asChild ? (
-          children
-        ) : (
-          <>
-            {loading && <Loader2 className="animate-spin" />}
-            {loading && loadingText ? loadingText : children}
-          </>
-        )}
-      </Comp>
-    );
-  },
-);
-Button.displayName = "Button";
-
-export { Button, buttonVariants };
+/**
+ * A button in one of the prototype's styles. Defaults to `type="button"`, so
+ * it only submits a form when asked to. For a button that should look
+ * disabled but still explain why when clicked (PRD NEW-1), use
+ * `aria-disabled` instead of `disabled`.
+ */
+export function Button({
+  variant = "primary",
+  size = "md",
+  type = "button",
+  className,
+  loading = false,
+  children,
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={buttonClassName(variant, size, className)}
+      {...props}
+    >
+      {loading && <Spinner />}
+      {children}
+    </button>
+  );
+}

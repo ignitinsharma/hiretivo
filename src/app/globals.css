@@ -1,193 +1,272 @@
 @import "tailwindcss";
 
-@config "../../tailwind.config.ts";
-@plugin "tailwindcss-animate";
-@plugin "@tailwindcss/typography";
+/*
+ * Design tokens for Hiretivo: near-white surfaces, soft sage, Forest Green primary.
+ * Each token below becomes a Tailwind utility, e.g. --color-muted → text-muted,
+ * --radius-card → rounded-card, --text-title → text-title.
+ */
+@theme {
+  /* Light surfaces and forest green actions stay consistent in every browser scheme. */
 
-@layer base {
-  :root {
-    --background: 220 14% 97%;
-    --foreground: 0 0% 4%;
+  /* The sidebar is sage; the page is near-white and its cards are white. */
+  --color-paper: #fafbf9; /* page shell */
+  --color-sidebar: #f1f5f2;
+  --color-surface: #fafbf9; /* the main screen and setup pages */
+  --color-card: #ffffff; /* cards, panels and popovers */
+  --color-canvas: #f1f5f2; /* behind document previews */
+  --color-input: #f1f5f2; /* inputs and secondary controls */
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+  /* Text */
+  --color-ink: #16241b;
+  --color-document: #223026; /* posting text, set like a document */
+  /* Secondary text: hints, labels, metadata. Use ink on selected shell items. */
+  --color-muted: #5f6f65;
+  /* Disabled and decorative only: never for text people need to read. */
+  --color-faint: #97a090;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
+  /* Primary actions use forest green and white text. primary-text marks
+     headings and selected choices. */
+  --color-primary: #1f3d2b;
+  --color-primary-hover: #16301f;
+  --color-on-primary: #ffffff;
+  --color-primary-text: #1f3d2b;
+  /* Focus rings: 3:1 against every surface. */
+  --color-focus: #1f3d2b;
 
-    --primary: 248 100% 69%;
-    --primary-foreground: 0 0% 100%;
+  /* Toasts and tooltips use a forest green chip. */
+  --color-inverse: #1f3d2b;
+  --color-on-inverse: #ffffff;
+  --color-on-inverse-muted: rgb(255 255 255 / 0.78);
+  /* The project's notices, on that green chip. */
+  --color-notice-security: #fca5a5;
+  --color-notice-important: #fbbf24;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 27%;
+  /* Lines */
+  --color-line: #e1e8e3; /* dividers */
+  --color-line-card: #e1e8e3;
+  --color-line-field: #e1e8e3; /* chips and other controls named by their text */
+  /* Text fields, whose border is what shows they're fields: 3:1 on every surface (E11-3, WCAG 1.4.11). */
+  --color-line-input: rgb(31 61 43 / 0.5);
+  --color-line-control: #e1e8e3; /* secondary buttons */
+  --color-line-popover: #e1e8e3; /* menus */
+  --color-line-strong: rgb(31 61 43 / 0.2); /* upcoming steps */
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 42%;
+  /* Tints for hover, selection and tracks */
+  --color-hover: #e3ebe5;
+  --color-selected: #e3ebe5;
+  --color-track: #f1f5f2;
+  --color-toggle-off: rgb(31 61 43 / 0.5); /* 3:1, like text fields */
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 4%;
+  /* Feedback. error and danger are for text; danger-fill is behind white text. */
+  --color-danger: #9a4a3a; /* remove / destructive text */
+  --color-error: #9a3a2c;
+  --color-error-strong: #7a2e22;
+  --color-danger-fill: #9a3a2c;
+  --color-danger-fill-hover: #7a2e22;
+  --color-danger-surface: oklch(0.98 0.01 30);
+  --color-danger-line: oklch(0.8 0.06 30);
+  --color-danger-control: oklch(0.7 0.1 30); /* outlined danger button */
+  --color-danger-disabled: oklch(0.8 0.05 30);
+  --color-warning: #6b4f1a;
+  --color-warning-surface: oklch(0.94 0.04 85);
+  --color-warning-line: oklch(0.85 0.06 85);
+  --color-success: #2f6b4a;
+  --color-flash: oklch(0.95 0.05 90); /* briefly marks content that changed */
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+  /* Application statuses (dots and bars; the label next to them is ink) */
+  --color-status-draft: #a29d94;
+  --color-status-sent: oklch(0.62 0.09 250);
+  --color-status-screening: oklch(0.62 0.09 205);
+  --color-status-interview: oklch(0.6 0.09 295);
+  --color-status-offer: oklch(0.68 0.1 80);
+  --color-status-accepted: oklch(0.6 0.1 150);
+  --color-status-rejected: oklch(0.58 0.1 30);
+  --color-status-declined: #6f6a62;
 
-    --border: 0 0% 93%;
-    --input: 0 0% 90%;
-    --ring: 248 100% 69%;
+  /* Radii */
+  --radius-control: 8px; /* buttons, inputs, nav items */
+  --radius-toast: 12px;
+  --radius-card: 12px;
+  --radius-panel: 12px; /* large cards and panels */
+  --radius-dialog: 16px;
 
-    --radius: 0.5rem;
-    --radius-card: 16px;
-    --radius-input: 14px;
-    --radius-pill: 9999px;
+  /* Soft neutral shadows lift white cards from the page. */
+  --shadow-page: 0 1px 2px rgb(0 0 0 / 0.06), 0 12px 40px rgb(22 36 27 / 0.1);
+  --shadow-dialog: 0 8px 32px rgb(22 36 27 / 0.16);
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.08); /* selected segment */
+  --shadow-control: 0 1px 3px rgb(22 36 27 / 0.08); /* fields and secondary buttons */
+  --shadow-cta: 0 1px 3px rgb(22 36 27 / 0.14);
+  --shadow-knob: 0 1px 2px rgb(0 0 0 / 0.2);
+  --shadow-menu: 0 8px 32px rgb(22 36 27 / 0.16);
+  --shadow-toolbar: 0 4px 14px rgb(0 0 0 / 0.16);
+  --shadow-toast: 0 8px 32px rgb(0 0 0 / 0.18);
+
+  /* Application typography. Shared utilities keep screens and controls aligned. */
+  --text-display: 36px;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 700;
+  --text-title: 32px;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.035em;
+  --text-title--font-weight: 700;
+  --text-section: 24px;
+  --text-section--line-height: 1.3;
+  --text-section--letter-spacing: -0.025em;
+  --text-section--font-weight: 600;
+  --text-card-title: 20px;
+  --text-card-title--line-height: 1.35;
+  --text-card-title--letter-spacing: -0.015em;
+  --text-card-title--font-weight: 600;
+  --text-subsection: 18px;
+  --text-subsection--line-height: 1.4;
+  --text-subsection--font-weight: 600;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.6;
+  --text-body: 15px;
+  --text-body--line-height: 1.55;
+  --text-ui: 14px;
+  --text-ui--line-height: 1.5;
+  --text-small: 13px;
+  --text-small--line-height: 1.45;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-micro: 11px;
+  --text-micro--line-height: 1.35;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  /* Existing semantic utility names remain for all current screens. */
+  --text-label: 13px; /* field labels */
+  --text-label--line-height: 1.45;
+  --text-meta: 12px; /* supporting metadata */
+  --text-meta--line-height: 1.45;
+  --text-control: 13px; /* compact controls and table rows */
+  --text-control--line-height: 1.5;
+  --text-field: 14px; /* input text, settings rows */
+  --text-field--line-height: 1.5;
+  --text-lead: 15px; /* page introductions */
+  --text-lead--line-height: 1.55;
+
+  /* Motion. Use with motion-safe: so reduced-motion users don't get it. */
+  --animate-toast-in: toast-in 160ms ease-out;
+  --animate-notice-in: notice-in 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-notice-ping: notice-ping 1400ms ease-out 450ms 2;
+  /* Only an opacity change, after a pause, so it's fine without motion-safe. */
+  --animate-skeleton-in: skeleton-in 200ms ease-out 150ms both;
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes notice-in {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+    }
+  }
+
+  @keyframes notice-ping {
+    0% {
+      opacity: 0.45;
+      transform: scale(1);
+    }
+    75%,
+    100% {
+      opacity: 0;
+      transform: scale(2.4);
+    }
+  }
+
+  @keyframes skeleton-in {
+    from {
+      opacity: 0;
+    }
   }
 }
 
-@layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    line-height: 1.9;
-    scrollbar-color: #d1d5db transparent;
-    scrollbar-width: thin;
-  }
+/* Thin scrollbars in the app's colours, for areas that scroll on their own
+   inside the page, such as the board's lanes. Browsers without
+   scrollbar-color (Safari) keep their own, which are thin already. */
+@utility scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-ink) 20%, transparent) transparent;
 
-  * {
-    scrollbar-color: #d1d5db transparent;
-    scrollbar-width: thin;
-  }
-
-  *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
-    border: 2px solid transparent;
-    border-radius: 9999px;
-    background-clip: content-box;
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: #9ca3af;
+  &:hover {
+    scrollbar-color: color-mix(in srgb, var(--color-ink) 36%, transparent) transparent;
   }
 }
 
-@layer utilities {
-  .btn-transition {
-    transition: color 0.15s ease, background-color 0.15s ease;
-  }
-
-  .card-border {
-    border: 1px solid #ededed;
-  }
-
-  .sticky-nav {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    backdrop-filter: blur(8px);
-  }
-
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-
-  .grid-bg {
-    background-image:
-      linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
-    background-size: 64px 64px;
-  }
-
-  .grainy-bg {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-  }
-}
-
-/* AI Pipeline Demo — sequential stage animation */
-@keyframes pipeline-stage {
-  0%, 5% { opacity: 0; transform: translateY(4px); }
-  10%, 28% { opacity: 1; transform: translateY(0); }
-  30%, 100% { opacity: 0.4; }
-}
-@keyframes pipeline-spinner {
-  0%, 28% { opacity: 1; }
-  30%, 100% { opacity: 0; }
-}
-@keyframes pipeline-check {
-  0%, 28% { opacity: 0; }
-  30%, 100% { opacity: 1; }
-}
-@keyframes pipeline-arrow {
-  0%, 10% { opacity: 0; }
-  12%, 100% { opacity: 0.4; }
-}
-
-/* Step stagger: 9s cycle, 3s offset each */
-.pipeline-stage.s1 { animation: pipeline-stage 9s infinite; }
-.pipeline-stage.s2 { animation: pipeline-stage 9s infinite; animation-delay: -3s; }
-.pipeline-stage.s3 { animation: pipeline-stage 9s infinite; animation-delay: -6s; }
-
-.pipeline-spinner.s1-spin { animation: pipeline-spinner 9s infinite; }
-.pipeline-spinner.s2-spin { animation: pipeline-spinner 9s infinite; animation-delay: -3s; }
-.pipeline-spinner.s3-spin { animation: pipeline-spinner 9s infinite; animation-delay: -6s; }
-
-.pipeline-check.s1-check { animation: pipeline-check 9s infinite; }
-.pipeline-check.s2-check { animation: pipeline-check 9s infinite; animation-delay: -3s; }
-.pipeline-check.s3-check { animation: pipeline-check 9s infinite; animation-delay: -6s; }
-
-.pipeline-arrow.a1 { animation: pipeline-arrow 9s infinite; }
-.pipeline-arrow.a2 { animation: pipeline-arrow 9s infinite; animation-delay: -3s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .pipeline-stage {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  .pipeline-spinner { display: none; }
-  .pipeline-check { opacity: 1 !important; }
-  .pipeline-arrow { opacity: 0.4 !important; animation: none !important; }
-  .pipeline-loading-icon { display: none; }
-}
-
-:root {
-  --sidebar: hsl(0 0% 100%);
-  --sidebar-foreground: hsl(0 0% 27%);
-  --sidebar-primary: hsl(248 100% 69%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(0 0% 96%);
-  --sidebar-accent-foreground: hsl(0 0% 0%);
-  --sidebar-border: hsl(0 0% 93%);
-  --sidebar-ring: hsl(248 100% 69%);
-}
-
+/* Satoshi is served by Fontshare. Other families below are for resume previews. */
 @theme inline {
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: "Satoshi", sans-serif;
+  --font-mono: var(--typeface-plex-mono);
 }
 
-@keyframes border-shimmer {
-  0%, 100% { border-color: rgb(117 96 255 / 0.25); }
-  50% { border-color: rgb(117 96 255 / 0.5); }
-}
-.shimmer-border:hover {
-  animation: border-shimmer 2s ease-in-out infinite;
+@layer base {
+  /* Keep native controls (date pickers, selects, scrollbars) light too. */
+  :root {
+    color-scheme: light;
+  }
+
+  @media (max-width: 640px) {
+    :root {
+      --text-display: 32px;
+      --text-title: 28px;
+      --text-section: 22px;
+    }
+  }
+
+  /* Jumps to an anchor or a focused field stop below the page bar (97px, 119px on an application, with the 8px above it), not under it. */
+  html {
+    scroll-padding-top: 128px;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  button, input, textarea, select {
+    font: inherit;
+  }
+
+  a {
+    color: var(--color-ink);
+  }
+  a:hover {
+    color: var(--color-muted);
+  }
+
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+
+  /* A visible keyboard focus ring on every control (WCAG 2.2 AA); the 2px gap
+     keeps it apart from buttons in the same colour. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .shimmer-border:hover { animation: none !important; }
+/* The height of the screen's panel, page bar included (the window less the
+   panel's bottom border and the shell's 8px margin under it), for screens
+   that keep to the window. */
+@utility h-panel {
+  height: calc(100dvh - 9px);
 }
