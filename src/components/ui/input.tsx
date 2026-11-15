@@ -1,22 +1,34 @@
-import * as React from "react";
+import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
-    return (
+import { controlClassName, FieldShell, useField, type FieldProps } from "./field";
+
+export type InputProps = ComponentProps<"input"> &
+  FieldProps & {
+    /** Classes for the wrapper around label, input and messages. */
+    className?: string;
+    inputClassName?: string;
+  };
+
+/** A text input with an optional label, hint and error. */
+export function Input({
+  label,
+  hint,
+  error,
+  id,
+  className,
+  inputClassName,
+  ...props
+}: InputProps) {
+  const field = useField({ id, hint, error });
+  return (
+    <FieldShell {...field} label={label} hint={hint} error={error} className={className}>
       <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-input border border-brand-border bg-white px-3 py-2 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-[invalid=true]:border-brand-danger aria-[invalid=true]:focus-visible:ring-brand-danger/20",
-          className,
-        )}
-        ref={ref}
+        {...field.controlProps}
+        className={cn(controlClassName, "h-10 px-3", inputClassName)}
         {...props}
       />
-    );
-  },
-);
-Input.displayName = "Input";
-
-export { Input };
+    </FieldShell>
+  );
+}

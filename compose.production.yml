@@ -1,0 +1,89 @@
+# Hiretivo with Docker Compose. The one-command install writes this file and the
+# .env it needs, then starts it:
+#
+#   curl -fsSL https://raw.githubusercontent.com/ignitinsharma/hiretivo/main/docker/install.sh | sh
+#
+# To set it up by hand instead, save this file as compose.yml, put
+# POSTGRES_PASSWORD, HIRETIVO_PASSWORD (a hash of your password, from
+# `docker run --rm -it ghcr.io/ignitinsharma/hiretivo hash-password`, in single
+# quotes because of its $ signs) and HIRETIVO_SECRET in a .env file next to it,
+# then run `docker compose up -d`.
+#
+# Add COMPOSE_PROFILES=ai to .env to run Ollama for a local model as well.
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hiretivo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: hiretivo
+    volumes:
+      # Postgres 18+ keeps data in a versioned subdirectory, so mount the parent.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hiretivo -d hiretivo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: ${HIRETIVO_IMAGE:-ghcr.io/ignitinsharma/hiretivo:latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://hiretivo:${POSTGRES_PASSWORD}@db:5432/hiretivo
+      HIRETIVO_PASSWORD: ${HIRETIVO_PASSWORD:?Set HIRETIVO_PASSWORD in .env to a hash from hash-password}
+      HIRETIVO_SECRET: ${HIRETIVO_SECRET:?Set HIRETIVO_SECRET in .env}
+      HIRETIVO_BACKUP_RETENTION_DAYS: ${HIRETIVO_BACKUP_RETENTION_DAYS:-}
+      # Your time zone, e.g. Europe/Berlin: nightly backups run at 03:00 in it.
+      TZ: ${TZ:-UTC}
+      HIRETIVO_AI_PROVIDER: ${HIRETIVO_AI_PROVIDER:-}
+      HIRETIVO_AI_URL: ${HIRETIVO_AI_URL:-}
+      HIRETIVO_AI_MODEL: ${HIRETIVO_AI_MODEL:-}
+      HIRETIVO_AI_KEY: ${HIRETIVO_AI_KEY:-}
+      HIRETIVO_AI_TIMEOUT_SECONDS: ${HIRETIVO_AI_TIMEOUT_SECONDS:-}
+      # Defaults for Settings → Job search.
+      HIRETIVO_JOBS_SOURCE: ${HIRETIVO_JOBS_SOURCE:-}
+      HIRETIVO_JSEARCH_KEY: ${HIRETIVO_JSEARCH_KEY:-}
+      HIRETIVO_JSEARCH_HOST: ${HIRETIVO_JSEARCH_HOST:-}
+      HIRETIVO_ADZUNA_APP_ID: ${HIRETIVO_ADZUNA_APP_ID:-}
+      HIRETIVO_ADZUNA_KEY: ${HIRETIVO_ADZUNA_KEY:-}
+      HIRETIVO_FREEHIRE_URL: ${HIRETIVO_FREEHIRE_URL:-}
+      HIRETIVO_JOBS_ARBEITSAGENTUR: ${HIRETIVO_JOBS_ARBEITSAGENTUR:-}
+      # Defaults for Settings → Scoring: ai or jev (Jev by TypeSafe, with its key).
+      HIRETIVO_SCORER: ${HIRETIVO_SCORER:-}
+      HIRETIVO_TYPESAFE_KEY: ${HIRETIVO_TYPESAFE_KEY:-}
+      # Gmail and Calendar: a Google OAuth client (or enter it in Settings → Google).
+      HIRETIVO_GOOGLE_CLIENT_ID: ${HIRETIVO_GOOGLE_CLIENT_ID:-}
+      HIRETIVO_GOOGLE_CLIENT_SECRET: ${HIRETIVO_GOOGLE_CLIENT_SECRET:-}
+      # The address Hiretivo is reached at, for Google's redirect.
+      HIRETIVO_PUBLIC_URL: ${HIRETIVO_PUBLIC_URL:-}
+    # Only on the server itself: put a reverse proxy with HTTPS in front.
+    ports:
+      - "127.0.0.1:${HIRETIVO_PORT:-3000}:3000"
+    volumes:
+      - data:/data
+    # Room for Chromium, which prints the PDFs.
+    mem_limit: 1g
+    # Lets http://host.docker.internal reach Ollama (:11434) or LM Studio
+    # (:1234) on the host.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # A local model, with COMPOSE_PROFILES=ai in .env: `docker compose up -d`,
+  # then pull one (see "Choosing an AI provider" in the wiki). Hiretivo reaches it at http://ollama:11434.
+  ollama:
+    profiles: [ai]
+    image: ollama/ollama:0.40.13
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+
+volumes:
+  pgdata:
+  data:
+  ollama:

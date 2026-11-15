@@ -1,0 +1,30 @@
+# Hosted Hiretivo, using the operator's PostgreSQL database and Resend sender.
+# Put DATABASE_URL, HIRETIVO_SECRET, RESEND_API_KEY, and RESEND_FROM_EMAIL in .env.
+# Run: docker compose -f compose.hosted.yml up -d --build
+# Run one app instance; put an HTTPS reverse proxy in front of port 3000.
+services:
+  app:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    init: true
+    environment:
+      HIRETIVO_DEPLOYMENT_MODE: hosted
+      HIRETIVO_PUBLIC_URL: ${HIRETIVO_PUBLIC_URL:-https://hiretivo.com}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL to your hosted PostgreSQL connection string}
+      HIRETIVO_SECRET: ${HIRETIVO_SECRET:?Set HIRETIVO_SECRET to at least 32 random characters}
+      RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:?Set RESEND_FROM_EMAIL to your verified Resend sender}
+      HIRETIVO_BACKUP_RETENTION_DAYS: ${HIRETIVO_BACKUP_RETENTION_DAYS:-14}
+      HIRETIVO_GOOGLE_CLIENT_ID: ${HIRETIVO_GOOGLE_CLIENT_ID:-}
+      HIRETIVO_GOOGLE_CLIENT_SECRET: ${HIRETIVO_GOOGLE_CLIENT_SECRET:-}
+      TZ: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${HIRETIVO_PORT:-3000}:3000"
+    volumes:
+      - data:/data
+    shm_size: 256mb
+    stop_grace_period: 30s
+volumes:
+  data:
