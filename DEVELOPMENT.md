@@ -6,10 +6,10 @@ Next.js 16 (App Router) + Prisma 7 + PostgreSQL 18, run with Docker Compose and 
 
 ```bash
 cp .env.example .env
-docker compose build
+docker compose -f compose.development.yml -p hiretivo-dev build
 # set HIRETIVO_PASSWORD in .env to the password you want to enter at sign-in
 # set HIRETIVO_SECRET (openssl rand -base64 32) in .env
-docker compose up
+docker compose -f compose.development.yml -p hiretivo-dev up
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Source is bind-mounted, so edits hot-reload.
@@ -43,7 +43,7 @@ Define models in `prisma/schema.prisma`, then create and apply a migration:
 
 ```bash
 docker/bin/yarn prisma migrate dev --name <migration-name>
-docker compose restart app
+docker compose -f compose.development.yml -p hiretivo-dev restart app
 ```
 
 The restart regenerates the Prisma Client and picks it up; since Prisma 7, `migrate dev` no longer runs `prisma generate` on its own.
@@ -55,7 +55,7 @@ Hiretivo also runs on an SQLite file, when `DATABASE_URL` is one (`file:/data/hi
 ```bash
 docker/bin/yarn sqlite-schema
 docker/bin/yarn prisma migrate dev --name <migration-name>                                                   # PostgreSQL
-docker compose exec -e DATABASE_URL=file:/app/data/dev.db app yarn prisma migrate dev --name <migration-name> # SQLite
+docker compose -f compose.development.yml -p hiretivo-dev exec -e DATABASE_URL=file:/app/data/dev.db app yarn prisma migrate dev --name <migration-name> # SQLite
 ```
 
 `yarn generate` makes both clients (the container does it on start). The code uses the PostgreSQL client's types for both, so keep to what both databases do:
@@ -67,11 +67,11 @@ docker compose exec -e DATABASE_URL=file:/app/data/dev.db app yarn prisma migrat
 - SQLite can't change most columns in place, so for those Prisma's migration rebuilds the table: it creates `new_<Table>`, copies the rows, drops the old table and renames the new one. That drops the trigger (on Theme) and `COLLATE NOCASE` (on Skill and Language) too. When a migration rebuilds one of these tables, add them back by hand: `COLLATE NOCASE` in its `CREATE TABLE`, and the trigger after the rename, as in `prisma/sqlite/migrations/20261102120000_init/migration.sql`. The database tests on SQLite fail when one is missing.
 - `yarn lint` refuses `skipDuplicates`, and a test checks that the SQLite migrations make exactly the SQLite schema.
 
-To browse and edit rows in Prisma Studio, start it on demand (plain `docker compose up` leaves it off) and open [http://localhost:5555](http://localhost:5555):
+To browse and edit rows in Prisma Studio, start it on demand (plain `docker compose -f compose.development.yml -p hiretivo-dev up` leaves it off) and open [http://localhost:5555](http://localhost:5555):
 
 ```bash
-docker compose up -d studio
-docker compose stop studio   # when you're done
+docker compose -f compose.development.yml -p hiretivo-dev up -d studio
+docker compose -f compose.development.yml -p hiretivo-dev stop studio   # when you're done
 ```
 
 Query the database from server code with the shared client:
@@ -152,7 +152,7 @@ Sign out from the sidebar ends the session in that browser. To sign out everywhe
 
 In server code, `getSession()` returns the session or null, and `verifySession()` (for pages and layouts) sends the visitor to `/login` when there is none. `action()` and `route()` already check it.
 
-Failed sign-ins are rate-limited in Postgres: after 5 failures within a minute from one IP, attempts are refused for 30 seconds, then 60, 120 and so on up to 15 minutes. The IP is the last `X-Forwarded-For` entry, which is the real client behind a reverse proxy but can be faked when the app is exposed directly, so 30 failures within 10 minutes from all IPs together also trigger the backoff. If you lock yourself out while developing, clear the counters with `docker compose exec db psql -U postgres -d hiretivo -c 'DELETE FROM "LoginThrottle"'`.
+Failed sign-ins are rate-limited in Postgres: after 5 failures within a minute from one IP, attempts are refused for 30 seconds, then 60, 120 and so on up to 15 minutes. The IP is the last `X-Forwarded-For` entry, which is the real client behind a reverse proxy but can be faked when the app is exposed directly, so 30 failures within 10 minutes from all IPs together also trigger the backoff. If you lock yourself out while developing, clear the counters with `docker compose -f compose.development.yml -p hiretivo-dev exec db psql -U postgres -d hiretivo -c 'DELETE FROM "LoginThrottle"'`.
 
 ## AI provider
 
@@ -169,16 +169,16 @@ The Usage screen shows the tokens each task used, as the servers counted them. E
 To try the AI features without a hosted provider, run a small model in Docker:
 
 ```bash
-docker compose up -d ollama
-docker compose exec ollama ollama pull qwen2.5:3b   # about 2 GB
+docker compose -f compose.development.yml -p hiretivo-dev up -d ollama
+docker compose -f compose.development.yml -p hiretivo-dev exec ollama ollama pull qwen2.5:3b   # about 2 GB
 ```
 
-Then pick Local model in Settings with the address `http://ollama:11434` (inside Docker, `localhost` is the app's own container). The Ollama image takes about 9 GB of disk, and a 3B model about 3 GB of memory while it runs; `docker compose stop ollama` when you're done.
+Then pick Local model in Settings with the address `http://ollama:11434` (inside Docker, `localhost` is the app's own container). The Ollama image takes about 9 GB of disk, and a 3B model about 3 GB of memory while it runs; `docker compose -f compose.development.yml -p hiretivo-dev stop ollama` when you're done.
 
 The tests use a mock provider. To check the providers and prompts against real models, run the live tests, which are skipped otherwise:
 
 ```bash
-docker compose exec -e AI_LIVE=ollama app yarn vitest run src/lib/ai/providers.live.test.ts src/lib/ai/tasks/tasks.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e AI_LIVE=ollama app yarn vitest run src/lib/ai/providers.live.test.ts src/lib/ai/tasks/tasks.live.test.ts
 ```
 
 `AI_LIVE=mistral` checks Mistral instead, with the key saved in Settings → AI provider while Mistral is chosen there, or with `HIRETIVO_AI_KEY` (and `HIRETIVO_AI_MODEL`) passed with `-e`.
@@ -199,10 +199,10 @@ Find jobs (`/jobs`) searches the job source chosen in Settings → Job search: J
 The tests use answers in each source's shape (`src/test/job-search-fixtures.ts`). The live tests check the real services, and are skipped otherwise. JSearch and Adzuna spend searches from your plan; the Arbeitsagentur and FreeHire are free:
 
 ```bash
-docker compose exec -e JOBS_LIVE=jsearch -e JSEARCH_TEST_KEY=… app yarn vitest run src/lib/job-search/jsearch.live.test.ts
-docker compose exec -e JOBS_LIVE=arbeitsagentur app yarn vitest run src/lib/job-search/sources.live.test.ts
-docker compose exec -e JOBS_LIVE=adzuna -e ADZUNA_TEST_APP_ID=… -e ADZUNA_TEST_KEY=… app yarn vitest run src/lib/job-search/sources.live.test.ts
-docker compose exec -e JOBS_LIVE=freehire app yarn vitest run src/lib/job-search/sources.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e JOBS_LIVE=jsearch -e JSEARCH_TEST_KEY=… app yarn vitest run src/lib/job-search/jsearch.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e JOBS_LIVE=arbeitsagentur app yarn vitest run src/lib/job-search/sources.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e JOBS_LIVE=adzuna -e ADZUNA_TEST_APP_ID=… -e ADZUNA_TEST_KEY=… app yarn vitest run src/lib/job-search/sources.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e JOBS_LIVE=freehire app yarn vitest run src/lib/job-search/sources.live.test.ts
 ```
 
 ## Scoring
@@ -214,8 +214,8 @@ Jev answers typed questions and writes no text, so `jev.ts` asks, in one request
 The live tests ask the real Jev with the key saved in Settings → Scoring, or `HIRETIVO_TYPESAFE_KEY`, and spend tokens on that account. `check` scores two postings against the demo profile; `compare` scores the job agent's latest 40 candidates again, against the profile in the database, and prints Jev's scores next to the AI model's, what was done with each posting, and the weights that would come closest to the AI model's scores. To compare on your own data, import an export of it into the development app first (Settings → Your data, which backs up what's there):
 
 ```bash
-docker compose exec -e JEV_LIVE=check app yarn vitest run src/lib/scoring/jev.live.test.ts
-docker compose exec -e JEV_LIVE=compare app yarn vitest run src/lib/scoring/jev.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e JEV_LIVE=check app yarn vitest run src/lib/scoring/jev.live.test.ts
+docker compose -f compose.development.yml -p hiretivo-dev exec -e JEV_LIVE=compare app yarn vitest run src/lib/scoring/jev.live.test.ts
 ```
 
 ## Your data
@@ -289,5 +289,42 @@ In the public repository, `image.yml` pushes an image for every commit on `main`
 ## Reset
 
 ```bash
-docker compose down -v   # stops everything and deletes the database and node_modules volumes
+docker compose -f compose.development.yml -p hiretivo-dev down -v   # stops everything and deletes the database and node_modules volumes
 ```
+
+## Maintainer-only hosted account testing
+
+The README recommends Docker with ENV password login for users. This section is only for maintainers testing signup, email verification, and password recovery. It is not a requirement for local self-hosting, and does not deploy a public website.
+
+Use a **direct PostgreSQL connection**, a Resend API key, and a verified Resend sender. Hosted mode does not use the ENV login password.
+
+```dotenv
+HIRETIVO_DEPLOYMENT_MODE=hosted
+HIRETIVO_PUBLIC_URL=http://localhost:3000
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE
+HIRETIVO_SECRET=your-random-secret-of-at-least-32-characters
+HIRETIVO_DATA_DIR=./data
+RESEND_API_KEY=your-resend-key
+RESEND_FROM_EMAIL=Hiretivo <noreply@hiretivo.com>
+```
+
+For development without Docker, use **Node 24.7 or newer** and the Yarn version pinned in `package.json`:
+
+```sh
+corepack enable
+yarn install --immutable
+yarn generate
+yarn playwright install chromium
+yarn dev
+```
+
+Hosted startup prepares the shared authentication tables. Open **http://localhost:3000/signup** and follow the account flow above. HTTP loopback URLs are allowed only during development. Open localhost email links on the computer running the app. After changing the public URL, restart and request a fresh email; previously sent emails retain their original URLs.
+
+For production, set `HIRETIVO_PUBLIC_URL=https://hiretivo.com` and use HTTPS. See [HOSTING.md](HOSTING.md) for the current Docker/Node deployment configuration. This README update does not change hosting or enable deployment.
+
+
+On Linux, install Chromium system dependencies with `yarn playwright install --with-deps chromium` when required. The writable `./data` directory is ignored by Git. Hosted PostgreSQL credentials need permission to create account schemas and the `citext` extension.
+
+| Hosted signup (maintainer testing) | Hosted login (maintainer testing) |
+| --- | --- |
+| ![Hosted signup](.github/images/hiretivo-signup.png) | ![Hosted login](.github/images/hiretivo-login.png) |
