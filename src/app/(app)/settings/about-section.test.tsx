@@ -24,6 +24,6 @@ describe("About (SET-12)", () => {
     expect(screen.getByRole("link", { name: "Privacy (opens in a new tab)" })).toHaveAttribute("href", "https://github.com/ignitinsharma/hiretivo/blob/main/PRIVACY.md");
     expect(screen.getByText(/never sends telemetry/)).toBeInTheDocument();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.queryByText(/dossier\.app@pm\.me/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/@pm\.me/i)).not.toBeInTheDocument();
   });
 });

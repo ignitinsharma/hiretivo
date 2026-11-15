@@ -2,7 +2,7 @@
 // SQLite has no citext: the unique Skill and Language names compare without
 // case through COLLATE NOCASE, which the migrations add by hand.
 
-// Dossier's data model (PRD §9). After editing, run
+// Hiretivo's data model (PRD §9). After editing, run
 // `docker/bin/yarn prisma migrate dev --name <name>` and `docker compose restart app`.
 //
 // Conventions:
@@ -520,7 +520,7 @@ model Application {
   /// The Gmail thread the application was sent in, when it went out through Gmail (E15-2).
   emailThreadId       String?
   /// The Google Calendar event of the next interview, and the calendar it's
-  /// in, when Dossier added it: kept in step with nextInterviewAt both ways.
+  /// in, when Hiretivo added it: kept in step with nextInterviewAt both ways.
   interviewEventId    String?
   interviewCalendarId String?
   /// The Find jobs posting it was started from, if any (E14-8).

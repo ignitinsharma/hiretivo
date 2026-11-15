@@ -1,6 +1,6 @@
-# Developing Dossier
+# Developing Hiretivo
 
-Next.js 16 (App Router) + Prisma 7 + PostgreSQL 18, run with Docker Compose and Yarn 4. Nothing runs on the host: every command goes through the containers. For installing and running Dossier, see the [README](README.md); for how it's secured, [SECURITY.md](SECURITY.md).
+Next.js 16 (App Router) + Prisma 7 + PostgreSQL 18, run with Docker Compose and Yarn 4. Nothing runs on the host: every command goes through the containers. For installing and running Hiretivo, see the [README](README.md); for how it's secured, [SECURITY.md](SECURITY.md).
 
 ## Getting started
 
@@ -50,7 +50,7 @@ The restart regenerates the Prisma Client and picks it up; since Prisma 7, `migr
 
 ### SQLite
 
-Dossier also runs on an SQLite file, when `DATABASE_URL` is one (`file:/data/hiretivo.db`), for a single container without a database server. `src/lib/database.ts` picks the client, and `prisma7.config.ts` the schema and migrations, from `DATABASE_URL`. The SQLite schema, `prisma/sqlite/schema.prisma`, is made from `prisma/schema.prisma`, which stays the only one to edit. After changing it, update the SQLite schema and make its migration too:
+Hiretivo also runs on an SQLite file, when `DATABASE_URL` is one (`file:/data/hiretivo.db`), for a single container without a database server. `src/lib/database.ts` picks the client, and `prisma7.config.ts` the schema and migrations, from `DATABASE_URL`. The SQLite schema, `prisma/sqlite/schema.prisma`, is made from `prisma/schema.prisma`, which stays the only one to edit. After changing it, update the SQLite schema and make its migration too:
 
 ```bash
 docker/bin/yarn sqlite-schema
@@ -144,7 +144,7 @@ Both get the session from `getSession()` in `src/lib/auth/session.ts` (see [Sign
 
 ## Sign-in
 
-Dossier has one user and no accounts: set `HIRETIVO_PASSWORD` in `.env` to the password you enter on the sign-in page. The password stays in `.env`, not in the database. The session is an encrypted token (JWE, keyed from `HIRETIVO_SECRET`) in an HttpOnly, SameSite=Lax cookie, so nothing is stored on the server. It lasts until the browser closes, but at most 24 hours; with "Keep me signed in", 30 days.
+Hiretivo has one user and no accounts: set `HIRETIVO_PASSWORD` in `.env` to the password you enter on the sign-in page. The password stays in `.env`, not in the database. The session is an encrypted token (JWE, keyed from `HIRETIVO_SECRET`) in an HttpOnly, SameSite=Lax cookie, so nothing is stored on the server. It lasts until the browser closes, but at most 24 hours; with "Keep me signed in", 30 days.
 
 Existing installations with an argon2id hash in `HIRETIVO_PASSWORD` still work. To make one, run `docker/bin/yarn hash-password` (`scripts/hash-password.ts`, bundled as the image's `hash-password` command). The hash uses OWASP's settings (19 MiB, 2 passes, 1 lane). Its `argon2id:m=19456,t=2,p=1:<salt>:<hash>` format avoids `$`, which Next.js and Docker Compose expand in `.env` files.
 
@@ -156,7 +156,7 @@ Failed sign-ins are rate-limited in Postgres: after 5 failures within a minute f
 
 ## AI provider
 
-Dossier reads job postings and writes drafts with the model you choose in Settings → AI provider: a local model through Ollama or llama.cpp, LM Studio, any OpenAI-compatible server, Anthropic, Mistral, Google Gemini, Groq or OpenRouter. Until you save a choice there, the `HIRETIVO_AI_*` variables decide (see `.env.example`). API keys are stored encrypted with a key derived from `HIRETIVO_SECRET`, and never sent back to the browser.
+Hiretivo reads job postings and writes drafts with the model you choose in Settings → AI provider: a local model through Ollama or llama.cpp, LM Studio, any OpenAI-compatible server, Anthropic, Mistral, Google Gemini, Groq or OpenRouter. Until you save a choice there, the `HIRETIVO_AI_*` variables decide (see `.env.example`). API keys are stored encrypted with a key derived from `HIRETIVO_SECRET`, and never sent back to the browser.
 
 Automatic fallback is optional. Add models in Settings → AI provider or the setup guide, order them, approve each hosted provider's data use, and then enable fallback. A rate limit or temporary provider failure moves the current request to the next eligible model. Paid-labeled fallback models need a separate opt-in. Free and paid labels are supplied by the user; Hiretivo does not verify prices or enforce a spending cap. Switches are recorded on the Usage screen without storing prompts or answers.
 
@@ -226,7 +226,7 @@ With "Nightly backups" on (the default), the app writes the same export to `back
 
 ### Import size limit
 
-Import files are capped at 10 MB, roughly 500 applications. The limit comes from Next.js, which buffers request bodies up to [`experimental.proxyClientMaxBodySize`](https://nextjs.org/docs/app/api-reference/config/next-config-js/proxyClientMaxBodySize) (10 MB by default) because `src/proxy.ts` runs on every request; larger bodies are cut off, so the app refuses them up front. To accept bigger files, raise that option in `next.config.ts` and `IMPORT_MAX_BYTES` in `src/lib/import-limits.ts`. Behind a reverse proxy, its own limit applies as well: with nginx, raise `client_max_body_size` (see [Troubleshooting](https://github.com/AienTech/dossier/wiki/Troubleshooting) in the wiki).
+Import files are capped at 10 MB, roughly 500 applications. The limit comes from Next.js, which buffers request bodies up to [`experimental.proxyClientMaxBodySize`](https://nextjs.org/docs/app/api-reference/config/next-config-js/proxyClientMaxBodySize) (10 MB by default) because `src/proxy.ts` runs on every request; larger bodies are cut off, so the app refuses them up front. To accept bigger files, raise that option in `next.config.ts` and `IMPORT_MAX_BYTES` in `src/lib/import-limits.ts`. Behind a reverse proxy, its own limit applies as well: with nginx, raise `client_max_body_size` (see [Troubleshooting](https://github.com/ignitinsharma/hiretivo/wiki/Troubleshooting) in the wiki).
 
 ## Job agent
 
@@ -281,7 +281,7 @@ The `Dockerfile`'s last stage is the production image (the `dev` stage is what C
 
 ```bash
 docker build -t hiretivo:local .
-HIRETIVO_IMAGE=dossier:local HIRETIVO_PORT=3300 docker compose -f compose.production.yml -p hiretivo-local up -d
+HIRETIVO_IMAGE=hiretivo:local HIRETIVO_PORT=3300 docker compose -f compose.production.yml -p hiretivo-local up -d
 ```
 
 In the public repository, `image.yml` pushes an image for every commit on `main` to `ghcr.io/<owner>/<repository>:<sha>` (lower case), once the checks and the end-to-end tests pass. A version tag (`v1.0.0`) then tags that commit's image with the version and `latest`.
