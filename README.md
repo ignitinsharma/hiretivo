@@ -1,33 +1,23 @@
 <p align="center"><img src="src/app/icon.svg" alt="Hiretivo" width="80" height="80"></p>
 <h1 align="center">Hiretivo</h1>
 <p align="center">Your profile, tailored resumes, and applications in one workspace.</p>
-<p align="center"><a href="https://hiretivo.com">hiretivo.com</a> · <a href="HOSTING.md">Hosting guide</a> · <a href="LICENSE">AGPL-3.0 license</a></p>
+<p align="center"><a href="#run-locally-with-docker-recommended">Local setup</a> · <a href="DEVELOPMENT.md">Development</a> · <a href="LICENSE">AGPL-3.0 license</a></p>
 
 Hiretivo helps you manage your job search: keep your career history in one profile, review how you match a job, create tailored resumes and cover letters, and track applications from draft to offer.
 
 **Free to use. Bring your own API keys.** Hiretivo has no subscription or shared AI credits. Your chosen AI and job-search providers may charge for usage or impose limits. Manage those costs in their accounts.
 
-The official domain is **https://hiretivo.com**. The deployed site can differ from the version in this repository until that version is deployed.
+## Recommended setup: run it on your computer
 
-## Current account flow
+Use Docker with an ENV password. You do not need a Hiretivo account, email verification, Resend, Neon, or a public domain. Docker supplies the local PostgreSQL database and Chromium for PDF downloads. Docker itself is the only required runtime; you do not need Node or Yarn installed on your computer.
 
-1. **Create an account:** enter your email, password, and confirm password.
-2. **Verify your email once:** open the email link and confirm verification. Links expire after 24 hours; request another if needed.
-3. **Sign in:** use email and password. Verified accounts do not need another verification email at login. Unverified accounts must finish signup verification first.
-4. **Set up your workspace:** follow the welcome guide, add your profile or import a resume, and connect your own cloud AI API key.
-5. **Start an application:** paste a job link or description, review the generated documents, and track progress in Applications.
+Your flow: start Docker → sign in with your ENV password → add your profile → connect an AI provider or local model → create and track applications.
 
-**Forgot your password?** Request a reset email from the login page. The single-use link expires in 30 minutes. Set a new password, then sign in again; existing sessions are revoked.
-
-Self-hosted installations use a separate flow: sign in with `HIRETIVO_PASSWORD` from your ENV file. There is no signup or email verification in that mode.
+There is no public hosted release of this version promised by these instructions. Hosted signup and deployment configuration are maintainer-only references in [DEVELOPMENT.md](DEVELOPMENT.md#maintainer-only-hosted-account-testing) and [HOSTING.md](HOSTING.md).
 
 ## Screenshots
 
-Screenshots show the current green Hiretivo interface. Career and application details belong to a fictional demo profile, not a real applicant. The workspace screens use the self-hosted demo; the account screens show hosted signup and login.
-
-| Create an account | Sign in |
-| --- | --- |
-| ![Hiretivo signup with email, password, and password confirmation](.github/images/hiretivo-signup.png) | ![Hiretivo email and password login](.github/images/hiretivo-login.png) |
+Screenshots show the current green Hiretivo interface. Career and application details belong to a fictional demo profile, not a real applicant. The workspace screens show the recommended local self-hosted mode.
 
 | Dashboard | Resume workspace |
 | --- | --- |
@@ -43,35 +33,36 @@ Screenshots show the current green Hiretivo interface. Career and application de
 - **Create documents:** tailor a resume and cover letter to a posting, refine the drafts, choose document themes, and download PDFs. Review AI output before using it.
 - **Track applications:** keep documents, notes, statuses, and interview dates together.
 - **Find opportunities:** configure supported job sources, explore Startups, and review fit scores and reasons.
-- **Choose your AI:** hosted accounts use supported cloud providers with their own keys. Self-hosting also supports local models and custom OpenAI-compatible endpoints.
+- **Choose your AI:** connect your own cloud API key, local model, or custom OpenAI-compatible endpoint.
 - **Use optional integrations:** configure Google Calendar/Gmail features or connect an MCP app. Review permissions and task data before enabling integrations.
 - **Keep control of your data:** export application data and manage stored app data from Settings.
 
-## Run locally with Docker
+## Run locally with Docker (recommended)
 
-Install Git and Docker Desktop, or Docker Engine with Compose. Have at least 2 GB of available memory.
+Install Git and Docker Desktop, or Docker Engine with Compose. Have at least 2 GB of available memory. On Windows, use WSL for the shell commands below. Keep port 3000 available, or change HIRETIVO_PORT in .env. The first build downloads dependencies and Chromium, so it can take several minutes.
 
 ```sh
 git clone https://github.com/ignitinsharma/hiretivo.git
 cd hiretivo
 cp .env.example .env
-openssl rand -base64 32
+docker run --rm node:24-trixie-slim node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-Edit `.env`: choose a unique password and paste the generated secret. Do not commit this file.
+Edit `.env`: choose unique login and database passwords and paste the generated secret. Use letters, digits, and hyphens for the database password so it is safe in a connection URL. Do not commit this file.
 
 ```dotenv
 HIRETIVO_DEPLOYMENT_MODE=self-hosted
 HIRETIVO_PASSWORD=choose-a-long-unique-password
 HIRETIVO_SECRET=paste-the-generated-secret
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hiretivo
+POSTGRES_PASSWORD=choose-another-long-unique-password
+HIRETIVO_PORT=3000
 ```
 
 ```sh
-docker compose up -d --build
+docker compose up -d --build --wait
 ```
 
-Compose starts PostgreSQL and sets the app's internal database address. The app generates its database clients, applies migrations, seeds built-in themes, and starts. Open **http://localhost:3000**, enter your ENV password, and follow the welcome guide.
+Compose starts PostgreSQL and sets the app's internal database address. The image includes generated database clients and Chromium. On startup, the app applies migrations, seeds built-in themes, and runs the production server. Open **http://localhost:3000**, enter your ENV password, and follow the welcome guide.
 
 ```sh
 docker compose logs --tail=100 app
@@ -79,7 +70,34 @@ docker compose stop
 docker compose start
 ```
 
-Stopping preserves database volumes. Removing volumes with `docker compose down -v` deletes their data. Keep backups.
+PostgreSQL data is stored in the `pgdata` volume. Backups and generated download ZIPs are stored in the `appdata` volume. Keep your `HIRETIVO_SECRET` stable so saved API keys remain readable.
+
+Stopping preserves these volumes. Removing volumes with `docker compose down -v` deletes their data. Keep backups.
+
+### Updates, backups, and recovery
+
+When upgrading an existing installation, retain its existing database username, database name, and password. If the previous Compose file used its default password, explicitly set `POSTGRES_PASSWORD=postgres` before starting this configuration; rotate it separately in PostgreSQL afterward.
+
+Before updating, use **Settings → Your data → Export** and save the JSON outside Docker. Keep a private copy of `.env`, especially its encryption secret. Importing JSON replaces application data; test recovery with a separate installation first.
+
+For a complete offline backup, stop the containers and back up both named volumes (`pgdata` and `appdata`) using Docker volume backup tooling, together with `.env`. Restore both volumes into a stopped installation using the same PostgreSQL major version. App exports are useful separately; they do not replace the database and ENV backup.
+
+After backing up, update from the repository and rebuild:
+
+```sh
+git pull --ff-only
+docker compose up -d --build --wait
+```
+
+To change your login password, edit `HIRETIVO_PASSWORD` and run `docker compose up -d --force-recreate app`. Keep `HIRETIVO_SECRET` unchanged: changing it prevents decryption of saved credentials.
+
+### Troubleshooting
+
+- **Docker unavailable:** start Docker Desktop or the Docker service; check `docker info`.
+- **Port occupied:** change `HIRETIVO_PORT` and recreate the app container.
+- **Startup or build fails:** inspect `docker compose logs --tail=100 app db` and the build output. Fill in required ENV values; allow more Docker memory if the build is killed.
+- **PDF or storage failure:** inspect app logs. Chromium is included in the image; `/data` must remain writable by the container user. Rebuild the image after dependency updates.
+- **Database fails:** check database logs and available disk space. Changing the ENV database password does not change an existing database user's password; retain the original value or deliberately rotate the database credential.
 
 ### Use a local model
 
@@ -92,36 +110,10 @@ docker compose exec ollama ollama pull qwen2.5:3b
 
 In **Settings → AI provider**, choose Local model, enter `http://ollama:11434`, select the downloaded model, and test the connection. Local-model speed and memory requirements depend on your hardware. Local models are available in self-hosted mode, not through the hosted website.
 
-## Test hosted signup locally
-
-Use a **direct PostgreSQL connection**, a Resend API key, and a verified Resend sender. Hosted mode does not use the ENV login password.
-
-```dotenv
-HIRETIVO_DEPLOYMENT_MODE=hosted
-HIRETIVO_PUBLIC_URL=http://localhost:3000
-DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE
-HIRETIVO_SECRET=your-random-secret-of-at-least-32-characters
-RESEND_API_KEY=your-resend-key
-RESEND_FROM_EMAIL=Hiretivo <noreply@hiretivo.com>
-```
-
-For development without Docker, use **Node 24.7 or newer** and the Yarn version pinned in `package.json`:
-
-```sh
-corepack enable
-yarn install --immutable
-yarn generate
-yarn dev
-```
-
-Hosted startup prepares the shared authentication tables. Open **http://localhost:3000/signup** and follow the account flow above. HTTP loopback URLs are allowed only during development. Open localhost email links on the computer running the app. After changing the public URL, restart and request a fresh email; previously sent emails retain their original URLs.
-
-For production, set `HIRETIVO_PUBLIC_URL=https://hiretivo.com` and use HTTPS. See [HOSTING.md](HOSTING.md) for the current Docker/Node deployment configuration. This README update does not change hosting or enable deployment.
-
 ## Configuration and development
 
 - [ENV examples](.env.example): available configuration without real credentials.
-- [Hosting](HOSTING.md): hosted accounts, direct database connections, migrations, and deployment modes.
+- [Maintainer hosting reference](HOSTING.md): optional hosted accounts and deployment details; not needed for local use.
 - [Development](DEVELOPMENT.md): tooling and tests.
 - [Privacy](PRIVACY.md) and [security](SECURITY.md): data handling and protection details.
 

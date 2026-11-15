@@ -15,12 +15,14 @@ FROM base AS dev
 RUN chown node:node /app
 USER node
 COPY --chown=node:node package.json yarn.lock .yarnrc.yml ./
-RUN yarn install --immutable && mkdir .next
+RUN yarn install --immutable && mkdir -p .next /app/data
 # Chromium for PDFs, matching the installed playwright-core, with the system
 # libraries and fonts it needs (installing those takes root). Only the
 # headless shell: printing needs nothing more.
 USER root
-RUN node node_modules/playwright-core/cli.js install --with-deps --only-shell chromium \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+  && sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
+  && node node_modules/playwright-core/cli.js install --with-deps --only-shell chromium \
   && rm -rf /var/lib/apt/lists/*
 USER node
 EXPOSE 3000
@@ -74,7 +76,9 @@ ENV NODE_ENV=production \
 # Chromium for PDFs with its system libraries and fonts, matching the app's
 # playwright-core, as in the dev image. Its CLI is only mounted for this.
 RUN --mount=type=bind,from=deps,source=/app/node_modules/playwright-core,target=/tmp/playwright-core \
-  node /tmp/playwright-core/cli.js install --with-deps --only-shell chromium \
+  apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+  && sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
+  && node /tmp/playwright-core/cli.js install --with-deps --only-shell chromium \
   && rm -rf /var/lib/apt/lists/*
 COPY --from=build /tools ./tools
 # On the PATH, so `docker run --rm -it ghcr.io/ignitinsharma/hiretivo hash-password` works.

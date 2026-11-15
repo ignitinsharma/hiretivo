@@ -9,8 +9,8 @@ cd "$(dirname "$0")/../.."
 tty=""
 [ -t 0 ] && [ -t 1 ] || tty="-T"
 
-if [ -n "$(docker compose ps --status running --quiet app)" ]; then
-  exec docker compose exec $tty app yarn "$@"
+if [ -n "$(docker compose -f compose.development.yml -p hiretivo-dev ps --status running --quiet app)" ]; then
+  exec docker compose -f compose.development.yml -p hiretivo-dev exec $tty app yarn "$@"
 else
-  exec docker compose run --rm $tty app yarn "$@"
+  exec docker compose -f compose.development.yml -p hiretivo-dev run --rm $tty app yarn "$@"
 fi

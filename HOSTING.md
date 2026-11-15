@@ -1,5 +1,7 @@
 # Hosted Hiretivo
 
+Maintainer-only reference for optional deployment and account-flow testing. Ordinary users should follow the Docker/ENV setup in [README.md](README.md). No public deployment is required for local use.
+
 The hosted version is free to use. Each person creates an account and supplies their own AI and other provider API keys. Provider charges and limits are managed in those providers' accounts; Hiretivo has no checkout or subscription system.
 
 ## Deployment modes
@@ -74,3 +76,5 @@ The health endpoint is `/api/health`. Check authentication and background-job er
 Keep `HIRETIVO_DEPLOYMENT_MODE=hosted` and set `HIRETIVO_PUBLIC_URL=http://localhost:3000` in your local `.env`. Run `yarn dev`, then request a fresh verification email. Verification and password-reset links now open the local app. Open localhost links on the same computer running the app.
 
 HTTP localhost, 127.0.0.1, and IPv6 loopback are accepted only in development. Production still requires an HTTPS public origin and secure session cookies. Set the deployed environment to `HIRETIVO_PUBLIC_URL=https://hiretivo.com`. Previously sent emails keep their old URLs; request new links after changing configuration.
+
+For hosted-only credentials, copy `.env.hosted.example` to `.env` and follow this guide. The default Compose configuration intentionally runs self-hosted mode; use the hosted configuration for account testing.

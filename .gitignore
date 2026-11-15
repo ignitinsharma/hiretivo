@@ -54,3 +54,6 @@ next-env.d.ts
 /e2e/.auth/
 /playwright-report/
 /test-results/
+
+# Credential-free maintainer configuration template.
+!.env.hosted.example
