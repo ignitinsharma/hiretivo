@@ -1,45 +1,33 @@
-try {
-  // eslint-disable-next-line
-  require("server-only");
-} catch {}
+import "server-only";
 
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@/generated/prisma/client";
+import { createPrismaClient } from "@/lib/database";
+import { env } from "@/lib/env";
+import { deploymentMode } from "@/lib/deployment-mode";
+import { currentTenantId } from "@/lib/tenancy/context";
+import { tenantDbForUser, withTenantDb } from "@/lib/tenancy/database";
+import { routedClient } from "@/lib/tenancy/routed-client";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+// Reuse one client across hot reloads in development instead of opening a new
+// connection pool on every change.
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not set");
-  }
-
-  const adapter = new PrismaPg({ connectionString });
-
-  return new PrismaClient({
-    adapter,
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
-  });
+function client(): PrismaClient {
+  globalForPrisma.prisma ??= createPrismaClient(env.DATABASE_URL);
+  return globalForPrisma.prisma;
 }
 
-function getPrisma(): PrismaClient {
-  if (globalForPrisma.prisma) return globalForPrisma.prisma;
-  const instance = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = instance;
-  }
-  return instance;
-}
+/**
+ * The shared database client. It's created on first use rather than on
+ * import, so `next build`, which imports every page, works without the
+ * secrets that reading `env` requires.
+ */
+const hosted = routedClient(currentTenantId, tenantDbForUser, withTenantDb);
 
 export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
-  get(_, prop) {
-    const instance = getPrisma();
-    const value = Reflect.get(instance, prop);
-    return typeof value === "function" ? value.bind(instance) : value;
+  get(_, key) {
+    const target = deploymentMode() === "hosted" ? hosted : client();
+    const value = Reflect.get(target, key, target);
+    return typeof value === "function" ? value.bind(target) : value;
   },
 });

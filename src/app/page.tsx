@@ -1,61 +1,16 @@
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { HeroSection } from "@/components/home/HeroSection";
-import { HowItWorksSection } from "@/components/home/HowItWorksSection";
-import { ResumeEngineSection } from "@/components/home/ResumeEngineSection";
-import { JobDashboardSection } from "@/components/home/JobDashboardSection";
-import { KanbanTrackerSection } from "@/components/home/KanbanTrackerSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
-import { AutoApplyTeaser } from "@/components/home/AutoApplyTeaser";
-import { SeekerCTASection } from "@/components/home/SeekerCTASection";
-import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 
-import { generatePageMetadata } from "@/lib/metadata";
+import { HomePage } from "@/components/marketing/home-page";
+import { getSession } from "@/lib/auth/session";
+import { deploymentMode } from "@/lib/deployment-mode";
 
-const SHOW_COMING_SOON = process.env.NEXT_PUBLIC_SHOW_COMING_SOON === "true";
+import AppLayout from "./(app)/layout";
+import DashboardPage from "./(app)/dashboard/page";
 
-export const metadata = generatePageMetadata({
-  title: "Stop copy-pasting. Start landing. | Hiretivo",
-  description:
-    "Paste any job link and get a tailored, ATS-ready resume in seconds. Browse jobs, generate AI resumes, apply, and track everything in one place.",
-});
-
-/*
- * Home
- * Public homepage for Hiretivo — seeker-first landing page.
- * 6 sections: Hero (centered), How It Works (3-step), Resume Engine showcase,
- * Job Dashboard showcase, Features (3 cards), CTA (free sign-up).
- * Authenticated users redirect to their dashboard immediately.
- */
-export default async function Home() {
-  if (SHOW_COMING_SOON) {
-    return <ComingSoonPage />;
+export default async function IndexPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  if (deploymentMode() === "hosted") {
+    if (await getSession()) redirect("/dashboard");
+    return <HomePage />;
   }
-
-  const session = await auth();
-  if (session?.user) {
-    if (session.user.onboardingCompleted === false) {
-      redirect("/seeker/onboarding");
-    }
-    redirect("/dashboard");
-  }
-
-  return (
-    <>
-      <Header />
-      <main className="overflow-x-hidden">
-        <HeroSection />
-        <HowItWorksSection />
-        <JobDashboardSection />
-        <ResumeEngineSection />
-        <KanbanTrackerSection />
-        <FeaturesSection />
-        <AutoApplyTeaser />
-        <SeekerCTASection />
-      </main>
-      <Footer />
-    </>
-  );
+  return <AppLayout><DashboardPage {...props} /></AppLayout>;
 }

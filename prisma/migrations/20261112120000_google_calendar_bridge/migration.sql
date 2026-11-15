@@ -1,0 +1,1 @@
+ALTER TABLE "GoogleAccount" ADD COLUMN "authMode" TEXT NOT NULL DEFAULT 'own';
