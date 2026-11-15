@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const THIS_FILE = import.meta.filename;
 const EXTENSIONS = new Set([".ts", ".tsx", ".mts"]);
-const FORBIDDEN = /telemetry\.dossier\.aien\.me|api\.dossier\.aien\.me|dossier\.app@pm\.me|HIRETIVO_TELEMETRY|HIRETIVO_API_URL|HIRETIVO_UPDATES_TEST_BASE_URL|HIRETIVO_USAGE_PING_TEST_URL|@\/lib\/update-check|@\/lib\/announcements|@\/lib\/releases/;
+const FORBIDDEN = /(?:telemetry|api)\.[^.]+\.aien\.me|[^@\s]+@pm\.me|HIRETIVO_TELEMETRY|HIRETIVO_API_URL|HIRETIVO_UPDATES_TEST_BASE_URL|HIRETIVO_USAGE_PING_TEST_URL|@\/lib\/update-check|@\/lib\/announcements|@\/lib\/releases/;
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
