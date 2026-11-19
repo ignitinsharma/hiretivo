@@ -87,7 +87,7 @@ export function SectionsPanel({
             {off.map((entry) => (
               <li key={entry.key} className="flex flex-col rounded-control border border-dashed border-line-card py-1 pr-1.5 pl-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm text-muted">{entry.name}</span>
+                  <span className="min-w-0 truncate text-sm text-muted">{entry.name}</span>
                   <Button variant="text" size="sm" onClick={() => onChange({ ...sections, off: sections.off.filter((key) => key !== entry.key) })}>
                     Put back <span className="sr-only">{entry.name}</span>
                   </Button>

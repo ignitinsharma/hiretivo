@@ -54,6 +54,7 @@
   /* Tints for hover, selection and tracks */
   --color-hover: #e3ebe5;
   --color-selected: #e3ebe5;
+  --color-segment-active: #ffffff;
   --color-track: #f1f5f2;
   --color-toggle-off: rgb(31 61 43 / 0.5); /* 3:1, like text fields */
 
@@ -187,6 +188,58 @@
       opacity: 0;
     }
   }
+}
+
+/* The route marker also scopes the palette to body-level portals and toasts. */
+:root:has([data-hiretivo-app]) {
+  --color-paper: #f7f8f9;
+  --color-sidebar: #ffffff;
+  --color-surface: #ffffff;
+  --color-canvas: #f7f8f9;
+  --color-input: #ffffff;
+  --color-ink: #172b4d;
+  --color-document: #172b4d;
+  --color-muted: #44546f;
+  --color-faint: #8993a4;
+  --color-primary: #0c66e4;
+  --color-primary-hover: #0055cc;
+  --color-primary-text: #0055cc;
+  --color-focus: #388bff;
+  --color-inverse: #172b4d;
+  --color-line: #dcdfe4;
+  --color-line-card: var(--color-line);
+  --color-line-field: var(--color-line);
+  --color-line-input: #8590a2;
+  --color-line-control: var(--color-line);
+  --color-line-popover: var(--color-line);
+  --color-line-strong: #b3b9c4;
+  --color-hover: #f1f2f4;
+  --color-selected: #e9f2ff;
+  --color-segment-active: var(--color-selected);
+  --color-track: #ebecf0;
+  --color-toggle-off: #8590a2;
+  --color-danger: #ae2e24;
+  --color-error: #ae2e24;
+  --color-error-strong: #5d1f1a;
+  --color-danger-fill: #c9372c;
+  --color-danger-fill-hover: #ae2e24;
+  --color-danger-surface: #ffeceb;
+  --color-danger-line: #ffd5d2;
+  --color-danger-control: #e34935;
+  --color-danger-disabled: #f87168;
+  --color-warning: #7f5f01;
+  --color-warning-surface: #fff7d6;
+  --color-warning-line: #f5cd47;
+  --color-success: #216e4e;
+  --color-flash: var(--color-warning-surface);
+  --color-status-draft: #8590a2;
+  --color-status-sent: var(--color-primary);
+  --color-status-screening: #2898bd;
+  --color-status-interview: #6e5dc6;
+  --color-status-offer: #f5cd47;
+  --color-status-accepted: #1f845a;
+  --color-status-rejected: var(--color-danger-fill);
+  --color-status-declined: var(--color-muted);
 }
 
 /* Thin scrollbars in the app's colours, for areas that scroll on their own

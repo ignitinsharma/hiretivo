@@ -195,5 +195,5 @@ function Welcome() {
 }
 
 function Panel({ children }: { children: ReactNode }) {
-  return <div className={`${card} max-w-[640px] items-start gap-3 p-7`}>{children}</div>;
+  return <div className={`${card} items-start gap-3 p-7`}>{children}</div>;
 }

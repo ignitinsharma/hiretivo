@@ -36,7 +36,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const userName = name.trim() || "New user";
 
   return (
-    <div className="flex min-h-screen">
+    <div data-hiretivo-app className="flex min-h-screen">
       <a
         href="#main"
         className="fixed top-3 left-3 z-50 -translate-y-[200%] rounded-control bg-primary px-4 py-2.5 text-sm font-medium text-on-primary hover:text-on-primary focus:translate-y-0"
@@ -51,7 +51,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         desktop={isDesktopApp()}
         collapsed={parseSidebarCollapsed(jar.get(SIDEBAR_COOKIE)?.value)}
       />
-      {/* The screen sits in a near-white panel inset from the shell. Each screen
+      {/* The screen sits in a panel inset from the shell. Each screen
           starts with its page bar (PageHeader or PageBar), which draws the
           panel's top edge and stays in view. */}
       <div className="flex min-w-0 flex-1 flex-col bg-paper px-2 pb-2">

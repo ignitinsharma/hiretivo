@@ -2,6 +2,7 @@ import { LogOut, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { BrandMark } from "@/components/brand-mark";
+import { buttonClassName } from "@/components/ui/button";
 import { deploymentMode } from "@/lib/deployment-mode";
 import { signOut } from "@/lib/auth/actions";
 
@@ -16,7 +17,7 @@ function initials(name: string): string {
 }
 
 /**
- * The signed-in sidebar: brand header, "+ New application", navigation,
+ * The signed-in sidebar: brand header, New application, navigation,
  * repository link, and account footer.
  */
 export function Sidebar({
@@ -51,7 +52,11 @@ export function Sidebar({
         <Link
           href="/new?fresh=1"
           title="New application"
-          className="mb-2 flex min-h-[34px] items-center gap-1.5 rounded-control bg-primary px-3 text-sm font-semibold text-on-primary shadow-cta hover:bg-primary-hover hover:text-on-primary motion-safe:transition-colors group-data-collapsed/sidebar:justify-center group-data-collapsed/sidebar:px-1.5"
+          className={buttonClassName(
+            "primary",
+            "md",
+            "mb-2 self-start hover:text-on-primary group-data-collapsed/sidebar:self-stretch group-data-collapsed/sidebar:px-1.5",
+          )}
         >
           <Plus size={16} aria-hidden="true" className="shrink-0" />
           {/* Hidden while collapsed, but still the link's name. */}
