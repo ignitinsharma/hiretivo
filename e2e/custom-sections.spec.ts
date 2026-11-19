@@ -34,8 +34,8 @@ test("moves and removes sections on the Base resume, and it stays that way", asy
 
   await page.waitForLoadState("networkidle");
   await page.goto("/resume?panel=sections");
+  await expect.poll(async () => (await titles(page)).filter((title) => title === "Skills" || title === "Experience")).toEqual(["Skills", "Experience"]);
   expect(await titles(page)).not.toContain("Projects");
-  expect((await titles(page)).indexOf("Skills")).toBeLessThan((await titles(page)).indexOf("Experience"));
 
   // Dragging works too: Languages above Education.
   const row = (name: string) => page.locator("li", { has: page.getByRole("button", { name: `Move “${name}” up` }) });
@@ -44,8 +44,12 @@ test("moves and removes sections on the Base resume, and it stays that way", asy
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, to.y + to.height / 2, { steps: 12 });
-  await page.mouse.up();
-  await expect.poll(async () => (await titles(page)).indexOf("Languages")).toBeLessThan((await titles(page)).indexOf("Education"));
+  const [savedOrder] = await Promise.all([
+    page.waitForResponse((response) => response.request().method() === "POST" && new URL(response.url()).pathname === "/resume"),
+    page.mouse.up(),
+  ]);
+  expect(savedOrder.ok()).toBe(true);
+  await expect.poll(async () => (await titles(page)).filter((title) => title === "Languages" || title === "Education")).toEqual(["Languages", "Education"]);
 
   await page.getByRole("button", { name: "Put back Projects" }).click();
   await expect.poll(() => titles(page)).toContain("Projects");
@@ -59,7 +63,7 @@ test("makes a section on Profile and fills it in there, and switches its format"
   await page.getByRole("button", { name: "Add section" }).click();
 
   // On to its page, listed among the profile's sections, without leaving Profile.
-  await expect(page).toHaveURL(/\/profile\?section=custom/);
+  await expect(page).toHaveURL(/\/resume\?tab=profile&section=custom%3A/);
   await expect(page.getByRole("heading", { name: "Awards" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Awards\s*optional\s*0/ })).toBeVisible();
   await page.getByRole("button", { name: "+ Add an item" }).click();
@@ -81,13 +85,18 @@ test("makes a section on Profile and fills it in there, and switches its format"
   // Entries show the fields a line hid, which were kept.
   await page.goto("/profile");
   await page.getByRole("link", { name: /Awards/ }).click();
-  await page.getByRole("radio", { name: "Entries" }).click();
+  const savedFormat = async () => (await sql<{ format: string }>(`SELECT format FROM "CustomSection" WHERE title = 'Awards'`))[0]?.format;
+  const entries = page.getByRole("radio", { name: "Entries" });
+  await entries.click();
+  await entries.press("Tab");
+  await expect.poll(savedFormat).toBe("ENTRIES");
   await page.getByRole("button", { name: /Best Paper/, expanded: false }).click();
   await expect(page.getByRole("textbox", { name: /Where or with whom/ })).toBeVisible();
   await expect(page.getByLabel(/^Link/)).toHaveValue("example.org/best-paper");
-  await page.getByRole("radio", { name: "Lines" }).click();
-  await page.getByRole("radio", { name: "Lines" }).blur();
-  await expect(page.getByText("Saved just now")).toBeVisible();
+  const lines = page.getByRole("radio", { name: "Lines" });
+  await lines.click();
+  await lines.press("Tab");
+  await expect.poll(savedFormat).toBe("LINES");
 });
 
 test("an application gets a new section only when it's added", async ({ page }) => {

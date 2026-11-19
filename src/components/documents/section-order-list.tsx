@@ -179,7 +179,7 @@ function SortableRow({
           <div className="flex items-center gap-1 pl-7">
             {actions}
             {renamed && (
-              <Button variant="text" size="sm" onClick={() => onRename("")}>
+              <Button variant="text" size="sm" className="min-w-0 whitespace-normal! [overflow-wrap:anywhere]" onClick={() => onRename("")}>
                 Use “{row.usual}”
               </Button>
             )}

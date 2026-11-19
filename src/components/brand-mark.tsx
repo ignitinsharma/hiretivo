@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-/** Hiretivo's "H" mark, as in src/app/icon.svg, in forest green and white. Decorative: put the name next to it. */
+/** Hiretivo's decorative "H" mark, using the current palette. Pair it with the name. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" className={cn("size-8 shrink-0", className)}>

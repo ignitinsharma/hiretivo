@@ -48,11 +48,11 @@ export type ResumeWorkspaceProps = {
 
 export type Panel = "themes" | "customize" | "sections";
 
+const panelContentClass = "min-h-0 overflow-y-auto p-1 @min-[960px]:overflow-visible";
+
 /**
- * The Base resume screen: the preview on the left and the theme panel on the
- * right, which moves below the preview on narrow windows. Picking a theme
- * shows it right away and saves it in the background; while you customise
- * one, the preview shows the draft.
+ * The Base resume controls sit before the preview. Picking a theme previews
+ * it immediately and saves it in the background. Customizing previews the draft.
  */
 export function ResumeWorkspace({
   profile,
@@ -227,97 +227,101 @@ export function ResumeWorkspace({
           </>
         }
       />
-      <div className="@container flex flex-1 flex-wrap border-t border-line">
-        <DocumentPreview
-          label={theme.name}
-          meta={(pages) => `${PAPER_SIZES[paper].label} · ${pages} ${pages === 1 ? "page" : "pages"}${fit > 0 ? " · squeezed to fit" : ""}`}
-          onPages={onPages}
-          notice={(pages) =>
-            empty ? (
-              // E11-4: an empty page needs a way forward.
-              <p role="note" className="rounded-card bg-card px-4 py-2.5 text-meta text-muted">
-                Your resume fills in from your profile. Add your name and a role or two, and it takes shape here.{" "}
-                <Link href="/resume?tab=profile" className="text-ink underline underline-offset-2">
-                  Go to your profile
-                </Link>
-              </p>
-            ) : (
-              maxPages !== null &&
-              pages > maxPages && (
-                <p role="note" className="rounded-card bg-warning-surface px-4 py-2.5 text-meta text-warning">
-                  Your base resume runs over {pagesInWords(maxPages)}. Tailored resumes are trimmed to fit, oldest roles first.{" "}
-                  <Link href="/settings?section=documents" className="font-medium text-warning underline underline-offset-2">
-                    Change the resume length
-                  </Link>
-                </p>
-              )
-            )
-          }
-        >
-          <ResumeDocument theme={theme} profile={profile} paper={paper} includeReferences={includeReferences} language={language} sections={sections} fit={fitToPage ? fit : 0} />
-        </DocumentPreview>
-        <aside
-          ref={panelArea}
-          aria-label="Theme and sections"
-          className="flex flex-[1_0_300px] flex-col gap-6 border-t border-line bg-paper px-7 pt-7 pb-12 @min-[780px]:border-t-0 @min-[780px]:border-l"
-        >
-          <Toggle
-            label="Fit to one page"
-            description={
-              !fitToPage
-                ? "Off. The resume takes the pages it needs."
-                : fit === 0
-                  ? "On. It fits as it is."
-                  : pages > 1
-                    ? "On, but it runs over one page even at its tightest. Shorten it, or leave a section out under Sections."
-                    : `On. Tighter spacing${fit >= 3 ? " and smaller type" : fit >= 2 ? " and lines" : ""}, so it fits; the PDF does the same.`
-            }
-            checked={fitToPage}
-            onCheckedChange={(next) => void toggleFit(next)}
-          />
-          <Tabs value={panel} onValueChange={(value) => openPanel(value as Panel)} className="flex flex-col gap-6">
-            <TabsList variant="segmented">
-              <TabsTrigger value="themes">Themes</TabsTrigger>
-              <TabsTrigger value="customize">Customize</TabsTrigger>
-              <TabsTrigger value="sections">Sections</TabsTrigger>
-            </TabsList>
-            <TabsContent value="themes">
-              <ThemePicker
-                themes={themes}
-                activeId={theme.id}
-                userName={profile.basics.name.trim() || "Your name"}
-                onSelect={selectTheme}
-                onCustomize={() => openPanel("customize", true)}
-                actions={{
-                  duplicate: () => void duplicate(),
-                  exportFile,
-                  remove: () => setDeleting(base),
-                  importFile: (file) => void importFile(file),
-                }}
-              />
-            </TabsContent>
-            <TabsContent value="customize">
-              {draft && (
-                <ThemeBuilder
-                  draft={draft}
-                  onChange={setDraft}
-                  onSave={saveDraft}
-                  onCancel={() => openPanel("themes", true)}
-                  saving={saving}
+      <div className="@container flex flex-1 flex-col border-t border-line">
+        <div className="grid min-w-0 flex-1 content-start bg-canvas @min-[960px]:grid-cols-[320px_minmax(0,1fr)]">
+          <aside
+            ref={panelArea}
+            aria-label="Theme and sections"
+            className="flex h-[clamp(20rem,60dvh,26rem)] min-w-0 flex-col gap-4 border-b border-line bg-card p-3 @min-[360px]:p-4 @min-[960px]:h-auto @min-[960px]:border-r @min-[960px]:border-b-0"
+          >
+            <Toggle
+              label="Fit to one page"
+              description={
+                !fitToPage
+                  ? "Off. The resume takes the pages it needs."
+                  : fit === 0
+                    ? "On. It fits as it is."
+                    : pages > 1
+                      ? "On, but it runs over one page even at its tightest. Shorten it, or leave a section out under Sections."
+                      : `On. Tighter spacing${fit >= 3 ? " and smaller type" : fit >= 2 ? " and lines" : ""}, so it fits; the PDF does the same.`
+              }
+              checked={fitToPage}
+              onCheckedChange={(next) => void toggleFit(next)}
+            />
+            <Tabs value={panel} onValueChange={(value) => openPanel(value as Panel)} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+              <TabsList variant="segmented" className="shrink-0">
+                <TabsTrigger value="themes">Themes</TabsTrigger>
+                <TabsTrigger value="customize">Customize</TabsTrigger>
+                <TabsTrigger value="sections">Sections</TabsTrigger>
+              </TabsList>
+              <TabsContent value="themes" className={panelContentClass}>
+                <ThemePicker
+                  themes={themes}
+                  activeId={theme.id}
+                  userName={profile.basics.name.trim() || "Your name"}
+                  onSelect={selectTheme}
+                  onCustomize={() => openPanel("customize", true)}
+                  actions={{
+                    duplicate: () => void duplicate(),
+                    exportFile,
+                    remove: () => setDeleting(base),
+                    importFile: (file) => void importFile(file),
+                  }}
                 />
-              )}
-            </TabsContent>
-            <TabsContent value="sections">
-              <SectionsPanel
-                profile={profile}
-                includeReferences={includeReferences}
-                sections={sections}
-                sidebar={hasSidebar(theme.layout)}
-                onChange={(next) => void changeSections(next)}
-              />
-            </TabsContent>
-          </Tabs>
-        </aside>
+              </TabsContent>
+              <TabsContent value="customize" className={panelContentClass}>
+                {draft && (
+                  <ThemeBuilder
+                    draft={draft}
+                    onChange={setDraft}
+                    onSave={saveDraft}
+                    onCancel={() => openPanel("themes", true)}
+                    saving={saving}
+                  />
+                )}
+              </TabsContent>
+              <TabsContent value="sections" className={panelContentClass}>
+                <SectionsPanel
+                  profile={profile}
+                  includeReferences={includeReferences}
+                  sections={sections}
+                  sidebar={hasSidebar(theme.layout)}
+                  onChange={(next) => void changeSections(next)}
+                />
+              </TabsContent>
+            </Tabs>
+          </aside>
+          <div role="region" aria-label="Resume preview" className="min-w-0 self-start">
+            <DocumentPreview
+              label={theme.name}
+              meta={(pages) => `${PAPER_SIZES[paper].label} · ${pages} ${pages === 1 ? "page" : "pages"}${fit > 0 ? " · squeezed to fit" : ""}`}
+              onPages={onPages}
+              notice={(pages) =>
+                empty ? (
+                  // E11-4: an empty page needs a way forward.
+                  <p role="note" className="rounded-card bg-card px-4 py-2.5 text-meta text-muted">
+                    Your resume fills in from your profile. Add your name and a role or two, and it takes shape here.{" "}
+                    <Link href="/resume?tab=profile" className="text-ink underline underline-offset-2">
+                      Go to your profile
+                    </Link>
+                  </p>
+                ) : (
+                  maxPages !== null &&
+                  pages > maxPages && (
+                    <p role="note" className="rounded-card bg-warning-surface px-4 py-2.5 text-meta text-warning">
+                      Your base resume runs over {pagesInWords(maxPages)}. Tailored resumes are trimmed to fit, oldest roles first.{" "}
+                      <Link href="/settings?section=documents" className="font-medium text-warning underline underline-offset-2">
+                        Change the resume length
+                      </Link>
+                    </p>
+                  )
+                )
+              }
+            >
+              <ResumeDocument theme={theme} profile={profile} paper={paper} includeReferences={includeReferences} language={language} sections={sections} fit={fitToPage ? fit : 0} />
+            </DocumentPreview>
+          </div>
+        </div>
       </div>
       <ConfirmDialog
         open={deleting !== null}

@@ -42,7 +42,7 @@ const triggerClassNames: Record<TabsVariant, string> = {
   underline:
     "-mb-px border-b-2 border-transparent pt-2.5 pb-[13px] text-ui font-medium text-muted hover:text-ink data-[state=active]:border-primary data-[state=active]:font-semibold data-[state=active]:text-ink",
   segmented:
-    "flex-1 rounded-control p-2 text-control font-medium data-[state=active]:bg-card data-[state=active]:shadow-raised",
+    "flex-1 rounded-control p-2 text-control font-medium data-[state=active]:bg-segment-active data-[state=active]:shadow-raised",
 };
 
 export function TabsTrigger({ className, ...props }: TabsPrimitive.TabsTriggerProps) {
