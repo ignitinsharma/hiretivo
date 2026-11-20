@@ -6286,6 +6286,7 @@ __metadata:
     openai: "npm:^7.47.0"
     pg: "npm:^8.23.1"
     playwright-core: "npm:^1.64.1"
+    postcss: "npm:8.5.28"
     prisma: "npm:^7.10.1"
     radix-ui: "npm:^1.8.1"
     react: "npm:19.3.1"
@@ -8059,7 +8060,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.5.16":
+"postcss@npm:8.5.28, postcss@npm:^8.5.16":
   version: 8.5.28
   resolution: "postcss@npm:8.5.28"
   dependencies:
