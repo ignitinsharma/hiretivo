@@ -190,8 +190,9 @@
   }
 }
 
-/* The route marker also scopes the palette to body-level portals and toasts. */
-:root:has([data-hiretivo-app]) {
+/* The app route marker also applies the palette to body-level portals and toasts. */
+:root:has([data-hiretivo-app]),
+:root:has([data-hiretivo-home]) {
   --color-paper: #f7f8f9;
   --color-sidebar: #ffffff;
   --color-surface: #ffffff;
