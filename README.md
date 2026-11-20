@@ -17,7 +17,7 @@ There is no public hosted release of this version promised by these instructions
 
 ## Screenshots
 
-Screenshots show the current green Hiretivo interface. Career and application details belong to a fictional demo profile, not a real applicant. The workspace screens show the recommended local self-hosted mode.
+Screenshots show Hiretivo’s blue interface in local self-hosted mode, with a fictional profile and sample applications.
 
 | Dashboard | Resume workspace |
 | --- | --- |
