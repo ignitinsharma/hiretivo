@@ -24,6 +24,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "website/.vercel/**",
     "next-env.d.ts",
     // The clickable prototype and its vendored runtime, kept for reference.
     "design/**",

@@ -4,6 +4,7 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { build } from "esbuild";
 import tailwind from "@tailwindcss/postcss";
 import postcss from "postcss";
 import type { ReactNode } from "react";
@@ -16,7 +17,7 @@ const root = join(here, "..");
 const output = join(here, ".vercel/output");
 const staticDir = join(output, "static");
 
-function html(title: string, content: ReactNode) {
+function html(title: string, content: ReactNode, script?: string) {
   return "<!doctype html>" + renderToStaticMarkup(
     <html lang="en" className="h-full antialiased">
       <head>
@@ -30,7 +31,7 @@ function html(title: string, content: ReactNode) {
         <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@variable&display=swap" />
         <link rel="stylesheet" href="/site.css" />
       </head>
-      <body className="min-h-full">{content}</body>
+      <body className="min-h-full">{content}{script && <script src={script} defer />}</body>
     </html>,
   );
 }
@@ -46,7 +47,7 @@ const sources = [
 const { css } = await postcss([tailwind({ base: here, optimize: true })])
   .process(`${styles}\n${sources}`, { from: cssPath });
 
-const home = html("Hiretivo · Self-hosted job search workspace", <HomePage />);
+const home = html("Hiretivo · Self-hosted job search workspace", <HomePage />, "/marketing/nav.js");
 const notFound = html("Page not found · Hiretivo", (
   <main data-hiretivo-home="" className="mx-auto max-w-[650px] px-6 py-16 text-center">
     <h1 className="text-4xl font-semibold text-primary-text">Page not found</h1>
@@ -57,6 +58,16 @@ const notFound = html("Page not found · Hiretivo", (
 await rm(output, { recursive: true, force: true });
 await mkdir(join(staticDir, "marketing"), { recursive: true });
 await Promise.all([
+  build({
+    stdin: {
+      contents: 'import { connectHomeNavTheme } from "./src/components/marketing/home-nav-theme"; connectHomeNavTheme();',
+      resolveDir: root,
+    },
+    bundle: true,
+    minify: true,
+    target: "es2020",
+    outfile: join(staticDir, "marketing/nav.js"),
+  }),
   writeFile(join(staticDir, "index.html"), home),
   writeFile(join(staticDir, "404.html"), notFound),
   writeFile(join(staticDir, "site.css"), css),
