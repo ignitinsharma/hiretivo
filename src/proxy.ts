@@ -20,7 +20,7 @@ const CONNECTOR_PATHS = /^\/(?:api\/(?:mcp|oauth)(?:\/|$)|\.well-known\/oauth-(?
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const hosted = deploymentMode() === "hosted";
-  if (pathname === "/login" || pathname === "/pricing") return pass(request);
+  if (pathname === "/login" || pathname === "/pricing" || pathname === "/features") return pass(request);
   if (hosted && ["/", "/signup", "/verify-email", "/verify-email-pending", "/forgot-password", "/reset-password"].includes(pathname)) return pass(request);
   // The Claude connector (#221) brings its own credentials, an OAuth token,
   // which its routes check; they answer 404 while it's off.

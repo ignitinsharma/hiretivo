@@ -6,10 +6,11 @@ import { buttonClassName } from "@/components/ui/button";
 
 import { dockerSetupUrl, repositoryUrl, sourceZipUrl } from "./project-links";
 
-export function SiteFrame({ children, hosted = true, selfHosted = false }: {
+export function SiteFrame({ children, hosted = true, selfHosted = false, featuresPage = false }: {
   children: ReactNode;
   hosted?: boolean;
   selfHosted?: boolean;
+  featuresPage?: boolean;
 }) {
   return (
     <div data-hiretivo-home={selfHosted ? "" : undefined} className="min-h-screen bg-paper text-ink">
@@ -19,7 +20,7 @@ export function SiteFrame({ children, hosted = true, selfHosted = false }: {
           <Link href="/" aria-label="Hiretivo home" className={"flex items-center gap-2.5 text-xl font-semibold " + (selfHosted ? "home-nav-label" : "text-primary-text")}><BrandMark className="size-9" />Hiretivo</Link>
           {selfHosted ? (
             <div className="home-nav-actions flex flex-wrap items-center gap-3 text-sm sm:gap-5">
-              <a href="#features" className="home-nav-label hidden hover:underline sm:block">Features</a>
+              <Link href="/features" aria-current={featuresPage ? "page" : undefined} className="home-nav-label hidden hover:underline sm:block">Features</Link>
               <a href={repositoryUrl} className="home-nav-label hover:underline">View on GitHub</a>
               <a href={dockerSetupUrl} className={buttonClassName("primary", "md")}>Set up with Docker</a>
             </div>
@@ -43,6 +44,7 @@ export function SiteFrame({ children, hosted = true, selfHosted = false }: {
               <a href={dockerSetupUrl}>Set up with Docker</a>
               <a href={repositoryUrl}>View on GitHub</a>
               <a href={sourceZipUrl}>Download ZIP</a>
+              <Link href="/features">Features</Link>
             </div>
           ) : (
             <div className="flex flex-wrap gap-5"><Link href="/pricing">Free pricing</Link><Link href="/pricing#self-host">Self-hosting guide</Link><Link href="/pricing#privacy">Your data</Link></div>
