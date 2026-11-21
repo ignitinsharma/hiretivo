@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, Check, FileText, Layers, Search, SlidersHorizontal } from "lucide-react";
 
 import { buttonClassName } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function HomePage() {
           <a href={sourceZipUrl} className={buttonClassName("secondary", "lg", "home-hero-link")}>Download ZIP</a>
         </div>
         <p className="mt-3 text-sm text-stone-300">External API usage may cost extra.</p>
+        <Link href="/features" className="mt-4 inline-block text-stone-200 underline underline-offset-4 hover:text-white sm:hidden">Explore features</Link>
         <figure className="mx-auto mt-8 max-w-[1200px] overflow-hidden home-dashboard rounded-[20px] border border-white/20 bg-[#242424] p-2 shadow-lg md:mt-10">
           {/* eslint-disable-next-line @next/next/no-img-element -- The static site serves pre-optimized WebP directly. */}
           <img src="/marketing/dashboard.webp" alt="Hiretivo dashboard showing fictional application totals, recent roles, and their statuses" width={2880} height={1800} fetchPriority="high" className="h-auto w-full rounded-control" />
@@ -41,6 +43,7 @@ export function HomePage() {
       </section>
       <section id="features" className="mx-auto max-w-[1280px] px-6 py-16 md:px-10 md:py-24">
         <div className="max-w-[650px]"><p className="text-sm font-semibold text-muted">YOUR SEARCH, TOGETHER</p><h2 className="mt-3 text-3xl font-semibold text-neutral-900 sm:text-4xl">Spend your energy on the right opportunities.</h2></div>
+        <Link href="/features" className={buttonClassName("secondary", "md", "mt-5")}>See how Hiretivo works <ArrowRight size={15} aria-hidden="true" /></Link>
         <div className="mt-10 grid gap-5 md:grid-cols-2">{features.map(({ icon: Icon, title, description }) => <article key={title} className="rounded-[20px] border border-line-card bg-card p-7"><Icon size={24} strokeWidth={1.5} className="text-primary" aria-hidden="true" /><h3 className="mt-5 text-xl font-semibold">{title}</h3><p className="mt-3 leading-relaxed text-muted">{description}</p></article>)}</div>
         <div className="mt-14 grid items-center gap-8 rounded-[20px] bg-sidebar p-6 md:grid-cols-2 md:p-10"><div><h2 className="text-3xl font-semibold text-neutral-900">Your words. Your experience. A clearer story.</h2><p className="mt-4 leading-relaxed text-muted">Keep your career history in one profile, choose a resume theme, and tailor each draft to the role. You decide what goes out.</p><ul className="mt-6 space-y-3 text-sm">{["Resumes and cover letters from your profile", "A fit score with reasons to review", "Editable drafts and PDF downloads", "Application tracking from draft to offer"].map((item) => <li key={item} className="flex gap-2"><Check size={17} className="shrink-0 text-primary" aria-hidden="true" />{item}</li>)}</ul></div>
           {/* eslint-disable-next-line @next/next/no-img-element -- The static site serves pre-optimized WebP directly. */}

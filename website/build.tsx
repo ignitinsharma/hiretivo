@@ -10,6 +10,7 @@ import postcss from "postcss";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { FeaturesPage, featureScreenshots } from "../src/components/marketing/features-page";
 import { HomePage } from "../src/components/marketing/home-page";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -47,7 +48,8 @@ const sources = [
 const { css } = await postcss([tailwind({ base: here, optimize: true })])
   .process(`${styles}\n${sources}`, { from: cssPath });
 
-const home = html("Hiretivo · Self-hosted job search workspace", <HomePage />, "/marketing/nav.js");
+const navScript = "/marketing/nav.js";
+const home = html("Hiretivo · Self-hosted job search workspace", <HomePage />, navScript);
 const notFound = html("Page not found · Hiretivo", (
   <main data-hiretivo-home="" className="mx-auto max-w-[650px] px-6 py-16 text-center">
     <h1 className="text-4xl font-semibold text-primary-text">Page not found</h1>
@@ -56,7 +58,7 @@ const notFound = html("Page not found · Hiretivo", (
 ));
 
 await rm(output, { recursive: true, force: true });
-await mkdir(join(staticDir, "marketing"), { recursive: true });
+await Promise.all(["marketing", "features"].map((dir) => mkdir(join(staticDir, dir), { recursive: true })));
 await Promise.all([
   build({
     stdin: {
@@ -69,16 +71,18 @@ await Promise.all([
     outfile: join(staticDir, "marketing/nav.js"),
   }),
   writeFile(join(staticDir, "index.html"), home),
+  writeFile(join(staticDir, "features/index.html"), html("How Hiretivo works · Features", <FeaturesPage />, navScript)),
   writeFile(join(staticDir, "404.html"), notFound),
   writeFile(join(staticDir, "site.css"), css),
   copyFile(join(root, "src/app/icon.svg"), join(staticDir, "icon.svg")),
-  ...["dashboard.webp", "resume.webp"].map((file) =>
+  ...["dashboard.webp", ...featureScreenshots].map((file) =>
     copyFile(join(root, "public/marketing", file), join(staticDir, "marketing", file))
   ),
   writeFile(join(output, "config.json"), JSON.stringify({
     version: 3,
     routes: [
       { src: "^/$", dest: "/index.html" },
+      { src: "^/features/?$", dest: "/features/index.html" },
       { handle: "filesystem" },
       { src: "/.*", dest: "/404.html", status: 404 },
     ],
