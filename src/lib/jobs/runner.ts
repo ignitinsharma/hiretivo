@@ -8,10 +8,13 @@ import { loadAiConfig } from "@/lib/ai/config";
 import { AiError } from "@/lib/ai/errors";
 import { withAiJob, type FallbackNotice } from "@/lib/ai/fallback";
 import { providerOption } from "@/lib/ai/provider-options";
+import { authPool } from "@/lib/auth/hosted/store";
 import { logServerError } from "@/lib/log";
 import { prisma } from "@/lib/prisma";
 import { currentTenantId, currentTenantIdSync, withTenant } from "@/lib/tenancy/context";
 import { loadSettings } from "@/lib/settings-data";
+
+import { publishQueuedJob, usesVercelQueue, type QueuedJob } from "./vercel-queue";
 
 // Long AI tasks run as background jobs (E6-7): the request that starts one
 // returns at once with its id, the work goes on in this process, and the
@@ -155,7 +158,7 @@ export async function startJob<I, R>(
     },
     select: { id: true },
   });
-  enqueue(job.id, await currentTenantId());
+  await dispatch(job.id);
   return job.id;
 }
 
@@ -168,12 +171,19 @@ export async function retryJob(id: string): Promise<boolean> {
   if (count === 0) return false;
   await prisma.aiFallbackEvent.deleteMany({ where: { jobId: id } });
   await notify(id);
-  enqueue(id, await currentTenantId());
+  await dispatch(id);
   return true;
 }
 
 /** Stops a queued or running job; it ends as failed with "Cancelled.". */
 export async function cancelJob(id: string): Promise<void> {
+  if (usesVercelQueue()) {
+    await prisma.job.updateMany({
+      where: { id, status: { in: [JobStatus.QUEUED, JobStatus.RUNNING] } },
+      data: { status: JobStatus.FAILED, error: JOB_MESSAGES.cancelled, finishedAt: new Date() },
+    });
+    return;
+  }
   const owner = await currentTenantId();
   const queued = state.queue.findIndex((item) => item.id === id && item.owner === owner);
   if (queued >= 0) {
@@ -216,12 +226,60 @@ async function notify(id: string): Promise<void> {
 async function finish(
   id: string,
   data: { status: JobStatus; result?: Prisma.InputJsonValue; error?: string },
+  revision?: Date,
 ): Promise<void> {
-  const { count } = await prisma.job.updateMany({ where: { id }, data: { ...data, finishedAt: new Date() } });
+  const { count } = await prisma.job.updateMany({ where: { id, ...(revision ? { status: JobStatus.RUNNING, startedAt: revision } : {}) }, data: { ...data, finishedAt: new Date() } });
   if (count > 0) await notify(id).catch((error: unknown) => logServerError(`job ${id} notification`, error));
 }
 
 const scopedJob = (id: string, owner: string) => `${owner}:${id}`;
+
+async function dispatch(id: string): Promise<void> {
+  const owner = await currentTenantId();
+  if (!usesVercelQueue()) {
+    enqueue(id, owner);
+    return;
+  }
+  const job = await prisma.job.findUniqueOrThrow({ where: { id }, select: { updatedAt: true } });
+  try {
+    await publishQueuedJob({ id, owner, attempt: job.updatedAt.toISOString() });
+  } catch (error) {
+    logServerError("publish background job", error);
+    await prisma.job.updateMany({
+      where: { id, status: JobStatus.QUEUED, updatedAt: job.updatedAt },
+      data: { status: JobStatus.FAILED, error: JOB_MESSAGES.failed, finishedAt: new Date() },
+    });
+  }
+}
+
+export async function executeQueuedJob({ id, owner, attempt }: QueuedJob): Promise<void> {
+  const connection = await authPool().connect();
+  const key = scopedJob(id, owner);
+  let locked = false;
+  try {
+    const lock = await connection.query<{ acquired: boolean }>(
+      "SELECT pg_try_advisory_lock(hashtextextended($1, 0)) AS acquired",
+      [key],
+    );
+    locked = lock.rows[0]?.acquired === true;
+    if (!locked) throw new Error("Job is already being processed.");
+    await withTenant(owner, async () => {
+      const revision = new Date(attempt);
+      const { count } = await prisma.job.updateMany({
+        where: { id, OR: [
+          { status: JobStatus.QUEUED, updatedAt: revision },
+          { status: JobStatus.RUNNING, startedAt: revision },
+        ] },
+        data: { status: JobStatus.RUNNING, startedAt: revision },
+      });
+      if (!count) return;
+      await execute(id, new AbortController(), revision);
+    });
+  } finally {
+    // Discard the connection so its session lock is released even if the job throws.
+    connection.release(locked);
+  }
+}
 
 function enqueue(id: string, owner: string): void {
   if (!state.queue.some((item) => item.id === id && item.owner === owner)) state.queue.push({ id, owner });
@@ -259,13 +317,15 @@ async function pump(): Promise<void> {
   }
 }
 
-async function execute(id: string, controller: AbortController): Promise<void> {
+async function execute(id: string, controller: AbortController, revision?: Date): Promise<void> {
+  const active = revision ? { status: JobStatus.RUNNING, startedAt: revision } : {};
   try {
-    const job = await prisma.job.update({
+    const job = revision ? await prisma.job.findFirst({ where: { id, ...active }, select: { type: true, input: true } }) : await prisma.job.update({
       where: { id },
       data: { status: JobStatus.RUNNING, startedAt: new Date() },
       select: { type: true, input: true },
     });
+    if (!job) return;
     await notify(id);
     // Job types register when their module loads; make sure they all have.
     await import("./definitions");
@@ -277,12 +337,12 @@ async function execute(id: string, controller: AbortController): Promise<void> {
       signal: controller.signal,
       step: async (name) => {
         // Deleted meanwhile: there's no one left to do it for.
-        const { count } = await prisma.job.updateMany({ where: { id }, data: { step: name } });
+        const { count } = await prisma.job.updateMany({ where: { id, ...active }, data: { step: name } });
         if (count === 0) controller.abort();
         else await notify(id);
       },
     }));
-    await finish(id, { status: JobStatus.DONE, result: definition.result.parse(result) as Prisma.InputJsonValue });
+    await finish(id, { status: JobStatus.DONE, result: definition.result.parse(result) as Prisma.InputJsonValue }, revision);
   } catch (error) {
     // AI failures already say what to do; anything else is logged and kept vague.
     const message = controller.signal.aborted
@@ -291,7 +351,7 @@ async function execute(id: string, controller: AbortController): Promise<void> {
         ? error.message
         : JOB_MESSAGES.failed;
     if (!(error instanceof AiError || error instanceof JobError) && !controller.signal.aborted) logServerError(`job ${id}`, error);
-    await finish(id, { status: JobStatus.FAILED, error: message }).catch((cause: unknown) => logServerError(`job ${id}`, cause));
+    await finish(id, { status: JobStatus.FAILED, error: message }, revision).catch((cause: unknown) => logServerError(`job ${id}`, cause));
   }
 }
 

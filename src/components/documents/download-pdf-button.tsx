@@ -60,7 +60,7 @@ export function DownloadPdfButton({
         toast(body?.error ?? messages.unexpected);
         return;
       }
-      if (held) {
+      if (held && !response.headers.get("content-type")?.startsWith("application/pdf")) {
         const { url } = (await response.json()) as { url: string };
         downloadFrom(url);
       } else {

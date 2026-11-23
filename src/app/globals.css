@@ -192,6 +192,7 @@
 
 /* The app route marker also applies the palette to body-level portals and toasts. */
 :root:has([data-hiretivo-app]),
+:root:has([data-hiretivo-onboarding]),
 :root:has([data-hiretivo-home]) {
   --color-paper: #f7f8f9;
   --color-sidebar: #ffffff;

@@ -36,16 +36,28 @@ const pool: Pool = (globalForPdf.pdfPool ??= { browser: null, active: 0, queue: 
 
 /** Where the app itself is listening, for Chromium to open print pages. */
 function appOrigin(): string {
+  if (process.env.VERCEL === "1") {
+    const origin = env.HIRETIVO_PUBLIC_URL;
+    if (!origin) throw new Error("PDF rendering on Vercel requires HIRETIVO_PUBLIC_URL.");
+    return origin;
+  }
   return `http://localhost:${process.env.PORT ?? 3000}`;
+}
+
+async function launchBrowser(): Promise<Browser> {
+  if (process.env.VERCEL === "1") {
+    const { default: serverChromium } = await import("@sparticuz/chromium");
+    return chromium.launch({
+      executablePath: await serverChromium.executablePath(),
+      args: serverChromium.args,
+    });
+  }
+  return chromium.launch({ args: ["--disable-dev-shm-usage"] });
 }
 
 function browser(): Promise<Browser> {
   if (!pool.browser) {
-    const launching = chromium
-      .launch({
-        // Docker gives /dev/shm only 64 MB.
-        args: ["--disable-dev-shm-usage"],
-      })
+    const launching = launchBrowser()
       .then((launched) => {
         // A crashed or closed browser is replaced on the next render.
         launched.on("disconnected", () => {
@@ -96,9 +108,10 @@ export async function renderPdf(path: string): Promise<Uint8Array> {
   await acquire();
   try {
     const origin = appOrigin();
-    const context = await (await browser()).newContext({
-      extraHTTPHeaders: { [PRINT_TOKEN_HEADER]: await signPrintToken(path) },
-    });
+    const extraHTTPHeaders: Record<string, string> = { [PRINT_TOKEN_HEADER]: await signPrintToken(path) };
+    const bypass = process.env.VERCEL === "1" ? process.env.VERCEL_AUTOMATION_BYPASS_SECRET : undefined;
+    if (bypass) extraHTTPHeaders["x-vercel-protection-bypass"] = bypass;
+    const context = await (await browser()).newContext({ extraHTTPHeaders });
     try {
       await context.route("**/*", (route) =>
         new URL(route.request().url()).origin === origin ? route.continue() : route.abort("blockedbyclient"),

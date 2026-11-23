@@ -13,9 +13,9 @@ const features = [
   { icon: SlidersHorizontal, title: "Choose the AI you want to use.", description: "Connect your own cloud-provider API key or run a local model on your own hardware." },
 ];
 
-export function HomePage() {
+export function HomePage({ hostedAppLinks = false }: { hostedAppLinks?: boolean }) {
   return (
-    <SiteFrame selfHosted>
+    <SiteFrame selfHosted hostedAppLinks={hostedAppLinks}>
       <section data-home-hero className="px-4 pb-8 text-center sm:px-8 md:px-10">
         <span className="inline-flex rounded-full border border-white/20 bg-white/5 px-3 py-1 text-sm font-medium text-stone-200">Free and open source</span>
         <h1 className="mx-auto mt-5 max-w-[1050px] text-4xl leading-[1.08] font-semibold tracking-tight text-stone-50 sm:text-5xl lg:text-[64px]">Less busywork.<br /><span className="text-balance text-stone-300">More room for your next move.</span></h1>

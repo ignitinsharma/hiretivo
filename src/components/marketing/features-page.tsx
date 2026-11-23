@@ -58,9 +58,9 @@ const workflow = [
 
 export const featureScreenshots = workflow.map(({ screenshot }) => screenshot);
 
-export function FeaturesPage() {
+export function FeaturesPage({ hostedAppLinks = false }: { hostedAppLinks?: boolean }) {
   return (
-    <SiteFrame selfHosted featuresPage>
+    <SiteFrame selfHosted hostedAppLinks={hostedAppLinks} featuresPage>
       <section data-home-hero className="px-5 pb-12 text-center sm:px-8 sm:pb-16">
         <h1 className="mx-auto max-w-[820px] text-balance text-4xl font-semibold tracking-tight text-stone-50 sm:text-6xl">How Hiretivo works</h1>
         <p className="mx-auto mt-5 max-w-[660px] text-lg leading-relaxed text-stone-300">

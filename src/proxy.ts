@@ -20,6 +20,7 @@ const CONNECTOR_PATHS = /^\/(?:api\/(?:mcp|oauth)(?:\/|$)|\.well-known\/oauth-(?
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const hosted = deploymentMode() === "hosted";
+  if (hosted && process.env.VERCEL === "1" && pathname === "/api/internal/queued-job") return pass(request);
   if (pathname === "/login" || pathname === "/pricing" || pathname === "/features") return pass(request);
   if (hosted && ["/", "/signup", "/verify-email", "/verify-email-pending", "/forgot-password", "/reset-password"].includes(pathname)) return pass(request);
   // The Claude connector (#221) brings its own credentials, an OAuth token,

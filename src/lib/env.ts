@@ -231,7 +231,11 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
 let cached: Env | undefined;
 
 function load(): Env {
-  cached ??= parseEnv(process.env);
+  const previewHost = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_URL : undefined;
+  cached ??= parseEnv({
+    ...process.env,
+    HIRETIVO_PUBLIC_URL: process.env.HIRETIVO_PUBLIC_URL ?? (previewHost ? `https://${previewHost}` : undefined),
+  });
   return cached;
 }
 

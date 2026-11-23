@@ -11,7 +11,7 @@ services:
     init: true
     environment:
       HIRETIVO_DEPLOYMENT_MODE: hosted
-      HIRETIVO_PUBLIC_URL: ${HIRETIVO_PUBLIC_URL:-https://hiretivo.com}
+      HIRETIVO_PUBLIC_URL: ${HIRETIVO_PUBLIC_URL:?Set HIRETIVO_PUBLIC_URL to the HTTPS origin for hosted accounts}
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL to your hosted PostgreSQL connection string}
       HIRETIVO_SECRET: ${HIRETIVO_SECRET:?Set HIRETIVO_SECRET to at least 32 random characters}
       RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY}

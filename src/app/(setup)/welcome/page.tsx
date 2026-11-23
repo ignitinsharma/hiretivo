@@ -11,6 +11,7 @@ import { SCORER_INFO } from "@/lib/scoring/scorers";
 import { jobRetentionLabel } from "@/lib/settings";
 import { loadScoringConfig, scoringView } from "@/lib/scoring/config";
 import { providerOption } from "@/lib/ai/provider-options";
+import { deploymentMode } from "@/lib/deployment-mode";
 import { env } from "@/lib/env";
 import { isDesktopApp } from "@/lib/desktop";
 import { redirectUri } from "@/lib/google/oauth";
@@ -124,7 +125,7 @@ export default async function WelcomePage({ searchParams }: PageProps<"/welcome"
         step="ai"
         title="Choose an AI"
         complete={usable}
-        lead="It reads job postings and writes your resumes and cover letters. Pick what matters most to you, and the guide shows you where to go, what to click and what to copy back here."
+        lead={deploymentMode() === "hosted" ? "Connect your own cloud AI provider key to analyze postings and generate tailored resumes and cover letters. Your provider may charge for usage." : "It reads job postings and writes your resumes and cover letters. Pick what matters most to you, and the guide shows you where to go, what to click and what to copy back here."}
       >
         <AiStep
           current={{
@@ -148,7 +149,7 @@ export default async function WelcomePage({ searchParams }: PageProps<"/welcome"
         step="jobs"
         title="Where to look for jobs"
         complete={settings.jobSource !== null || view.source !== "OFF"}
-        lead="Find jobs and the job agent search one source for postings that fit you. You can also paste any posting you find yourself."
+        lead={deploymentMode() === "hosted" ? "Find Jobs and the job agent use the job source you connect. Add your own credentials if the source requires them, or paste a posting you found yourself." : "Find jobs and the job agent search one source for postings that fit you. You can also paste any posting you find yourself."}
       >
         <JobsStep initial={view} />
       </SetupFrame>
