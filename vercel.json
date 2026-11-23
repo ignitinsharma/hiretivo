@@ -1,5 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "src/app/api/internal/queued-job/route.ts": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "hiretivo-jobs"
+        }
+      ]
+    }
+  },
+  "buildCommand": "yarn generate && yarn tenants:generate && yarn build",
+  "regions": [
+    "sin1"
+  ],
+  "framework": "nextjs",
   "git": {
     "deploymentEnabled": false
   }

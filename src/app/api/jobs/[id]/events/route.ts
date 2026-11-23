@@ -13,6 +13,11 @@ const HEARTBEAT_MS = 15_000;
 export const GET = route<RouteContext<"/api/jobs/[id]/events">>(async (request, { params }) => {
   const { id } = await params;
   if (!(await getJob(id))) return NextResponse.json({ error: "That job doesn't exist." }, { status: 404 });
+  // A serverless request may run in a different instance from the job.
+  // The client already falls back to polling the persisted job status.
+  if (process.env.VERCEL === "1") {
+    return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
+  }
   const encoder = new TextEncoder();
   let stop = () => {};
 

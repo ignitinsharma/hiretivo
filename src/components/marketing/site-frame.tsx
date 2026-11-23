@@ -6,11 +6,12 @@ import { buttonClassName } from "@/components/ui/button";
 
 import { dockerSetupUrl, repositoryUrl, sourceZipUrl } from "./project-links";
 
-export function SiteFrame({ children, hosted = true, selfHosted = false, featuresPage = false }: {
+export function SiteFrame({ children, hosted = true, selfHosted = false, featuresPage = false, hostedAppLinks = false }: {
   children: ReactNode;
   hosted?: boolean;
   selfHosted?: boolean;
   featuresPage?: boolean;
+  hostedAppLinks?: boolean;
 }) {
   return (
     <div data-hiretivo-home={selfHosted ? "" : undefined} className="min-h-screen bg-paper text-ink">
@@ -22,7 +23,14 @@ export function SiteFrame({ children, hosted = true, selfHosted = false, feature
             <div className="home-nav-actions flex flex-wrap items-center gap-3 text-sm sm:gap-5">
               <Link href="/features" aria-current={featuresPage ? "page" : undefined} className="home-nav-label hidden hover:underline sm:block">Features</Link>
               <a href={repositoryUrl} className="home-nav-label hover:underline">View on GitHub</a>
-              <a href={dockerSetupUrl} className={buttonClassName("primary", "md")}>Set up with Docker</a>
+              {hostedAppLinks ? (
+                <>
+                  <a href="https://app.hiretivo.com/login" className="home-nav-label hover:underline">Log in</a>
+                  <a href="https://app.hiretivo.com/signup" className={buttonClassName("primary", "md")}>Create account</a>
+                </>
+              ) : (
+                <a href={dockerSetupUrl} className={buttonClassName("primary", "md")}>Set up with Docker</a>
+              )}
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-5 text-sm">

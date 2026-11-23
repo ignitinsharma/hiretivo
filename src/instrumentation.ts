@@ -5,6 +5,10 @@ export async function register() {
     const { checkEnvOnStartup } = await import("@/lib/env");
     checkEnvOnStartup();
 
+    // Serverless instances can start while other instances are processing jobs.
+    // Release migrations and scheduled maintenance run outside instance startup.
+    if (process.env.VERCEL === "1" && process.env.HIRETIVO_DEPLOYMENT_MODE === "hosted") return;
+
     const { logServerError } = await import("@/lib/log");
     const { deploymentMode } = await import("@/lib/deployment-mode");
     const { eachTenant, upgradeAllTenants, startAuthCleanup } = await import("@/lib/tenancy/provision");

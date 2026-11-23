@@ -39,6 +39,8 @@ export const GET = route(async (request) => {
 export const POST = route(async (request) => {
   const rendered = await renderRequested(request);
   if (rendered instanceof Response) return rendered;
+  // The next request on Vercel may run in a different process.
+  if (process.env.VERCEL === "1") return pdfDownload(rendered.pdf, rendered.fileName);
   return NextResponse.json({ url: `/api/pdf/${holdPdf(rendered.pdf, rendered.fileName, Date.now(), await currentTenantId())}` });
 });
 
