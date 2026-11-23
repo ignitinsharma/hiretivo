@@ -22,7 +22,7 @@ export function SiteFrame({ children, hosted = true, selfHosted = false, feature
           {selfHosted ? (
             <div className="home-nav-actions flex flex-wrap items-center gap-3 text-sm sm:gap-5">
               <Link href="/features" aria-current={featuresPage ? "page" : undefined} className="home-nav-label hidden hover:underline sm:block">Features</Link>
-              <a href={repositoryUrl} className="home-nav-label hover:underline">View on GitHub</a>
+              <a href={repositoryUrl} className={hostedAppLinks ? "home-nav-label hidden hover:underline sm:inline" : "home-nav-label hover:underline"}>View on GitHub</a>
               {hostedAppLinks ? (
                 <>
                   <a href="https://app.hiretivo.com/login" className="home-nav-label hover:underline">Log in</a>
