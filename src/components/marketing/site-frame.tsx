@@ -35,7 +35,7 @@ export function SiteFrame({ children, hosted = true, selfHosted = false, feature
         </nav>
       </header>
       <main id="content">{children}</main>
-      <footer className={selfHosted ? "home-footer" : "border-t border-line bg-sidebar"}>
+      <footer data-home-dark={selfHosted ? "" : undefined} className={selfHosted ? "home-footer" : "border-t border-line bg-sidebar"}>
         {selfHosted && <div aria-hidden="true" className="home-footer-wordmark">Hiretivo</div>}
         <div className={"mx-auto flex max-w-[1280px] flex-wrap justify-between gap-6 px-6 py-8 text-sm md:px-10 " + (selfHosted ? "text-stone-300" : "text-muted")}>
           <p>Hiretivo · A calmer way to manage your job search.</p>

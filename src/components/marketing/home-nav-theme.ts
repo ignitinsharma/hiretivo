@@ -1,15 +1,20 @@
 export function connectHomeNavTheme() {
   const nav = document.querySelector("[data-home-header] nav");
   const header = nav?.parentElement;
-  const hero = document.querySelector("[data-home-hero]");
-  if (!nav || !header || !hero) return;
+  const darkSections = Array.from(document.querySelectorAll("[data-home-hero], [data-home-dark]"));
+  if (!nav || !header) return;
 
   let frame: number | undefined;
 
   const update = () => {
     frame = undefined;
     const bar = nav.getBoundingClientRect();
-    const theme = hero.getBoundingClientRect().bottom <= bar.top + bar.height / 2 ? "light" : "dark";
+    const midpoint = bar.top + bar.height / 2;
+    const overDarkSection = darkSections.some((section) => {
+      const { top, bottom } = section.getBoundingClientRect();
+      return top <= midpoint && midpoint < bottom;
+    });
+    const theme = overDarkSection ? "dark" : "light";
     if (header.dataset.theme !== theme) header.dataset.theme = theme;
   };
 
