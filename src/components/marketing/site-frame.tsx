@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { buttonClassName } from "@/components/ui/button";
 
-import { dockerSetupUrl, repositoryUrl, sourceZipUrl } from "./project-links";
+import { dockerSetupUrl, hostedLoginUrl, hostedSignupUrl, repositoryUrl, sourceZipUrl } from "./project-links";
 
 export function SiteFrame({ children, hosted = true, selfHosted = false, featuresPage = false, hostedAppLinks = false }: {
   children: ReactNode;
@@ -18,15 +18,15 @@ export function SiteFrame({ children, hosted = true, selfHosted = false, feature
       <a href="#content" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
       <header data-home-header={selfHosted ? "" : undefined} className={selfHosted ? "home-header" : "border-b border-line bg-surface"}>
         <nav aria-label="Website" className={selfHosted ? "home-nav" : "mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-6 py-5 md:px-10"}>
-          <Link href="/" aria-label="Hiretivo home" className={"flex items-center gap-2.5 text-xl font-semibold " + (selfHosted ? "home-nav-label" : "text-primary-text")}><BrandMark className="size-9" />Hiretivo</Link>
+          <Link href="/" aria-label="Hiretivo home" className={"flex items-center gap-2.5 text-xl font-semibold " + (selfHosted ? "home-nav-label home-brand-link" : "text-primary-text")}><BrandMark className="size-9" /><span className={selfHosted ? "home-brand-wordmark" : undefined}>Hiretivo</span></Link>
           {selfHosted ? (
             <div className="home-nav-actions flex flex-wrap items-center gap-3 text-sm sm:gap-5">
               <Link href="/features" aria-current={featuresPage ? "page" : undefined} className="home-nav-label hidden hover:underline sm:block">Features</Link>
               <a href={repositoryUrl} className={hostedAppLinks ? "home-nav-label hidden hover:underline sm:inline" : "home-nav-label hover:underline"}>View on GitHub</a>
               {hostedAppLinks ? (
                 <>
-                  <a href="https://app.hiretivo.com/login" className="home-nav-label hover:underline">Log in</a>
-                  <a href="https://app.hiretivo.com/signup" className={buttonClassName("primary", "md")}>Create account</a>
+                  <a href={hostedLoginUrl} className="home-nav-label hover:underline">Log in</a>
+                  <a href={hostedSignupUrl} className={buttonClassName("primary", "md")}>Create account</a>
                 </>
               ) : (
                 <a href={dockerSetupUrl} className={buttonClassName("primary", "md")}>Set up with Docker</a>

@@ -442,10 +442,98 @@
   }
 }
 
+.home-header {
+  --home-brand-highlight: #a9c4f5;
+}
+
+.home-header[data-theme="light"] {
+  --home-brand-highlight: #2151b5;
+}
+
+.home-brand-link:focus-visible .home-brand-wordmark {
+  color: var(--home-brand-highlight);
+}
+
+[data-home-hero] .home-signup:focus-visible {
+  background-color: #2f66d3;
+}
+
+@media (hover: hover) {
+  .home-headline-words:hover {
+    color: #a9c4f5;
+  }
+
+  .home-brand-link:hover .home-brand-wordmark {
+    color: var(--home-brand-highlight);
+  }
+
+  [data-home-hero] .home-signup:hover {
+    background-color: #2f66d3;
+  }
+
+  .home-dashboard:hover {
+    border-color: rgb(255 255 255 / 0.35);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .home-headline-words,
+  .home-brand-wordmark {
+    transition: color 180ms ease-out;
+  }
+
+  .home-dashboard {
+    transition: border-color 180ms ease-out;
+  }
+
+  [data-home-hero] .home-signup {
+    transition: background-color 180ms ease-out;
+  }
+
+  .home-signup-arrow {
+    transition: transform 180ms ease-out;
+  }
+
+  .home-signup:focus-visible .home-signup-arrow {
+    transform: translateX(4px);
+  }
+
+  @media (hover: hover) {
+    .home-signup:hover .home-signup-arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  html:has([data-home-hero]) {
+    scroll-behavior: smooth;
+  }
+
+  .home-headline-first,
+  .home-headline-words > span > span {
+    display: inline-block;
+    animation: home-headline-enter 220ms ease-out both;
+    animation-delay: var(--home-word-delay, 0ms);
+  }
+
+  .home-headline-first {
+    animation-duration: 240ms;
+  }
+
+  .home-headline-words > span:nth-child(1) { --home-word-delay: 240ms; }
+  .home-headline-words > span:nth-child(2) { --home-word-delay: 295ms; }
+  .home-headline-words > span:nth-child(3) { --home-word-delay: 350ms; }
+  .home-headline-words > span:nth-child(4) { --home-word-delay: 405ms; }
+  .home-headline-words > span:nth-child(5) { --home-word-delay: 460ms; }
+  .home-headline-words > span:nth-child(6) { --home-word-delay: 515ms; }
+
   .home-dashboard {
     animation: home-dashboard-enter 420ms ease-out both;
   }
+}
+
+@keyframes home-headline-enter {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes home-dashboard-enter {
