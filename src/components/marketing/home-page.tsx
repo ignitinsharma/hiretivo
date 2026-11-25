@@ -3,7 +3,7 @@ import { ArrowRight, Check, FileText, Layers, Search, SlidersHorizontal } from "
 
 import { buttonClassName } from "@/components/ui/button";
 
-import { dockerSetupUrl, repositoryUrl, sourceZipUrl } from "./project-links";
+import { dockerSetupUrl, hostedLoginUrl, hostedSignupUrl, repositoryUrl, sourceZipUrl } from "./project-links";
 import { SiteFrame } from "./site-frame";
 
 const features = [
@@ -18,14 +18,32 @@ export function HomePage({ hostedAppLinks = false }: { hostedAppLinks?: boolean 
     <SiteFrame selfHosted hostedAppLinks={hostedAppLinks}>
       <section data-home-hero className="px-4 pb-8 text-center sm:px-8 md:px-10">
         <span className="inline-flex rounded-full border border-white/20 bg-white/5 px-3 py-1 text-sm font-medium text-stone-200">Free and open source</span>
-        <h1 className="mx-auto mt-5 max-w-[1050px] text-4xl leading-[1.08] font-semibold tracking-tight text-stone-50 sm:text-5xl lg:text-[64px]">Less busywork.<br /><span className="text-balance text-stone-300">More room for your next move.</span></h1>
-        <p className="mx-auto mt-5 max-w-[650px] text-lg leading-relaxed text-stone-300">Find your fit, tailor your resume, and keep every application together. Hiretivo runs on your own machine with the AI provider you choose.</p>
+        <h1 className="mx-auto mt-5 max-w-[1050px] text-4xl leading-[1.08] font-semibold tracking-tight text-stone-50 sm:text-5xl lg:text-[64px]">
+          <span className="home-headline-first">Less busywork.</span>
+          <br />
+          <span className="home-headline-words text-balance text-stone-300">
+            {"More room for your next move.".split(" ").map((word, index) => (
+              <span key={word}>{index > 0 && " "}<span>{word}</span></span>
+            ))}
+          </span>
+        </h1>
+        <p className="mx-auto mt-5 max-w-[650px] text-lg leading-relaxed text-stone-300">Find your fit, tailor your resume, and keep every application together. {hostedAppLinks ? "Use Hiretivo in your browser with the AI provider you choose." : "Run Hiretivo on your own machine with the AI provider you choose."}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <a href={dockerSetupUrl} className={buttonClassName("primary", "lg")}>Set up with Docker <ArrowRight size={17} aria-hidden="true" /></a>
-          <a href={repositoryUrl} className={buttonClassName("secondary", "lg", "home-hero-link")}>View on GitHub</a>
-          <a href={sourceZipUrl} className={buttonClassName("secondary", "lg", "home-hero-link")}>Download ZIP</a>
+          {hostedAppLinks ? (
+            <>
+              <a href={hostedSignupUrl} className={buttonClassName("primary", "lg", "home-signup")}>Create account <ArrowRight className="home-signup-arrow" size={17} aria-hidden="true" /></a>
+              <a href={hostedLoginUrl} className={buttonClassName("secondary", "lg", "home-hero-link")}>Log in</a>
+            </>
+          ) : (
+            <>
+              <a href={dockerSetupUrl} className={buttonClassName("primary", "lg")}>Set up with Docker <ArrowRight size={17} aria-hidden="true" /></a>
+              <a href={repositoryUrl} className={buttonClassName("secondary", "lg", "home-hero-link")}>View on GitHub</a>
+              <a href={sourceZipUrl} className={buttonClassName("secondary", "lg", "home-hero-link")}>Download ZIP</a>
+            </>
+          )}
         </div>
-        <p className="mt-3 text-sm text-stone-300">External API usage may cost extra.</p>
+        <p className="mt-3 text-sm text-stone-300">{hostedAppLinks ? "Free to use. Bring your own provider keys." : "External API usage may cost extra."}</p>
+        {hostedAppLinks && <a href="#self-host" className="mt-4 block text-sm text-stone-200 underline underline-offset-4 hover:text-white">Prefer to self-host?</a>}
         <Link href="/features" className="mt-4 inline-block text-stone-200 underline underline-offset-4 hover:text-white sm:hidden">Explore features</Link>
         <figure className="mx-auto mt-8 max-w-[1200px] overflow-hidden home-dashboard rounded-[20px] border border-white/20 bg-[#242424] p-2 shadow-lg md:mt-10">
           {/* eslint-disable-next-line @next/next/no-img-element -- The static site serves pre-optimized WebP directly. */}
@@ -37,7 +55,7 @@ export function HomePage({ hostedAppLinks = false }: { hostedAppLinks?: boolean 
         <div className="mx-auto max-w-[1200px]">
           <p className="text-sm font-semibold text-muted">A SIMPLE PLACE TO START</p><h2 className="mt-3 text-3xl font-semibold text-neutral-900 sm:text-4xl">From your experience to your next application.</h2>
           <ol className="mt-10 grid gap-8 md:grid-cols-3">
-            {[["01", "Make it yours", "Set up Hiretivo, add your profile or resume, and connect your own AI provider."], ["02", "Find an opportunity", "Search connected job sources or paste a posting. Review the fit and create a tailored draft."], ["03", "Stay on top of it", "Review your documents, download your PDFs, and track the application through every stage."]].map(([number, title, body]) => <li key={number}><span className="text-sm font-semibold text-muted">{number}</span><h3 className="mt-3 text-xl font-semibold">{title}</h3><p className="mt-3 leading-relaxed text-muted">{body}</p></li>)}
+            {[["01", "Make it yours", "Add your profile or import a resume, then connect your own AI provider."], ["02", "Find an opportunity", "Search connected job sources or paste a posting. Review the fit and create a tailored draft."], ["03", "Stay on top of it", "Review your documents, download your PDFs, and track the application through every stage."]].map(([number, title, body]) => <li key={number}><span className="text-sm font-semibold text-muted">{number}</span><h3 className="mt-3 text-xl font-semibold">{title}</h3><p className="mt-3 leading-relaxed text-muted">{body}</p></li>)}
           </ol>
         </div>
       </section>
@@ -50,7 +68,17 @@ export function HomePage({ hostedAppLinks = false }: { hostedAppLinks?: boolean 
           <img src="/marketing/resume.webp" alt="Hiretivo Resume workspace with theme choices alongside a fictional candidate’s resume preview" width={2880} height={1800} loading="lazy" className="h-auto w-full rounded-control border border-line-card" />
         </div>
       </section>
-      <section className="border-t border-stone-200 bg-[#f8f7f4] px-6 py-16 text-center text-neutral-900"><h2 className="text-3xl font-semibold sm:text-4xl">Your next move starts with a little clarity.</h2><p className="mx-auto mt-4 max-w-[570px] leading-relaxed text-neutral-600">Run Hiretivo on your own machine and manage your job search in one place.</p><a href={dockerSetupUrl} className={buttonClassName("primary", "lg", "mt-7")}>Set up with Docker <ArrowRight size={17} aria-hidden="true" /></a></section>
+      <section id="self-host" className="border-t border-stone-200 bg-[#f8f7f4] px-6 py-16 text-center text-neutral-900">
+        <h2 className="text-3xl font-semibold sm:text-4xl">Self-host Hiretivo</h2>
+        <p className="mx-auto mt-4 max-w-[570px] leading-relaxed text-neutral-600">
+          Run Hiretivo on your own machine with Docker. Download the open-source code or follow the setup guide to get started.
+        </p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <a href={dockerSetupUrl} className={buttonClassName("primary", "lg")}>Set up with Docker <ArrowRight size={17} aria-hidden="true" /></a>
+          <a href={sourceZipUrl} className={buttonClassName("secondary", "lg")}>Download ZIP</a>
+          <a href={repositoryUrl} className={buttonClassName("secondary", "lg")}>View on GitHub</a>
+        </div>
+      </section>
     </SiteFrame>
   );
 }
